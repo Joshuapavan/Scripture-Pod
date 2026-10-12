@@ -516,7 +516,7 @@
         transitionType: document.getElementById('song-transition-type')?.value || 'fade',
         animateBgTransitions: !!document.getElementById('animate-bg-transitions')?.checked,
         showVersion: liveProjection.showVersion != null ? !!liveProjection.showVersion : !!document.getElementById('show-version')?.checked,
-        textColor: liveProjection.textColor || document.getElementById('text-color')?.value || '#ffffff',
+        textColor: liveProjection.textColor || document.getElementById('text-color')?.value || '#FFFFFF',
         refColor: liveProjection.refColor || document.getElementById('ref-color')?.value || '#ffffff',
         refBgColor: liveProjection.refBgColor || document.getElementById('ref-bg-color')?.value || '#FFD500',
         showVerseNos: liveProjection.showVerseNos != null ? !!liveProjection.showVerseNos : !!document.getElementById('show-verse-nos')?.checked,
@@ -575,7 +575,7 @@
       const bgType = liveBgState.bgType || 'color';
       const bgOpacity = Number.isFinite(liveBgState.bgOpacity) ? liveBgState.bgOpacity : 1;
       const bgY = Number(liveBgState.bgY || 0);
-      const bgColor = liveBgState.bgColor || '#111CB0';
+      const bgColor = liveBgState.bgColor || '#000000';
       bgGradientShadow = liveBgState.bgGradientShadow || '#AD0000';
       bgGradientHighlight = liveBgState.bgGradientHighlight || '#000000';
       const bgModeValue = liveBgState.bgMode || bgMode;

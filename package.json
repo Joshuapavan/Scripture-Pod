@@ -1,9 +1,9 @@
 {
-  "name": "scripture-pod-pro-vmix-desktop",
+  "name": "scripture-pod-desktop",
   "version": "2.0.0",
-  "description": "Scripture Pod Pro desktop preview wrapper for macOS",
+  "description": "Scripture Pod desktop presentation control application",
   "main": "electron/main.js",
-  "author": "Johnson Olakotan",
+  "author": "Joshua Pavan",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
@@ -12,17 +12,23 @@
     "dist:mac": "electron-builder --mac",
     "pack:win": "electron-builder --win nsis portable",
     "dist:win": "electron-builder --win",
-    "dist:linux": "electron-builder --linux"
+    "dist:linux": "electron-builder --linux",
+    "mobile:build": "node scripts/build-mobile.js",
+    "mobile:sync": "npm run mobile:build && cap sync",
+    "mobile:android": "npm run mobile:sync && cap open android",
+    "mobile:ios": "npm run mobile:sync && cap open ios"
   },
   "build": {
     "appId": "com.scripturepodpro.desktop",
-    "productName": "Scripture Pod Pro",
+    "productName": "Scripture Pod",
     "files": [
       "UI/**/*",
       "index.html",
       "assets/**/*",
       "js/**/*",
-      "electron/**/*",
+      "electron/main.js",
+      "electron/preload.js",
+      "electron/resources/Logo.svg",
       "package.json",
       "README.md",
       "LICENSE"
@@ -31,12 +37,14 @@
       "buildResources": "electron/resources",
       "output": "dist"
     },
+    "electronLanguages": [
+      "en-US"
+    ],
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "scripture-pod-pro.icns",
+      "icon": "electron/resources/scripture-pod.png",
       "identity": null,
       "target": [
-        "dir",
         "zip"
       ],
       "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
@@ -67,9 +75,13 @@
     }
   },
   "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
     "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.3",
     "electron": "^42.4.0",
     "electron-builder": "^26.5.0"
   }

@@ -174,6 +174,7 @@
       const cached = bibleSearchCache.get(versionId);
       if (cached && cached.size === list.length) return cached.entries;
       const built = buildBibleSearchIndex(versionId);
+      bibleSearchCache.clear();
       bibleSearchCache.set(versionId, built);
       return built.entries;
     }

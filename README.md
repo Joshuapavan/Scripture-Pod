@@ -58,6 +58,26 @@ npm run dist:mac
 
 The `build` section in `package.json` is configured for `electron-builder`.
 
+## Android and iOS
+
+The Capacitor mobile apps reuse the control panel and connect to a desktop host over the local WebSocket relay. Keep the phone/tablet and desktop on the same trusted Wi-Fi network; do not expose the relay ports to the public internet. Desktop-only features such as selecting a separate physical output display remain available only in the desktop app.
+
+Build and open the Android project with Android Studio:
+
+```bash
+npm install
+npm run mobile:android
+```
+
+Build and open the iOS project with Xcode on macOS:
+
+```bash
+npm install
+npm run mobile:ios
+```
+
+Each command stages the shared panel assets and synchronizes the native project before opening the IDE. Android builds require Android Studio and its SDK; iOS builds require the full Xcode installation and signing configuration.
+
 On macOS, choose the target architecture explicitly when needed:
 
 ```bash

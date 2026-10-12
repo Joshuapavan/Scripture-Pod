@@ -154,7 +154,7 @@
     let projectionSettingsProfilesByTab = null;
     let settingsTargetTab = 'follow';
     let setlistSettings = { ...DEFAULT_SETLIST_SETTINGS };
-    let hostMode = HOST_MODE_OBS;
+    let hostMode = HOST_MODE_WEBSOCKET;
     let vmixState = {
       enabled: false,
       host: '127.0.0.1',

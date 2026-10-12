@@ -32,6 +32,8 @@
         currentAppPage: 'projection',
         ui: {
           language: 'en',
+          bgColor: '#000000',
+          textColor: '#FFFFFF',
           searchText: { ...DEFAULT_SEARCH_QUERIES },
           bibleRecentRefs: [],
           biblePinnedRefs: [],
@@ -43,7 +45,7 @@
           focusedWorkspaceControls: createDefaultFocusedWorkspaceControls()
         },
         host: {
-          mode: HOST_MODE_OBS,
+          mode: HOST_MODE_WEBSOCKET,
         }
       };
     }
@@ -1312,7 +1314,7 @@
         historyStates = historyStates.slice(0, historyIndex + 1);
       }
       historyStates.push(state);
-      if (historyStates.length > 50) {
+      if (historyStates.length > 10) {
         historyStates.shift();
         /* shift removed index 0, so historyIndex stays the same (the new item is now at the old last index) */
       } else {
@@ -4465,7 +4467,7 @@
       });
 
       appState = mergeAppStateWithDefaults(stateValue || {});
-      const persistedHostMode = stateValue?.host?.mode || (appState.settings && appState.settings.hostMode) || HOST_MODE_OBS;
+      const persistedHostMode = stateValue?.host?.mode || (appState.settings && appState.settings.hostMode) || HOST_MODE_WEBSOCKET;
       setHostMode(persistedHostMode, { silent: true });
       let localPreferredLanguage = '';
       try { localPreferredLanguage = localStorage.getItem('bible_app_language') || ''; } catch (_) {}
