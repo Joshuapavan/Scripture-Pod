@@ -3048,9 +3048,6 @@
         // populate language submenu from main settings
         populateLanguageSelect();
         buildAbLangSubmenu();
-        // sync active theme indicator
-        const currentTheme = document.getElementById('theme-select')?.value || 'skyline';
-        syncActiveThemeIndicator(currentTheme);
         popup.classList.add('open');
         backdrop.classList.add('open');
       }

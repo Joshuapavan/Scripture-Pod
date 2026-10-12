@@ -1103,8 +1103,9 @@
       try {
         switch (d.type) {
           case 'PRELOAD_BACKGROUND': {
-            const videoEl = elements.bgVideo;
             const src = d.bgVideo || '';
+            const mode = currentState.mode;
+            const videoEl = mode === 'lt' ? elements.ltVideo : elements.bgVideo;
             if (src) {
               currentState = {
                 ...currentState,
@@ -1113,10 +1114,16 @@
                 bgVideoSpeed: d.bgVideoSpeed || 1
               };
             }
-            if (src && !isGifSource(src) && !getYouTubeInfo(src) && videoEl && videoEl.dataset.src !== src) {
-              syncVideoState(videoEl, src, false, {
+            const shouldResume = d.resume === true &&
+              currentState.bgType === 'video' &&
+              currentState.bgEnabled === true &&
+              Number(currentState.bgOpacity ?? 1) > 0 &&
+              (mode === 'full' || mode === 'lt');
+            if (src && !isGifSource(src) && !getYouTubeInfo(src) && videoEl) {
+              syncVideoState(videoEl, src, shouldResume, {
                 loop: d.bgVideoLoop !== false,
-                playbackRate: d.bgVideoSpeed || 1
+                playbackRate: d.bgVideoSpeed || 1,
+                revealOpacity: Number(currentState.bgOpacity ?? 1)
               });
             }
             break;

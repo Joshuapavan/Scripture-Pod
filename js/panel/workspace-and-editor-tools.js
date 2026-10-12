@@ -1,15 +1,3 @@
-    function selectAbTheme(value) {
-      const normalizedTheme = normalizeThemeId(value);
-      closeAbSettingsPopup();
-      const sel = document.getElementById('theme-select');
-      if (sel) { sel.value = normalizedTheme; handleThemeChange(); }
-      syncActiveThemeIndicator(normalizedTheme);
-    }
-    function syncActiveThemeIndicator(activeTheme) {
-      document.querySelectorAll('.ab-popup-sub [data-theme]').forEach(el => {
-        el.classList.toggle('theme-active', el.dataset.theme === activeTheme);
-      });
-    }
     function selectAbLanguage(code) {
       closeAbSettingsPopup();
       const sel = document.getElementById('language-select');

@@ -62,6 +62,7 @@
     let backgroundVideoPreloadTimer = null;
     const backgroundMediaUrlCache = new Map();
     const backgroundMediaPending = new Map();
+    let syncStateMediaPending = false;
 
     function cacheBackgroundMediaForOutput(source) {
       if (typeof source !== 'string' || !source.startsWith('data:')) return Promise.resolve(source);
@@ -108,8 +109,18 @@
     }
 
     function compactRelayMedia(message) {
+      if (message.type === 'CLEAR' || (message.type === 'SYNC_STATE' && message.state?.kind === 'clear')) {
+        lastRelayBgImage = RELAY_MEDIA_UNSET;
+        lastRelayBgVideo = RELAY_MEDIA_UNSET;
+        return message;
+      }
       if (message.type === 'PRELOAD_BACKGROUND') {
         if (Object.prototype.hasOwnProperty.call(message, 'bgVideo')) lastRelayBgVideo = message.bgVideo;
+        return message;
+      }
+      if (message.type === 'SYNC_STATE' && message.state?.kind === 'update' && message.state.payload) {
+        lastRelayBgImage = message.state.payload.bgImage ?? null;
+        lastRelayBgVideo = message.state.payload.bgVideo ?? null;
         return message;
       }
       if (message.type !== 'UPDATE') return message;
@@ -135,8 +146,6 @@
         ? bgVideoUploadDataUrl
         : String(document.getElementById('bg-video-url')?.value || '').trim();
       if (!videoData) return;
-      const alreadyCached = !videoData.startsWith('data:') || backgroundMediaUrlCache.has(videoData);
-      if (alreadyCached && lastLiveState?.kind === 'update' && lastLiveState.payload?.bgType === 'video' && lastLiveState.payload.bgVideo === videoData) return;
       let videoUrl = videoData;
       try {
         videoUrl = await cacheBackgroundMediaForOutput(videoData);
@@ -145,12 +154,21 @@
         showToast('Background video could not be prepared for display');
         return;
       }
+      const savedLiveVideoMatches = lastLiveState?.kind === 'update' &&
+        lastLiveState.payload?.bgType === 'video' &&
+        lastLiveState.payload.bgVideo === videoData;
+      const resumeSavedLiveVideo = savedLiveVideoMatches &&
+        lastLiveState.payload.bgEnabled !== false &&
+        Number(lastLiveState.payload.bgOpacity ?? 1) > 0;
       broadcastMessage({
         type: 'PRELOAD_BACKGROUND',
         bgVideo: videoUrl,
         bgVideoLoop: !!document.getElementById('bg-video-loop')?.checked,
-        bgVideoSpeed: Number(document.getElementById('bg-video-speed')?.value || 1)
+        bgVideoSpeed: Number(document.getElementById('bg-video-speed')?.value || 1),
+        resume: resumeSavedLiveVideo
       });
+      if (savedLiveVideoMatches) sendSyncState();
+      else if (isLive && livePointer) scheduleLiveUpdate();
     }
 
     function scheduleBackgroundVideoPreload() {
@@ -163,11 +181,30 @@
       return messageSeq;
     }
 
-    function sendSyncState() {
+    function sendSyncState(opts = {}) {
       const sceneLayers = getOutputSceneLayers();
       const state = (lastLiveState && lastLiveState.kind === 'update')
         ? { kind: 'update', payload: { ...lastLiveState.payload, sceneLayers } }
         : { kind: 'clear', sceneLayers };
+      const payload = state.payload;
+      const activeMedia = payload?.bgEnabled && Number(payload.bgOpacity ?? 1) > 0
+        ? (payload.bgType === 'video' ? payload.bgVideo : (payload.bgType === 'image' ? payload.bgImage : null))
+        : null;
+      const canCacheMedia = window.BSPDesktop && typeof window.BSPDesktop.cacheBackgroundMedia === 'function';
+      if (!opts.skipMediaCache && canCacheMedia && typeof activeMedia === 'string' &&
+          activeMedia.startsWith('data:') && !backgroundMediaUrlCache.has(activeMedia)) {
+        if (syncStateMediaPending) return;
+        syncStateMediaPending = true;
+        cacheBackgroundMediaForOutput(activeMedia).then(() => {
+          syncStateMediaPending = false;
+          sendSyncState();
+        }).catch((error) => {
+          syncStateMediaPending = false;
+          console.error('Live background registration failed during display sync', error);
+          sendSyncState({ skipMediaCache: true });
+        });
+        return;
+      }
       const msg = {
         type: 'SYNC_STATE',
         proto: 1,

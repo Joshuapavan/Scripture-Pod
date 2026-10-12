@@ -12313,32 +12313,6 @@
       letter-spacing: -0.01em;
     }
 
-    .feedback-textarea {
-      width: 100%;
-      min-height: 220px;
-      resize: vertical;
-      border-radius: 16px;
-      border: 1px solid color-mix(in srgb, var(--border) 88%, transparent 12%);
-      background: color-mix(in srgb, var(--panel-content-bg) 80%, #455066 20%);
-      color: var(--text);
-      padding: 20px 22px;
-      font: inherit;
-      font-size: 15px;
-      line-height: 1.5;
-      box-sizing: border-box;
-      outline: none;
-      transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
-    }
-
-    .feedback-textarea::placeholder {
-      color: color-mix(in srgb, var(--text-secondary) 78%, transparent 22%);
-    }
-
-    .feedback-textarea:focus {
-      border-color: color-mix(in srgb, var(--accent) 56%, var(--border) 44%);
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
-    }
-
     .feedback-note {
       display: flex;
       align-items: flex-start;
@@ -12368,172 +12342,6 @@
       color: inherit;
       text-decoration: underline;
       text-underline-offset: 2px;
-    }
-
-    .feedback-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      min-height: 18px;
-      font-size: 12px;
-      color: var(--text-secondary);
-    }
-
-    .feedback-status::before {
-      content: '';
-      width: 14px;
-      height: 14px;
-      border-radius: 999px;
-      border: 1px solid transparent;
-      opacity: 0;
-      transform: scale(0.6);
-      transition: opacity 180ms ease, transform 180ms ease, background-color 180ms ease, border-color 180ms ease;
-      flex: 0 0 14px;
-    }
-
-    .feedback-status.error {
-      color: #ff8b8b;
-    }
-
-    .feedback-success-overlay {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 32px;
-      border-radius: 18px;
-      background:
-        radial-gradient(circle at top, rgba(111, 206, 141, 0.18), transparent 38%),
-        linear-gradient(180deg, rgba(16, 27, 23, 0.96), rgba(10, 19, 17, 0.98));
-      backdrop-filter: blur(8px);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 220ms ease;
-      z-index: 2;
-    }
-
-    .feedback-success-overlay.visible {
-      opacity: 1;
-    }
-
-    .feedback-success-panel {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      width: 100%;
-      height: 100%;
-      text-align: center;
-    }
-
-    .feedback-success-icon {
-      width: 58px;
-      height: 58px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: radial-gradient(circle at 30% 30%, rgba(154, 255, 184, 0.34), rgba(76, 175, 80, 0.16));
-      border: 1px solid rgba(111, 206, 141, 0.7);
-      color: #bff4cd;
-      font-size: 28px;
-      font-weight: 800;
-      line-height: 1;
-      transform: scale(0.88);
-      animation: feedbackSuccessPop 260ms ease forwards;
-    }
-
-    .feedback-success-message {
-      color: #d6f7e0;
-      font-size: 18px;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-    }
-
-    .feedback-success-subtext {
-      color: rgba(214, 247, 224, 0.76);
-      font-size: 13px;
-      line-height: 1.45;
-      max-width: 280px;
-    }
-
-    @keyframes feedbackSuccessPop {
-      0% {
-        transform: scale(0.72);
-        opacity: 0.4;
-      }
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    .feedback-actions {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      align-items: stretch;
-      gap: 16px;
-    }
-
-    .feedback-action-group {
-      display: flex;
-      align-items: stretch;
-    }
-
-    .feedback-actions .btn {
-      width: 100%;
-      min-height: 52px;
-      border-radius: 14px;
-      font-weight: 700;
-      font-size: 14px;
-    }
-
-    .feedback-btn-outline {
-      border: 1px solid color-mix(in srgb, var(--accent) 75%, transparent);
-      background: transparent;
-      color: color-mix(in srgb, var(--accent-light, var(--accent)) 82%, white 18%);
-    }
-
-    .feedback-btn-secondary {
-      border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-      background: color-mix(in srgb, var(--panel-content-bg) 78%, #405070 22%);
-      color: var(--text);
-    }
-
-    .feedback-btn-primary {
-      background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 78%, #b8c1ff 22%), color-mix(in srgb, var(--accent-light, var(--accent)) 70%, white 30%));
-      color: #fff;
-      border: 1px solid color-mix(in srgb, var(--accent-light, var(--accent)) 55%, transparent);
-    }
-
-    @media (max-width: 760px) {
-      .feedback-card {
-        padding: 18px;
-        border-radius: 16px;
-      }
-
-      .feedback-textarea {
-        min-height: 180px;
-        padding: 16px 18px;
-      }
-
-      .feedback-actions {
-        grid-template-columns: 1fr;
-        align-items: stretch;
-      }
-
-      .feedback-action-group {
-        width: 100%;
-        justify-content: stretch;
-      }
-
-      .feedback-btn-outline,
-      .feedback-actions .btn,
-      .feedback-btn-primary {
-        width: 100%;
-      }
     }
 
     .url-input-row {
@@ -16254,9 +16062,6 @@
       #sidebar { width: min(86vw, 300px); min-width: min(86vw, 300px); max-width: min(86vw, 500px); }
       body.sidebar-layout-docked-active #sidebar.sidebar-open { width: min(86vw, 300px); min-width: min(86vw, 300px); max-width: min(86vw, 500px); }
       #sidebar-quick-actions-btn {
-        left: auto !important;
-        right: 12px !important;
-        top: 146px !important;
         width: 42px;
         height: 34px;
         border-radius: 9px;
@@ -16351,6 +16156,114 @@
     .seg-btn.active, .t-btn.active { background: #fafafa !important; border-color: #fafafa !important; color: #18181b !important; }
     .section-label, .ctrl-section-title, .studio-pane-title { color: #a1a1aa !important; letter-spacing: 0.10em !important; }
     ::selection { background: rgba(34,211,238,0.25); color: #fff; }
+
+    #settingsModal .modal-content {
+      background: #09090b !important;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.62);
+    }
+    #settingsModal .settings-modal-title {
+      min-height: 52px;
+      padding: 10px 14px;
+      background: #09090b !important;
+      border-bottom: 1px solid #27272a;
+      color: #fafafa;
+    }
+    #settingsModal .sm-body { background: #09090b; }
+    #settingsModal .sm-sidebar {
+      width: min(204px, 34vw);
+      min-width: min(204px, 34vw);
+      padding: 8px;
+      background: #0f0f11 !important;
+      border-right: 1px solid #27272a;
+    }
+    #settingsModal .sm-sidebar-item {
+      min-height: 36px;
+      margin: 2px 0;
+      padding: 8px 10px;
+      border-radius: 6px;
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 120ms ease, color 120ms ease;
+    }
+    #settingsModal .sm-sidebar-item:hover { background: #18181b; color: #fafafa; }
+    #settingsModal .sm-sidebar-item.active {
+      background: #27272a;
+      color: #fafafa;
+    }
+    #settingsModal .sm-sidebar-item.active::before { display: none; }
+    #settingsModal .sm-content {
+      padding: 18px 20px;
+      background: #09090b !important;
+    }
+    #settingsModal .sm-panel-title {
+      margin-bottom: 14px;
+      padding: 0 0 12px;
+      border-bottom: 1px solid #27272a;
+      color: #fafafa;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+    #settingsModal .settings-category-content { padding: 0 0 16px; }
+    #settingsModal .settings-row { gap: 12px; margin-bottom: 12px; }
+    #settingsModal .settings-field { margin-bottom: 8px; }
+    #settingsModal .settings-label {
+      margin-bottom: 6px;
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0;
+    }
+    #settingsModal .settings-input,
+    #settingsModal .settings-select,
+    #settingsModal .settings-textarea {
+      border: 1px solid #27272a !important;
+      border-radius: 6px !important;
+      background: #09090b !important;
+      color: #fafafa !important;
+    }
+    #settingsModal .settings-input,
+    #settingsModal .settings-select { min-height: 36px; }
+    #settingsModal .settings-input:focus,
+    #settingsModal .settings-select:focus,
+    #settingsModal .settings-textarea:focus {
+      border-color: #52525b !important;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4) !important;
+    }
+    #settingsModal .segmented-picker {
+      padding: 3px;
+      border: 1px solid #27272a;
+      border-radius: 7px;
+      background: #18181b;
+    }
+    #settingsModal .seg-btn { border-radius: 4px !important; }
+    #settingsModal .btn { min-height: 34px; border-radius: 6px !important; }
+    #settingsModal :focus-visible {
+      outline: 2px solid rgba(59, 130, 246, 0.75);
+      outline-offset: 2px;
+    }
+    #settingsModal .feedback-card {
+      max-width: 720px;
+      padding: 16px;
+      gap: 12px;
+      border: 1px solid #27272a;
+      border-radius: 8px;
+      background: #111113;
+      box-shadow: none;
+    }
+    #settingsModal .feedback-card-title { font-size: 14px; font-weight: 600; letter-spacing: 0; }
+    #settingsModal .feedback-note {
+      border: 1px solid #27272a;
+      border-radius: 6px;
+      background: #18181b;
+      color: #d4d4d8;
+      padding: 12px 14px;
+      font-size: 12px;
+    }
+    #settingsModal .feedback-note a { color: #fafafa; }
 
   </style>
 </head>
@@ -17426,10 +17339,6 @@
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
             <span data-i18n="settings_presets">Plugin Settings</span>
           </div>
-          <div class="sm-sidebar-item" data-sm-tab="themes" onclick="switchSettingsTab('themes')">
-            <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r="2.5"/><path d="M17 2H7a5 5 0 0 0 0 10h10a5 5 0 0 0 0-10z"/><circle cx="10.5" cy="17.5" r="2.5"/><path d="M17 14H7a5 5 0 0 0 0 10h10a5 5 0 0 0 0-10z"/></svg>
-            <span data-i18n="settings_themes">Themes</span>
-          </div>
           <div class="sm-sidebar-item" data-sm-tab="feedback" onclick="switchSettingsTab('feedback')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>
             <span>Feedback</span>
@@ -18305,56 +18214,16 @@
             <input type="file" id="backup-import-file" accept=".json" style="display:none" onchange="handleBackupImport(this)">
           </div>
         </div>
-        <!-- Tab: Themes -->
-        <div class="sm-tab-panel" data-sm-panel="themes">
-          <div class="sm-panel-title" data-i18n="settings_themes">Themes</div>
-          <div class="settings-category-content">
-            <div class="settings-field" style="margin-bottom:12px">
-              <label class="settings-label" data-i18n="settings_themes">Themes</label>
-              <select id="theme-select" class="settings-select" onchange="handleThemeChange()">
-                <option value="skyline" data-i18n="theme_skyline">Skyline</option>
-                <option value="dark" selected data-i18n="theme_dark_mode">Dark Mode</option>
-                <option value="thamar-black" data-i18n="theme_thamar_black">Thamar Black</option>
-                <option value="sunset" data-i18n="theme_sunset">Sunset</option>
-                <option value="neon-horizon" data-i18n="theme_neon_horizon">Neon Horizon</option>
-                <option value="midnight-bloom" data-i18n="theme_midnight_bloom">Midnight Bloom</option>
-                <option value="liquid-glass" data-i18n="theme_liquid_glass">Liquid Glass</option>
-                <option value="paperlight" data-i18n="theme_paperlight">Paperlight</option>
-                <option value="apple-music" data-i18n="theme_jovisuals">JOvisuals</option>
-              </select>
-            </div>
-          </div>
-        </div>
         <div class="sm-tab-panel" data-sm-panel="feedback">
           <div class="sm-panel-title">Feedback</div>
           <div class="settings-category-content">
             <div class="feedback-card">
-              <div id="feedback-success-overlay" class="feedback-success-overlay" aria-hidden="true">
-                <div class="feedback-success-panel">
-                  <div class="feedback-success-icon">✓</div>
-                  <div id="feedback-success-message" class="feedback-success-message">Feedback sent to GitHub.</div>
-                  <div class="feedback-success-subtext">Your message has been submitted successfully.</div>
-                </div>
-              </div>
               <div class="feedback-card-header">
-                <div class="feedback-card-title">Send Feedback</div>
+                <div class="feedback-card-title">Feedback & Support</div>
               </div>
-              <textarea id="feedback-message" class="feedback-textarea" placeholder="Describe your problem or suggestion here..."></textarea>
               <div class="feedback-note">
-                <span>Your feedback will be sent to our feedback backend and posted publicly on our</span>
+                <span>Please post your feedback and issues on our Github Issues section</span>
                 <a href="https://github.com/Joshuapavan/Scripture-Pod-V2/issues" target="_blank" rel="noreferrer">GitHub issues</a>
-              </div>
-              <div id="feedback-status" class="feedback-status"></div>
-              <div class="feedback-actions">
-                <div class="feedback-action-group feedback-action-group-left">
-                  <button type="button" class="btn feedback-btn-outline" onclick="openFeedbackContact()">Contact Us</button>
-                </div>
-                <div class="feedback-action-group feedback-action-group-center">
-                  <button type="button" class="btn feedback-btn-secondary" onclick="resetFeedbackForm()">Cancel</button>
-                </div>
-                <div class="feedback-action-group feedback-action-group-right">
-                  <button type="button" class="btn feedback-btn-primary" onclick="submitFeedbackIssue()">Send</button>
-                </div>
               </div>
             </div>
           </div>
@@ -19509,16 +19378,6 @@
   <!-- Hidden File Inputs -->
   <input type="file" id="import-file" hidden multiple onchange="handleImport(this)">
   <input type="file" id="import-style-file" hidden accept=".fstemplate,.json,application/json" onchange="handleStyleImport(this)">
-  <script>
-    (() => {
-      try {
-        if (!localStorage.getItem('bible_app_current_theme')) {
-          const themeSelect = document.getElementById('theme-select');
-          if (themeSelect) themeSelect.value = 'dark';
-        }
-      } catch (_) {}
-    })();
-  </script>
   <script src="../js/panel/state-and-storage.js"></script>
   <script src="../js/panel/panel-app-core.js"></script>
   <script src="../js/panel/reference-localization-theme.js"></script>
@@ -19714,15 +19573,19 @@
     }
     body.websocket-mode #sidebar {
       min-width: 160px !important;
-      width: 200px !important;
-      max-width: 240px !important;
+      width: 200px;
+      max-width: 500px !important;
     }
     body.websocket-mode #main {
       min-width: 0 !important;
       width: auto !important;
     }
     body.websocket-mode #sidebar-width-handle {
-      width: 4px !important;
+      width: 12px !important;
+      min-width: 12px !important;
+      flex-basis: 12px !important;
+      cursor: ew-resize;
+      touch-action: none;
     }
     body.websocket-mode #lyric-editor,
     body.websocket-mode #lyric-buttons,

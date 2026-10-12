@@ -78,14 +78,6 @@
       return nav;
     }
 
-    function normalizeFeedbackApiUrl(value) {
-      const normalized = String(value || '').trim();
-      if (!normalized || normalized === BSP_LEGACY_LOCAL_FEEDBACK_API_URL) {
-        return BSP_DEFAULT_FEEDBACK_API_URL;
-      }
-      return normalized;
-    }
-
     function syncAppStateFromUi() {
       if (!appState) appState = buildDefaultAppState();
       const searchInput = document.getElementById('song-search');
@@ -95,7 +87,6 @@
       const isBible = getIsBibleItem(currentItem);
       const selectedSongId = (!isBible && currentItem) ? (currentItem.id || null) : null;
       const settings = getUiSnapshot();
-      settings.feedbackApiUrl = normalizeFeedbackApiUrl(settings.feedbackApiUrl);
       // Sync source order from DOM before persisting
       saveCurrentSourceOrder();
       appState = {
@@ -712,17 +703,6 @@
       });
     })();
 
-    const THEME_ALIAS_MAP = Object.freeze({
-      forest: 'neon-horizon',
-      royal: 'midnight-bloom',
-      daylight: 'paperlight',
-      daylist: 'paperlight'
-    });
-
-    function normalizeThemeId(theme) {
-      return THEME_ALIAS_MAP[theme] || theme;
-    }
-
     function applyUiSnapshot(ui) {
       if (!ui) return;
       loadFocusedWorkspaceControlsFromUi(ui);
@@ -747,14 +727,6 @@
             }))
         : [];
       if (ui.hostMode) setHostMode(ui.hostMode, { silent: true });
-      if (ui.theme) {
-        const themeSelect = document.getElementById('theme-select');
-        const normalizedTheme = normalizeThemeId(ui.theme);
-        if (themeSelect && themeSelect.value !== normalizedTheme) {
-          themeSelect.value = normalizedTheme;
-          handleThemeChange();
-        }
-      }
       if (ui.language) setLanguage(ui.language, { silent: true });
       applySidebarLayoutMode(ui.sidebarLayout || 'layout2', { persist: false });
       applyWorkspaceLayoutMode(ui.workspaceLayoutMode || 'focused', { persist: false });
@@ -3779,10 +3751,29 @@
       }
       restoreSidebarWidth();
       if (hHandle) {
-        let hDrag = false, hStartX = 0, hStartW = 0;
+        let hDrag = false, hStartX = 0, hStartW = 0, hPointerId = null;
+        const moveSidebarWidth = (e) => {
+          if (!hDrag || (hPointerId != null && e.pointerId !== hPointerId)) return;
+          const newW = Math.min(500, Math.max(150, hStartW + e.clientX - hStartX));
+          sidebar.style.width = newW + 'px';
+          sidebar.style.minWidth = newW + 'px';
+          positionSidebarQuickActions();
+        };
+        const finishSidebarWidth = (e) => {
+          if (!hDrag || (e?.pointerId != null && hPointerId !== e.pointerId)) return;
+          const pointerId = hPointerId;
+          hDrag = false;
+          hPointerId = null;
+          sidebar.style.transition = '';
+          safeReleasePointerCapture(hHandle, pointerId);
+          hideDragOverlay();
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          try { localStorage.setItem('sidebarWidth', sidebar.style.width); } catch(e) {}
+        };
         hHandle.addEventListener('pointerdown', (e) => {
           if (mq.matches) return;
-          hDrag = true; hStartX = e.clientX; hStartW = sidebar.offsetWidth;
+          hDrag = true; hPointerId = e.pointerId; hStartX = e.clientX; hStartW = sidebar.offsetWidth;
           sidebar.style.transition = 'none';
           safeSetPointerCapture(hHandle, e.pointerId);
           showDragOverlay('ew-resize');
@@ -3790,35 +3781,38 @@
           document.body.style.userSelect = 'none';
           e.preventDefault(); e.stopPropagation();
         });
-        hHandle.addEventListener('pointermove', (e) => {
-          if (!hDrag) return;
-          const newW = Math.min(500, Math.max(150, hStartW + e.clientX - hStartX));
-          sidebar.style.width = newW + 'px';
-          sidebar.style.minWidth = newW + 'px';
-        });
-        hHandle.addEventListener('pointerup', (e) => {
-          if (!hDrag) return;
-          hDrag = false; sidebar.style.transition = '';
-          safeReleasePointerCapture(hHandle, e.pointerId);
-          hideDragOverlay();
-          document.body.style.cursor = ''; document.body.style.userSelect = '';
-          try { localStorage.setItem('sidebarWidth', sidebar.style.width); } catch(e) {}
-        });
-        hHandle.addEventListener('pointercancel', () => {
-          if (!hDrag) return;
-          hDrag = false; sidebar.style.transition = '';
-          hideDragOverlay();
-          document.body.style.cursor = ''; document.body.style.userSelect = '';
-        });
+        document.addEventListener('pointermove', moveSidebarWidth);
+        document.addEventListener('pointerup', finishSidebarWidth);
+        document.addEventListener('pointercancel', finishSidebarWidth);
+        hHandle.addEventListener('lostpointercapture', finishSidebarWidth);
+        window.addEventListener('blur', finishSidebarWidth);
       }
 
       // === MAIN/LEFT vs DISPLAY SPLIT (desktop, unified across tabs) ===
       restoreUnifiedLeftPanelWidth();
       if (programHandle && main) {
-        let pDrag = false, pStartX = 0, pStartW = 0;
+        let pDrag = false, pStartX = 0, pStartW = 0, pPointerId = null;
+        const moveProgramWidth = (e) => {
+          if (!pDrag || (pPointerId != null && e.pointerId !== pPointerId)) return;
+          applyUnifiedLeftPanelWidth(pStartW + e.clientX - pStartX);
+          positionSidebarQuickActions();
+        };
+        const finishProgramWidth = (e) => {
+          if (!pDrag || (e?.pointerId != null && pPointerId !== e.pointerId)) return;
+          const pointerId = pPointerId;
+          pDrag = false;
+          pPointerId = null;
+          if (leftWorkspace) leftWorkspace.style.transition = '';
+          main.style.transition = '';
+          saveUnifiedLeftPanelWidth();
+          safeReleasePointerCapture(programHandle, pointerId);
+          hideDragOverlay();
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+        };
         programHandle.addEventListener('pointerdown', (e) => {
           if (mq.matches) return;
-          pDrag = true; pStartX = e.clientX; pStartW = getCurrentLeftPanelWidth();
+          pDrag = true; pPointerId = e.pointerId; pStartX = e.clientX; pStartW = getCurrentLeftPanelWidth();
           if (leftWorkspace) leftWorkspace.style.transition = 'none';
           main.style.transition = 'none';
           safeSetPointerCapture(programHandle, e.pointerId);
@@ -3827,28 +3821,11 @@
           document.body.style.userSelect = 'none';
           e.preventDefault(); e.stopPropagation();
         });
-        programHandle.addEventListener('pointermove', (e) => {
-          if (!pDrag) return;
-          applyUnifiedLeftPanelWidth(pStartW + e.clientX - pStartX);
-        });
-        programHandle.addEventListener('pointerup', (e) => {
-          if (!pDrag) return;
-          pDrag = false;
-          if (leftWorkspace) leftWorkspace.style.transition = '';
-          main.style.transition = '';
-          saveUnifiedLeftPanelWidth();
-          safeReleasePointerCapture(programHandle, e.pointerId);
-          hideDragOverlay();
-          document.body.style.cursor = ''; document.body.style.userSelect = '';
-        });
-        programHandle.addEventListener('pointercancel', () => {
-          if (!pDrag) return;
-          pDrag = false;
-          if (leftWorkspace) leftWorkspace.style.transition = '';
-          main.style.transition = '';
-          hideDragOverlay();
-          document.body.style.cursor = ''; document.body.style.userSelect = '';
-        });
+        document.addEventListener('pointermove', moveProgramWidth);
+        document.addEventListener('pointerup', finishProgramWidth);
+        document.addEventListener('pointercancel', finishProgramWidth);
+        programHandle.addEventListener('lostpointercapture', finishProgramWidth);
+        window.addEventListener('blur', finishProgramWidth);
       }
 
       // === TOP vs DOCK SPLIT (desktop) ===
@@ -4070,129 +4047,6 @@
       document.querySelectorAll('.sm-tab-panel').forEach(panel => {
         panel.classList.toggle('active', panel.dataset.smPanel === tabId);
       });
-    }
-
-    let feedbackSuccessOverlayTimer = null;
-
-    function setFeedbackSuccessOverlay(message, opts = {}) {
-      const overlayEl = document.getElementById('feedback-success-overlay');
-      const messageEl = document.getElementById('feedback-success-message');
-      if (!overlayEl || !messageEl) return;
-      if (feedbackSuccessOverlayTimer) {
-        clearTimeout(feedbackSuccessOverlayTimer);
-        feedbackSuccessOverlayTimer = null;
-      }
-      const show = opts.show === true;
-      messageEl.textContent = String(message || '');
-      overlayEl.classList.toggle('visible', show);
-      if (show) {
-        const duration = Math.max(800, Number(opts.durationMs) || 2200);
-        feedbackSuccessOverlayTimer = setTimeout(() => {
-          overlayEl.classList.remove('visible');
-          feedbackSuccessOverlayTimer = null;
-        }, duration);
-      }
-    }
-
-    function setFeedbackStatus(message, opts = {}) {
-      const statusEl = document.getElementById('feedback-status');
-      if (!statusEl) return;
-      if (opts.success === true && !opts.error) {
-        statusEl.textContent = '';
-        statusEl.classList.remove('error', 'success');
-        setFeedbackSuccessOverlay(message, { show: true, durationMs: opts.durationMs });
-        return;
-      }
-      setFeedbackSuccessOverlay('', { show: false });
-      statusEl.textContent = String(message || '');
-      statusEl.classList.toggle('error', opts.error === true);
-      statusEl.classList.remove('success');
-    }
-
-    function resetFeedbackForm(opts = {}) {
-      const input = document.getElementById('feedback-message');
-      if (input) input.value = '';
-      if (opts.clearStatus !== false) setFeedbackStatus('');
-    }
-
-    function openFeedbackContact() {
-      window.open(BSP_CONTACT_URL, '_blank', 'noopener,noreferrer');
-    }
-
-    function getFeedbackApiUrl() {
-      return normalizeFeedbackApiUrl(appState?.settings?.feedbackApiUrl);
-    }
-
-    function buildFeedbackIssueDraft() {
-      const input = document.getElementById('feedback-message');
-      const message = String(input?.value || '').trim();
-      if (!message) {
-        setFeedbackStatus('Enter your feedback before sending.', { error: true });
-        if (input) input.focus();
-        return null;
-      }
-      const firstLine = message.split('\n').find(line => line.trim()) || 'Feedback';
-      const title = `Feedback: ${firstLine.trim().slice(0, 72)}`;
-      const body = [
-        message,
-        '',
-        '---',
-        'Submitted from Scripture Pod Pro',
-        `Host mode: ${getHostMode()}`,
-        `Workspace layout: ${workspaceLayoutMode}`,
-        `Active tab: ${sidebarTab}`,
-        `Timestamp: ${new Date().toISOString()}`
-      ].join('\n');
-      return { title, body };
-    }
-
-    async function submitFeedbackIssue() {
-      const draft = buildFeedbackIssueDraft();
-      if (!draft) return;
-      const endpoint = getFeedbackApiUrl();
-      if (!endpoint) {
-        setFeedbackStatus('Feedback backend is not configured.', { error: true });
-        return;
-      }
-      setFeedbackStatus('Sending feedback...');
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            title: draft.title,
-            body: draft.body,
-            message: draft.body,
-            app: 'Scripture Pod Pro',
-            repoUrl: BSP_GITHUB_REPO_URL,
-            issuesUrl: BSP_GITHUB_ISSUES_URL,
-            context: {
-              hostMode: getHostMode(),
-              workspaceLayout: workspaceLayoutMode,
-              activeTab: sidebarTab,
-              timestamp: new Date().toISOString()
-            }
-          })
-        });
-        let payload = null;
-        try {
-          payload = await response.json();
-        } catch (_) {}
-        if (!response.ok) {
-          const errorMessage = payload && payload.error
-            ? String(payload.error)
-            : `Feedback request failed (${response.status}).`;
-          setFeedbackStatus(errorMessage, { error: true });
-          return;
-        }
-        resetFeedbackForm({ clearStatus: false });
-        setFeedbackStatus('Feedback sent to GitHub.', { success: true, durationMs: 2200 });
-      } catch (error) {
-        const message = error && error.message ? error.message : 'Unable to reach feedback backend.';
-        setFeedbackStatus(message, { error: true });
-      }
     }
 
     /* ---- Footer Status Bar ---- */
@@ -4569,6 +4423,11 @@
 
       if (appState.settings) {
         applyUiSnapshot(appState.settings);
+        if (bgSettingsValue && bgSettingsUpdatedAt >= stateUpdatedAt) {
+          const settingsTab = getEffectiveSettingsTargetTab();
+          const profiles = ensureProjectionSettingsProfiles();
+          applyBackgroundSnapshot(profiles[settingsTab], bgSettingsValue);
+        }
       } else {
         applySidebarLayoutMode('layout2', { persist: false });
         applyWorkspaceLayoutMode('focused', { persist: false });
@@ -4753,8 +4612,6 @@
       _restoreAudioBufferSizeSetting();
       bindHostModeInput();
       applyObsCompatibilityUi();
-      // Ensure CSS vars match the currently selected theme on cold startup.
-      handleThemeChange();
       applyHostModeUi();
       refreshLocalServerInfo().catch(() => {});
       // Preload camera/audio device lists so source properties open instantly.

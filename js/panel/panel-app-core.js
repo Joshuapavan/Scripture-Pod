@@ -3,11 +3,6 @@
     const HOST_MODE_OBS = 'obs';
     const HOST_MODE_WEBSOCKET = 'websocket';
     const HOST_MODE_STANDALONE = 'standalone';
-    const BSP_GITHUB_REPO_URL = 'https://github.com/Joshuapavan/Scripture-Pod-V2';
-    const BSP_GITHUB_ISSUES_URL = `${BSP_GITHUB_REPO_URL}/issues`;
-    const BSP_CONTACT_URL = '';
-    const BSP_LEGACY_LOCAL_FEEDBACK_API_URL = 'http://127.0.0.1:8787/api/github-feedback';
-    const BSP_DEFAULT_FEEDBACK_API_URL = '';
     const VMIX_OUTPUT_MODE_DEDICATED = 'dedicated-input';
     const VMIX_OUTPUT_MODE_OVERLAY = 'overlay';
     const VMIX_OUTPUT_MODE_MANUAL = 'manual';
