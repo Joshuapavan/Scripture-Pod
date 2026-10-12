@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Scripture Pod Pro Preview</title>
+  <title>Scripture Pod Preview</title>
   <style>
     :root {
       --bg: #0b0d12;
@@ -230,12 +230,12 @@
   <main class="studio">
     <div class="camera-notch" aria-hidden="true"></div>
 
-    <section class="screen" aria-label="Scripture Pod Pro preview studio">
+    <section class="screen" aria-label="Scripture Pod preview studio">
       <div class="pane panel-pane">
         <iframe
           id="panel-frame"
-          src="./Bible%20Song%20Pro%20panel.html"
-          title="Scripture Pod Pro control panel"
+          src="UI/scripture-pod-panel.html"
+          title="Scripture Pod control panel"
           loading="eager"></iframe>
       </div>
 
@@ -246,8 +246,8 @@
           <div class="display-shell">
             <iframe
               id="display-frame"
-              src="./Scripture Pod Pro_display.html"
-              title="Scripture Pod Pro live display"
+              src="UI/scripture-pod-display.html"
+              title="Scripture Pod live display"
               loading="eager"></iframe>
           </div>
         </div>
@@ -255,12 +255,12 @@
       </div>
     </section>
 
-    <footer class="base">Scripture Pod Pro Preview</footer>
+    <footer class="base">Scripture Pod Preview</footer>
   </main>
 
   <script>
-    const PANEL_URL = "./Bible%20Song%20Pro%20panel.html";
-    const DISPLAY_URL = "./Scripture Pod Pro_display.html";
+    const PANEL_URL = "UI/scripture-pod-panel.html";
+    const DISPLAY_URL = "UI/scripture-pod-display.html";
     const panelFrame = document.getElementById("panel-frame");
     const displayFrame = document.getElementById("display-frame");
     const displayShell = document.querySelector(".display-shell");

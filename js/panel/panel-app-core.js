@@ -156,7 +156,7 @@
       port: '8088',
       password: '',
       displayHost: '',
-      outputInputName: 'Scripture Pod Pro Output',
+      outputInputName: 'Scripture Pod Output',
       outputInputKey: '',
       outputMode: VMIX_OUTPUT_MODE_DEDICATED,
       overlayChannel: '1',
