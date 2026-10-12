@@ -2,6 +2,7 @@
 
 node_modules/
 dist/
+/mobile/www/
 
 .qodo/
 
@@ -10,3 +11,29 @@ dist/
 
 electron/resources/win-iconset/
 Thumbs.db
+
+# Android generated output and local configuration
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+android/.idea/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/capacitor-cordova-android-plugins/
+
+# iOS generated output and local configuration
+ios/build/
+ios/DerivedData/
+ios/App/Pods/
+ios/App/build/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/App/capacitor.plugins.json
+ios/App/CapApp-SPM/Package.swift
+ios/capacitor-cordova-ios-plugins/
+ios/App/*.xcworkspace/xcuserdata/
+ios/App/*.xcodeproj/xcuserdata/
+ios/App/*.xcuserstate
