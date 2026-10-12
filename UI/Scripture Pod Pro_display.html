@@ -2765,7 +2765,10 @@
           else {
             active.addEventListener('canplay', function onCanPlay() {
               active.removeEventListener('canplay', onCanPlay);
+              if (videoStateGenerations.get(videoEl) !== generation) return;
               reveal();
+              const retry = active.play();
+              if (retry && retry.catch) retry.catch(() => {});
             });
           }
         } else {
@@ -2800,7 +2803,10 @@
           } else {
             videoEl.addEventListener('canplay', function onCanPlay() {
               videoEl.removeEventListener('canplay', onCanPlay);
+              if (videoStateGenerations.get(videoEl) !== generation) return;
               reveal();
+              const retry = videoEl.play();
+              if (retry && retry.catch) retry.catch(() => {});
             });
           }
           const p = videoEl.play();

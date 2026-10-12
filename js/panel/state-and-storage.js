@@ -811,6 +811,8 @@
         projectionSettingsProfilesByTab[tab] = normalizeProjectionSettingsSnapshot(source[tab], projectionSettingsProfilesByTab[tab]);
       });
       settingsTargetTab = normalizeSettingsTargetTab(ui?.settingsTargetTab);
+      const activeProfileTab = getEffectiveSettingsTargetTab();
+      applyBackgroundSnapshot(projectionSettingsProfilesByTab[activeProfileTab], ui);
       return projectionSettingsProfilesByTab;
     }
 

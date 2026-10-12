@@ -625,6 +625,19 @@
       const transitionType = ui.transitionType;
       const transitionDuration = getCurrentTransitionDuration();
       const animateBgTransitions = ui.animateBgTransitions;
+      const outputBackgroundMedia = bgEnabled
+        ? (bgType === 'video' ? bgVideo : (bgType === 'image' ? bgImage : null))
+        : null;
+      if (window.BSPDesktop && typeof window.BSPDesktop.cacheBackgroundMedia === 'function' &&
+          typeof outputBackgroundMedia === 'string' &&
+          outputBackgroundMedia.startsWith('data:') &&
+          !backgroundMediaUrlCache.has(outputBackgroundMedia)) {
+        cacheBackgroundMediaForOutput(outputBackgroundMedia).catch((error) => {
+          console.error('Live background registration failed', error);
+          showToast('Background media could not be prepared for display');
+        });
+        return false;
+      }
       const textXRaw = 0;
       const textYRaw = 1080;
       const padLRFullRaw = Number.isFinite(ui.padLRFull) ? ui.padLRFull : (Number.isFinite(ui.padLR) ? ui.padLR : 5);
