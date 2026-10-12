@@ -57,8 +57,8 @@ function getLocalServerInfo() {
     relayPort: LOCAL_RELAY_PORT,
     preferredHost,
     availableHosts: ['127.0.0.1', ...addresses],
-    displayPath: '/UI/scripture_pod_display.html',
-    displayUrl: `http://${preferredHost}:${LOCAL_HTTP_PORT}/UI/scripture_pod_display.html?hostMode=websocket&relay=ws://${preferredHost}:${LOCAL_RELAY_PORT}`,
+    displayPath: '/UI/scripture-pod-display.html',
+    displayUrl: `http://${preferredHost}:${LOCAL_HTTP_PORT}/UI/scripture-pod-display.html?hostMode=websocket&relay=ws://${preferredHost}:${LOCAL_RELAY_PORT}`,
     relayUrl: `ws://${preferredHost}:${LOCAL_RELAY_PORT}`
   };
 }
@@ -124,7 +124,7 @@ function startHttpServer() {
       serveBackgroundMedia(req, res, mediaMatch[1]);
       return;
     }
-    const pathname = decodeURIComponent(url.pathname === '/' ? '/UI/scripture_pod_display.html' : url.pathname);
+    const pathname = decodeURIComponent(url.pathname === '/' ? '/UI/scripture-pod-display.html' : url.pathname);
     const target = resolveAppFile(pathname.replace(/^\/+/, ''));
     if (!target.startsWith(path.join(__dirname, '..'))) {
       res.writeHead(403);
@@ -192,7 +192,7 @@ function createMainWindow() {
     }
   });
 
-  mainWindow.loadFile(resolveAppFile(path.join('UI', 'scripture_pod_panel.html')));
+  mainWindow.loadFile(resolveAppFile(path.join('UI', 'scripture-pod-panel.html')));
   mainWindow.on('closed', () => {
     mainWindow = null;
     if (outputWindow && !outputWindow.isDestroyed()) {
@@ -237,7 +237,7 @@ function createOutputWindow(options = {}) {
     }
   });
 
-  outputWindow.loadFile(resolveAppFile(path.join('UI', 'scripture_pod_display.html')), {
+  outputWindow.loadFile(resolveAppFile(path.join('UI', 'scripture-pod-display.html')), {
     query: {
       standalone: '1',
       hostMode: 'standalone'

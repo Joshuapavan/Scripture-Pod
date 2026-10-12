@@ -27,7 +27,7 @@ fs.writeFileSync(path.join(webRoot, 'index.html'), `<!doctype html>
   <title>Scripture Pod</title>
 </head>
 <body>
-  <script>location.replace('UI/Scripture%20Pod%20Pro%20Panel.html' + location.search + location.hash);</script>
+  <script>location.replace('UI/scripture-pod-panel.html' + location.search + location.hash);</script>
 </body>
 </html>
 `, 'utf8');

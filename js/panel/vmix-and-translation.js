@@ -112,7 +112,7 @@
     }
 
     function getVmixDisplayUrl() {
-      const displayPath = localServerInfo?.displayPath || '/UI/Scripture%20Pod%20Pro_display.html';
+      const displayPath = localServerInfo?.displayPath || '/UI/scripture-pod-display.html';
       if (localServerInfo) {
         const selectedHost = String(vmixState.displayHost || '').trim() || localServerInfo.preferredHost || '127.0.0.1';
         return `http://${selectedHost}:${localServerInfo.httpPort}${displayPath}?hostMode=vmix&relay=ws://${selectedHost}:${localServerInfo.relayPort}`;

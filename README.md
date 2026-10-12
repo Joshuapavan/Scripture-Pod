@@ -27,8 +27,8 @@ npm start
 
 You can open the following files directly in a modern browser for quick testing (not packaged):
 
-- `UI/scripture_pod_panel.html` — control panel UI
-- `UI/scripture_pod_display.html` — output/display window
+- `UI/scripture-pod-panel.html` — control panel UI
+- `UI/scripture-pod-display.html` — output/display window
 
 Notes:
 
@@ -151,8 +151,8 @@ Notes:
 
 ## Project layout (important files)
 
-- `UI/scripture_pod_panel.html` — main control panel
-- `UI/scripture_pod_display.html` — renderer/display
+- `UI/scripture-pod-panel.html` — main control panel
+- `UI/scripture-pod-display.html` — renderer/display
 - `js/` — application JavaScript modules used by the panel
 - `electron/` — Electron bootstrap (main, preload, helpers)
 - `electron/resources/` — app icon assets for macOS, Windows, and Linux
