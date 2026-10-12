@@ -15580,26 +15580,6 @@
     }
     ::-webkit-scrollbar-corner { background: transparent; }
 
-    /* GPU compositing hints for animated elements */
-    .ab-btn,
-    .tab,
-    .song-item,
-    .lyric-btn,
-    .btn,
-    .btn-live,
-    .add-btn,
-    .quick-add,
-    .seg-btn,
-    .t-btn,
-    .studio-pane-footer-btn,
-    #btn-output-go-live,
-    #btn-output-go-live-panel,
-    #btn-output-end-live {
-      will-change: transform;
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-    }
-
     /* Content-visibility for offscreen studio dock panes */
     .studio-pane-body {
       content-visibility: auto;
@@ -15614,14 +15594,6 @@
     #program-display-stage {
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
-    }
-
-    /* Reduce paint for transforms — only animate composited props */
-    .lyric-btn,
-    .song-item,
-    .ab-btn,
-    .modal-content {
-      transform: translateZ(0);
     }
 
     /* Selection color */
@@ -15644,36 +15616,6 @@
     }
 
     /* ── Broadcast desk visual system ── */
-    :root {
-      --bg-dark: #0b0e12;
-      --bg-panel: #12171d;
-      --panel-content-bg: #171e26;
-      --header-toolbar-bg: #0d1217;
-      --body-bg: #080b0f;
-      --activity-bar-bg: #0d1217;
-      --studio-dock-bg: #10161c;
-      --studio-pane-bg: #111820;
-      --program-panel-bg: #080b0f;
-      --footer-bar-bg: #0d1217;
-      --text: #f4f1e9;
-      --text-secondary: #a4adb5;
-      --text-tertiary: #69737d;
-      --border: rgba(229, 235, 239, 0.10);
-      --border-elevated: rgba(229, 235, 239, 0.18);
-      --accent: #f2a65a;
-      --accent-light: #ffd08a;
-      --accent-dark: #c97832;
-      --tab-active-color: #f2a65a;
-      --success: #59d39b;
-      --warning: #f5ca67;
-      --danger: #f27878;
-      --radius-sm: 7px;
-      --radius-md: 11px;
-      --radius-lg: 16px;
-      --radius-xl: 22px;
-      --body-radial: radial-gradient(1100px 680px at 72% -20%, rgba(242, 166, 90, 0.12), transparent 62%), radial-gradient(900px 680px at 12% 100%, rgba(72, 154, 146, 0.08), transparent 65%);
-    }
-
     html, body {
       background: var(--body-bg) !important;
       color: var(--text) !important;
@@ -16100,45 +16042,89 @@
       --success: #34d399;
       --warning: #facc15;
       --danger: #fb7185;
+      --surface-raised: #111113;
+      --surface-control: #18181b;
+      --control-hover: #222226;
+      --control-min-height: 36px;
+      --radius-sm: 5px;
+      --radius-md: 8px;
+      --radius-lg: 10px;
+      --radius-xl: 14px;
       --body-radial: radial-gradient(900px 560px at 78% -14%, rgba(34, 211, 238, 0.07), transparent 62%), radial-gradient(760px 520px at 4% 106%, rgba(168, 85, 247, 0.045), transparent 64%);
     }
 
     html, body { background: #09090b !important; color: #fafafa !important; }
-    body { background-image: var(--body-radial) !important; font-family: "Avenir Next", "Helvetica Neue", sans-serif; }
+    body { background-image: var(--body-radial) !important; font-family: "Avenir Next", "Segoe UI", sans-serif; }
     #app-topbar {
-      height: 52px;
-      background: rgba(9, 9, 11, 0.92) !important;
+      height: 58px;
+      padding: 0 26px;
+      justify-content: flex-start;
+      background: rgba(9, 9, 11, 0.97) !important;
       border-bottom: 1px solid #27272a !important;
-      box-shadow: none;
+      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.22);
     }
-    #app-topbar::after { content: "CONTROL ROOM"; color: #71717a; letter-spacing: 0.16em; }
-    #app-topbar-title { font-family: "Avenir Next", sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 0.02em; }
-    #app-topbar-logo { width: 26px; height: 26px; border-radius: 7px; box-shadow: 0 0 0 1px #3f3f46; }
+    #app-topbar::after { content: "LIVE PRESENTATION"; left: auto; right: 26px; color: #71717a; font-size: 10px; font-weight: 600; letter-spacing: 0; }
+    #app-topbar-title { position: relative; left: auto; gap: 12px; font-family: "Avenir Next", "Segoe UI", sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 0; }
+    #app-topbar-title::after { content: "Scripture Pod"; }
+    #app-topbar-logo { width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 0 0 1px #3f3f46; }
+    #app-body-row { background: transparent !important; }
     #activity-bar { background: #0f0f11 !important; border-right: 1px solid #27272a !important; }
-    .ab-btn { border-radius: 8px; color: #71717a; }
+    .ab-btn { width: 40px; height: 40px; border-radius: 8px; color: #71717a; }
     .ab-btn:hover { color: #fafafa; background: #18181b; }
-    .ab-btn.active { color: #09090b; background: #fafafa; box-shadow: 0 4px 12px rgba(255,255,255,0.08); }
+    .ab-btn.active { color: #fafafa; background: #18181b; box-shadow: inset 0 0 0 1px #3f3f46; }
     .ab-btn.active::before { background: #22d3ee; }
-    #sidebar { background: rgba(17, 17, 19, 0.98) !important; border-right-color: #27272a !important; box-shadow: 12px 0 28px rgba(0,0,0,0.18); }
-    .sidebar-tabs { background: #111113; border-bottom-color: #27272a; }
-    .tab { color: #71717a; border-radius: 7px 7px 0 0; }
+    #left-workspace { background: transparent !important; }
+    #main { background: #09090b !important; }
+    #sidebar { width: 280px; min-width: 280px; background: rgba(17, 17, 19, 0.99) !important; border-right-color: #27272a !important; box-shadow: 18px 0 38px rgba(0,0,0,0.24); }
+    body.sidebar-layout-docked-active #sidebar.sidebar-open { width: 280px; min-width: 280px; }
+    .sidebar-tabs { padding: 12px 12px 10px; gap: 5px; background: #111113; border-bottom-color: #27272a; }
+    .tab { min-height: 34px; border-radius: 6px; color: #71717a; font-size: 11px; letter-spacing: 0; }
     .tab:hover { color: #fafafa; background: #18181b; }
-    .tab.active { color: #fafafa; background: #18181b; }
+    .tab.active { color: #fafafa; background: #18181b; box-shadow: inset 0 0 0 1px #3f3f46; }
     .tab.active::after { background: #22d3ee; }
-    .search-container { background: #111113; border-bottom-color: #27272a; }
-    #song-search { border-color: #27272a; background: #09090b; }
-    #song-search:focus { border-color: #52525b; box-shadow: 0 0 0 3px rgba(161,161,170,0.12); }
-    .song-item { border-radius: 7px; color: #a1a1aa; }
+    .search-container { padding: 14px 14px 12px; background: #111113; border-bottom-color: #27272a; }
+    #song-search, #nav-mirror-search { min-height: 38px; border-color: #27272a; background: #09090b; border-radius: 7px; }
+    #song-search:focus, #nav-mirror-search:focus { border-color: #52525b; box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.14); }
+    .song-item { min-height: 40px; border-radius: 7px; color: #a1a1aa; }
     .song-item:hover { background: #18181b !important; border-color: #3f3f46; transform: none; }
-    .song-item.active { color: #fafafa; background: #27272a !important; border-color: #52525b; box-shadow: inset 2px 0 0 #22d3ee; }
+    .song-item.active { color: #fafafa; background: #1b1b1f !important; border-color: #3f3f46; box-shadow: inset 2px 0 0 #22d3ee; }
+    .header-toolbar { min-height: 62px; padding: 10px 16px; gap: 8px; align-items: center; background: rgba(17, 17, 19, 0.96); border-bottom-color: #27272a; }
+    .toolbar-mode-switch { padding: 3px; gap: 2px; border-radius: 8px; border-color: #27272a; background: #09090b; }
+    .toolbar-mode-switch .t-btn { min-width: 76px; min-height: 34px; border-radius: 6px !important; }
+    .header-toolbar .toolbar-icon-btn { width: 38px; min-width: 38px; height: 38px; padding: 0 !important; border-radius: 8px !important; }
+    .header-toolbar .toolbar-icon-btn:hover { border-color: #52525b !important; background: #222226 !important; }
+    .header-toolbar .add-btn { width: 38px; height: 38px; border-radius: 8px; background: #fafafa; color: #09090b; }
+    .header-toolbar .add-btn:hover { background: #e4e4e7; color: #09090b; }
+    .header-toolbar .add-btn svg,
+    .header-toolbar .toolbar-icon-btn svg { width: 18px; height: 18px; stroke-width: 2; }
+    .header-toolbar #btn-bible-tool svg { width: 18px; height: 18px; }
+    .bible-search-tool-btn svg,
+    .nav-mirror-search-tool svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    #main-workspace { background: #09090b !important; }
+    #focused-editor-banner { min-height: 52px; padding: 10px 18px; border-bottom: 1px solid #27272a; background: linear-gradient(90deg, rgba(24,24,27,0.82), rgba(9,9,11,0.3)); }
+    #focused-editor-banner-title { color: #fafafa; font-size: 13px; font-weight: 650; }
+    #focused-editor-banner-subtitle { color: #a1a1aa; font-size: 12px; }
+    #editor-container { background: #09090b !important; }
+    #lyric-buttons { padding: 16px 18px !important; background: transparent !important; }
+    .lyric-btn { border-radius: 7px !important; transition: border-color 140ms ease, background 140ms ease, color 140ms ease; }
     #program-display-panel { background: #09090b !important; border-bottom-color: #27272a !important; }
     #program-display-stage { background: radial-gradient(circle at 50% 0%, rgba(34,211,238,0.07), transparent 38%), #09090b !important; }
-    #program-display-shell { border-color: #3f3f46 !important; border-radius: 10px !important; box-shadow: 0 20px 60px rgba(0,0,0,0.44), 0 0 0 1px rgba(255,255,255,0.03) !important; }
-    #program-display-shell::before { color: #67e8f9; border-color: rgba(34,211,238,0.35); background: rgba(8, 25, 30, 0.72); }
+    #program-display-shell { border-color: #3f3f46 !important; border-radius: 8px !important; box-shadow: 0 20px 54px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.03) !important; }
+    #program-display-shell::before { color: #67e8f9; border-color: rgba(34,211,238,0.35); background: rgba(8, 25, 30, 0.72); letter-spacing: 0; }
     #controls-panel { background: #111113 !important; border-top-color: #27272a !important; }
     #controls-panel-body { padding: 12px 14px !important; }
-    .btn, .sp-btn, .ctrl-action-btn, .studio-pane-footer-btn { border-radius: 7px !important; border-color: #3f3f46 !important; background: #18181b !important; color: #d4d4d8 !important; }
+    .live-controls { gap: 10px; padding: 12px 16px 14px; background: #111113; border-top-color: #27272a; }
+    .nav-row { grid-template-columns: auto auto minmax(0, 1fr) auto auto; gap: 8px; align-items: center; }
+    .nav-row > .btn:first-child { min-height: 36px; }
+    #btn-project-live { min-height: 38px; }
+    #nav-mirror-search { min-width: 0 !important; }
+    .main-panel-stacks { display: grid !important; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px !important; align-items: stretch !important; border-top: 1px solid #27272a !important; padding-top: 10px !important; }
+    .main-panel-stacks > div { min-width: 0 !important; padding: 10px; border: 1px solid #27272a; border-radius: 8px; background: #0d0d10; }
+    .main-panel-stacks > div > span:first-child { min-height: 16px; color: #a1a1aa !important; font-size: 10px !important; font-weight: 600; }
+    .main-panel-stacks .segmented-picker { width: 100%; }
+    .btn, .sp-btn, .ctrl-action-btn, .studio-pane-footer-btn { border-radius: 6px !important; border-color: #3f3f46 !important; background: #18181b !important; color: #d4d4d8 !important; }
     .btn:hover, .sp-btn:hover, .ctrl-action-btn:hover, .studio-pane-footer-btn:hover { background: #27272a !important; border-color: #52525b !important; color: #fafafa !important; transform: none; }
+    .btn:disabled, .sp-btn:disabled, .ctrl-action-btn:disabled { opacity: 0.42; }
     #btn-project-live { background: #b91c1c !important; border-color: rgba(239, 68, 68, 0.55) !important; color: #fff !important; }
     #btn-project-live:hover { background: #dc2626 !important; }
     #btn-project-live.live-active { background: #16a34a !important; border-color: rgba(34, 197, 94, 0.65) !important; color: #fff !important; }
@@ -16146,15 +16132,20 @@
     #btn-output-go-live, #btn-output-go-live-panel { background: #fafafa !important; border-color: #fafafa !important; color: #18181b !important; box-shadow: 0 6px 16px rgba(255,255,255,0.08); }
     #btn-output-end-live { background: rgba(244,63,94,0.12) !important; border-color: rgba(251,113,133,0.45) !important; color: #fda4af !important; }
     #page-nav-bar { background: #09090b !important; border-top-color: #27272a !important; }
-    #page-nav-bar .page-nav-btn { border-radius: 7px; color: #71717a; }
+    #page-nav-bar .page-nav-btn { border-radius: 6px; color: #71717a; }
     #page-nav-bar .page-nav-btn:hover { color: #fafafa; background: #18181b; }
     #page-nav-bar .page-nav-btn.active { color: #18181b; background: #fafafa; box-shadow: none; }
     #footer-bar { background: #09090b !important; border-top-color: #27272a !important; color: #71717a !important; }
-    input, select, textarea { border-radius: 7px !important; border-color: #27272a !important; background-color: #09090b !important; color: #fafafa !important; }
-    input:focus, select:focus, textarea:focus { border-color: #52525b !important; box-shadow: 0 0 0 3px rgba(161,161,170,0.12) !important; }
-    .seg-btn, .t-btn { border-radius: 7px !important; border-color: #27272a !important; background: #18181b !important; color: #a1a1aa !important; }
+    input, select, textarea { border-radius: 6px !important; border-color: #27272a !important; background-color: #09090b !important; color: #fafafa !important; }
+    input:focus, select:focus, textarea:focus { border-color: #52525b !important; box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.14) !important; }
+    input[type="checkbox"], input[type="radio"], input[type="range"] { accent-color: #22d3ee; }
+    input[type="range"] { background: transparent !important; }
+    input[type="color"] { background: transparent !important; }
+    .segmented-picker { padding: 3px; border: 1px solid #27272a; border-radius: 7px; background: #09090b; }
+    .seg-btn, .t-btn { border-radius: 5px !important; border-color: #27272a !important; background: #18181b !important; color: #a1a1aa !important; }
     .seg-btn.active, .t-btn.active { background: #fafafa !important; border-color: #fafafa !important; color: #18181b !important; }
-    .section-label, .ctrl-section-title, .studio-pane-title { color: #a1a1aa !important; letter-spacing: 0.10em !important; }
+    .section-label, .ctrl-section-title, .studio-pane-title { color: #a1a1aa !important; letter-spacing: 0 !important; }
+    :focus-visible { outline: 2px solid #22d3ee !important; outline-offset: 2px; box-shadow: none !important; }
     ::selection { background: rgba(34,211,238,0.25); color: #fff; }
 
     #settingsModal .modal-content {
@@ -16265,6 +16256,35 @@
     }
     #settingsModal .feedback-note a { color: #fafafa; }
 
+    @media (max-width: 520px) {
+      #app-topbar { height: 50px; padding: 0 14px; }
+      #app-topbar-title { left: auto; }
+      #app-topbar-logo { width: 27px; height: 27px; }
+      body.sidebar-layout-docked-active #left-workspace,
+      body.sidebar-layout-docked-active #workspace-top,
+      body.sidebar-layout-docked-active #main { min-width: 0 !important; width: 100% !important; }
+      body.sidebar-layout-docked-active #sidebar { position: fixed !important; left: 0 !important; top: 50px !important; height: calc(100% - 50px) !important; z-index: 20000 !important; }
+      body.sidebar-layout-docked-active #sidebar:not(.sidebar-open) { transform: translateX(calc(-100% - 12px)) !important; opacity: 0; pointer-events: none; }
+      body.sidebar-layout-docked-active #sidebar.sidebar-open { transform: translateX(0) !important; opacity: 1; pointer-events: auto; }
+      body.sidebar-layout-docked-active #sidebar-width-handle { display: none !important; }
+      .header-toolbar { min-height: 54px; gap: 6px; padding: 8px !important; }
+      .header-toolbar .toolbar-icon-btn, .header-toolbar .add-btn { width: 34px; min-width: 34px; height: 34px; }
+      .toolbar-mode-switch .t-btn { min-width: 64px; min-height: 32px; }
+      .live-controls { padding: 9px !important; }
+      .nav-row { grid-template-columns: auto minmax(0, 1fr) 36px 36px; grid-template-rows: auto auto; gap: 6px; }
+      .nav-row > .btn:first-child { padding: 0 8px !important; }
+      .nav-row > .btn:first-child { grid-column: 1; grid-row: 1; }
+      .nav-row > #btn-project-live { grid-column: 2 / 5; grid-row: 1; min-width: 0 !important; padding: 0 9px !important; font-size: 11px !important; }
+      .nav-row > div { grid-column: 1 / 3; grid-row: 2; min-width: 0; }
+      .nav-row > #btn-prev { grid-column: 3; grid-row: 2; }
+      .nav-row > #btn-next { grid-column: 4; grid-row: 2; }
+      .main-panel-stacks { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px !important; padding-top: 8px !important; }
+      .main-panel-stacks > div { padding: 8px; }
+      #controls-panel-body { padding: 8px !important; }
+      #focused-editor-banner { min-height: 46px; padding: 8px 12px; }
+      #lyric-buttons { padding: 10px !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -16302,8 +16322,8 @@
 
       <div class="search-container">
         <input type="text" id="song-search" placeholder="Search lyrics..." data-i18n-placeholder="ui_search_songs" oninput="handleSearch();_updateAutocomplete()" autocomplete="off">
-        <button type="button" id="bible-ref-pin-current" class="bible-search-tool-btn" title="Pin current reference" data-i18n-title="ui_pin_current_reference">P</button>
-        <button type="button" id="bible-ref-history-btn" class="bible-search-tool-btn" title="Pinned and recent references" data-i18n-title="ui_pinned_recent_references">R</button>
+        <button type="button" id="bible-ref-pin-current" class="bible-search-tool-btn" title="Pin current reference" data-i18n-title="ui_pin_current_reference" aria-label="Pin current reference" data-i18n-aria-label="ui_pin_current_reference"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+        <button type="button" id="bible-ref-history-btn" class="bible-search-tool-btn" title="Pinned and recent references" data-i18n-title="ui_pinned_recent_references" aria-label="Pinned and recent references" data-i18n-aria-label="ui_pinned_recent_references"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></button>
         <div id="search-autocomplete"></div>
         <div id="bible-ref-picker"></div>
       </div>
@@ -16329,13 +16349,13 @@
 
     <div id="main">
       <div class="header-toolbar">
-        <button class="add-btn" onclick="openModal('newSongModal')">+</button>
+        <button type="button" class="add-btn" title="New song" aria-label="New song" onclick="openModal('newSongModal')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
         <div class="toolbar-mode-switch">
           <button class="t-btn" id="mode-text" onclick="setEditorMode('text')"><span data-i18n="ui_mode_text">Text</span></button>
           <button class="t-btn active" id="mode-btn" onclick="setEditorMode('btn')"><span data-i18n="ui_mode_buttons">Buttons</span></button>
         </div>
         <button class="btn toolbar-icon-btn" id="btn-import" onclick="triggerImport()" title="Import" data-i18n-title="common_import"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
-        <button class="btn toolbar-icon-btn" id="btn-preset" style="position:relative" onclick="togglePresetPopover()" title="Animation" data-i18n-title="ui_animation"><span style="font-family:'Georgia',serif;font-style:italic;font-size:16px;font-weight:900;line-height:1">fx</span></button>
+        <button class="btn toolbar-icon-btn" id="btn-preset" style="position:relative" onclick="togglePresetPopover()" title="Animation" data-i18n-title="ui_animation"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Z"/><path d="m19 14 1.1 3.1L23 18l-2.9 1-1.1 3-1-3-3-1 3-1 1-3Z"/></svg></button>
         <div class="annotate-wrap">
           <button class="btn toolbar-icon-btn" id="btn-annotate" title="Annotate" data-i18n-title="ui_annotate">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:block">
@@ -16681,8 +16701,8 @@
           <button class="btn btn-live" id="btn-project-live" style="white-space:nowrap;padding:0 14px;min-width:126px" onclick="projectLive(true)"><span data-i18n="common_project_live">Project Live</span></button>
           <div style="position:relative;display:flex;align-items:center;min-width:0">
             <input type="text" id="nav-mirror-search" placeholder="Search..." data-i18n-placeholder="ui_search_generic" autocomplete="off" style="width:100%;background:var(--panel-content-bg);border:1px solid var(--border);color:var(--text);padding:8px 64px 8px 12px;border-radius:8px;font-size:12px;font-family:inherit;box-sizing:border-box">
-            <button type="button" id="nav-mirror-ref-pin-current" class="nav-mirror-search-tool" title="Pin current reference" data-i18n-title="ui_pin_current_reference">P</button>
-            <button type="button" id="nav-mirror-ref-history-btn" class="nav-mirror-search-tool" title="Pinned and recent references" data-i18n-title="ui_pinned_recent_references">R</button>
+            <button type="button" id="nav-mirror-ref-pin-current" class="nav-mirror-search-tool" title="Pin current reference" data-i18n-title="ui_pin_current_reference" aria-label="Pin current reference" data-i18n-aria-label="ui_pin_current_reference"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+            <button type="button" id="nav-mirror-ref-history-btn" class="nav-mirror-search-tool" title="Pinned and recent references" data-i18n-title="ui_pinned_recent_references" aria-label="Pinned and recent references" data-i18n-aria-label="ui_pinned_recent_references"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></button>
             <div id="nav-mirror-bible-ref-picker"></div>
             <div id="nav-mirror-results"></div>
           </div>

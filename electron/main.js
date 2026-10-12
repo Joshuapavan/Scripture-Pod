@@ -57,8 +57,8 @@ function getLocalServerInfo() {
     relayPort: LOCAL_RELAY_PORT,
     preferredHost,
     availableHosts: ['127.0.0.1', ...addresses],
-    displayPath: '/UI/Scripture%20Pod%20Pro_display.html',
-    displayUrl: `http://${preferredHost}:${LOCAL_HTTP_PORT}/UI/Scripture%20Pod%20Pro_display.html?hostMode=websocket&relay=ws://${preferredHost}:${LOCAL_RELAY_PORT}`,
+    displayPath: '/UI/scripture-pod-display.html',
+    displayUrl: `http://${preferredHost}:${LOCAL_HTTP_PORT}/UI/scripture-pod-display.html?hostMode=websocket&relay=ws://${preferredHost}:${LOCAL_RELAY_PORT}`,
     relayUrl: `ws://${preferredHost}:${LOCAL_RELAY_PORT}`
   };
 }
@@ -66,7 +66,7 @@ function getLocalServerInfo() {
 function logDisplayUrlWhenReady() {
   if (displayUrlLogged || !httpServerReady || !relayServerReady) return;
   displayUrlLogged = true;
-  console.log(`Scripture Pod Pro display URL: ${getLocalServerInfo().displayUrl}`);
+  console.log(`Scripture Pod display URL: ${getLocalServerInfo().displayUrl}`);
 }
 
 async function serveBackgroundMedia(req, res, id) {
@@ -124,7 +124,7 @@ function startHttpServer() {
       serveBackgroundMedia(req, res, mediaMatch[1]);
       return;
     }
-    const pathname = decodeURIComponent(url.pathname === '/' ? '/UI/Scripture%20Pod%20Pro_display.html' : url.pathname);
+    const pathname = decodeURIComponent(url.pathname === '/' ? '/UI/scripture-pod-display.html' : url.pathname);
     const target = resolveAppFile(pathname.replace(/^\/+/, ''));
     if (!target.startsWith(path.join(__dirname, '..'))) {
       res.writeHead(403);
@@ -183,7 +183,7 @@ function createMainWindow() {
     minWidth: 560,
     minHeight: 760,
     backgroundColor: '#101318',
-    title: 'Scripture Pod Pro',
+    title: 'Scripture Pod',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -192,7 +192,7 @@ function createMainWindow() {
     }
   });
 
-  mainWindow.loadFile(resolveAppFile(path.join('UI', 'Scripture Pod Pro Panel.html')));
+  mainWindow.loadFile(resolveAppFile(path.join('UI', 'scripture-pod-panel.html')));
   mainWindow.on('closed', () => {
     mainWindow = null;
     if (outputWindow && !outputWindow.isDestroyed()) {
@@ -237,7 +237,7 @@ function createOutputWindow(options = {}) {
     }
   });
 
-  outputWindow.loadFile(resolveAppFile(path.join('UI', 'Scripture Pod Pro_display.html')), {
+  outputWindow.loadFile(resolveAppFile(path.join('UI', 'scripture-pod-display.html')), {
     query: {
       standalone: '1',
       hostMode: 'standalone'

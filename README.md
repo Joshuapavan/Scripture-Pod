@@ -1,6 +1,6 @@
-# Scripture Pod Pro
+# Scripture Pod
 
-This repository contains the control Panel and Display for Scripture Pod Pro (a Bible / lyrics projection tool). It can be run in-browser or as an Electron desktop app.
+This repository contains the control Panel and Display for Scripture Pod (a Bible / lyrics projection tool). It can be run in-browser or as an Electron desktop app.
 
 ## Requirements
 
@@ -22,12 +22,13 @@ npm install
 ```bash
 npm start
 ```
+
 ## Run in a browser (panel + display)
 
 You can open the following files directly in a modern browser for quick testing (not packaged):
 
-- `UI/Scripture Pod Pro Panel.html` — control panel UI
-- `UI/Scripture Pod Pro_display.html` — output/display window
+- `UI/scripture-pod-panel.html` — control panel UI
+- `UI/scripture-pod-display.html` — output/display window
 
 Notes:
 
@@ -134,7 +135,7 @@ npm run dist:linux
    - Mark it executable if needed:
 
 ```bash
-chmod +x "dist/Scripture Pod Pro-*.AppImage"
+chmod +x "dist/Scripture Pod-*.AppImage"
 ```
 
 - Run the AppImage directly.
@@ -150,8 +151,8 @@ Notes:
 
 ## Project layout (important files)
 
-- `UI/Scripture Pod Pro Panel.html` — main control panel
-- `UI/Scripture Pod Pro_display.html` — renderer/display
+- `UI/scripture-pod-panel.html` — main control panel
+- `UI/scripture-pod-display.html` — renderer/display
 - `js/` — application JavaScript modules used by the panel
 - `electron/` — Electron bootstrap (main, preload, helpers)
 - `electron/resources/` — app icon assets for macOS, Windows, and Linux

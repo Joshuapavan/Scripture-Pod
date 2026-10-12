@@ -69,7 +69,7 @@
         params.set('relayPort', relayPort);
         params.set('relay', `ws://${relayHost}:${relayPort}`);
       }
-      return `Scripture%20Pod%20Pro_display.html?${params.toString()}`;
+      return `scripture-pod-display.html?${params.toString()}`;
     }
 
     function shouldSkipPunctuationLine(line) {

@@ -1,5 +1,5 @@
     // ===== CONSTANTS / GLOBALS =====
-    const CHANNEL_NAME = 'scripture_pod_pro_v1';
+    const CHANNEL_NAME = 'scripture_pod_v1';
     const HOST_MODE_OBS = 'obs';
     const HOST_MODE_WEBSOCKET = 'websocket';
     const HOST_MODE_STANDALONE = 'standalone';
@@ -156,7 +156,7 @@
       port: '8088',
       password: '',
       displayHost: '',
-      outputInputName: 'Scripture Pod Pro Output',
+      outputInputName: 'Scripture Pod Output',
       outputInputKey: '',
       outputMode: VMIX_OUTPUT_MODE_DEDICATED,
       overlayChannel: '1',

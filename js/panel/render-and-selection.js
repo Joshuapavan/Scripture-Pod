@@ -1226,7 +1226,7 @@
         if (bgUploadDataUrl != null) settings.bgUploadDataUrl = bgUploadDataUrl;
         if (bgVideoUploadDataUrl != null) settings.bgVideoUploadDataUrl = bgVideoUploadDataUrl;
         const backup = {
-          app: 'Scripture Pod Pro',
+          app: 'Scripture Pod',
           backupVersion: 1,
           exportedAt: new Date().toISOString(),
           data: {
@@ -1374,7 +1374,7 @@
     async function handleBackupImportText(text, fileName = '') {
       try {
         const parsed = JSON.parse(text);
-        if (!parsed || parsed.app !== 'Scripture Pod Pro') {
+        if (!parsed || parsed.app !== 'Scripture Pod') {
           showToast(t('backup_invalid_file'));
           return;
         }
