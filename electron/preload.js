@@ -40,9 +40,6 @@ const BSPDesktop = {
   async getSystemStats() {
     return ipcRenderer.invoke('bsp:get-system-stats');
   },
-  async saveTheme(theme) {
-    return ipcRenderer.invoke('bsp:save-theme', theme);
-  },
   async openRecordingInLocation(payload = {}) {
     return ipcRenderer.invoke('bsp:open-in-location', payload.path);
   },

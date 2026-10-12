@@ -375,7 +375,6 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('bsp:get-system-stats', () => getSystemStats());
-  ipcMain.handle('bsp:save-theme', () => ({ ok: true }));
   ipcMain.handle('bsp:open-in-location', async (_event, targetPath) => {
     if (targetPath) await shell.showItemInFolder(targetPath);
     return { ok: true };

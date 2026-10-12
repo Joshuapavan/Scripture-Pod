@@ -397,7 +397,8 @@
 
     function isSidebarQuickActionsVisible() {
       const main = document.getElementById('main');
-      if (!main) return false;
+      const sidebar = document.getElementById('sidebar');
+      if (!main || !sidebar || !sidebar.classList.contains('sidebar-open')) return false;
       const style = getComputedStyle(main);
       if (style.display === 'none' || style.visibility === 'hidden') return false;
       const rect = main.getBoundingClientRect();
@@ -560,10 +561,10 @@
 
     function positionSidebarQuickActions() {
       const sidebar = document.getElementById('sidebar');
-      const main = document.getElementById('main');
+      const handle = document.getElementById('sidebar-width-handle');
       const btn = document.getElementById('sidebar-quick-actions-btn');
       const panel = document.getElementById('sidebar-quick-actions-panel');
-      if (!sidebar || !main || !btn || !panel) return;
+      if (!sidebar || !btn || !panel) return;
 
       const visible = isSidebarQuickActionsVisible();
       if (!visible) {
@@ -575,11 +576,14 @@
       }
 
       const sidebarRect = sidebar.getBoundingClientRect();
-      const mainRect = main.getBoundingClientRect();
+      const handleRect = handle ? handle.getBoundingClientRect() : null;
       const gap = 0;
-      const anchorLeft = Math.round(mainRect.left);
       const top = Math.max(64, sidebarRect.top + 110);
       btn.style.display = 'flex';
+      const handleCenter = handleRect && handleRect.width > 0
+        ? (handleRect.left + handleRect.right) / 2
+        : sidebarRect.right;
+      const anchorLeft = Math.round(handleCenter - (btn.offsetWidth || 26) / 2);
       btn.style.left = `${anchorLeft}px`;
       btn.style.top = `${Math.round(top)}px`;
       btn.classList.toggle('active', sidebarQuickActionsOpen);

@@ -919,8 +919,12 @@
 
     function getEffectiveLiveBackgroundState() {
       const panelKind = getCurrentPanelContentKind();
-      if (isLive && livePointer && panelKind && livePointer.kind === panelKind) {
+      const settingsTarget = (typeof getEffectiveSettingsTargetTab === 'function')
+        ? getEffectiveSettingsTargetTab()
+        : panelKind;
+      if (isLive && livePointer && panelKind && livePointer.kind === panelKind && settingsTarget === panelKind) {
         liveBackgroundState = captureBackgroundStateFromUi();
+        return liveBackgroundState;
       }
       if (isLive && livePointer && livePointer.kind && typeof getProjectionSettingsSnapshotForTab === 'function') {
         const profile = getProjectionSettingsSnapshotForTab(livePointer.kind === 'songs' ? 'songs' : 'bible');
@@ -1233,6 +1237,7 @@
     }
 
     function projectLive(trigger = false) {
+      const wasLive = isLive;
       if (trigger) isLive = true;
       if (!isLive) return;
       applyProgramDisplaySource('lyrics');
@@ -1279,6 +1284,9 @@
         delayBibleBgUntilVerse = false;
       }
       pushLiveUpdate(); saveToStorageDebounced(); updateButtonView(); setLtFontInputValue(getEffectiveLtFont());
+      if (!wasLive && document.getElementById('bg-type')?.value === 'video') {
+        sendBackgroundVideoPreload();
+      }
       if (isScheduleItem) {
         const setlistBehavior = (typeof getSetlistSettingsSnapshot === 'function')
           ? getSetlistSettingsSnapshot()
