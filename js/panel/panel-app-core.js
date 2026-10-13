@@ -419,7 +419,7 @@
       en: {
         status_online: "Display Online",
         status_offline: "Display Offline",
-        ui_tab_songs: "Songs",
+        ui_tab_songs: "Lyrics",
         ui_tab_bible: "Bible",
         ui_tab_setlist: "Setlist",
         ui_search_songs: "Search lyrics...",
@@ -941,7 +941,7 @@
       zh: {
         status_online: "显示在线",
         status_offline: "显示离线",
-        ui_tab_songs: "歌曲",
+        ui_tab_songs: "歌词",
         ui_tab_bible: "圣经",
         ui_tab_setlist: "曲目单",
         ui_search_songs: "搜索歌词...",
@@ -1030,7 +1030,7 @@
       es: {
         status_online: "Pantalla en línea",
         status_offline: "Pantalla sin conexión",
-        ui_tab_songs: "Canciones",
+        ui_tab_songs: "Letras",
         ui_tab_bible: "Biblia",
         ui_tab_setlist: "Lista",
         ui_search_songs: "Buscar letras...",
@@ -1119,7 +1119,7 @@
       hi: {
         status_online: "डिस्प्ले ऑनलाइन",
         status_offline: "डिस्प्ले ऑफ़लाइन",
-        ui_tab_songs: "गीत",
+        ui_tab_songs: "गीतों के बोल",
         ui_tab_bible: "बाइबल",
         ui_tab_setlist: "सेटलिस्ट",
         ui_search_songs: "गीत खोजें...",
@@ -1208,7 +1208,7 @@
       ar: {
         status_online: "العرض متصل",
         status_offline: "العرض غير متصل",
-        ui_tab_songs: "الترانيم",
+        ui_tab_songs: "كلمات",
         ui_tab_bible: "الكتاب المقدس",
         ui_tab_setlist: "قائمة",
         ui_search_songs: "ابحث عن الكلمات...",
@@ -1297,7 +1297,7 @@
       bn: {
         status_online: "ডিসপ্লে অনলাইন",
         status_offline: "ডিসপ্লে অফলাইন",
-        ui_tab_songs: "গান",
+        ui_tab_songs: "গানের কথা",
         ui_tab_bible: "বাইবেল",
         ui_tab_setlist: "সেটলিস্ট",
         ui_search_songs: "গান খুঁজুন...",
@@ -1386,7 +1386,7 @@
       pt: {
         status_online: "Exibição online",
         status_offline: "Exibição offline",
-        ui_tab_songs: "Canções",
+        ui_tab_songs: "Letras",
         ui_tab_bible: "Bíblia",
         ui_tab_setlist: "Repertório",
         ui_search_songs: "Buscar letras...",
@@ -1475,7 +1475,7 @@
       ru: {
         status_online: "Экран онлайн",
         status_offline: "Экран офлайн",
-        ui_tab_songs: "Песни",
+        ui_tab_songs: "Тексты",
         ui_tab_bible: "Библия",
         ui_tab_setlist: "Сетлист",
         ui_search_songs: "Поиск текстов...",
@@ -1564,7 +1564,7 @@
       ja: {
         status_online: "表示オンライン",
         status_offline: "表示オフライン",
-        ui_tab_songs: "曲",
+        ui_tab_songs: "歌詞",
         ui_tab_bible: "聖書",
         ui_tab_setlist: "セットリスト",
         ui_search_songs: "歌詞を検索...",
@@ -1653,7 +1653,7 @@
       de: {
         status_online: "Anzeige online",
         status_offline: "Anzeige offline",
-        ui_tab_songs: "Lieder",
+        ui_tab_songs: "Liedtexte",
         ui_tab_bible: "Bibel",
         ui_tab_setlist: "Setlist",
         ui_search_songs: "Liedtext suchen...",
@@ -1742,7 +1742,7 @@
       fr: {
         status_online: "Affichage en ligne",
         status_offline: "Affichage hors ligne",
-        ui_tab_songs: "Chants",
+        ui_tab_songs: "Paroles",
         ui_tab_bible: "Bible",
         ui_tab_setlist: "Setlist",
         ui_search_songs: "Rechercher les paroles...",
@@ -1831,7 +1831,7 @@
       ko: {
         status_online: "디스플레이 온라인",
         status_offline: "디스플레이 오프라인",
-        ui_tab_songs: "노래",
+        ui_tab_songs: "가사",
         ui_tab_bible: "성경",
         ui_tab_setlist: "세트리스트",
         ui_search_songs: "가사 검색...",
@@ -1920,7 +1920,7 @@
       it: {
         status_online: "Display online",
         status_offline: "Display offline",
-        ui_tab_songs: "Canzoni",
+        ui_tab_songs: "Testi",
         ui_tab_bible: "Bibbia",
         ui_tab_setlist: "Scaletta",
         ui_search_songs: "Cerca testi...",
@@ -2011,7 +2011,7 @@
       pa: {
         status_online: "ਡਿਸਪਲੇ ਆਨਲਾਈਨ",
         status_offline: "ਡਿਸਪਲੇ ਆਫ਼ਲਾਈਨ",
-        ui_tab_songs: "ਗੀਤ",
+        ui_tab_songs: "ਗੀਤਾਂ ਦੇ ਬੋਲ",
         ui_tab_bible: "ਬਾਈਬਲ",
         ui_tab_setlist: "ਸੈੱਟਲਿਸਟ",
         ui_search_songs: "ਗੀਤਾਂ ਦੇ ਬੋਲ ਖੋਜੋ...",
@@ -2100,7 +2100,7 @@
       jv: {
         status_online: "Tampilan Online",
         status_offline: "Tampilan Offline",
-        ui_tab_songs: "Lagu",
+        ui_tab_songs: "Lirik",
         ui_tab_bible: "Alkitab",
         ui_tab_setlist: "Daftar Lagu",
         ui_search_songs: "Telusuri lirik...",
@@ -2189,7 +2189,7 @@
       mr: {
         status_online: "डिस्प्ले ऑनलाईन",
         status_offline: "डिस्प्ले ऑफलाईन",
-        ui_tab_songs: "गीते",
+        ui_tab_songs: "गीतांचे बोल",
         ui_tab_bible: "बायबल",
         ui_tab_setlist: "सेटलिस्ट",
         ui_search_songs: "गीतांचे बोल शोधा...",
@@ -2278,7 +2278,7 @@
       ta: {
         status_online: "காட்சி ஆன்லைன்",
         status_offline: "காட்சி ஆஃப்லைன்",
-        ui_tab_songs: "பாடல்கள்",
+        ui_tab_songs: "பாடல் வரிகள்",
         ui_tab_bible: "வேதாகமம்",
         ui_tab_setlist: "செட் பட்டியல்",
         ui_search_songs: "பாடல் வரிகளை தேடு...",
@@ -2367,7 +2367,7 @@
       ur: {
         status_online: "ڈسپلے آن لائن",
         status_offline: "ڈسپلے آف لائن",
-        ui_tab_songs: "نغمات",
+        ui_tab_songs: "كلمات",
         ui_tab_bible: "بائبل",
         ui_tab_setlist: "سیٹ لسٹ",
         ui_search_songs: "بول تلاش کریں...",
@@ -2456,7 +2456,7 @@
       tr: {
         status_online: "Ekran çevrimiçi",
         status_offline: "Ekran çevrimdışı",
-        ui_tab_songs: "Şarkılar",
+        ui_tab_songs: "Şarkı Sözleri",
         ui_tab_bible: "Kutsal Kitap",
         ui_tab_setlist: "Set listesi",
         ui_search_songs: "Şarkı sözlerini ara...",
@@ -2545,7 +2545,7 @@
       th: {
         status_online: "แสดงผลออนไลน์",
         status_offline: "แสดงผลออฟไลน์",
-        ui_tab_songs: "เพลง",
+        ui_tab_songs: "เนื้อเพลง",
         ui_tab_bible: "พระคัมภีร์",
         ui_tab_setlist: "รายการเพลง",
         ui_search_songs: "ค้นหาเนื้อเพลง...",
@@ -2634,7 +2634,7 @@
       gu: {
         status_online: "ડિસ્પ્લે ઓનલાઈન",
         status_offline: "ડિસ્પ્લે ઑફલાઈન",
-        ui_tab_songs: "ગીતો",
+        ui_tab_songs: "ગીતોના શબ્દો",
         ui_tab_bible: "બાઈબલ",
         ui_tab_setlist: "સેટલિસ્ટ",
         ui_search_songs: "ગીતોના શબ્દો શોધો...",
@@ -2723,7 +2723,7 @@
       pl: {
         status_online: "Wyświetlacz online",
         status_offline: "Wyświetlacz offline",
-        ui_tab_songs: "Pieśni",
+        ui_tab_songs: "Teksty",
         ui_tab_bible: "Biblia",
         ui_tab_setlist: "Lista",
         ui_search_songs: "Szukaj tekstów...",
@@ -2812,7 +2812,7 @@
       uk: {
         status_online: "Дисплей онлайн",
         status_offline: "Дисплей офлайн",
-        ui_tab_songs: "Пісні",
+        ui_tab_songs: "Тексти",
         ui_tab_bible: "Біблія",
         ui_tab_setlist: "Сетліст",
         ui_search_songs: "Пошук текстів...",
@@ -2901,7 +2901,7 @@
       fa: {
         status_online: "نمایش آنلاین",
         status_offline: "نمایش آفلاین",
-        ui_tab_songs: "سرودها",
+        ui_tab_songs: "متن سرود",
         ui_tab_bible: "کتاب مقدس",
         ui_tab_setlist: "فهرست",
         ui_search_songs: "جستجوی متن سرود...",
@@ -2990,7 +2990,7 @@
       ml: {
         status_online: "ഡിസ്‌പ്ലേ ഓൺലൈൻ",
         status_offline: "ഡിസ്‌പ്ലേ ഓഫ്‌ലൈൻ",
-        ui_tab_songs: "ഗാനങ്ങൾ",
+        ui_tab_songs: "ഗാനവരികൾ",
         ui_tab_bible: "ബൈബിൾ",
         ui_tab_setlist: "സെറ്റ്‌ലിസ്റ്റ്",
         ui_search_songs: "ഗാനവരികൾ തിരയുക...",
@@ -3079,7 +3079,7 @@
       kn: {
         status_online: "ಡಿಸ್ಪ್ಲೇ ಆನ್‌ಲೈನ್",
         status_offline: "ಡಿಸ್ಪ್ಲೇ ಆಫ್‌ಲೈನ್",
-        ui_tab_songs: "ಹಾಡುಗಳು",
+        ui_tab_songs: "ಹಾಡಿನ ಪದಗಳು",
         ui_tab_bible: "ಬೈಬಲ್",
         ui_tab_setlist: "ಸೆಟ್‌ಲಿಸ್ಟ್",
         ui_search_songs: "ಹಾಡಿನ ಪದಗಳನ್ನು ಹುಡುಕಿ...",
@@ -3168,7 +3168,7 @@
       or: {
         status_online: "ଡିସ୍ପ୍ଲେ ଅନଲାଇନ୍",
         status_offline: "ଡିସ୍ପ୍ଲେ ଅଫଲାଇନ୍",
-        ui_tab_songs: "ଗୀତ",
+        ui_tab_songs: "ଗୀତର ଶବ୍ଦ",
         ui_tab_bible: "ବାଇବେଲ",
         ui_tab_setlist: "ସେଟଲିଷ୍ଟ",
         ui_search_songs: "ଗୀତର ଶବ୍ଦ ଖୋଜନ୍ତୁ...",
@@ -3257,7 +3257,7 @@
       my: {
         status_online: "ပြသမှု အွန်လိုင်း",
         status_offline: "ပြသမှု အော့ဖ်လိုင်း",
-        ui_tab_songs: "သီချင်းများ",
+        ui_tab_songs: "သီချင်းစာသား",
         ui_tab_bible: "သမ္မာကျမ်း",
         ui_tab_setlist: "သီချင်းစာရင်း",
         ui_search_songs: "သီချင်းစာသားရှာ...",
@@ -3346,7 +3346,7 @@
       su: {
         status_online: "Tampilan Online",
         status_offline: "Tampilan Offline",
-        ui_tab_songs: "Lagu",
+        ui_tab_songs: "Lirik",
         ui_tab_bible: "Alkitab",
         ui_tab_setlist: "Daptar Lagu",
         ui_search_songs: "Téangan lirik...",
@@ -3435,7 +3435,7 @@
       ha: {
         status_online: "Nuni akan layi",
         status_offline: "Nuni ba layi",
-        ui_tab_songs: "Wakoki",
+        ui_tab_songs: "Baitocin Waka",
         ui_tab_bible: "Littafi Mai Tsarki",
         ui_tab_setlist: "Jerin waƙoƙi",
         ui_search_songs: "Nemo baitocin waka...",
@@ -3524,7 +3524,7 @@
       yo: {
         status_online: "Ifihan lori ayelujara",
         status_offline: "Ifihan lai ayelujara",
-        ui_tab_songs: "Orin",
+        ui_tab_songs: "Ọ̀rọ̀ orin",
         ui_tab_bible: "Bíbélì",
         ui_tab_setlist: "Àkójọ orin",
         ui_search_songs: "Wa ọrọ orin...",
@@ -3738,7 +3738,7 @@
       ig: {
         status_online: "Ngosipụta n'ịntanetị",
         status_offline: "Ngosipụta na-enweghị ịntanetị",
-        ui_tab_songs: "Abụ",
+        ui_tab_songs: "Okwu Abụ",
         ui_tab_bible: "Baịbụl",
         ui_tab_setlist: "Ndepụta abụ",
         ui_search_songs: "Chọọ okwu abụ...",
@@ -3827,7 +3827,7 @@
       sw: {
         status_online: "Onyesho mtandaoni",
         status_offline: "Onyesho nje ya mtandao",
-        ui_tab_songs: "Nyimbo",
+        ui_tab_songs: "Maneno ya Nyimbo",
         ui_tab_bible: "Biblia",
         ui_tab_setlist: "Orodha ya nyimbo",
         ui_search_songs: "Tafuta maneno...",
@@ -3916,7 +3916,7 @@
       nl: {
         status_online: "Scherm online",
         status_offline: "Scherm offline",
-        ui_tab_songs: "Liederen",
+        ui_tab_songs: "Songteksten",
         ui_tab_bible: "Bijbel",
         ui_tab_setlist: "Setlist",
         ui_search_songs: "Zoek songtekst...",
@@ -4005,7 +4005,7 @@
       ro: {
         status_online: "Afișare online",
         status_offline: "Afișare offline",
-        ui_tab_songs: "Cântece",
+        ui_tab_songs: "Versuri",
         ui_tab_bible: "Biblia",
         ui_tab_setlist: "Setlist",
         ui_search_songs: "Caută versuri...",
@@ -4094,7 +4094,7 @@
       el: {
         status_online: "Οθόνη online",
         status_offline: "Οθόνη offline",
-        ui_tab_songs: "Τραγούδια",
+        ui_tab_songs: "Στίχοι",
         ui_tab_bible: "Βίβλος",
         ui_tab_setlist: "Λίστα",
         ui_search_songs: "Αναζήτηση στίχων...",
@@ -4183,7 +4183,7 @@
       he: {
         status_online: "תצוגה מקוונת",
         status_offline: "תצוגה לא מקוונת",
-        ui_tab_songs: "שירים",
+        ui_tab_songs: "מילות השיר",
         ui_tab_bible: "תנ״ך",
         ui_tab_setlist: "רשימת שירים",
         ui_search_songs: "חפש מילים...",
@@ -4272,7 +4272,7 @@
       cs: {
         status_online: "Zobrazení online",
         status_offline: "Zobrazení offline",
-        ui_tab_songs: "Písně",
+        ui_tab_songs: "Texty",
         ui_tab_bible: "Bible",
         ui_tab_setlist: "Setlist",
         ui_search_songs: "Hledat texty...",
@@ -4361,7 +4361,7 @@
       sv: {
         status_online: "Skärm online",
         status_offline: "Skärm offline",
-        ui_tab_songs: "Sånger",
+        ui_tab_songs: "Låttexter",
         ui_tab_bible: "Bibeln",
         ui_tab_setlist: "Setlista",
         ui_search_songs: "Sök texter...",
@@ -4450,7 +4450,7 @@
       hu: {
         status_online: "Kijelző online",
         status_offline: "Kijelző offline",
-        ui_tab_songs: "Dalok",
+        ui_tab_songs: "Dalszövegek",
         ui_tab_bible: "Biblia",
         ui_tab_setlist: "Setlista",
         ui_search_songs: "Szöveg keresése...",
@@ -4539,7 +4539,7 @@
       da: {
         status_online: "Skærm online",
         status_offline: "Skærm offline",
-        ui_tab_songs: "Sange",
+        ui_tab_songs: "Sangtekster",
         ui_tab_bible: "Bibel",
         ui_tab_setlist: "Setliste",
         ui_search_songs: "Søg tekster...",
@@ -4628,7 +4628,7 @@
       fi: {
         status_online: "Näyttö online",
         status_offline: "Näyttö offline",
-        ui_tab_songs: "Laulut",
+        ui_tab_songs: "Sanoitukset",
         ui_tab_bible: "Raamattu",
         ui_tab_setlist: "Settilista",
         ui_search_songs: "Hae sanoituksia...",
@@ -4717,7 +4717,7 @@
       no: {
         status_online: "Skjerm online",
         status_offline: "Skjerm offline",
-        ui_tab_songs: "Sanger",
+        ui_tab_songs: "Sangtekster",
         ui_tab_bible: "Bibelen",
         ui_tab_setlist: "Setliste",
         ui_search_songs: "Søk tekster...",
@@ -4806,7 +4806,7 @@
       vi: {
         status_online: "Hiển thị trực tuyến",
         status_offline: "Hiển thị ngoại tuyến",
-        ui_tab_songs: "Bài hát",
+        ui_tab_songs: "Lời bài hát",
         ui_tab_bible: "Kinh Thánh",
         ui_tab_setlist: "Danh sách",
         ui_search_songs: "Tìm lời bài hát...",
@@ -4895,7 +4895,7 @@
       id: {
         status_online: "Tampilan Online",
         status_offline: "Tampilan Offline",
-        ui_tab_songs: "Lagu",
+        ui_tab_songs: "Lirik",
         ui_tab_bible: "Alkitab",
         ui_tab_setlist: "Daftar lagu",
         ui_search_songs: "Cari lirik...",
@@ -4991,7 +4991,7 @@
       tl: {
         status_online: "Display online",
         status_offline: "Display offline",
-        ui_tab_songs: "Mga Awit",
+        ui_tab_songs: "Titik ng Awit",
         ui_tab_bible: "Bibliya",
         ui_tab_setlist: "Listahan",
         ui_search_songs: "Hanapin ang lyrics...",
@@ -5080,7 +5080,7 @@
       te: {
         status_online: "డిస్‌ప్లే ఆన్‌లైన్",
         status_offline: "డిస్‌ప్లే ఆఫ్‌లైన్",
-        ui_tab_songs: "పాటలు",
+        ui_tab_songs: "పాటల పదాలు",
         ui_tab_bible: "బైబిల్",
         ui_tab_setlist: "సెట్‌లిస్ట్",
         ui_search_songs: "పాటల పదాలు వెతకండి...",
@@ -5169,7 +5169,7 @@
       ms: {
         status_online: "Paparan dalam talian",
         status_offline: "Paparan luar talian",
-        ui_tab_songs: "Lagu",
+        ui_tab_songs: "Lirik",
         ui_tab_bible: "Alkitab",
         ui_tab_setlist: "Senarai set",
         ui_search_songs: "Cari lirik...",
@@ -5258,7 +5258,7 @@
       sk: {
         status_online: "Zobrazenie online",
         status_offline: "Zobrazenie offline",
-        ui_tab_songs: "Piesne",
+        ui_tab_songs: "Texty piesní",
         ui_tab_bible: "Biblia",
         ui_tab_setlist: "Setlist",
         ui_search_songs: "Hľadať texty...",
@@ -5347,7 +5347,7 @@
       am: {
         status_online: "ማሳያ በመስመር ላይ",
         status_offline: "ማሳያ ከመስመር ውጭ",
-        ui_tab_songs: "መዝሙሮች",
+        ui_tab_songs: "የመዝሙር ጽሑፍ",
         ui_tab_bible: "መጽሐፍ ቅዱስ",
         ui_tab_setlist: "ዝርዝር",
         ui_search_songs: "መዝሙር ጽሑፍ ፈልግ...",

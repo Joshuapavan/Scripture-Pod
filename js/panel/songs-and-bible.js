@@ -926,7 +926,7 @@
         liveBackgroundState = captureBackgroundStateFromUi();
         return liveBackgroundState;
       }
-      if (isLive && livePointer && livePointer.kind && typeof getProjectionSettingsSnapshotForTab === 'function') {
+      if (livePointer && livePointer.kind && typeof getProjectionSettingsSnapshotForTab === 'function') {
         const profile = getProjectionSettingsSnapshotForTab(livePointer.kind === 'songs' ? 'songs' : 'bible');
         if (profile && typeof profile === 'object') {
           const effectiveRatio = liveRatio || activeRatio || 'full';

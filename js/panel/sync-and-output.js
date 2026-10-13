@@ -87,11 +87,12 @@
       return {
         enabled: !!enabled,
         socials: {
-          enabled: document.getElementById('social-engagement-socials-enabled')?.checked === true,
           instagram: String(document.getElementById('social-engagement-instagram')?.value || '').trim(),
           facebook: String(document.getElementById('social-engagement-facebook')?.value || '').trim(),
           website: String(document.getElementById('social-engagement-website')?.value || '').trim()
         },
+        accentColor: document.getElementById('social-engagement-accent')?.value || '#b9df45',
+        size: Number(document.getElementById('social-engagement-size')?.value || 14),
         actions: {
           like: document.getElementById('social-engagement-like')?.checked === true,
           share: document.getElementById('social-engagement-share')?.checked === true,
@@ -100,7 +101,10 @@
       };
     }
 
-    function publishNameRoleOverlay(enabled) {
+    function publishLowerThirdOverlays() {
+      const nameRoleEnabled = document.getElementById('name-role-overlay-show-btn')?.getAttribute('aria-pressed') === 'true';
+      const socialEnabled = document.getElementById('social-engagement-overlay-show-btn')?.getAttribute('aria-pressed') === 'true';
+      const anyEnabled = nameRoleEnabled || socialEnabled;
       const payload = {
         text: '',
         mode: 'full',
@@ -119,39 +123,29 @@
         bgImage: null,
         bgVideo: null,
         sceneLayers: [],
-        lowerThirdOnly: !!enabled,
-        restorePrevious: !enabled,
-        nameRoleOverlay: getNameRoleOverlaySettings(enabled)
+        lowerThirdOnly: anyEnabled,
+        restorePrevious: !anyEnabled,
+        nameRoleOverlay: getNameRoleOverlaySettings(nameRoleEnabled),
+        socialEngagementOverlay: getSocialEngagementOverlaySettings(socialEnabled)
       };
       if (isPreviewOnlyMode()) sendProgramPreview(payload);
       else postUpdate(payload);
     }
 
-    function publishSocialEngagementOverlay(enabled) {
-      const payload = {
-        text: '',
-        mode: 'full',
-        isBible: false,
-        fontFamily: "'Montserrat',sans-serif",
-        fontWeight: '700',
-        fontSizeFull: 48,
-        fontSizeLT: 32,
-        lineHeightFull: 1.1,
-        lineHeightLT: 1.1,
-        bgEnabled: false,
-        bgType: 'color',
-        bgColor: '#000000',
-        bgMode: 'solid',
-        bgOpacity: 0,
-        bgImage: null,
-        bgVideo: null,
-        sceneLayers: [],
-        lowerThirdOnly: !!enabled,
-        restorePrevious: !enabled,
-        socialEngagementOverlay: getSocialEngagementOverlaySettings(enabled)
-      };
-      if (isPreviewOnlyMode()) sendProgramPreview(payload);
-      else postUpdate(payload);
+    function publishNameRoleOverlay() {
+      publishLowerThirdOverlays();
+    }
+
+    function publishSocialEngagementOverlay() {
+      publishLowerThirdOverlays();
+    }
+
+    function setLowerThirdButtonState(button, enabled, title) {
+      if (!button) return;
+      button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      button.textContent = enabled ? 'Hide Lower Third' : 'Show Lower Third';
+      button.classList.toggle('active', enabled);
+      button.title = enabled ? `Hide ${title}` : `Show ${title}`;
     }
 
     function previewNameRoleLowerThirdExample() {
@@ -176,8 +170,8 @@
         lowerThirdOnly: true,
         nameRoleOverlay: {
           ...settings,
-          name: 'PS. PHILIP MANTOFA',
-          role: 'GMS SURABAYA BARAT'
+          name: 'PS. Samson Arthur Paul',
+          role: 'Senior Pastor'
         }
       });
       showToast('Lower-third example sent to preview');
@@ -206,7 +200,6 @@
         socialEngagementOverlay: {
           ...settings,
           socials: {
-            enabled: true,
             instagram: '@church',
             facebook: 'facebook.com/church',
             website: 'church.org'
@@ -230,10 +223,10 @@
         showToast('Enter a name and role before showing the lower third');
         return;
       }
-      button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-      button.textContent = enabled ? 'Hide Lower Third' : 'Show Lower Third';
-      button.classList.toggle('active', enabled);
-      button.title = enabled ? 'Hide lower third' : 'Show lower third';
+      if (enabled) {
+        setLowerThirdButtonState(document.getElementById('social-engagement-overlay-show-btn'), false, 'social lower third');
+      }
+      setLowerThirdButtonState(button, enabled, 'lower third');
       updateProgramDisplayStatus();
       handleNameRoleOverlayChange(true);
     }
@@ -243,15 +236,15 @@
       if (!button) return;
       const enabled = button.getAttribute('aria-pressed') !== 'true';
       const overlay = getSocialEngagementOverlaySettings(enabled);
-      const hasAnyContent = !!overlay.socials.enabled || Object.values(overlay.socials).some(Boolean) || Object.values(overlay.actions).some(Boolean);
+      const hasAnyContent = Object.values(overlay.socials).some(Boolean) || Object.values(overlay.actions).some(Boolean);
       if (enabled && !hasAnyContent) {
         showToast('Enter a social handle or enable an action before showing the social lower third');
         return;
       }
-      button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-      button.textContent = enabled ? 'Hide Lower Third' : 'Show Lower Third';
-      button.classList.toggle('active', enabled);
-      button.title = enabled ? 'Hide social lower third' : 'Show social lower third';
+      if (enabled) {
+        setLowerThirdButtonState(document.getElementById('name-role-overlay-show-btn'), false, 'lower third');
+      }
+      setLowerThirdButtonState(button, enabled, 'social lower third');
       handleSocialEngagementOverlayChange(true);
     }
 
@@ -265,6 +258,7 @@
       const enabled = enabledButton?.getAttribute('aria-pressed') === 'true';
       if (!appState) appState = buildDefaultAppState();
       if (!appState.settings) appState.settings = getUiSnapshot();
+      appState.settings.socialEngagementOverlayEnabled = document.getElementById('social-engagement-overlay-show-btn')?.getAttribute('aria-pressed') === 'true';
       appState.settings.nameRoleOverlayName = name;
       appState.settings.nameRoleOverlayRole = role;
       appState.settings.nameRoleOverlayEnabled = enabled;
@@ -284,12 +278,12 @@
           saveState();
           saveToStorageDebounced();
           showToast('Enter a name and role before showing the lower third');
-          publishNameRoleOverlay(false);
+          publishNameRoleOverlay();
           return;
         }
-        publishNameRoleOverlay(true);
+        publishNameRoleOverlay();
       } else if (visibilityChanged) {
-        publishNameRoleOverlay(false);
+        publishNameRoleOverlay();
       } else if (isPreviewOnlyMode()) previewCurrentSelection();
       else if (isLive && livePointer) pushLiveUpdate();
     }
@@ -300,29 +294,34 @@
       const payload = getSocialEngagementOverlaySettings(enabled);
       if (!appState) appState = buildDefaultAppState();
       if (!appState.settings) appState.settings = getUiSnapshot();
-      appState.settings.nameRoleOverlaySocialsEnabled = payload.socials.enabled;
+      appState.settings.nameRoleOverlayEnabled = document.getElementById('name-role-overlay-show-btn')?.getAttribute('aria-pressed') === 'true';
+      appState.settings.nameRoleOverlaySocialsEnabled = Object.values(payload.socials).some(Boolean);
       appState.settings.nameRoleOverlayInstagram = payload.socials.instagram;
       appState.settings.nameRoleOverlayFacebook = payload.socials.facebook;
       appState.settings.nameRoleOverlayWebsite = payload.socials.website;
       appState.settings.nameRoleOverlayLike = payload.actions.like;
       appState.settings.nameRoleOverlayShare = payload.actions.share;
       appState.settings.nameRoleOverlaySubscribe = payload.actions.subscribe;
+      appState.settings.socialEngagementOverlayEnabled = enabled;
+      appState.settings.socialEngagementOverlayAccentColor = payload.accentColor;
+      appState.settings.socialEngagementOverlaySize = String(payload.size);
       saveState();
       saveToStorageDebounced();
       if (enabled) {
-        const hasAnyContent = payload.socials.enabled || Object.values(payload.socials).some(Boolean) || Object.values(payload.actions).some(Boolean);
+        const hasAnyContent = Object.values(payload.socials).some(Boolean) || Object.values(payload.actions).some(Boolean);
         if (!hasAnyContent) {
           enabledButton?.setAttribute('aria-pressed', 'false');
           if (enabledButton) enabledButton.textContent = 'Show Lower Third';
           appState.settings.nameRoleOverlaySocialsEnabled = false;
+          appState.settings.socialEngagementOverlayEnabled = false;
           saveState();
           saveToStorageDebounced();
-          publishSocialEngagementOverlay(false);
+          publishSocialEngagementOverlay();
           return;
         }
-        publishSocialEngagementOverlay(true);
+        publishSocialEngagementOverlay();
       } else if (visibilityChanged) {
-        publishSocialEngagementOverlay(false);
+        publishSocialEngagementOverlay();
       } else if (isPreviewOnlyMode()) previewCurrentSelection();
       else if (isLive && livePointer) pushLiveUpdate();
     }
@@ -900,18 +899,7 @@
           logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',
           nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
           roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),
-          logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128),
-          socials: {
-            enabled: document.getElementById('name-role-overlay-socials-enabled')?.checked === true,
-            instagram: String(document.getElementById('name-role-overlay-instagram')?.value || '').trim(),
-            facebook: String(document.getElementById('name-role-overlay-facebook')?.value || '').trim(),
-            website: String(document.getElementById('name-role-overlay-website')?.value || '').trim()
-          },
-          actions: {
-            like: document.getElementById('name-role-overlay-like')?.checked === true,
-            share: document.getElementById('name-role-overlay-share')?.checked === true,
-            subscribe: document.getElementById('name-role-overlay-subscribe')?.checked === true
-          }
+          logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128)
         },
         autoResizeFull: liveProjection.autoResizeFull || document.getElementById('auto-resize-full')?.value || 'shrink',
         autoResizeLT: liveProjection.autoResizeLT || document.getElementById('auto-resize-lt')?.value || 'shrink',

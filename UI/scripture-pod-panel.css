@@ -17562,6 +17562,22 @@
   font-size: 9px;
 }
 
+.social-engagement-overlay-customize {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+}
+
+.social-engagement-overlay-customize > label:last-child {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(72px, 104px);
+  align-items: center;
+  gap: 8px;
+  color: var(--text-tertiary);
+  font-size: 9px;
+}
+
 #program-display-panel #transform-overlay {
   display: none !important;
 }
@@ -17632,9 +17648,13 @@
 }
 
 #btn-preview[aria-pressed="true"] {
-  color: var(--accent-light);
-  border-color: var(--accent);
-  background: rgba(255, 255, 255, 0.12);
+  color: #fff !important;
+  border-color: rgba(34, 197, 94, 0.65) !important;
+  background: #16a34a !important;
+}
+
+#btn-preview[aria-pressed="true"]:hover {
+  background: #15803d !important;
 }
 
 .bible-search-tool-btn,

@@ -163,12 +163,13 @@ body.lower-third-only-mode {
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 360ms ease, visibility 360ms ease;
+    transition: opacity 700ms ease, visibility 0s linear 700ms;
 }
 
 #name-role-overlay.is-visible {
     opacity: 1;
     visibility: visible;
+    transition-delay: 0s;
 }
 
 .style-centered#name-role-overlay {
@@ -224,7 +225,7 @@ body.lower-third-only-mode {
     border: 0;
     border-radius: 2px;
     background: linear-gradient(105deg, var(--name-role-accent, #b9df45) 0 76%, #101216 76%);
-    color: #101216;
+    color: var(--name-role-foreground, #fff);
     box-shadow: 0 12px 34px rgba(0, 0, 0, 0.38);
 }
 
@@ -254,8 +255,17 @@ body.lower-third-only-mode {
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    max-width: 92vw;
+    width: 100%;
+    max-width: 100%;
     padding: 0;
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+    transition: opacity 560ms ease, transform 700ms cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+#social-engagement-overlay.is-visible .social-engagement-overlay-card {
+    opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
 .social-engagement-overlay-socials,
@@ -265,7 +275,7 @@ body.lower-third-only-mode {
     flex-wrap: wrap;
     gap: 10px;
     padding: 7px 12px;
-    border: 1px solid rgba(255,255,255,0.14);
+    border: 1px solid color-mix(in srgb, var(--social-engagement-accent, #b9df45) 42%, transparent);
     border-radius: 999px;
     background: rgba(10, 15, 18, 0.68);
     color: #fff;
@@ -275,15 +285,77 @@ body.lower-third-only-mode {
     padding: 6px 10px 7px;
 }
 
+.social-engagement-overlay-socials,
+.social-engagement-overlay-actions {
+    width: max-content;
+    max-width: 100%;
+    justify-content: center;
+}
+
+.social-engagement-overlay-socials[hidden],
+.social-engagement-overlay-actions[hidden] {
+    display: none;
+}
+
 #social-engagement-overlay .name-role-social,
 #social-engagement-overlay .name-role-action {
     color: inherit;
 }
 
-#name-role-overlay.theme-gms .name-role-overlay-role,
-#name-role-overlay.theme-gms .name-role-overlay-socials,
-#name-role-overlay.theme-gms .name-role-action {
-    color: #17200c;
+#social-engagement-overlay .name-role-action {
+    opacity: 0;
+    transform: translateY(9px) scale(0.96);
+    border-color: color-mix(in srgb, var(--social-engagement-accent, #b9df45) 70%, transparent);
+    font-size: var(--social-engagement-action-size, 11px);
+}
+
+#social-engagement-overlay.is-visible .name-role-action:not([hidden]) {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+#social-engagement-overlay.is-visible .name-role-action-like { transition-delay: 100ms; }
+#social-engagement-overlay.is-visible .name-role-action-share { transition-delay: 190ms; }
+#social-engagement-overlay.is-visible .name-role-action-subscribe { transition-delay: 280ms; }
+
+#social-engagement-overlay .name-role-social {
+    font-size: var(--social-engagement-size, 14px);
+    flex: 0 0 auto;
+}
+
+#social-engagement-overlay .name-role-social b {
+    width: var(--social-engagement-icon-size, 20px);
+    height: var(--social-engagement-icon-size, 20px);
+    flex-basis: var(--social-engagement-icon-size, 20px);
+    color: var(--social-engagement-accent, #b9df45);
+}
+
+#social-engagement-overlay .name-role-social b svg {
+    width: 100%;
+    height: 100%;
+}
+
+#social-engagement-overlay .name-role-action svg {
+    width: 1em;
+    height: 1em;
+    flex: 0 0 1em;
+    fill: none;
+    stroke: var(--social-engagement-accent, #b9df45);
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    opacity: 0;
+    transform: scale(0.55) rotate(-8deg);
+    transition: opacity 300ms ease, transform 420ms cubic-bezier(0.2, 0.85, 0.25, 1);
+}
+
+#social-engagement-overlay.is-visible .name-role-action svg {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+}
+
+#name-role-overlay.theme-gms .name-role-overlay-role {
+    color: var(--name-role-foreground, #fff);
 }
 
 #name-role-overlay.theme-noir .name-role-overlay-card {
@@ -305,15 +377,13 @@ body.lower-third-only-mode {
     border: 1px solid rgba(241, 248, 245, 0.72);
     border-left: 5px solid var(--name-role-accent, #b9df45);
     border-radius: 2px;
-    background: rgba(239, 245, 242, 0.96);
-    color: #17231e;
+    background: var(--name-role-accent, #b9df45);
+    color: var(--name-role-foreground, #fff);
     box-shadow: 0 14px 42px rgba(0, 0, 0, 0.3);
 }
 
-#name-role-overlay.theme-modern .name-role-overlay-role,
-#name-role-overlay.theme-modern .name-role-overlay-socials,
-#name-role-overlay.theme-modern .name-role-action {
-    color: #17231e;
+#name-role-overlay.theme-modern .name-role-overlay-role {
+    color: var(--name-role-foreground, #fff);
 }
 
 #name-role-overlay.theme-news .name-role-overlay-card {
@@ -334,9 +404,9 @@ body.lower-third-only-mode {
 }
 
 #name-role-overlay.theme-legacy .name-role-overlay-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
     width: min(980px, 82vw);
     max-width: 82vw;
     min-height: 0;
@@ -349,9 +419,14 @@ body.lower-third-only-mode {
     -webkit-backdrop-filter: none;
 }
 
-#name-role-overlay.theme-legacy .name-role-overlay-content {
-    align-self: flex-start;
-    min-width: min(680px, 78vw);
+#name-role-overlay.theme-legacy .name-role-overlay-stack {
+    align-self: center;
+    flex: 1;
+}
+
+#name-role-overlay.theme-legacy .name-role-overlay-copy-panel {
+    align-self: stretch;
+    min-width: 0;
     padding: 14px 22px 16px;
     border-left: 5px solid var(--name-role-accent, #b9df45);
     background: linear-gradient(90deg, rgba(5, 8, 12, 0.94), rgba(5, 8, 12, 0.76) 72%, transparent);
@@ -363,10 +438,10 @@ body.lower-third-only-mode {
 }
 
 #name-role-overlay.theme-legacy .name-role-overlay-logo {
-    align-self: flex-end;
+    align-self: center;
     width: min(var(--name-role-logo-size, 128px), 22vw);
     height: min(var(--name-role-logo-size, 128px), 16vh);
-    margin: 0 0 10px auto;
+    margin: 0;
 }
 
 #name-role-overlay.is-visible .name-role-overlay-card {
@@ -487,30 +562,6 @@ body.lower-third-only-mode {
     align-items: center;
 }
 
-.name-role-overlay-socials {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    padding: 7px 12px;
-    border: 1px solid rgba(255,255,255,0.14);
-    border-radius: 999px;
-    background: rgba(7, 12, 16, 0.58);
-    color: currentColor;
-    font-size: 13px;
-    font-weight: 600;
-    opacity: 0;
-    transform: translateY(-8px);
-    transition: opacity 380ms ease 90ms, transform 460ms ease 90ms;
-}
-
-#name-role-overlay.is-visible .name-role-overlay-socials:not([hidden]) {
-    opacity: 0.9;
-    transform: translateY(0);
-}
-
-.name-role-overlay-socials[hidden],
-.name-role-overlay-actions[hidden],
 .name-role-social[hidden],
 .name-role-action[hidden] {
     display: none;
@@ -527,13 +578,15 @@ body.lower-third-only-mode {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 23px;
+    width: 20px;
     height: 20px;
-    padding: 0 4px;
-    border: 1px solid currentColor;
-    border-radius: 3px;
-    font-size: 9px;
-    font-weight: 800;
+    flex: 0 0 20px;
+}
+
+.name-role-social b svg {
+    display: block;
+    width: 18px;
+    height: 18px;
 }
 
 .name-role-social span {
@@ -541,17 +594,6 @@ body.lower-third-only-mode {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-}
-
-.name-role-overlay-actions {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px;
-    padding: 7px 10px;
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 999px;
-    background: rgba(11, 15, 18, 0.62);
 }
 
 .name-role-action {
@@ -578,12 +620,6 @@ body.lower-third-only-mode {
 .name-role-overlay.is-visible .name-role-action-like { transition-delay: 100ms; }
 .name-role-overlay.is-visible .name-role-action-share { transition-delay: 190ms; }
 .name-role-overlay.is-visible .name-role-action-subscribe { transition-delay: 280ms; }
-
-.name-role-action b {
-    color: var(--name-role-accent, #b9df45);
-    font-size: 14px;
-    line-height: 1;
-}
 
 .name-role-overlay-name {
     max-width: 72vw;

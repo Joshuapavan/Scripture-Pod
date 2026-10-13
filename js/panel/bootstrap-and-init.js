@@ -712,19 +712,22 @@
       const overlayNameSizeInput = document.getElementById('name-role-overlay-name-size');
       const overlayRoleSizeInput = document.getElementById('name-role-overlay-role-size');
       const overlayLogoSizeInput = document.getElementById('name-role-overlay-logo-size');
-      const overlaySocialsEnabled = document.getElementById('name-role-overlay-socials-enabled');
-      const overlayInstagram = document.getElementById('name-role-overlay-instagram');
-      const overlayFacebook = document.getElementById('name-role-overlay-facebook');
-      const overlayWebsite = document.getElementById('name-role-overlay-website');
-      const overlayLike = document.getElementById('name-role-overlay-like');
-      const overlayShare = document.getElementById('name-role-overlay-share');
-      const overlaySubscribe = document.getElementById('name-role-overlay-subscribe');
+      const overlayInstagram = document.getElementById('social-engagement-instagram');
+      const overlayFacebook = document.getElementById('social-engagement-facebook');
+      const overlayWebsite = document.getElementById('social-engagement-website');
+      const overlayLike = document.getElementById('social-engagement-like');
+      const overlayShare = document.getElementById('social-engagement-share');
+      const overlaySubscribe = document.getElementById('social-engagement-subscribe');
+      const socialEnabledButton = document.getElementById('social-engagement-overlay-show-btn');
+      const socialAccentInput = document.getElementById('social-engagement-accent');
+      const socialSizeInput = document.getElementById('social-engagement-size');
       const overlayLogoPreview = document.getElementById('name-role-overlay-logo-preview');
       const overlayLogoRemoveButton = document.getElementById('name-role-overlay-logo-remove');
+      const overlayEnabled = ui.nameRoleOverlayEnabled === true;
+      const socialEnabled = ui.socialEngagementOverlayEnabled === true && !overlayEnabled;
       if (overlayNameInput) overlayNameInput.value = String(ui.nameRoleOverlayName || '');
       if (overlayRoleInput) overlayRoleInput.value = String(ui.nameRoleOverlayRole || '');
       if (overlayEnabledButton) {
-        const overlayEnabled = ui.nameRoleOverlayEnabled === true;
         overlayEnabledButton.setAttribute('aria-pressed', overlayEnabled ? 'true' : 'false');
         overlayEnabledButton.textContent = overlayEnabled ? 'Hide Lower Third' : 'Show Lower Third';
         overlayEnabledButton.classList.toggle('active', overlayEnabled);
@@ -744,13 +747,22 @@
       if (overlayNameSizeInput) overlayNameSizeInput.value = String(Math.max(24, Math.min(160, Number(ui.nameRoleOverlayNameSize) || 56)));
       if (overlayRoleSizeInput) overlayRoleSizeInput.value = String(Math.max(12, Math.min(72, Number(ui.nameRoleOverlayRoleSize) || 24)));
       if (overlayLogoSizeInput) overlayLogoSizeInput.value = String(Math.max(24, Math.min(320, Number(ui.nameRoleOverlayLogoSize) || 128)));
-      if (overlaySocialsEnabled) overlaySocialsEnabled.checked = ui.nameRoleOverlaySocialsEnabled === true;
       if (overlayInstagram) overlayInstagram.value = String(ui.nameRoleOverlayInstagram || '');
       if (overlayFacebook) overlayFacebook.value = String(ui.nameRoleOverlayFacebook || '');
       if (overlayWebsite) overlayWebsite.value = String(ui.nameRoleOverlayWebsite || '');
       if (overlayLike) overlayLike.checked = ui.nameRoleOverlayLike === true;
       if (overlayShare) overlayShare.checked = ui.nameRoleOverlayShare === true;
       if (overlaySubscribe) overlaySubscribe.checked = ui.nameRoleOverlaySubscribe === true;
+      if (socialAccentInput && /^#[0-9a-f]{6}$/i.test(ui.socialEngagementOverlayAccentColor || '')) {
+        socialAccentInput.value = ui.socialEngagementOverlayAccentColor;
+      }
+      if (socialSizeInput) socialSizeInput.value = String(Math.max(10, Math.min(40, Number(ui.socialEngagementOverlaySize) || 14)));
+      if (socialEnabledButton) {
+        const socialEnabled = ui.socialEngagementOverlayEnabled === true;
+        socialEnabledButton.setAttribute('aria-pressed', socialEnabled ? 'true' : 'false');
+        socialEnabledButton.textContent = socialEnabled ? 'Hide Lower Third' : 'Show Lower Third';
+        socialEnabledButton.classList.toggle('active', socialEnabled);
+      }
       if (overlayLogoPreview) {
         const logoDataUrl = String(ui.nameRoleOverlayLogo || '');
         overlayLogoPreview.dataset.logoDataUrl = logoDataUrl;
@@ -781,11 +793,13 @@
                   }
             }))
         : [];
-      if (ui.hostMode) setHostMode(ui.hostMode, { silent: true });
       if (ui.language) setLanguage(ui.language, { silent: true });
       applySidebarLayoutMode(ui.sidebarLayout || 'layout2', { persist: false });
       applyWorkspaceLayoutMode(ui.workspaceLayoutMode || 'focused', { persist: false });
       bibleRecentRefs = sanitizeBibleRefEntries(ui.bibleRecentRefs, MAX_BIBLE_RECENT_REFS);
+            if (overlayEnabled && ui.socialEngagementOverlayEnabled === true && appState?.settings) {
+              appState.settings.socialEngagementOverlayEnabled = false;
+            }
       biblePinnedRefs = sanitizeBibleRefEntries(ui.biblePinnedRefs, MAX_BIBLE_PINNED_REFS);
       renderBibleReferencePicker();
       renderMirrorBibleReferencePicker();
