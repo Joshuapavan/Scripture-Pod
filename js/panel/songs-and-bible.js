@@ -1236,6 +1236,23 @@
         schedule.includes(currentItem);
     }
 
+    function isPreviewOnlyMode() {
+      return document.getElementById('btn-preview')?.getAttribute('aria-pressed') === 'true';
+    }
+
+    function togglePreviewOnlyMode() {
+      const button = document.getElementById('btn-preview');
+      if (!button) return;
+      const enabled = button.getAttribute('aria-pressed') !== 'true';
+      button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      button.classList.toggle('active', enabled);
+      button.title = enabled
+        ? 'Preview Only is on. Turn it off to send Project Live to the output.'
+        : 'Toggle preview-only mode';
+      updateProgramDisplayStatus();
+      if (enabled) previewCurrentSelection();
+    }
+
     function previewCurrentSelection() {
       if (!currentItem) {
         showToast('Select a verse or song to preview');
@@ -1292,9 +1309,15 @@
     }
 
     function projectLive(trigger = false) {
+      if (isPreviewOnlyMode()) {
+        previewCurrentSelection();
+        showToast('Preview Only is on. Turn it off to project live.');
+        return;
+      }
       const wasLive = isLive;
       if (trigger) isLive = true;
       if (!isLive) return;
+      updateProgramDisplayStatus();
       applyProgramDisplaySource('lyrics');
       if (!currentItem) return;
       const isBible = getIsBibleItem(currentItem);

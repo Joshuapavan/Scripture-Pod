@@ -237,7 +237,7 @@
         <div class="nav-row">
           <button class="btn" id="panel-inline-style-32" onclick="clearOutput()"><span data-i18n="common_clear">Clear</span></button>
           <div class="nav-live-actions">
-            <button type="button" class="btn nav-preview-btn" id="btn-preview" onclick="previewCurrentSelection()" data-i18n="common_preview">Preview</button>
+            <button type="button" class="btn nav-preview-btn" id="btn-preview" onclick="togglePreviewOnlyMode()" aria-pressed="false" title="Toggle preview-only mode">Preview</button>
             <button class="btn btn-live" id="btn-project-live" onclick="projectLive(true)"><span data-i18n="common_project_live">Project Live</span></button>
           </div>
           <div id="nav-mirror-search-wrap">
@@ -337,69 +337,26 @@
           <iframe id="program-display-frame" title="Program Display Preview" data-i18n-title="ui_program_display_preview" allowtransparency="true"></iframe>
         </div>
       </div>
+      <div class="program-display-footer">
+        <div class="program-display-output-status">
+          <span class="program-display-status-dot" id="program-display-status-dot"></span>
+          <span id="program-display-output-state">Display offline</span>
+        </div>
+        <div class="program-display-route-status">
+          <span>Routing</span>
+          <strong id="program-display-route-label">Live output</strong>
+        </div>
+        <button type="button" class="btn" id="btn-clear-program-preview" onclick="clearProgramPreview()" title="Clear the preview without clearing live output">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+          <span>Clear Preview</span>
+        </button>
+      </div>
       <div class="program-display-link-row">
         <label for="program-display-link">Display Link</label>
         <input type="text" id="program-display-link" readonly placeholder="Launch display to load URL">
         <button type="button" class="btn" id="copy-program-display-link" onclick="copyLocalDisplayUrl()" title="Copy display link" aria-label="Copy display link">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
         </button>
-      </div>
-      <div id="program-scale-bar">
-        <div class="program-aspect-wrap">
-          <span class="program-aspect-label">Aspect Ratio</span>
-          <div class="segmented-picker" id="panel-inline-style-43">
-            <button class="seg-btn active" id="program-aspect-16x9" onclick="setProgramDisplayAspect('16:9')">16:9</button>
-            <button class="seg-btn" id="program-aspect-9x16" onclick="setProgramDisplayAspect('9:16')">9:16</button>
-          </div>
-        </div>
-        <!-- Master output audio meter -->
-        <div id="pgm-output-meter">
-          <div class="pgm-meter-main">
-            <div class="pgm-meter-bars">
-              <div class="pgm-meter-scale">
-                <span id="panel-inline-style-44">0</span>
-                <span id="panel-inline-style-45">-6</span>
-                <span id="panel-inline-style-46">-10</span>
-                <span id="panel-inline-style-47">-20</span>
-                <span id="panel-inline-style-48">-30</span>
-                <span id="panel-inline-style-49">-40</span>
-                <span id="panel-inline-style-50">-60</span>
-              </div>
-              <div class="pgm-bar">
-                <div class="pgm-bar-fill" id="pgm-fill-l"></div>
-                <div class="pgm-bar-peak" id="pgm-peak-l"></div>
-                <span class="pgm-bar-label">L</span>
-              </div>
-              <div class="pgm-bar">
-                <div class="pgm-bar-fill" id="pgm-fill-r"></div>
-                <div class="pgm-bar-peak" id="pgm-peak-r"></div>
-                <span class="pgm-bar-label">R</span>
-              </div>
-            </div>
-            <div class="pgm-volume-col">
-              <input id="pgm-stream-volume" class="pgm-volume-slider" type="range" min="0" max="100" value="100" oninput="pgmSetMonitorVolumeFromUi(this.value)" title="Monitor output volume">
-              <span class="pgm-volume-value" id="pgm-stream-vol-label">0.0 dB</span>
-            </div>
-          </div>
-          <div class="pgm-mute-row">
-            <button class="pgm-mute-btn muted" id="pgm-mute-monitor" title="Unmute monitor output" onclick="pgmToggleMute('monitor')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 18v-6a9 9 0 0 1 18 0v6"/>
-                <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>
-              </svg>
-            </button>
-          </div>
-          <div class="pgm-monitor-controls">
-            <select id="pgm-output-device-select" class="pgm-output-device-select" onchange="pgmChangeOutputDevice()">
-              <option value="">System Default</option>
-            </select>
-            <select id="pgm-monitor-mode-select" class="pgm-monitor-mode-select" onchange="pgmChangeMonitoringMode(this.value)" title="Monitoring Mode">
-              <option value="monitor-off">Monitor Off</option>
-              <option value="monitor-only">Monitor Only</option>
-              <option value="monitor-and-output">Monitor and Output</option>
-            </select>
-          </div>
-        </div>
       </div>
     </aside>
     </div>

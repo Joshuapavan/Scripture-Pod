@@ -158,6 +158,17 @@
       return postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_UPDATE', payload: previewPayload });
     }
 
+    function clearProgramPreview() {
+      pendingProgramPreviewPayload = null;
+      embeddedProgramDisplayState = { kind: 'clear' };
+      if (!postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_CLEAR' })) {
+        showToast('Preview display is not ready');
+        return false;
+      }
+      showToast('Preview cleared');
+      return true;
+    }
+
     function postMessageToStandaloneOutput(message) {
       if (window.BSPDesktop && typeof window.BSPDesktop.sendOutputMessage === 'function') {
         window.BSPDesktop.sendOutputMessage(message).catch(() => {});

@@ -48,12 +48,24 @@
       bar.classList.add('connected');
       isDisplayOnline = true;
       updateStatusText();
+      updateProgramDisplayStatus();
       clearTimeout(connectionTimer);
       connectionTimer = setTimeout(() => {
         bar.classList.remove('connected');
         isDisplayOnline = false;
         updateStatusText();
+        updateProgramDisplayStatus();
       }, 3000);
+    }
+
+    function updateProgramDisplayStatus() {
+      const dot = document.getElementById('program-display-status-dot');
+      const outputState = document.getElementById('program-display-output-state');
+      const routeLabel = document.getElementById('program-display-route-label');
+      const isPreviewOnly = document.getElementById('btn-preview')?.getAttribute('aria-pressed') === 'true';
+      if (dot) dot.classList.toggle('connected', !!isDisplayOnline);
+      if (outputState) outputState.textContent = isDisplayOnline ? 'Display connected' : 'Display offline';
+      if (routeLabel) routeLabel.textContent = isPreviewOnly ? 'Preview only' : (isLive ? 'Live output' : 'Live ready');
     }
 
     const RELAY_MEDIA_UNSET = Symbol('relay-media-unset');
@@ -61,17 +73,26 @@
     let lastRelayBgVideo = RELAY_MEDIA_UNSET;
     let backgroundVideoPreloadTimer = null;
     const backgroundMediaUrlCache = new Map();
+    const BACKGROUND_MEDIA_URL_CACHE_LIMIT = 4;
     const backgroundMediaPending = new Map();
     let syncStateMediaPending = false;
 
     function cacheBackgroundMediaForOutput(source) {
       if (typeof source !== 'string' || !source.startsWith('data:')) return Promise.resolve(source);
       if (!(window.BSPDesktop && typeof window.BSPDesktop.cacheBackgroundMedia === 'function')) return Promise.resolve(source);
-      if (backgroundMediaUrlCache.has(source)) return Promise.resolve(backgroundMediaUrlCache.get(source));
+      if (backgroundMediaUrlCache.has(source)) {
+        const cachedUrl = backgroundMediaUrlCache.get(source);
+        backgroundMediaUrlCache.delete(source);
+        backgroundMediaUrlCache.set(source, cachedUrl);
+        return Promise.resolve(cachedUrl);
+      }
       if (backgroundMediaPending.has(source)) return backgroundMediaPending.get(source);
       const pending = window.BSPDesktop.cacheBackgroundMedia(source).then((result) => {
         if (!result?.url) throw new Error('Background media URL was not returned');
         backgroundMediaUrlCache.set(source, result.url);
+        while (backgroundMediaUrlCache.size > BACKGROUND_MEDIA_URL_CACHE_LIMIT) {
+          backgroundMediaUrlCache.delete(backgroundMediaUrlCache.keys().next().value);
+        }
         if (isLive) scheduleLiveUpdate();
         return result.url;
       }).finally(() => {
@@ -572,6 +593,7 @@
 
     function pushLiveUpdate(opts = {}) {
       const previewOnly = opts.previewOnly === true;
+      if (!previewOnly && document.getElementById('btn-preview')?.getAttribute('aria-pressed') === 'true') return false;
       if ((!isLive && !previewOnly) || !livePointer) return false;
       const effectiveLiveLinesPerPage = Math.max(1, Number(liveLinesPerPage) || Number(linesPerPage) || 1);
       const liveBgState = getEffectiveLiveBackgroundState();

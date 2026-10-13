@@ -247,14 +247,16 @@ function createOutputWindow(options = {}) {
   outputWindow.on('closed', () => {
     outputWindow = null;
     outputClosedCallbacks.forEach((webContentsId) => {
-      const sender = BrowserWindow.fromWebContents(
-        [...BrowserWindow.getAllWindows()]
-          .map((win) => win.webContents)
-          .find((contents) => contents.id === webContentsId)
+      const sender = [...BrowserWindow.getAllWindows()].find((win) =>
+        !win.isDestroyed() &&
+        !win.webContents.isDestroyed() &&
+        win.webContents.id === webContentsId
       );
-      if (sender && sender.webContents) {
-        sender.webContents.send('bsp:output-closed');
+      if (!sender) {
+        outputClosedCallbacks.delete(webContentsId);
+        return;
       }
+      sender.webContents.send('bsp:output-closed');
     });
   });
 
@@ -381,7 +383,9 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on('bsp:register-output-closed-listener', (event) => {
-    outputClosedCallbacks.add(event.sender.id);
+    const senderId = event.sender.id;
+    outputClosedCallbacks.add(senderId);
+    event.sender.once('destroyed', () => outputClosedCallbacks.delete(senderId));
   });
 
   startHttpServer();

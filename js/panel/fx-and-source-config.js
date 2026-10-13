@@ -1812,6 +1812,7 @@
 
     /** Cache for parsed LUT data to avoid re-parsing on every render */
     const _lutParseCache = new Map();
+    const LUT_PARSE_CACHE_LIMIT = 8;
 
     /**
      * Ensure an SVG <filter> element exists for a custom LUT and return its ID.
@@ -1821,10 +1822,19 @@
       /* Check cache */
       const cacheKey = String(lutName || '') + '::' + String(lutDataUrl || '');
       let lut = _lutParseCache.get(cacheKey);
+      if (lut) {
+        _lutParseCache.delete(cacheKey);
+        _lutParseCache.set(cacheKey, lut);
+      }
       if (!lut) {
         const text = _decodeLutDataUrl(lutDataUrl);
         lut = _parseCustomLutText(text, lutName);
-        if (lut) _lutParseCache.set(cacheKey, lut);
+        if (lut) {
+          _lutParseCache.set(cacheKey, lut);
+          while (_lutParseCache.size > LUT_PARSE_CACHE_LIMIT) {
+            _lutParseCache.delete(_lutParseCache.keys().next().value);
+          }
+        }
       }
       if (!lut) return null;
       const matrix = _lutToColorMatrix(lut, intensity);
