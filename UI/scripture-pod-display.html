@@ -34,6 +34,35 @@
   <div id="display-container" class="mode-full">
     <div id="text-container" class="hardware-accelerated"></div>
   </div>
+  <div id="name-role-overlay" aria-hidden="true">
+    <div class="name-role-overlay-card">
+      <span class="name-role-overlay-accent"></span>
+      <img class="name-role-overlay-logo" alt="" hidden>
+      <div class="name-role-overlay-stack">
+        <div class="name-role-overlay-copy-panel">
+          <div class="name-role-overlay-copy">
+            <strong class="name-role-overlay-name"></strong>
+            <span class="name-role-overlay-role"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="social-engagement-overlay" aria-hidden="true">
+    <div class="social-engagement-overlay-card">
+      <div class="social-engagement-overlay-socials" hidden>
+        <span class="name-role-social name-role-social-instagram"><b>IG</b><span></span></span>
+        <span class="name-role-social name-role-social-facebook"><b>f</b><span></span></span>
+        <span class="name-role-social name-role-social-website"><b>WEB</b><span></span></span>
+      </div>
+      <div class="social-engagement-overlay-actions" hidden>
+        <span class="name-role-action name-role-action-like"><b>+</b> LIKE</span>
+        <span class="name-role-action name-role-action-share"><b>↗</b> SHARE</span>
+        <span class="name-role-action name-role-action-subscribe"><b>●</b> SUBSCRIBE</span>
+      </div>
+    </div>
+  </div>
 
   <div id="debug-overlay" style="position: fixed; right: 12px; top: 12px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px; border-radius: 8px; z-index: 9999; font-family: monospace; font-size: 12px; max-width: 440px; max-height: 60vh; overflow:auto; display: none;">
     <div id="debug-status" style="font-weight:bold;margin-bottom:6px">DEBUG: initializing...</div>
@@ -148,6 +177,8 @@
     let rafId = null;
     let lastUpdateTime = 0;
     let lastSeq = 0;
+    let lowerThirdOnlyMode = false;
+    let lastProjectionUpdate = null;
     let lastLtBgMode = 'solid';
     let lastBGMode = 'solid';
     let lastBgType = 'color';
@@ -512,7 +543,12 @@
           }
           case 'CLEAR':
             hasSynced = true;
-            if (acceptSeq(d.seq)) clearDisplay({ fade: d.fade !== false, duration: d.transitionDuration });
+            if (acceptSeq(d.seq)) {
+              lowerThirdOnlyMode = false;
+              lastProjectionUpdate = null;
+              document.body.classList.remove('lower-third-only-mode');
+              clearDisplay({ fade: d.fade !== false, duration: d.transitionDuration });
+            }
             break;
           case 'UPDATE':
             hasSynced = true;
@@ -526,6 +562,9 @@
             hasSynced = true;
             if (!acceptSeq(seq)) return;
             if (state.kind === 'clear') {
+              lowerThirdOnlyMode = false;
+              lastProjectionUpdate = null;
+              document.body.classList.remove('lower-third-only-mode');
               clearDisplay();
             } else if (state.kind === 'update' && payload) {
               applyUpdateWithThrottle(payload);
@@ -1170,10 +1209,136 @@
 
     // ===== RENDERER =====
     // Handle update with proper sequencing
+    function updateNameRoleOverlay(data) {
+      const overlay = document.getElementById('name-role-overlay');
+      if (!overlay) return;
+      const name = String(data?.name || '').trim();
+      const role = String(data?.role || '').trim();
+      const rawStyle = String(data?.style || 'classic-rise');
+      const normalizedStyle = ['classic', 'centered', 'band'].includes(rawStyle) ? `${rawStyle}-rise` : rawStyle;
+      const previousStyle = normalizedStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring)$/);
+      const currentStyle = previousStyle ? `${previousStyle[1]}-gms-${previousStyle[2]}` : normalizedStyle;
+      const styleMatch = currentStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy)-(rise|slide|sweep|zoom|shutter|spring)$/);
+      const layout = styleMatch ? styleMatch[1] : 'classic';
+      const theme = styleMatch ? styleMatch[2] : 'gms';
+      const animation = styleMatch ? styleMatch[3] : 'rise';
+      const style = `${layout}-${theme}-${animation}`;
+      const accentColor = /^#[0-9a-f]{6}$/i.test(data?.accentColor || '') ? data.accentColor : '#b9df45';
+      const logo = typeof data?.logo === 'string' && data.logo.startsWith('data:image/') ? data.logo : '';
+      const nameSize = Math.max(24, Math.min(160, Number(data?.nameSize) || 56));
+      const roleSize = Math.max(12, Math.min(72, Number(data?.roleSize) || 24));
+      const logoSize = Math.max(24, Math.min(320, Number(data?.logoSize) || 128));
+      const enabled = !!data?.enabled && !!name && !!role;
+      const nameEl = overlay.querySelector('.name-role-overlay-name');
+      const roleEl = overlay.querySelector('.name-role-overlay-role');
+      const logoEl = overlay.querySelector('.name-role-overlay-logo');
+      const changed = overlay.dataset.name !== name || overlay.dataset.role !== role ||
+        overlay.dataset.style !== style || overlay.dataset.accentColor !== accentColor || overlay.dataset.logo !== logo;
+      if (nameEl) nameEl.textContent = name;
+      if (roleEl) roleEl.textContent = role;
+      if (logoEl) {
+        if (logo) logoEl.src = logo;
+        else logoEl.removeAttribute('src');
+        logoEl.hidden = !logo;
+      }
+      overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring');
+      overlay.classList.add(`style-${layout}`, `theme-${theme}`, `motion-${animation}`);
+      overlay.style.setProperty('--name-role-accent', accentColor);
+      overlay.style.setProperty('--name-role-name-size', `${nameSize}px`);
+      overlay.style.setProperty('--name-role-role-size', `${roleSize}px`);
+      overlay.style.setProperty('--name-role-logo-size', `${logoSize}px`);
+      overlay.dataset.name = name;
+      overlay.dataset.role = role;
+      overlay.dataset.style = style;
+      overlay.dataset.theme = theme;
+      overlay.dataset.accentColor = accentColor;
+      overlay.dataset.logo = logo;
+      overlay.setAttribute('aria-hidden', enabled ? 'false' : 'true');
+      if (enabled && changed && overlay.classList.contains('is-visible')) {
+        overlay.classList.remove('is-visible');
+        void overlay.offsetWidth;
+      }
+      overlay.classList.toggle('is-visible', enabled);
+    }
+
+    function updateSocialEngagementOverlay(data) {
+      const overlay = document.getElementById('social-engagement-overlay');
+      if (!overlay) return;
+      const socials = data?.socials || {};
+      const actions = data?.actions || {};
+      const socialValues = {
+        instagram: String(socials.instagram || '').trim(),
+        facebook: String(socials.facebook || '').trim(),
+        website: String(socials.website || '').trim()
+      };
+      const socialEl = overlay.querySelector('.social-engagement-overlay-socials');
+      const actionEl = overlay.querySelector('.social-engagement-overlay-actions');
+      if (socialEl) {
+        Object.entries(socialValues).forEach(([key, value]) => {
+          const item = socialEl.querySelector(`.name-role-social-${key}`);
+          if (!item) return;
+          item.hidden = !value;
+          const text = item.querySelector('span');
+          if (text) text.textContent = value;
+        });
+        socialEl.hidden = socials.enabled !== true || !Object.values(socialValues).some(Boolean);
+      }
+      if (actionEl) {
+        Object.entries({ like: !!actions.like, share: !!actions.share, subscribe: !!actions.subscribe }).forEach(([key, visible]) => {
+          const item = actionEl.querySelector(`.name-role-action-${key}`);
+          if (item) item.hidden = !visible;
+        });
+        actionEl.hidden = !Object.values(actions).some(Boolean);
+      }
+      const enabled = !!data?.enabled && (!!socials.enabled || Object.values(socialValues).some(Boolean) || Object.values(actions).some(Boolean));
+      overlay.setAttribute('aria-hidden', enabled ? 'false' : 'true');
+      overlay.classList.toggle('is-visible', enabled);
+    }
+
     function handleUpdate(d) {
+      if (d.restorePrevious) {
+        lowerThirdOnlyMode = false;
+        document.body.classList.remove('lower-third-only-mode');
+        updateNameRoleOverlay(null);
+        updateSocialEngagementOverlay(null);
+        if (lastProjectionUpdate) {
+          handleUpdate({
+            ...lastProjectionUpdate,
+            nameRoleOverlay: {
+              ...(lastProjectionUpdate.nameRoleOverlay || {}),
+              ...(d.nameRoleOverlay || {}),
+              enabled: false
+            },
+            socialEngagementOverlay: {
+              ...(lastProjectionUpdate.socialEngagementOverlay || {}),
+              ...(d.socialEngagementOverlay || {}),
+              enabled: false
+            }
+          });
+        }
+        else clearDisplay({ fade: false });
+        return;
+      }
+      if (d.lowerThirdOnly) {
+        const entering = !lowerThirdOnlyMode;
+        lowerThirdOnlyMode = true;
+        document.body.classList.add('lower-third-only-mode');
+        if (entering) clearDisplay({ fade: false });
+        updateNameRoleOverlay(d.nameRoleOverlay);
+        updateSocialEngagementOverlay(d.socialEngagementOverlay);
+        return;
+      }
+      if (lowerThirdOnlyMode) {
+        lastProjectionUpdate = d;
+        return;
+      }
+      lastProjectionUpdate = d;
+      document.body.classList.remove('lower-third-only-mode');
       cancelPendingClear();
       // Store current state
       currentState = { ...currentState, ...d };
+      updateNameRoleOverlay(d.nameRoleOverlay);
+      updateSocialEngagementOverlay(d.socialEngagementOverlay);
       const backgroundUpdate = { ...d };
       if (!Object.prototype.hasOwnProperty.call(d, 'bgImage')) backgroundUpdate.bgImage = currentState.bgImage;
       if (!Object.prototype.hasOwnProperty.call(d, 'bgVideo')) backgroundUpdate.bgVideo = currentState.bgVideo;
@@ -2689,6 +2854,7 @@
     }
 
     function clearDisplay(opts = {}) {
+      updateNameRoleOverlay(null);
       const fade = opts.fade !== false;
       const durationSec = clamp(Number(opts.duration ?? currentState.transitionDuration ?? 0.3), 0, 10);
       cancelPendingClear();

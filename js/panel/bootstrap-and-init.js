@@ -704,6 +704,62 @@
 
     function applyUiSnapshot(ui) {
       if (!ui) return;
+      const overlayNameInput = document.getElementById('name-role-overlay-name');
+      const overlayRoleInput = document.getElementById('name-role-overlay-role');
+      const overlayEnabledButton = document.getElementById('name-role-overlay-show-btn');
+      const overlayStyleInput = document.getElementById('name-role-overlay-style');
+      const overlayAccentInput = document.getElementById('name-role-overlay-accent');
+      const overlayNameSizeInput = document.getElementById('name-role-overlay-name-size');
+      const overlayRoleSizeInput = document.getElementById('name-role-overlay-role-size');
+      const overlayLogoSizeInput = document.getElementById('name-role-overlay-logo-size');
+      const overlaySocialsEnabled = document.getElementById('name-role-overlay-socials-enabled');
+      const overlayInstagram = document.getElementById('name-role-overlay-instagram');
+      const overlayFacebook = document.getElementById('name-role-overlay-facebook');
+      const overlayWebsite = document.getElementById('name-role-overlay-website');
+      const overlayLike = document.getElementById('name-role-overlay-like');
+      const overlayShare = document.getElementById('name-role-overlay-share');
+      const overlaySubscribe = document.getElementById('name-role-overlay-subscribe');
+      const overlayLogoPreview = document.getElementById('name-role-overlay-logo-preview');
+      const overlayLogoRemoveButton = document.getElementById('name-role-overlay-logo-remove');
+      if (overlayNameInput) overlayNameInput.value = String(ui.nameRoleOverlayName || '');
+      if (overlayRoleInput) overlayRoleInput.value = String(ui.nameRoleOverlayRole || '');
+      if (overlayEnabledButton) {
+        const overlayEnabled = ui.nameRoleOverlayEnabled === true;
+        overlayEnabledButton.setAttribute('aria-pressed', overlayEnabled ? 'true' : 'false');
+        overlayEnabledButton.textContent = overlayEnabled ? 'Hide Lower Third' : 'Show Lower Third';
+        overlayEnabledButton.classList.toggle('active', overlayEnabled);
+      }
+      if (overlayStyleInput) {
+        const savedOverlayStyle = String(ui.nameRoleOverlayStyle || 'classic-gms-rise');
+        const isCurrentStyle = /^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy)-(rise|slide|sweep|zoom|shutter|spring)$/.test(savedOverlayStyle);
+        const previousStyle = savedOverlayStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring)$/);
+        const previousLayout = ['classic', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : 'classic';
+        overlayStyleInput.value = isCurrentStyle
+          ? savedOverlayStyle
+          : previousStyle
+            ? `${previousStyle[1]}-gms-${previousStyle[2]}`
+            : `${previousLayout}-gms-rise`;
+      }
+      if (overlayAccentInput && /^#[0-9a-f]{6}$/i.test(ui.nameRoleOverlayAccentColor || '')) overlayAccentInput.value = ui.nameRoleOverlayAccentColor;
+      if (overlayNameSizeInput) overlayNameSizeInput.value = String(Math.max(24, Math.min(160, Number(ui.nameRoleOverlayNameSize) || 56)));
+      if (overlayRoleSizeInput) overlayRoleSizeInput.value = String(Math.max(12, Math.min(72, Number(ui.nameRoleOverlayRoleSize) || 24)));
+      if (overlayLogoSizeInput) overlayLogoSizeInput.value = String(Math.max(24, Math.min(320, Number(ui.nameRoleOverlayLogoSize) || 128)));
+      if (overlaySocialsEnabled) overlaySocialsEnabled.checked = ui.nameRoleOverlaySocialsEnabled === true;
+      if (overlayInstagram) overlayInstagram.value = String(ui.nameRoleOverlayInstagram || '');
+      if (overlayFacebook) overlayFacebook.value = String(ui.nameRoleOverlayFacebook || '');
+      if (overlayWebsite) overlayWebsite.value = String(ui.nameRoleOverlayWebsite || '');
+      if (overlayLike) overlayLike.checked = ui.nameRoleOverlayLike === true;
+      if (overlayShare) overlayShare.checked = ui.nameRoleOverlayShare === true;
+      if (overlaySubscribe) overlaySubscribe.checked = ui.nameRoleOverlaySubscribe === true;
+      if (overlayLogoPreview) {
+        const logoDataUrl = String(ui.nameRoleOverlayLogo || '');
+        overlayLogoPreview.dataset.logoDataUrl = logoDataUrl;
+        if (logoDataUrl) overlayLogoPreview.src = logoDataUrl;
+        else overlayLogoPreview.removeAttribute('src');
+        overlayLogoPreview.hidden = !logoDataUrl;
+      }
+      if (overlayLogoRemoveButton) overlayLogoRemoveButton.hidden = !ui.nameRoleOverlayLogo;
+      if (typeof updateProgramDisplayStatus === 'function') updateProgramDisplayStatus();
       loadFocusedWorkspaceControlsFromUi(ui);
       loadProjectionSettingsProfilesFromUi(ui);
       applySetlistSettingsSnapshot(ui.setlistSettings);

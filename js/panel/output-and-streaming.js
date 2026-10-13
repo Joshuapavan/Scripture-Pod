@@ -351,6 +351,57 @@
     #scene-compositor .src-layer .src-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); font-size: 12px; font-weight: 600; }
     #stage { position: fixed; inset: 0; z-index: 3; color: #fff; text-rendering: geometricPrecision; -webkit-font-smoothing: antialiased; display: flex; pointer-events: none; }
     #text-layer { width: 100%; word-break: break-word; }
+    #name-role-overlay { position: fixed; inset: 0; z-index: 8; display: flex; align-items: flex-end; justify-content: flex-start; padding: 0 7vw 8vh; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 360ms ease, visibility 360ms ease; }
+    #name-role-overlay.is-visible { opacity: 1; visibility: visible; }
+    .style-centered#name-role-overlay { justify-content: center; padding-bottom: 8vh; }
+    .style-band#name-role-overlay { justify-content: center; padding: 0 0 7vh; }
+    .name-role-overlay-card { display: flex; flex-direction: row; align-items: center; gap: 18px; max-width: 86vw; min-height: 92px; padding: 14px 24px; border: 1px solid rgba(218,238,241,0.24); border-left: 5px solid var(--name-role-accent,#b9df45); border-radius: 5px; background: rgba(8,14,18,0.82); box-shadow: 0 20px 64px rgba(0,0,0,0.42); backdrop-filter: blur(14px); color: #fff; text-align: left; opacity: 0; transform: translateY(24px) scale(0.96); transition: opacity 560ms ease, transform 700ms cubic-bezier(0.2,0.85,0.25,1); }
+    .style-centered#name-role-overlay .name-role-overlay-card { border: 0; border-top: 4px solid var(--name-role-accent,#b9df45); text-align: center; }
+    .style-band#name-role-overlay .name-role-overlay-card { width: 100%; max-width: 100%; justify-content: center; border: 0; border-top: 3px solid var(--name-role-accent,#b9df45); border-radius: 0; background: rgba(8,14,18,0.9); text-align: center; }
+    #name-role-overlay.theme-gms .name-role-overlay-card { border: 0; border-radius: 2px; background: linear-gradient(105deg,var(--name-role-accent,#b9df45) 0 76%,#101216 76%); color: #101216; box-shadow: 0 12px 34px rgba(0,0,0,0.38); }
+    #name-role-overlay.theme-gms .name-role-overlay-role, #name-role-overlay.theme-gms .name-role-overlay-socials, #name-role-overlay.theme-gms .name-role-action { color: #17200c; }
+    #name-role-overlay.theme-noir .name-role-overlay-card { border: 1px solid rgba(222,192,132,0.78); border-left: 5px solid #d5b56d; background: linear-gradient(145deg,rgba(27,29,34,0.96),rgba(5,7,10,0.96)); box-shadow: 0 18px 54px rgba(0,0,0,0.58); }
+    #name-role-overlay.theme-broadcast .name-role-overlay-card { border: 0; border-left: 7px solid var(--name-role-accent,#b9df45); border-radius: 0; background: linear-gradient(105deg,#1559a7,#203c79); box-shadow: 0 12px 32px rgba(0,0,0,0.38); }
+    #name-role-overlay.theme-modern .name-role-overlay-card { border: 1px solid rgba(241,248,245,0.72); border-left: 5px solid var(--name-role-accent,#b9df45); border-radius: 2px; background: rgba(239,245,242,0.96); color: #17231e; box-shadow: 0 14px 42px rgba(0,0,0,0.3); }
+    #name-role-overlay.theme-modern .name-role-overlay-role, #name-role-overlay.theme-modern .name-role-overlay-socials, #name-role-overlay.theme-modern .name-role-action { color: #17231e; }
+    #name-role-overlay.theme-news .name-role-overlay-card { border: 0; border-left: 8px solid var(--name-role-accent,#b9df45); border-bottom: 3px solid var(--name-role-accent,#b9df45); border-radius: 0; background: linear-gradient(90deg,rgba(13,16,20,0.98),rgba(29,33,38,0.95)); box-shadow: 0 12px 36px rgba(0,0,0,0.48); }
+    #name-role-overlay.theme-spotlight .name-role-overlay-card { border: 1px solid rgba(255,255,255,0.22); border-bottom: 4px solid var(--name-role-accent,#b9df45); border-radius: 12px; background: linear-gradient(135deg,rgba(16,25,37,0.97),rgba(8,11,19,0.94)); box-shadow: 0 0 34px color-mix(in srgb,var(--name-role-accent,#b9df45) 38%,transparent),0 20px 56px rgba(0,0,0,0.5); }
+    #name-role-overlay.is-visible .name-role-overlay-card { opacity: 1; transform: translateY(0) scale(1); }
+    #name-role-overlay.motion-slide:not(.is-visible) .name-role-overlay-card { transform: translateX(-54px); }
+    #name-role-overlay.motion-slide.is-visible .name-role-overlay-card { transform: translateX(0); }
+    #name-role-overlay.motion-sweep:not(.is-visible) .name-role-overlay-card { transform: translateX(-72px) skewX(-7deg); }
+    #name-role-overlay.motion-sweep.is-visible .name-role-overlay-card { transform: translateX(0) skewX(0); }
+    #name-role-overlay.motion-zoom:not(.is-visible) .name-role-overlay-card { transform: scale(0.72); }
+    #name-role-overlay.motion-zoom.is-visible .name-role-overlay-card { transform: scale(1); }
+    #name-role-overlay.motion-shutter:not(.is-visible) .name-role-overlay-card { transform: scaleX(0.12); }
+    #name-role-overlay.motion-shutter.is-visible .name-role-overlay-card { transform: scaleX(1); }
+    #name-role-overlay.motion-spring .name-role-overlay-card { transition-timing-function: cubic-bezier(0.2,1.4,0.35,1); }
+    .name-role-overlay-accent { width: 4px; height: 58px; flex: 0 0 4px; border-radius: 2px; background: var(--name-role-accent,#b9df45); transform: scaleY(0.15); transition: transform 540ms cubic-bezier(0.2,0.85,0.25,1) 120ms; }
+    #name-role-overlay.is-visible .name-role-overlay-accent { transform: scaleY(1); }
+    .style-centered#name-role-overlay .name-role-overlay-accent { width: 34px; height: 3px; flex-basis: 34px; align-self: flex-start; margin-top: 8px; transform: scaleX(0.15); }
+    .style-centered#name-role-overlay.is-visible .name-role-overlay-accent { transform: scaleX(1); }
+    .style-band#name-role-overlay .name-role-overlay-accent { display: none; }
+    .name-role-overlay-logo { display: block; width: var(--name-role-logo-size,128px); height: var(--name-role-logo-size,128px); max-width: min(24vw,320px); max-height: min(28vh,320px); object-fit: contain; flex: 0 0 auto; }
+    .name-role-overlay-logo[hidden] { display: none; }
+    .name-role-overlay-content { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; }
+    .name-role-overlay-copy { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 0.08em; }
+    .style-centered#name-role-overlay .name-role-overlay-content, .style-band#name-role-overlay .name-role-overlay-content { align-items: center; }
+    .name-role-overlay-socials { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; color: currentColor; font-size: 13px; font-weight: 600; opacity: 0; transform: translateY(-8px); transition: opacity 380ms ease 90ms,transform 460ms ease 90ms; }
+    #name-role-overlay.is-visible .name-role-overlay-socials:not([hidden]) { opacity: 0.9; transform: translateY(0); }
+    .name-role-overlay-socials[hidden], .name-role-overlay-actions[hidden], .name-role-social[hidden], .name-role-action[hidden] { display: none; }
+    .name-role-social { display: inline-flex; align-items: center; gap: 5px; min-width: 0; }
+    .name-role-social b { display: inline-flex; align-items: center; justify-content: center; min-width: 23px; height: 20px; padding: 0 4px; border: 1px solid currentColor; border-radius: 3px; font-size: 9px; font-weight: 800; }
+    .name-role-social span { max-width: 32vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .name-role-overlay-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; padding-top: 4px; }
+    .name-role-action { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border: 1px solid color-mix(in srgb,var(--name-role-accent,#b9df45) 70%,transparent); border-radius: 999px; background: rgba(7,12,16,0.32); color: currentColor; font-size: 10px; font-weight: 800; opacity: 0; transform: translateY(9px) scale(0.96); transition: opacity 360ms ease,transform 460ms cubic-bezier(0.2,0.85,0.25,1); }
+    #name-role-overlay.is-visible .name-role-action:not([hidden]) { opacity: 1; transform: translateY(0) scale(1); }
+    #name-role-overlay.is-visible .name-role-action-like { transition-delay: 100ms; }
+    #name-role-overlay.is-visible .name-role-action-share { transition-delay: 190ms; }
+    #name-role-overlay.is-visible .name-role-action-subscribe { transition-delay: 280ms; }
+    .name-role-action b { color: var(--name-role-accent,#b9df45); font-size: 14px; line-height: 1; }
+    .name-role-overlay-name { max-width: 72vw; overflow-wrap: anywhere; font-size: var(--name-role-name-size,56px); font-weight: 800; line-height: 1.04; }
+    .name-role-overlay-role { color: var(--name-role-accent,#b9df45); font-size: var(--name-role-role-size,24px); font-weight: 600; line-height: 1.15; opacity: 0; transform: translateY(10px); transition: opacity 440ms ease 180ms, transform 520ms ease 180ms; }
+    #name-role-overlay.is-visible .name-role-overlay-role { opacity: 1; transform: translateY(0); }
     #stage.mode-full { align-items: center; justify-content: center; padding: 20px; }
     #stage.mode-full #text-layer { max-width: calc(100vw - 40px); text-align: center; }
     #stage.mode-lt { align-items: flex-end; justify-content: center; padding: 0; }
@@ -373,6 +424,30 @@
       <div id="text-layer"></div>
     </div>
     <div id="text-layer-full" style="display:none"></div>
+  </div>
+  <div id="name-role-overlay" aria-hidden="true">
+    <div class="name-role-overlay-card">
+      <span class="name-role-overlay-accent"></span>
+      <img class="name-role-overlay-logo" alt="" hidden>
+      <div class="name-role-overlay-stack">
+        <div class="name-role-overlay-socials" hidden>
+          <span class="name-role-social name-role-social-instagram"><b>IG</b><span></span></span>
+          <span class="name-role-social name-role-social-facebook"><b>f</b><span></span></span>
+          <span class="name-role-social name-role-social-website"><b>WEB</b><span></span></span>
+        </div>
+        <div class="name-role-overlay-copy-panel">
+          <div class="name-role-overlay-copy">
+            <strong class="name-role-overlay-name"></strong>
+            <span class="name-role-overlay-role"></span>
+          </div>
+        </div>
+        <div class="name-role-overlay-actions" hidden>
+          <span class="name-role-action name-role-action-like"><b>+</b> LIKE</span>
+          <span class="name-role-action name-role-action-share"><b>↗</b> SHARE</span>
+          <span class="name-role-action name-role-action-subscribe"><b>●</b> SUBSCRIBE</span>
+        </div>
+      </div>
+    </div>
   </div>
   <div id="hud">${opts.preview ? 'Program Preview' : 'Standalone Output'}</div>
   <script>
@@ -424,6 +499,8 @@
       const fullText = document.getElementById('text-layer-full');
       const hud = document.getElementById('hud');
       let lastSeq = 0;
+      let lowerThirdOnlyMode = false;
+      let lastNormalUpdate = null;
       const outputStreams = Object.create(null);
       if (IS_PREVIEW && hud) hud.style.display = 'none';
 
@@ -852,7 +929,50 @@
       function applyUpdate(data) {
         if (data.seq && data.seq <= lastSeq) return;
         if (data.seq) lastSeq = data.seq;
+        if (data.restorePrevious) {
+          lowerThirdOnlyMode = false;
+          document.body.classList.remove('lower-third-only-mode');
+          updateNameRoleOverlay(null);
+          if (lastNormalUpdate) {
+            applyUpdate({
+              ...lastNormalUpdate,
+              seq: 0,
+              nameRoleOverlay: {
+                ...(lastNormalUpdate.nameRoleOverlay || {}),
+                ...(data.nameRoleOverlay || {}),
+                enabled: false
+              }
+            });
+          }
+          else {
+            fullText.innerHTML = '';
+            ltText.innerHTML = '';
+            renderSceneLayers([]);
+            setBackground({ bgEnabled: false });
+          }
+          return;
+        }
+        if (data.lowerThirdOnly) {
+          const entering = !lowerThirdOnlyMode;
+          lowerThirdOnlyMode = true;
+          document.body.classList.add('lower-third-only-mode');
+          if (entering) {
+            fullText.innerHTML = '';
+            ltText.innerHTML = '';
+            renderSceneLayers([]);
+            setBackground({ bgEnabled: false });
+          }
+          updateNameRoleOverlay(data.nameRoleOverlay);
+          return;
+        }
+        if (lowerThirdOnlyMode) {
+          lastNormalUpdate = data;
+          return;
+        }
+        lastNormalUpdate = data;
+        document.body.classList.remove('lower-third-only-mode');
         renderSceneLayers(data.sceneLayers);
+        updateNameRoleOverlay(data.nameRoleOverlay);
         setBackground(data);
         setModeAndLayout(data);
         if (String(data.mode || 'full') === 'full') {
@@ -862,9 +982,100 @@
         }
       }
 
+      function updateNameRoleOverlay(data) {
+        const overlay = document.getElementById('name-role-overlay');
+        if (!overlay) return;
+        const name = String(data && data.name || '').trim();
+        const role = String(data && data.role || '').trim();
+        const rawStyle = String(data && data.style || 'classic-rise');
+        const legacyStyle = rawStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring)$/);
+        const normalizedStyle = legacyStyle ? legacyStyle[1] + '-gms-' + legacyStyle[2] : rawStyle;
+        const styleMatch = normalizedStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy)-(rise|slide|sweep|zoom|shutter|spring)$/);
+        const layout = styleMatch ? styleMatch[1] : 'classic';
+        const theme = styleMatch ? styleMatch[2] : 'gms';
+        const animation = styleMatch ? styleMatch[3] : 'rise';
+        const style = layout + '-' + theme + '-' + animation;
+        const accentColor = /^#[0-9a-f]{6}$/i.test(data && data.accentColor || '') ? data.accentColor : '#b9df45';
+        const logo = typeof (data && data.logo) === 'string' && data.logo.startsWith('data:image/') ? data.logo : '';
+        const socials = data && data.socials || {};
+        const socialValues = {
+          instagram: String(socials.instagram || '').trim(),
+          facebook: String(socials.facebook || '').trim(),
+          website: String(socials.website || '').trim()
+        };
+        const actions = {
+          like: !!(data && data.actions && data.actions.like),
+          share: !!(data && data.actions && data.actions.share),
+          subscribe: !!(data && data.actions && data.actions.subscribe)
+        };
+        const socialSignature = JSON.stringify(socialValues);
+        const actionSignature = JSON.stringify(actions);
+        const nameSize = Math.max(24, Math.min(160, Number(data && data.nameSize) || 56));
+        const roleSize = Math.max(12, Math.min(72, Number(data && data.roleSize) || 24));
+        const logoSize = Math.max(24, Math.min(320, Number(data && data.logoSize) || 128));
+        const enabled = !!(data && data.enabled) && !!name && !!role;
+        const nameEl = overlay.querySelector('.name-role-overlay-name');
+        const roleEl = overlay.querySelector('.name-role-overlay-role');
+        const logoEl = overlay.querySelector('.name-role-overlay-logo');
+        const socialsEl = overlay.querySelector('.name-role-overlay-socials');
+        const actionsEl = overlay.querySelector('.name-role-overlay-actions');
+        const changed = overlay.dataset.name !== name || overlay.dataset.role !== role ||
+          overlay.dataset.style !== style || overlay.dataset.accentColor !== accentColor || overlay.dataset.logo !== logo ||
+          overlay.dataset.socials !== socialSignature || overlay.dataset.actions !== actionSignature;
+        if (nameEl) nameEl.textContent = name;
+        if (roleEl) roleEl.textContent = role;
+        if (logoEl) {
+          if (logo) logoEl.src = logo;
+          else logoEl.removeAttribute('src');
+          logoEl.hidden = !logo;
+        }
+        Object.entries(socialValues).forEach(([key, value]) => {
+          const item = socialsEl && socialsEl.querySelector('.name-role-social-' + key);
+          if (!item) return;
+          item.hidden = !value;
+          const text = item.querySelector('span');
+          if (text) text.textContent = value;
+        });
+        if (socialsEl) socialsEl.hidden = socials.enabled !== true || !Object.values(socialValues).some(Boolean);
+        Object.entries(actions).forEach(([key, visible]) => {
+          const item = actionsEl && actionsEl.querySelector('.name-role-action-' + key);
+          if (item) item.hidden = !visible;
+        });
+        if (actionsEl) actionsEl.hidden = !Object.values(actions).some(Boolean);
+        overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring');
+        overlay.classList.add('style-' + layout, 'theme-' + theme, 'motion-' + animation);
+        overlay.style.setProperty('--name-role-accent', accentColor);
+        overlay.style.setProperty('--name-role-name-size', nameSize + 'px');
+        overlay.style.setProperty('--name-role-role-size', roleSize + 'px');
+        overlay.style.setProperty('--name-role-logo-size', logoSize + 'px');
+        overlay.dataset.name = name;
+        overlay.dataset.role = role;
+        overlay.dataset.style = style;
+        overlay.dataset.theme = theme;
+        overlay.dataset.accentColor = accentColor;
+        overlay.dataset.logo = logo;
+        overlay.dataset.socials = socialSignature;
+        overlay.dataset.actions = actionSignature;
+        overlay.setAttribute('aria-hidden', enabled ? 'false' : 'true');
+        if (enabled && changed && overlay.classList.contains('is-visible')) {
+          overlay.classList.remove('is-visible');
+          void overlay.offsetWidth;
+        }
+        overlay.classList.toggle('is-visible', enabled);
+      }
+
       function clearOutput() {
+        const wasLowerThirdOnly = lowerThirdOnlyMode;
+        lowerThirdOnlyMode = false;
+        lastNormalUpdate = null;
+        document.body.classList.remove('lower-third-only-mode');
         fullText.innerHTML = '';
         ltText.innerHTML = '';
+        if (wasLowerThirdOnly) {
+          renderSceneLayers([]);
+          setBackground({ bgEnabled: false });
+        }
+        updateNameRoleOverlay(null);
       }
 
       if (channel) {

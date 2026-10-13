@@ -63,9 +63,322 @@
       const outputState = document.getElementById('program-display-output-state');
       const routeLabel = document.getElementById('program-display-route-label');
       const isPreviewOnly = document.getElementById('btn-preview')?.getAttribute('aria-pressed') === 'true';
+      const lowerThirdOnly = document.getElementById('name-role-overlay-show-btn')?.getAttribute('aria-pressed') === 'true';
       if (dot) dot.classList.toggle('connected', !!isDisplayOnline);
       if (outputState) outputState.textContent = isDisplayOnline ? 'Display connected' : 'Display offline';
-      if (routeLabel) routeLabel.textContent = isPreviewOnly ? 'Preview only' : (isLive ? 'Live output' : 'Live ready');
+      if (routeLabel) routeLabel.textContent = isPreviewOnly ? 'Preview' : 'Live';
+    }
+
+    function getNameRoleOverlaySettings(enabled) {
+      return {
+        enabled: !!enabled,
+        name: String(document.getElementById('name-role-overlay-name')?.value || '').trim(),
+        role: String(document.getElementById('name-role-overlay-role')?.value || '').trim(),
+        style: document.getElementById('name-role-overlay-style')?.value || 'classic',
+        accentColor: document.getElementById('name-role-overlay-accent')?.value || '#b9df45',
+        logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',
+        nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
+        roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),
+        logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128)
+      };
+    }
+
+    function getSocialEngagementOverlaySettings(enabled) {
+      return {
+        enabled: !!enabled,
+        socials: {
+          enabled: document.getElementById('social-engagement-socials-enabled')?.checked === true,
+          instagram: String(document.getElementById('social-engagement-instagram')?.value || '').trim(),
+          facebook: String(document.getElementById('social-engagement-facebook')?.value || '').trim(),
+          website: String(document.getElementById('social-engagement-website')?.value || '').trim()
+        },
+        actions: {
+          like: document.getElementById('social-engagement-like')?.checked === true,
+          share: document.getElementById('social-engagement-share')?.checked === true,
+          subscribe: document.getElementById('social-engagement-subscribe')?.checked === true
+        }
+      };
+    }
+
+    function publishNameRoleOverlay(enabled) {
+      const payload = {
+        text: '',
+        mode: 'full',
+        isBible: false,
+        fontFamily: "'Montserrat',sans-serif",
+        fontWeight: '700',
+        fontSizeFull: 48,
+        fontSizeLT: 32,
+        lineHeightFull: 1.1,
+        lineHeightLT: 1.1,
+        bgEnabled: false,
+        bgType: 'color',
+        bgColor: '#000000',
+        bgMode: 'solid',
+        bgOpacity: 0,
+        bgImage: null,
+        bgVideo: null,
+        sceneLayers: [],
+        lowerThirdOnly: !!enabled,
+        restorePrevious: !enabled,
+        nameRoleOverlay: getNameRoleOverlaySettings(enabled)
+      };
+      if (isPreviewOnlyMode()) sendProgramPreview(payload);
+      else postUpdate(payload);
+    }
+
+    function publishSocialEngagementOverlay(enabled) {
+      const payload = {
+        text: '',
+        mode: 'full',
+        isBible: false,
+        fontFamily: "'Montserrat',sans-serif",
+        fontWeight: '700',
+        fontSizeFull: 48,
+        fontSizeLT: 32,
+        lineHeightFull: 1.1,
+        lineHeightLT: 1.1,
+        bgEnabled: false,
+        bgType: 'color',
+        bgColor: '#000000',
+        bgMode: 'solid',
+        bgOpacity: 0,
+        bgImage: null,
+        bgVideo: null,
+        sceneLayers: [],
+        lowerThirdOnly: !!enabled,
+        restorePrevious: !enabled,
+        socialEngagementOverlay: getSocialEngagementOverlaySettings(enabled)
+      };
+      if (isPreviewOnlyMode()) sendProgramPreview(payload);
+      else postUpdate(payload);
+    }
+
+    function previewNameRoleLowerThirdExample() {
+      const settings = getNameRoleOverlaySettings(true);
+      sendProgramPreview({
+        text: '',
+        mode: 'full',
+        isBible: false,
+        fontFamily: "'Montserrat',sans-serif",
+        fontWeight: '700',
+        fontSizeFull: 48,
+        fontSizeLT: 32,
+        lineHeightFull: 1.1,
+        lineHeightLT: 1.1,
+        bgEnabled: false,
+        bgType: 'color',
+        bgColor: '#000000',
+        bgMode: 'solid',
+        bgOpacity: 0,
+        bgImage: null,
+        bgVideo: null,
+        lowerThirdOnly: true,
+        nameRoleOverlay: {
+          ...settings,
+          name: 'PS. PHILIP MANTOFA',
+          role: 'GMS SURABAYA BARAT'
+        }
+      });
+      showToast('Lower-third example sent to preview');
+    }
+
+    function previewSocialEngagementLowerThirdExample() {
+      const settings = getSocialEngagementOverlaySettings(true);
+      sendProgramPreview({
+        text: '',
+        mode: 'full',
+        isBible: false,
+        fontFamily: "'Montserrat',sans-serif",
+        fontWeight: '700',
+        fontSizeFull: 48,
+        fontSizeLT: 32,
+        lineHeightFull: 1.1,
+        lineHeightLT: 1.1,
+        bgEnabled: false,
+        bgType: 'color',
+        bgColor: '#000000',
+        bgMode: 'solid',
+        bgOpacity: 0,
+        bgImage: null,
+        bgVideo: null,
+        lowerThirdOnly: true,
+        socialEngagementOverlay: {
+          ...settings,
+          socials: {
+            enabled: true,
+            instagram: '@church',
+            facebook: 'facebook.com/church',
+            website: 'church.org'
+          },
+          actions: {
+            like: true,
+            share: true,
+            subscribe: true
+          }
+        }
+      });
+      showToast('Social lower-third example sent to preview');
+    }
+
+    function toggleNameRoleOverlay() {
+      const button = document.getElementById('name-role-overlay-show-btn');
+      if (!button) return;
+      const enabled = button.getAttribute('aria-pressed') !== 'true';
+      const overlay = getNameRoleOverlaySettings(enabled);
+      if (enabled && (!overlay.name || !overlay.role)) {
+        showToast('Enter a name and role before showing the lower third');
+        return;
+      }
+      button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      button.textContent = enabled ? 'Hide Lower Third' : 'Show Lower Third';
+      button.classList.toggle('active', enabled);
+      button.title = enabled ? 'Hide lower third' : 'Show lower third';
+      updateProgramDisplayStatus();
+      handleNameRoleOverlayChange(true);
+    }
+
+    function toggleSocialEngagementOverlay() {
+      const button = document.getElementById('social-engagement-overlay-show-btn');
+      if (!button) return;
+      const enabled = button.getAttribute('aria-pressed') !== 'true';
+      const overlay = getSocialEngagementOverlaySettings(enabled);
+      const hasAnyContent = !!overlay.socials.enabled || Object.values(overlay.socials).some(Boolean) || Object.values(overlay.actions).some(Boolean);
+      if (enabled && !hasAnyContent) {
+        showToast('Enter a social handle or enable an action before showing the social lower third');
+        return;
+      }
+      button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+      button.textContent = enabled ? 'Hide Lower Third' : 'Show Lower Third';
+      button.classList.toggle('active', enabled);
+      button.title = enabled ? 'Hide social lower third' : 'Show social lower third';
+      handleSocialEngagementOverlayChange(true);
+    }
+
+    function handleNameRoleOverlayChange(visibilityChanged = false) {
+      const nameInput = document.getElementById('name-role-overlay-name');
+      const roleInput = document.getElementById('name-role-overlay-role');
+      const enabledButton = document.getElementById('name-role-overlay-show-btn');
+      const logoPreview = document.getElementById('name-role-overlay-logo-preview');
+      const name = String(nameInput?.value || '').trim();
+      const role = String(roleInput?.value || '').trim();
+      const enabled = enabledButton?.getAttribute('aria-pressed') === 'true';
+      if (!appState) appState = buildDefaultAppState();
+      if (!appState.settings) appState.settings = getUiSnapshot();
+      appState.settings.nameRoleOverlayName = name;
+      appState.settings.nameRoleOverlayRole = role;
+      appState.settings.nameRoleOverlayEnabled = enabled;
+      appState.settings.nameRoleOverlayStyle = document.getElementById('name-role-overlay-style')?.value || 'classic';
+      appState.settings.nameRoleOverlayAccentColor = document.getElementById('name-role-overlay-accent')?.value || '#b9df45';
+      appState.settings.nameRoleOverlayLogo = logoPreview?.dataset.logoDataUrl || '';
+      appState.settings.nameRoleOverlayNameSize = document.getElementById('name-role-overlay-name-size')?.value || '56';
+      appState.settings.nameRoleOverlayRoleSize = document.getElementById('name-role-overlay-role-size')?.value || '24';
+      appState.settings.nameRoleOverlayLogoSize = document.getElementById('name-role-overlay-logo-size')?.value || '128';
+      saveState();
+      saveToStorageDebounced();
+      if (enabled) {
+        if (!name || !role) {
+          enabledButton?.setAttribute('aria-pressed', 'false');
+          if (enabledButton) enabledButton.textContent = 'Show Lower Third';
+          appState.settings.nameRoleOverlayEnabled = false;
+          saveState();
+          saveToStorageDebounced();
+          showToast('Enter a name and role before showing the lower third');
+          publishNameRoleOverlay(false);
+          return;
+        }
+        publishNameRoleOverlay(true);
+      } else if (visibilityChanged) {
+        publishNameRoleOverlay(false);
+      } else if (isPreviewOnlyMode()) previewCurrentSelection();
+      else if (isLive && livePointer) pushLiveUpdate();
+    }
+
+    function handleSocialEngagementOverlayChange(visibilityChanged = false) {
+      const enabledButton = document.getElementById('social-engagement-overlay-show-btn');
+      const enabled = enabledButton?.getAttribute('aria-pressed') === 'true';
+      const payload = getSocialEngagementOverlaySettings(enabled);
+      if (!appState) appState = buildDefaultAppState();
+      if (!appState.settings) appState.settings = getUiSnapshot();
+      appState.settings.nameRoleOverlaySocialsEnabled = payload.socials.enabled;
+      appState.settings.nameRoleOverlayInstagram = payload.socials.instagram;
+      appState.settings.nameRoleOverlayFacebook = payload.socials.facebook;
+      appState.settings.nameRoleOverlayWebsite = payload.socials.website;
+      appState.settings.nameRoleOverlayLike = payload.actions.like;
+      appState.settings.nameRoleOverlayShare = payload.actions.share;
+      appState.settings.nameRoleOverlaySubscribe = payload.actions.subscribe;
+      saveState();
+      saveToStorageDebounced();
+      if (enabled) {
+        const hasAnyContent = payload.socials.enabled || Object.values(payload.socials).some(Boolean) || Object.values(payload.actions).some(Boolean);
+        if (!hasAnyContent) {
+          enabledButton?.setAttribute('aria-pressed', 'false');
+          if (enabledButton) enabledButton.textContent = 'Show Lower Third';
+          appState.settings.nameRoleOverlaySocialsEnabled = false;
+          saveState();
+          saveToStorageDebounced();
+          publishSocialEngagementOverlay(false);
+          return;
+        }
+        publishSocialEngagementOverlay(true);
+      } else if (visibilityChanged) {
+        publishSocialEngagementOverlay(false);
+      } else if (isPreviewOnlyMode()) previewCurrentSelection();
+      else if (isLive && livePointer) pushLiveUpdate();
+    }
+
+    async function handleNameRoleOverlayLogoChange(input) {
+      const file = input?.files?.[0];
+      if (!file) return;
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) {
+        showToast('Choose a PNG, JPEG, or WebP logo');
+        input.value = '';
+        return;
+      }
+      if (file.size > 8 * 1024 * 1024) {
+        showToast('Logo image must be smaller than 8 MB');
+        input.value = '';
+        return;
+      }
+      let bitmap = null;
+      try {
+        bitmap = await createImageBitmap(file);
+        const scale = Math.min(1, 520 / bitmap.width, 220 / bitmap.height);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Unable to process logo image');
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        const mimeType = file.type === 'image/png' ? 'image/png' : 'image/webp';
+        const logoDataUrl = canvas.toDataURL(mimeType, 0.88);
+        const preview = document.getElementById('name-role-overlay-logo-preview');
+        const removeButton = document.getElementById('name-role-overlay-logo-remove');
+        if (preview) {
+          preview.dataset.logoDataUrl = logoDataUrl;
+          preview.src = logoDataUrl;
+          preview.hidden = false;
+        }
+        if (removeButton) removeButton.hidden = false;
+        handleNameRoleOverlayChange();
+      } catch (error) {
+        showToast('Unable to load church logo');
+      } finally {
+        bitmap?.close();
+        input.value = '';
+      }
+    }
+
+    function removeNameRoleOverlayLogo() {
+      const preview = document.getElementById('name-role-overlay-logo-preview');
+      const removeButton = document.getElementById('name-role-overlay-logo-remove');
+      if (preview) {
+        preview.dataset.logoDataUrl = '';
+        preview.removeAttribute('src');
+        preview.hidden = true;
+      }
+      if (removeButton) removeButton.hidden = true;
+      handleNameRoleOverlayChange();
     }
 
     const RELAY_MEDIA_UNSET = Symbol('relay-media-unset');
@@ -578,6 +891,28 @@
         refColor: liveProjection.refColor || document.getElementById('ref-color')?.value || '#ffffff',
         refBgColor: liveProjection.refBgColor || document.getElementById('ref-bg-color')?.value || '#FFFFFF',
         showVerseNos: liveProjection.showVerseNos != null ? !!liveProjection.showVerseNos : !!document.getElementById('show-verse-nos')?.checked,
+        nameRoleOverlay: {
+          enabled: document.getElementById('name-role-overlay-show-btn')?.getAttribute('aria-pressed') === 'true',
+          name: String(document.getElementById('name-role-overlay-name')?.value || '').trim(),
+          role: String(document.getElementById('name-role-overlay-role')?.value || '').trim(),
+          style: document.getElementById('name-role-overlay-style')?.value || 'classic',
+          accentColor: document.getElementById('name-role-overlay-accent')?.value || '#b9df45',
+          logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',
+          nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
+          roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),
+          logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128),
+          socials: {
+            enabled: document.getElementById('name-role-overlay-socials-enabled')?.checked === true,
+            instagram: String(document.getElementById('name-role-overlay-instagram')?.value || '').trim(),
+            facebook: String(document.getElementById('name-role-overlay-facebook')?.value || '').trim(),
+            website: String(document.getElementById('name-role-overlay-website')?.value || '').trim()
+          },
+          actions: {
+            like: document.getElementById('name-role-overlay-like')?.checked === true,
+            share: document.getElementById('name-role-overlay-share')?.checked === true,
+            subscribe: document.getElementById('name-role-overlay-subscribe')?.checked === true
+          }
+        },
         autoResizeFull: liveProjection.autoResizeFull || document.getElementById('auto-resize-full')?.value || 'shrink',
         autoResizeLT: liveProjection.autoResizeLT || document.getElementById('auto-resize-lt')?.value || 'shrink',
         ltWidthPct: pickNumber(liveProjection.ltWidthPct, document.getElementById('lt-width-pct')?.value || 100),
@@ -1209,7 +1544,8 @@
         bilingualEnabled: livePointer.kind === 'songs' && !!(songTextPair &&
           songTextPair.bilingualEnabled),
         translatedText: livePointer.kind === 'songs' ? ((songTextPair && songTextPair.secondaryHtml) || '') : '',
-        secondaryFontScale: getSongBilingualSettings().secondaryFontScale
+        secondaryFontScale: getSongBilingualSettings().secondaryFontScale,
+        nameRoleOverlay: ui.nameRoleOverlay
       };
       if (previewOnly) return sendProgramPreview(payload);
       postUpdate(payload);

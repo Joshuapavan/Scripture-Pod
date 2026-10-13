@@ -10249,7 +10249,7 @@
       flex: 1 1 auto;
       min-height: 0;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
       padding: 8px 0;
       background: var(--bg-dark);
@@ -17240,6 +17240,330 @@
 .program-display-link-row button svg {
   width: 15px;
   height: 15px;
+}
+
+.name-role-overlay-panel {
+  display: grid;
+  gap: 8px;
+  padding: 9px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--material-thick);
+  flex: 0 0 auto;
+}
+
+.name-role-overlay-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.name-role-overlay-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.name-role-overlay-example-btn {
+  min-height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border-elevated);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 9px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.name-role-overlay-example-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.name-role-overlay-heading strong {
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.name-role-overlay-show-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border-elevated);
+  border-radius: 6px;
+  background: var(--panel-content-bg);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 10px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.name-role-overlay-show-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.name-role-overlay-show-btn.active {
+  color: #062b25;
+  border-color: #43d6c5;
+  background: #43d6c5;
+}
+
+.name-role-overlay-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px;
+}
+
+.name-role-overlay-fields input {
+  width: 100%;
+  min-width: 0;
+  height: 30px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.name-role-overlay-extra-section {
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.018);
+}
+
+.name-role-overlay-extra-section > input {
+  width: 100%;
+  min-width: 0;
+  height: 27px;
+  padding: 0 7px;
+  font-size: 10px;
+}
+
+.name-role-social-input {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  height: 28px;
+  padding: 0 7px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.12);
+  color: var(--text-tertiary);
+}
+
+.name-role-social-input svg,
+.name-role-overlay-action-toggles svg {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.name-role-social-input input {
+  width: 100%;
+  min-width: 0;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 10px;
+}
+
+.name-role-overlay-subheading,
+.name-role-overlay-subheading label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.name-role-overlay-subheading {
+  justify-content: space-between;
+  color: var(--text-secondary);
+  font-size: 9px;
+}
+
+.name-role-overlay-subheading strong {
+  color: var(--text);
+  font-size: 10px;
+}
+
+.name-role-overlay-subheading label input,
+.name-role-overlay-action-toggles input {
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.name-role-overlay-subheading label {
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.name-role-overlay-action-toggles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.name-role-overlay-action-toggles label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 9px;
+  cursor: pointer;
+}
+
+.name-role-overlay-action-toggles label:has(input:checked) {
+  color: var(--text);
+}
+
+.name-role-overlay-action-toggles label input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.name-role-overlay-action-toggles label:has(input:checked) svg {
+  color: var(--accent-light, #60a5fa);
+}
+
+.name-role-overlay-customize {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px auto 32px 26px;
+  align-items: center;
+  gap: 6px;
+}
+
+.name-role-overlay-customize select {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 10px;
+}
+
+.name-role-overlay-accent-picker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 28px;
+  border: 1px solid var(--border-elevated);
+  border-radius: 6px;
+  background: var(--panel-content-bg);
+  cursor: pointer;
+}
+
+.name-role-overlay-accent-picker input {
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.name-role-overlay-logo-btn,
+#name-role-overlay-logo-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border-elevated);
+  border-radius: 6px;
+  background: var(--panel-content-bg);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.name-role-overlay-logo-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.name-role-overlay-logo-btn:hover,
+#name-role-overlay-logo-remove:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+#name-role-overlay-logo-preview {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+#name-role-overlay-logo-preview[hidden],
+#name-role-overlay-logo-remove[hidden] {
+  display: none;
+}
+
+.name-role-overlay-sizes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.name-role-overlay-sizes label {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  color: var(--text-tertiary);
+  font-size: 9px;
+}
+
+.name-role-overlay-pixel-input {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 27px;
+  border: 1px solid var(--border-elevated);
+  border-radius: 5px;
+  background: var(--panel-content-bg);
+  color: var(--text-secondary);
+}
+
+.name-role-overlay-pixel-input input {
+  width: 100%;
+  min-width: 0;
+  height: 25px;
+  padding: 0 5px;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 10px;
+}
+
+.name-role-overlay-pixel-input span {
+  padding: 0 6px 0 2px;
+  color: var(--text-tertiary);
+  font-size: 9px;
+}
+
+#program-display-panel #transform-overlay {
+  display: none !important;
 }
 
 .program-display-footer {
