@@ -78,6 +78,8 @@
       }
       const displayUrlEl = document.getElementById('network-display-url');
       if (displayUrlEl) displayUrlEl.value = localServerInfo?.displayUrl || '';
+      const programDisplayUrlEl = document.getElementById('program-display-link');
+      if (programDisplayUrlEl) programDisplayUrlEl.value = localServerInfo?.displayUrl || '';
       updateVmixStatusUi();
       return localServerInfo;
     }

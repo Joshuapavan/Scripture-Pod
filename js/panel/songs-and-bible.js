@@ -1236,6 +1236,61 @@
         schedule.includes(currentItem);
     }
 
+    function previewCurrentSelection() {
+      if (!currentItem) {
+        showToast('Select a verse or song to preview');
+        return false;
+      }
+
+      const previousLiveState = {
+        kind: liveKind,
+        pointer: livePointer,
+        lineCursor: liveLineCursor,
+        linesPerPage: liveLinesPerPage,
+        background: liveBackgroundState,
+        ratio: liveRatio,
+        textTransform: liveTextTransformState
+      };
+      const isBible = getIsBibleItem(currentItem);
+      const scheduleProjectIndex = isCurrentItemFromScheduleList() ? currentIndex : -1;
+
+      try {
+        liveKind = isBible ? 'bible' : 'songs';
+        livePointer = isBible
+          ? {
+              kind: 'bible',
+              version: currentItem.version,
+              index: currentIndex,
+              source: scheduleProjectIndex >= 0 ? 'schedule' : 'bible'
+            }
+          : {
+              kind: 'songs',
+              index: currentIndex,
+              source: scheduleProjectIndex >= 0 ? 'schedule' : 'songs'
+            };
+        liveLineCursor = lineCursor;
+        liveLinesPerPage = linesPerPage;
+        liveBackgroundState = captureBackgroundStateFromUi();
+        liveRatio = !isBible && activeRatio === 'custom' ? 'full' : activeRatio;
+        liveTextTransformState = captureTextTransformStateFromUi();
+        applyProgramDisplaySource('lyrics');
+        const previewed = pushLiveUpdate({ previewOnly: true });
+        if (previewed) showToast('Preview updated');
+        return previewed;
+      } catch (error) {
+        showToast(error && error.message ? error.message : 'Unable to preview selection');
+        return false;
+      } finally {
+        liveKind = previousLiveState.kind;
+        livePointer = previousLiveState.pointer;
+        liveLineCursor = previousLiveState.lineCursor;
+        liveLinesPerPage = previousLiveState.linesPerPage;
+        liveBackgroundState = previousLiveState.background;
+        liveRatio = previousLiveState.ratio;
+        liveTextTransformState = previousLiveState.textTransform;
+      }
+    }
+
     function projectLive(trigger = false) {
       const wasLive = isLive;
       if (trigger) isLive = true;

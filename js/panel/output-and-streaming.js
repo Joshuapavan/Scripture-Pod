@@ -66,18 +66,21 @@
       goLiveGroup.style.left = `${Math.max(0, clampedLeft)}px`;
     }
 
+    let pendingProgramPreviewPayload = null;
+
     function applyProgramDisplaySource(source, opts = {}) {
       const frame = document.getElementById('program-display-frame');
       if (!frame) return;
       const normalized = 'lyrics';
-      const nextSrc = getDisplayFileForTab(normalized, 'embedded');
       const forceReload = !!opts.forceReload;
-      if (!forceReload && currentProgramDisplaySource === normalized && frame.getAttribute('src') === nextSrc) {
+      if (!forceReload && currentProgramDisplaySource === normalized && frame.dataset.previewDocument === '1') {
         return;
       }
       currentProgramDisplaySource = normalized;
       embeddedProgramDisplayReady = false;
-      frame.setAttribute('src', nextSrc);
+      frame.dataset.previewDocument = '1';
+      frame.removeAttribute('src');
+      frame.srcdoc = buildStandaloneDisplayHtml({ preview: true });
 
       // Projection streaming now captures from the Program Display directly,
       // so source switching is handled automatically. This call is a no-op
@@ -135,6 +138,24 @@
       if (!frame || !frame.contentWindow || !embeddedProgramDisplayReady) return false;
       frame.contentWindow.postMessage(message, '*');
       return true;
+    }
+
+    function sendProgramPreview(payload) {
+      if (!payload) return false;
+      const viewport = getEmbeddedDisplayViewport();
+      const previewPayload = {
+        ...payload,
+        seq: nextSeq(),
+        sceneLayers: getOutputSceneLayers(),
+        displayViewportWidth: viewport.width,
+        displayViewportHeight: viewport.height
+      };
+      if (!embeddedProgramDisplayReady) {
+        pendingProgramPreviewPayload = previewPayload;
+        return true;
+      }
+      pendingProgramPreviewPayload = null;
+      return postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_UPDATE', payload: previewPayload });
     }
 
     function postMessageToStandaloneOutput(message) {
@@ -270,7 +291,12 @@
         embeddedProgramDisplayReady = true;
         updateEmbeddedProgramDisplayScale();
         layoutProgramScaleControls();
-        syncEmbeddedProgramDisplay();
+        if (pendingProgramPreviewPayload) {
+          postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_UPDATE', payload: pendingProgramPreviewPayload });
+          pendingProgramPreviewPayload = null;
+        } else {
+          syncEmbeddedProgramDisplay();
+        }
       });
       applyProgramDisplaySource('lyrics', { forceReload: true });
       setProgramDisplayAspect('16:9');

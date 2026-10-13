@@ -60,7 +60,6 @@
         index: currentIndex,
         lineCursor
       };
-      if (!currentItem || !getIsBibleItem(currentItem)) return nav;
       const extracted = extractBookAndChapter(currentItem);
       nav.book = extracted.book;
       nav.chapter = extracted.chap;
@@ -73,7 +72,7 @@
         const firstMatch = first ? first.match(/^(\d+)/) : null;
         const lastMatch = last ? last.match(/^(\d+)/) : null;
         nav.verseStart = firstMatch ? firstMatch[1] : null;
-        nav.verseEnd = lastMatch ? lastMatch[1] : nav.verseStart;
+        nav.verseEnd = lastMatch ? lastMatch[1] : null;
       }
       return nav;
     }
@@ -4607,17 +4606,33 @@
       if (streamOverlay) streamOverlay.classList.remove('open');
     }
 
+    let controlPanelInitStarted = false;
     async function initControlPanel() {
-      initStandaloneTools();
-      _restoreAudioBufferSizeSetting();
-      bindHostModeInput();
-      applyObsCompatibilityUi();
-      applyHostModeUi();
-      refreshLocalServerInfo().catch(() => {});
-      // Preload camera/audio device lists so source properties open instantly.
-      setTimeout(() => prewarmSourceDeviceCaches(), 50);
-      await bootApp();
-      applyObsCompatibilityUi();
+      if (controlPanelInitStarted) return;
+      controlPanelInitStarted = true;
+      try {
+        initStandaloneTools();
+        _restoreAudioBufferSizeSetting();
+        bindHostModeInput();
+        applyObsCompatibilityUi();
+        applyHostModeUi();
+        refreshLocalServerInfo().catch(() => {});
+        setTimeout(() => prewarmSourceDeviceCaches(), 50);
+        await bootApp();
+        applyObsCompatibilityUi();
+      } catch (error) {
+        console.error('Control panel startup failed', error);
+        if (typeof showToast === 'function') showToast('Some workspace data could not be loaded');
+      } finally {
+        document.body.classList.add('app-ready');
+        const loadingScreen = document.getElementById('app-loading-screen');
+        if (loadingScreen) {
+          loadingScreen.classList.add('is-hidden');
+          loadingScreen.style.setProperty('opacity', '0', 'important');
+          loadingScreen.style.setProperty('visibility', 'hidden', 'important');
+          loadingScreen.style.setProperty('pointer-events', 'none', 'important');
+        }
+      }
     }
 
     setRefBgEnabled(true, { silent: true });
@@ -4625,4 +4640,8 @@
     setVerseShadowEnabled(false, { silent: true });
     setReferenceCapitalized(true, { silent: true });
     setDualVersionModeEnabled(false, { silent: true });
-    window.onload = initControlPanel;
+    if (document.readyState === 'complete') {
+      queueMicrotask(initControlPanel);
+    } else {
+      window.addEventListener('load', initControlPanel, { once: true });
+    }

@@ -269,7 +269,7 @@
     let ltModeUserPresets = [];
     let autoAdjustLtHeight = true;
     let versionSwitchUpdatesLive = true;
-    let ltRefBgColor = '#FFD500';
+    let ltRefBgColor = '#FFFFFF';
     let refBgEnabled = true;
     let verseShadowEnabled = false;
     let referenceShadowEnabled = false;

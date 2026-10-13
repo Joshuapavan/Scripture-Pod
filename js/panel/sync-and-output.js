@@ -555,7 +555,7 @@
         showVersion: liveProjection.showVersion != null ? !!liveProjection.showVersion : !!document.getElementById('show-version')?.checked,
         textColor: liveProjection.textColor || document.getElementById('text-color')?.value || '#FFFFFF',
         refColor: liveProjection.refColor || document.getElementById('ref-color')?.value || '#ffffff',
-        refBgColor: liveProjection.refBgColor || document.getElementById('ref-bg-color')?.value || '#FFD500',
+        refBgColor: liveProjection.refBgColor || document.getElementById('ref-bg-color')?.value || '#FFFFFF',
         showVerseNos: liveProjection.showVerseNos != null ? !!liveProjection.showVerseNos : !!document.getElementById('show-verse-nos')?.checked,
         autoResizeFull: liveProjection.autoResizeFull || document.getElementById('auto-resize-full')?.value || 'shrink',
         autoResizeLT: liveProjection.autoResizeLT || document.getElementById('auto-resize-lt')?.value || 'shrink',
@@ -570,8 +570,9 @@
       };
     }
 
-    function pushLiveUpdate() {
-      if (!isLive || !livePointer) return false;
+    function pushLiveUpdate(opts = {}) {
+      const previewOnly = opts.previewOnly === true;
+      if ((!isLive && !previewOnly) || !livePointer) return false;
       const effectiveLiveLinesPerPage = Math.max(1, Number(liveLinesPerPage) || Number(linesPerPage) || 1);
       const liveBgState = getEffectiveLiveBackgroundState();
       const effectiveLiveRatio = liveRatio || activeRatio || 'full';
@@ -628,7 +629,7 @@
       const outputBackgroundMedia = bgEnabled
         ? (bgType === 'video' ? bgVideo : (bgType === 'image' ? bgImage : null))
         : null;
-      if (window.BSPDesktop && typeof window.BSPDesktop.cacheBackgroundMedia === 'function' &&
+      if (!previewOnly && window.BSPDesktop && typeof window.BSPDesktop.cacheBackgroundMedia === 'function' &&
           typeof outputBackgroundMedia === 'string' &&
           outputBackgroundMedia.startsWith('data:') &&
           !backgroundMediaUrlCache.has(outputBackgroundMedia)) {
@@ -1188,6 +1189,7 @@
         translatedText: livePointer.kind === 'songs' ? ((songTextPair && songTextPair.secondaryHtml) || '') : '',
         secondaryFontScale: getSongBilingualSettings().secondaryFontScale
       };
+      if (previewOnly) return sendProgramPreview(payload);
       postUpdate(payload);
       return true;
     }

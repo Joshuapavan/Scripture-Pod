@@ -1,0 +1,623 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+
+@font-face {
+    font-family: 'CustomFont';
+    src: url('') format('truetype');
+}
+
+@font-face {
+    font-family: 'CMGSans';
+    src: local('Arial'), local('Helvetica');
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+    font-family: 'Montserrat', sans-serif;
+}
+
+#bg-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    overflow: hidden;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), filter 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: black;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+}
+
+/* Crossfade overlay for full-mode BG dissolves */
+#bg-layer-crossfade {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 1;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateZ(0);
+}
+
+.bg-youtube {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    display: none;
+    pointer-events: none;
+    transform: translateZ(0);
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bg-youtube iframe {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border: 0;
+}
+
+#lt-bg-wrap {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    z-index: -2;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: linear-gradient(to top,
+                rgba(0, 0, 0, 1) 0%,
+                rgba(0, 0, 0, 0.85) 15%,
+                rgba(0, 0, 0, 0.7) 30%,
+                rgba(0, 0, 0, 0.5) 50%,
+                rgba(0, 0, 0, 0.3) 70%,
+                rgba(0, 0, 0, 0.1) 85%,
+                rgba(0, 0, 0, 0) 100%);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+#lt-bg-inner {
+    position: absolute;
+    inset: 0;
+    background-color: black;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: filter 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+                background-color 0.2s ease;
+}
+
+/* Crossfade overlay for LT-mode BG dissolves */
+#lt-bg-crossfade {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#display-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+#text-container {
+    color: white;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+    max-width: 100%;
+    width: 100%;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0;
+    text-align: center;
+    box-sizing: border-box;
+    line-height: 1.2;
+    position: absolute;
+    z-index: 4;
+    will-change: transform, opacity;
+}
+
+
+#custom-lt-ref-box {
+    position: absolute;
+    display: none;
+    background: #00411C;
+    opacity: 0.95;
+    border: 2px solid white;
+    border-radius: 10px;
+    box-shadow: 15px 11px 16px 0px rgba(0, 0, 0, 0.5);
+    z-index: 3;
+    align-items: center;
+    justify-content: center;
+    font-family: 'CMGSans', 'Montserrat', sans-serif;
+    font-weight: bold;
+    font-size: 36px;
+    color: white;
+    text-align: center;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+    padding: 12px 24px;
+    min-width: 200px;
+    pointer-events: none;
+}
+
+#custom-lt-version-bar {
+    position: absolute;
+    display: none;
+    background: #1a1a2e;
+    opacity: 0.95;
+    border: 1px solid white;
+    border-radius: 8px;
+    z-index: 3;
+    align-items: center;
+    justify-content: center;
+    font-family: 'CMGSans', 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 24px;
+    color: white;
+    text-align: center;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: 8px 12px;
+    min-width: 120px;
+    pointer-events: none;
+}
+
+#custom-lt-main-bar {
+    position: absolute;
+    display: none;
+    width: 100%;
+    background: linear-gradient(90deg,
+                rgba(0, 94, 41, 0.95) 0%,
+                rgba(23, 142, 76, 0.95) 100%);
+    z-index: 2;
+    align-items: center;
+    font-family: 'CMGSans', 'Montserrat', sans-serif;
+    font-weight: bold;
+    font-size: 40px;
+    color: white;
+    text-shadow: 2px 2px 4px #000000;
+    text-align: left;
+    padding: 20px 0 20px 60px;
+    box-sizing: border-box;
+    min-height: 220px;
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                background 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+/* Bible/Song Specific Styling */
+.lt-bible #text-container {
+    text-align: left;
+}
+
+.lt-song #text-container {
+    text-align: center;
+}
+
+/* Verse Styling */
+.jo-body {
+    display: block;
+    transition: all 0.3s ease;
+}
+
+.dual-primary-block {
+    display: block;
+}
+
+.dual-secondary-wrapper {
+    margin-top: var(--bible-version-gap, 14px);
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.dual-secondary-wrapper .jo-ref-line {
+    margin-bottom: 2px !important;
+    opacity: 0.85;
+}
+
+.dual-secondary-body {
+    opacity: 0.9;
+    font-size: 0.95em;
+}
+.triple-tertiary-wrapper {
+    margin-top: var(--bible-version-gap, 14px);
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.triple-tertiary-wrapper .jo-ref-line {
+    margin-bottom: 2px !important;
+    opacity: 0.8;
+}
+
+.triple-tertiary-body {
+    opacity: 0.88;
+    font-size: 0.92em;
+}
+
+.jo-highlight {
+    display: block;
+    margin: 0 0 0.35em;
+    padding: 0.18em 0.4em;
+    line-height: 1.35;
+    border-radius: 10px;
+    box-decoration-break: clone;
+    background: var(--highlight-color, rgba(255, 235, 150, 0.95));
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+    word-break: break-word;
+}
+
+.jo-ref-line {
+    margin-bottom: 10px !important;
+    font-weight: 800 !important;
+    font-size: 0.8em !important;
+    opacity: 0.9;
+    transition: all 0.3s ease;
+}
+
+/* Ensure Bible reference lines use the preferred font (default Montserrat) */
+.lt-bible .jo-ref-line {
+    font-family: 'Montserrat', sans-serif !important;
+}
+
+.jo-ref-tail {
+    margin-top: 20px !important;
+}
+
+.jo-verse-sup {
+    font-size: 0.5em !important;
+    vertical-align: super !important;
+    margin-right: 4px !important;
+    line-height: 0 !important;
+    background: rgba(56, 189, 248, 0.2);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 700;
+    color: #e0f2fe;
+}
+
+/* Bible LT Mode Specific */
+.lt-bible.mode-lt #text-container {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+}
+
+.lt-bible.mode-lt #lt-bg-wrap {
+    bottom: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 1;
+}
+
+.lt-bible.mode-lt #lt-bg-inner {
+    transform-origin: center bottom;
+}
+
+.lt-bible.mode-lt .jo-body {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    padding-left: clamp(24px, 2vw, 40px);
+    padding-right: clamp(24px, 2vw, 40px);
+}
+
+.lt-bible.mode-lt .jo-ref-line {
+    position: relative;
+    z-index: 4;
+    background: transparent;
+    padding: 8px 16px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    margin-left: 0;
+    align-self: flex-start;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Custom Mode Bible */
+.lt-bible.mode-custom #custom-lt-main-bar {
+    display: flex;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    min-height: 120px;
+    padding: 25px 15px 25px 60px;
+    align-items: center;
+}
+
+.lt-bible.mode-custom #text-container {
+    display: block !important;
+    position: absolute !important;
+    left: 60px !important;
+    right: 60px !important;
+    bottom: 25px !important;
+    top: auto !important;
+    z-index: 3 !important;
+    opacity: 1 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+.lt-bible.mode-custom #custom-lt-ref-box {
+    display: flex;
+    bottom: calc(100% + 10px);
+    left: 60px;
+    z-index: 4;
+    min-width: 240px;
+}
+
+.lt-bible.mode-custom .jo-body {
+    padding-left: 0 !important;
+    width: 100%;
+}
+
+/* Song LT Mode */
+.lt-song.mode-lt #text-container {
+    text-align: center;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 10%;
+    box-sizing: border-box;
+}
+
+.lt-song.mode-lt #lt-bg-wrap {
+    bottom: 0;
+    opacity: 1;
+}
+
+.lt-song.mode-lt .jo-body {
+    text-align: center;
+    width: 100%;
+}
+
+/* Full Screen Mode */
+.mode-full #text-container {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    padding: 0 20px;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+.mode-full .jo-body {
+    text-align: center;
+    width: 100%;
+}
+
+.mode-full .jo-ref-line {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 0.7em;
+    opacity: 0.9;
+}
+
+/* Animation Classes */
+.transition-anim {
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform, clip-path;
+}
+
+.anim-fade { animation-name: fadeIn; }
+.anim-zoom { animation-name: zoomIn; }
+.anim-write { animation-name: writeOn; }
+
+.type-line {
+    display: block;
+}
+
+.type-word {
+    display: inline-block;
+    white-space: pre;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+}
+
+.hidden-word {
+    visibility: hidden;
+    opacity: 0;
+}
+
+.revealed-word {
+    visibility: visible;
+    opacity: 1;
+}
+
+.custom-main-text,
+.custom-ref-text,
+.custom-version-text {
+    display: block;
+    width: 100%;
+}
+
+.text-anim-content {
+    display: block;
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes zoomIn {
+    from {
+    opacity: 0;
+    transform: scale(0.95);
+    }
+    to {
+    opacity: 1;
+    transform: scale(1);
+    }
+}
+
+@keyframes writeOn {
+    from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    }
+    to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+    }
+}
+
+@keyframes slideUp {
+    from {
+    opacity: 0;
+    transform: translateY(20px);
+    }
+    to {
+    opacity: 1;
+    transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+    opacity: 0;
+    transform: scale(0.95);
+    }
+    to {
+    opacity: 1;
+    transform: scale(1);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1920px) {
+    #custom-lt-ref-box {
+    font-size: 28px;
+    padding: 10px 20px;
+    min-width: 180px;
+    }
+
+    #custom-lt-main-bar {
+    font-size: 32px;
+    min-height: 180px;
+    padding: 15px 0 15px 40px;
+    }
+
+    .lt-bible.mode-lt #text-container {
+    padding: 15px 40px;
+    }
+
+    .lt-bible.mode-custom #text-container {
+    left: 40px !important;
+    right: 40px !important;
+    bottom: 20px !important;
+    }
+
+    .lt-bible.mode-custom #custom-lt-main-bar {
+    padding: 20px 10px 20px 40px;
+    min-height: 100px;
+    }
+
+    .lt-bible.mode-custom #custom-lt-ref-box {
+    left: 40px;
+    }
+}
+
+/* High DPI Screens */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    #text-container {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    }
+
+    .jo-verse-sup {
+    -webkit-font-smoothing: subpixel-antialiased;
+    }
+}
+
+/* Performance Optimizations */
+.hardware-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+}
