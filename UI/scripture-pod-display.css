@@ -28,7 +28,16 @@ body, html {
     font-family: 'Montserrat', sans-serif;
 }
 body.lower-third-only-mode {
+    background: transparent;
+}
+body.display-full-mode {
     background: #000;
+}
+#name-role-overlay {
+    transform: translate(var(--name-role-offset-x, 0vw), var(--name-role-offset-y, 0vh));
+}
+#social-engagement-overlay {
+    transform: translate(calc(-50% + var(--social-engagement-offset-x, 0vw)), var(--social-engagement-offset-y, 0vh));
 }
 
 #bg-layer {

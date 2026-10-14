@@ -11171,6 +11171,64 @@
       gap: 6px;
     }
 
+    #lyrics-output-types {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      min-height: 34px;
+      padding: 0 2px;
+    }
+
+    body[data-sidebar-tab="songs"] #lyrics-output-types {
+      display: flex;
+    }
+
+    #lyrics-output-types > strong {
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .lyrics-output-type-buttons {
+      display: inline-flex;
+      gap: 5px;
+    }
+
+    .lyrics-output-type-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-width: 88px;
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid var(--border-elevated);
+      border-radius: var(--settings-control-radius);
+      background: var(--panel-content-bg);
+      color: var(--text-secondary);
+      font: inherit;
+      font-size: 10px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+
+    .lyrics-output-type-btn svg {
+      width: 14px;
+      height: 14px;
+      flex: 0 0 auto;
+    }
+
+    .lyrics-output-type-btn.active {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 16%, var(--panel-content-bg));
+      color: var(--text);
+    }
+
+    .lyrics-output-type-btn:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
     .segmented-picker {
       display: flex;
       background: rgba(255, 255, 255, 0.04);
@@ -17532,6 +17590,41 @@
   gap: 4px;
   color: var(--text-tertiary);
   font-size: 9px;
+}
+
+.lt-position-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.lt-position-controls label {
+  display: grid;
+  grid-template-columns: auto minmax(48px, 1fr) 34px;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-tertiary);
+  font-size: 9px;
+}
+
+.lt-position-controls input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.lt-position-controls output {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+@media (max-width: 700px) {
+  .lt-position-controls {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .name-role-overlay-pixel-input {

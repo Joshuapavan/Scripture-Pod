@@ -80,6 +80,8 @@
       if (displayUrlEl) displayUrlEl.value = localServerInfo?.displayUrl || '';
       const programDisplayUrlEl = document.getElementById('program-display-link');
       if (programDisplayUrlEl) programDisplayUrlEl.value = localServerInfo?.displayUrl || '';
+      const monitorDisplayUrlEl = document.getElementById('monitor-display-link');
+      if (monitorDisplayUrlEl) monitorDisplayUrlEl.value = getLocalMonitorUrl(localServerInfo);
       updateVmixStatusUi();
       return localServerInfo;
     }
@@ -110,6 +112,38 @@
         showToast('Display URL copied');
       } catch (error) {
         showToast('Unable to copy display URL');
+      }
+    }
+
+    function getLocalMonitorUrl(info = localServerInfo) {
+      if (!info?.displayUrl) return '';
+      try {
+        const url = new URL(info.displayUrl);
+        url.searchParams.set('hostMode', 'standalone');
+        return url.toString();
+      } catch (error) {
+        return '';
+      }
+    }
+
+    async function copyLocalMonitorUrl() {
+      const info = localServerInfo || await refreshLocalServerInfo();
+      const monitorUrl = getLocalMonitorUrl(info);
+      if (!monitorUrl) {
+        showToast('Monitor URL is only available in the desktop app');
+        return;
+      }
+      try {
+        if (window.BSPDesktop && typeof window.BSPDesktop.copyText === 'function') {
+          await window.BSPDesktop.copyText(monitorUrl);
+        } else if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(monitorUrl);
+        } else {
+          throw new Error('Clipboard unavailable');
+        }
+        showToast('Monitor URL copied');
+      } catch (error) {
+        showToast('Unable to copy monitor URL');
       }
     }
 

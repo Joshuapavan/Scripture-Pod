@@ -351,6 +351,7 @@
     let footerBibleVersionPopoverOpen = false;
     let outputLiveActive = false;
     let outputLiveWatcher = null;
+    let lyricsMonitorOutputOpen = false;
     const loadedFontNames = new Set();
     const baseFontOptions = [
       { label: 'Montserrat', value: "'Montserrat',sans-serif" },

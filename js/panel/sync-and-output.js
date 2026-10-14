@@ -79,7 +79,9 @@
         logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',
         nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
         roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),
-        logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128)
+        logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128),
+        offsetX: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-x')?.value) || 0)),
+        offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-y')?.value) || 0))
       };
     }
 
@@ -93,6 +95,8 @@
         },
         accentColor: document.getElementById('social-engagement-accent')?.value || '#b9df45',
         size: Number(document.getElementById('social-engagement-size')?.value || 14),
+        offsetX: Math.max(-40, Math.min(40, Number(document.getElementById('social-engagement-offset-x')?.value) || 0)),
+        offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('social-engagement-offset-y')?.value) || 0)),
         actions: {
           like: document.getElementById('social-engagement-like')?.checked === true,
           share: document.getElementById('social-engagement-share')?.checked === true,
@@ -268,6 +272,10 @@
       appState.settings.nameRoleOverlayNameSize = document.getElementById('name-role-overlay-name-size')?.value || '56';
       appState.settings.nameRoleOverlayRoleSize = document.getElementById('name-role-overlay-role-size')?.value || '24';
       appState.settings.nameRoleOverlayLogoSize = document.getElementById('name-role-overlay-logo-size')?.value || '128';
+      appState.settings.nameRoleOverlayOffsetX = String(document.getElementById('name-role-overlay-offset-x')?.value || '0');
+      appState.settings.nameRoleOverlayOffsetY = String(document.getElementById('name-role-overlay-offset-y')?.value || '0');
+      document.getElementById('name-role-overlay-offset-x-value').textContent = `${appState.settings.nameRoleOverlayOffsetX}%`;
+      document.getElementById('name-role-overlay-offset-y-value').textContent = `${appState.settings.nameRoleOverlayOffsetY}%`;
       saveState();
       saveToStorageDebounced();
       if (enabled) {
@@ -305,6 +313,10 @@
       appState.settings.socialEngagementOverlayEnabled = enabled;
       appState.settings.socialEngagementOverlayAccentColor = payload.accentColor;
       appState.settings.socialEngagementOverlaySize = String(payload.size);
+      appState.settings.socialEngagementOverlayOffsetX = String(payload.offsetX);
+      appState.settings.socialEngagementOverlayOffsetY = String(payload.offsetY);
+      document.getElementById('social-engagement-offset-x-value').textContent = `${payload.offsetX}%`;
+      document.getElementById('social-engagement-offset-y-value').textContent = `${payload.offsetY}%`;
       saveState();
       saveToStorageDebounced();
       if (enabled) {
@@ -899,7 +911,9 @@
           logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',
           nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
           roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),
-          logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128)
+          logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128),
+          offsetX: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-x')?.value) || 0)),
+          offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-y')?.value) || 0))
         },
         autoResizeFull: liveProjection.autoResizeFull || document.getElementById('auto-resize-full')?.value || 'shrink',
         autoResizeLT: liveProjection.autoResizeLT || document.getElementById('auto-resize-lt')?.value || 'shrink',

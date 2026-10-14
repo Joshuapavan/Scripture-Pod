@@ -251,6 +251,19 @@
           <button class="btn" id="btn-prev"  onclick="prevSlide()">←</button>
           <button class="btn" id="btn-next"  onclick="nextSlide()">→</button>
         </div>
+        <div id="lyrics-output-types" aria-label="Lyrics output types">
+          <strong>Lyrics Output</strong>
+          <div class="lyrics-output-type-buttons">
+            <button type="button" class="lyrics-output-type-btn" id="lyrics-output-monitor-btn" aria-pressed="false" onclick="toggleLyricsMonitorOutput()" title="Open or close fullscreen monitor output">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+              <span>Monitor</span>
+            </button>
+            <button type="button" class="lyrics-output-type-btn" id="lyrics-output-stream-btn" aria-pressed="false" onclick="toggleLyricsStreamOutput()" title="Start or stop the Program Stream">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+              <span>Stream</span>
+            </button>
+          </div>
+        </div>
         <div class="main-panel-stacks" id="panel-inline-style-34">
           <div id="panel-inline-style-35">
             <span id="panel-inline-style-36"><span data-i18n="common_lines">Lines</span></span>
@@ -394,6 +407,10 @@
           <label>Role <span class="name-role-overlay-pixel-input"><input type="number" id="name-role-overlay-role-size" aria-label="Role text size in pixels" min="12" max="72" step="1" value="24" onchange="handleNameRoleOverlayChange()"><span>px</span></span></label>
           <label>Logo <span class="name-role-overlay-pixel-input"><input type="number" id="name-role-overlay-logo-size" aria-label="Logo size in pixels" min="24" max="320" step="1" value="128" onchange="handleNameRoleOverlayChange()"><span>px</span></span></label>
         </div>
+        <div class="lt-position-controls">
+          <label>Horizontal <input type="range" id="name-role-overlay-offset-x" min="-40" max="40" step="1" value="0" oninput="handleNameRoleOverlayChange()"><output id="name-role-overlay-offset-x-value">0%</output></label>
+          <label>Vertical <input type="range" id="name-role-overlay-offset-y" min="-40" max="40" step="1" value="0" oninput="handleNameRoleOverlayChange()"><output id="name-role-overlay-offset-y-value">0%</output></label>
+        </div>
       </div>
       <div class="social-engagement-overlay-panel">
         <div class="name-role-overlay-heading">
@@ -426,6 +443,10 @@
           </label>
           <label>Text &amp; icon size <span class="name-role-overlay-pixel-input"><input type="number" id="social-engagement-size" aria-label="Social text and icon size in pixels" min="10" max="40" step="1" value="14" onchange="handleSocialEngagementOverlayChange()"><span>px</span></span></label>
         </div>
+        <div class="lt-position-controls">
+          <label>Horizontal <input type="range" id="social-engagement-offset-x" min="-40" max="40" step="1" value="0" oninput="handleSocialEngagementOverlayChange()"><output id="social-engagement-offset-x-value">0%</output></label>
+          <label>Vertical <input type="range" id="social-engagement-offset-y" min="-40" max="40" step="1" value="0" oninput="handleSocialEngagementOverlayChange()"><output id="social-engagement-offset-y-value">0%</output></label>
+        </div>
         <section class="name-role-overlay-extra-section name-role-overlay-engagement">
           <div class="name-role-overlay-subheading"><strong>Engagement</strong><span>Animated actions</span></div>
           <div class="name-role-overlay-action-toggles">
@@ -453,6 +474,13 @@
         <label for="program-display-link">Display Link</label>
         <input type="text" id="program-display-link" readonly placeholder="Launch display to load URL">
         <button type="button" class="btn" id="copy-program-display-link" onclick="copyLocalDisplayUrl()" title="Copy display link" aria-label="Copy display link">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+        </button>
+      </div>
+      <div class="program-display-link-row">
+        <label for="monitor-display-link">Monitor Link</label>
+        <input type="text" id="monitor-display-link" readonly placeholder="Launch display to load URL">
+        <button type="button" class="btn" id="copy-monitor-display-link" onclick="copyLocalMonitorUrl()" title="Copy monitor link" aria-label="Copy monitor link">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
         </button>
       </div>

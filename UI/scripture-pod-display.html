@@ -197,6 +197,7 @@
     const MIN_SONG_LT_NO_BG_TOP_PAD_PX = 24;
     // Debug mode controlled by URL param `?debug=1` or `?debug`
     const DEBUG_MODE = new URLSearchParams(window.location.search).has('debug');
+    const IS_STANDALONE_MONITOR = new URLSearchParams(window.location.search).get('hostMode') === 'standalone';
 
     // DOM Elements
     const elements = {
@@ -1215,6 +1216,8 @@
       if (!data) {
         overlay.setAttribute('aria-hidden', 'true');
         overlay.classList.remove('is-visible');
+        overlay.style.removeProperty('--name-role-offset-x');
+        overlay.style.removeProperty('--name-role-offset-y');
         return;
       }
       const name = String(data?.name || '').trim();
@@ -1233,6 +1236,8 @@
       const nameSize = Math.max(24, Math.min(160, Number(data?.nameSize) || 56));
       const roleSize = Math.max(12, Math.min(72, Number(data?.roleSize) || 24));
       const logoSize = Math.max(24, Math.min(320, Number(data?.logoSize) || 128));
+      const offsetX = Math.max(-40, Math.min(40, Number(data?.offsetX) || 0));
+      const offsetY = Math.max(-40, Math.min(40, Number(data?.offsetY) || 0));
       const enabled = !!data?.enabled && !!name && !!role;
       const nameEl = overlay.querySelector('.name-role-overlay-name');
       const roleEl = overlay.querySelector('.name-role-overlay-role');
@@ -1253,6 +1258,8 @@
       overlay.style.setProperty('--name-role-name-size', `${nameSize}px`);
       overlay.style.setProperty('--name-role-role-size', `${roleSize}px`);
       overlay.style.setProperty('--name-role-logo-size', `${logoSize}px`);
+      overlay.style.setProperty('--name-role-offset-x', `${offsetX}vw`);
+      overlay.style.setProperty('--name-role-offset-y', `${offsetY}vh`);
       overlay.dataset.name = name;
       overlay.dataset.role = role;
       overlay.dataset.style = style;
@@ -1281,6 +1288,8 @@
       const actionEl = overlay.querySelector('.social-engagement-overlay-actions');
       const accentColor = /^#[0-9a-f]{6}$/i.test(data?.accentColor || '') ? data.accentColor : '#b9df45';
       const size = Math.max(10, Math.min(40, Number(data?.size) || 14));
+      const offsetX = Math.max(-40, Math.min(40, Number(data?.offsetX) || 0));
+      const offsetY = Math.max(-40, Math.min(40, Number(data?.offsetY) || 0));
       if (socialEl) {
         Object.entries(socialValues).forEach(([key, value]) => {
           const item = socialEl.querySelector(`.name-role-social-${key}`);
@@ -1301,7 +1310,7 @@
       const hasSocials = Object.values(socialValues).some(Boolean);
       const hasActions = Object.values(actions).some(Boolean);
       const enabled = !!data?.enabled && (hasSocials || hasActions);
-      const signature = JSON.stringify({ socialValues, actions, accentColor, size });
+      const signature = JSON.stringify({ socialValues, actions, accentColor, size, offsetX, offsetY });
       const changed = overlay.dataset.signature !== signature;
       if (enabled && changed && overlay.classList.contains('is-visible')) {
         overlay.classList.remove('is-visible');
@@ -1312,11 +1321,16 @@
       overlay.style.setProperty('--social-engagement-size', `${size}px`);
       overlay.style.setProperty('--social-engagement-action-size', `${Math.max(10, Math.round(size * 0.75))}px`);
       overlay.style.setProperty('--social-engagement-icon-size', `${Math.round(size * 1.4)}px`);
+      overlay.style.setProperty('--social-engagement-offset-x', `${offsetX}vw`);
+      overlay.style.setProperty('--social-engagement-offset-y', `${offsetY}vh`);
       overlay.setAttribute('aria-hidden', enabled ? 'false' : 'true');
       overlay.classList.toggle('is-visible', enabled);
     }
 
     function handleUpdate(d) {
+      if (IS_STANDALONE_MONITOR && !d.lowerThirdOnly && !d.restorePrevious) {
+        d = { ...d, mode: 'full' };
+      }
       if (d.restorePrevious) {
         lowerThirdOnlyMode = false;
         document.body.classList.remove('lower-third-only-mode');
@@ -1341,6 +1355,7 @@
         const entering = !lowerThirdOnlyMode;
         lowerThirdOnlyMode = true;
         document.body.classList.add('lower-third-only-mode');
+        document.body.classList.remove('display-full-mode');
         if (entering) clearDisplay({ fade: false });
         updateNameRoleOverlay(d.nameRoleOverlay);
         updateSocialEngagementOverlay(d.socialEngagementOverlay);
@@ -1362,6 +1377,7 @@
       if (!Object.prototype.hasOwnProperty.call(d, 'bgVideo')) backgroundUpdate.bgVideo = currentState.bgVideo;
 
       const mode = (d.mode === 'full') ? 'full' : (d.mode === 'custom' ? 'custom' : 'lt');
+      document.body.classList.toggle('display-full-mode', mode === 'full');
       const isBible = !!d.isBible;
       const useCustomStyle = (mode === 'custom');
       const ltAnchorMode = getLtAnchorMode(d);

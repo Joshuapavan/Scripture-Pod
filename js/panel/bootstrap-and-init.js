@@ -712,6 +712,8 @@
       const overlayNameSizeInput = document.getElementById('name-role-overlay-name-size');
       const overlayRoleSizeInput = document.getElementById('name-role-overlay-role-size');
       const overlayLogoSizeInput = document.getElementById('name-role-overlay-logo-size');
+      const overlayOffsetXInput = document.getElementById('name-role-overlay-offset-x');
+      const overlayOffsetYInput = document.getElementById('name-role-overlay-offset-y');
       const overlayInstagram = document.getElementById('social-engagement-instagram');
       const overlayFacebook = document.getElementById('social-engagement-facebook');
       const overlayWebsite = document.getElementById('social-engagement-website');
@@ -721,6 +723,8 @@
       const socialEnabledButton = document.getElementById('social-engagement-overlay-show-btn');
       const socialAccentInput = document.getElementById('social-engagement-accent');
       const socialSizeInput = document.getElementById('social-engagement-size');
+      const socialOffsetXInput = document.getElementById('social-engagement-offset-x');
+      const socialOffsetYInput = document.getElementById('social-engagement-offset-y');
       const overlayLogoPreview = document.getElementById('name-role-overlay-logo-preview');
       const overlayLogoRemoveButton = document.getElementById('name-role-overlay-logo-remove');
       const overlayEnabled = ui.nameRoleOverlayEnabled === true;
@@ -747,6 +751,10 @@
       if (overlayNameSizeInput) overlayNameSizeInput.value = String(Math.max(24, Math.min(160, Number(ui.nameRoleOverlayNameSize) || 56)));
       if (overlayRoleSizeInput) overlayRoleSizeInput.value = String(Math.max(12, Math.min(72, Number(ui.nameRoleOverlayRoleSize) || 24)));
       if (overlayLogoSizeInput) overlayLogoSizeInput.value = String(Math.max(24, Math.min(320, Number(ui.nameRoleOverlayLogoSize) || 128)));
+      if (overlayOffsetXInput) overlayOffsetXInput.value = String(Math.max(-40, Math.min(40, Number(ui.nameRoleOverlayOffsetX) || 0)));
+      if (overlayOffsetYInput) overlayOffsetYInput.value = String(Math.max(-40, Math.min(40, Number(ui.nameRoleOverlayOffsetY) || 0)));
+      document.getElementById('name-role-overlay-offset-x-value').textContent = `${overlayOffsetXInput?.value || 0}%`;
+      document.getElementById('name-role-overlay-offset-y-value').textContent = `${overlayOffsetYInput?.value || 0}%`;
       if (overlayInstagram) overlayInstagram.value = String(ui.nameRoleOverlayInstagram || '');
       if (overlayFacebook) overlayFacebook.value = String(ui.nameRoleOverlayFacebook || '');
       if (overlayWebsite) overlayWebsite.value = String(ui.nameRoleOverlayWebsite || '');
@@ -757,6 +765,10 @@
         socialAccentInput.value = ui.socialEngagementOverlayAccentColor;
       }
       if (socialSizeInput) socialSizeInput.value = String(Math.max(10, Math.min(40, Number(ui.socialEngagementOverlaySize) || 14)));
+      if (socialOffsetXInput) socialOffsetXInput.value = String(Math.max(-40, Math.min(40, Number(ui.socialEngagementOverlayOffsetX) || 0)));
+      if (socialOffsetYInput) socialOffsetYInput.value = String(Math.max(-40, Math.min(40, Number(ui.socialEngagementOverlayOffsetY) || 0)));
+      document.getElementById('social-engagement-offset-x-value').textContent = `${socialOffsetXInput?.value || 0}%`;
+      document.getElementById('social-engagement-offset-y-value').textContent = `${socialOffsetYInput?.value || 0}%`;
       if (socialEnabledButton) {
         const socialEnabled = ui.socialEngagementOverlayEnabled === true;
         socialEnabledButton.setAttribute('aria-pressed', socialEnabled ? 'true' : 'false');

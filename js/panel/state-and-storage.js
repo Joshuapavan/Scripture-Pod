@@ -1239,9 +1239,13 @@
         nameRoleOverlayNameSize: document.getElementById('name-role-overlay-name-size')?.value || '56',
         nameRoleOverlayRoleSize: document.getElementById('name-role-overlay-role-size')?.value || '24',
         nameRoleOverlayLogoSize: document.getElementById('name-role-overlay-logo-size')?.value || '128',
+        nameRoleOverlayOffsetX: document.getElementById('name-role-overlay-offset-x')?.value || '0',
+        nameRoleOverlayOffsetY: document.getElementById('name-role-overlay-offset-y')?.value || '0',
         socialEngagementOverlayEnabled: document.getElementById('social-engagement-overlay-show-btn')?.getAttribute('aria-pressed') === 'true',
         socialEngagementOverlayAccentColor: document.getElementById('social-engagement-accent')?.value || '#b9df45',
         socialEngagementOverlaySize: document.getElementById('social-engagement-size')?.value || '14',
+        socialEngagementOverlayOffsetX: document.getElementById('social-engagement-offset-x')?.value || '0',
+        socialEngagementOverlayOffsetY: document.getElementById('social-engagement-offset-y')?.value || '0',
         nameRoleOverlaySocialsEnabled: [
           document.getElementById('social-engagement-instagram')?.value,
           document.getElementById('social-engagement-facebook')?.value,

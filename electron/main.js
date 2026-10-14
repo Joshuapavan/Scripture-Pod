@@ -213,8 +213,10 @@ function getDisplayBounds(displayId) {
 
 function createOutputWindow(options = {}) {
   const bounds = getDisplayBounds(options.displayId);
+  const shouldFullscreen = !!(options.fullscreen || options.requestFullscreen);
   if (outputWindow && !outputWindow.isDestroyed()) {
     outputWindow.setBounds(bounds);
+    if (shouldFullscreen) outputWindow.setFullScreen(true);
     outputWindow.focus();
     return outputWindow;
   }
@@ -226,9 +228,10 @@ function createOutputWindow(options = {}) {
     height: bounds.height,
     frame: false,
     show: true,
-    backgroundColor: '#000000',
+    backgroundColor: '#00000000',
+    transparent: true,
     autoHideMenuBar: true,
-    fullscreen: !!options.fullscreen,
+    fullscreen: shouldFullscreen,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,

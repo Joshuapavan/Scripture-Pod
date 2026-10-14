@@ -154,6 +154,10 @@
         pendingProgramPreviewPayload = previewPayload;
         return true;
       }
+      postMessageToEmbeddedProgramDisplay({
+        type: 'SET_STREAM_OUTPUT_MODE',
+        enabled: !!_pgmStreamState.running
+      });
       pendingProgramPreviewPayload = null;
       return postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_UPDATE', payload: previewPayload });
     }
@@ -193,6 +197,7 @@
           type: 'PREVIEW_UPDATE',
           payload: {
             ...embeddedProgramDisplayState.payload,
+            mode: 'full',
             seq,
             sceneLayers,
             displayViewportWidth: viewport.width,
@@ -253,6 +258,10 @@
     function syncEmbeddedProgramDisplay() {
       if (currentProgramDisplaySource !== 'lyrics') return;
       if (!embeddedProgramDisplayReady) return;
+      postMessageToEmbeddedProgramDisplay({
+        type: 'SET_STREAM_OUTPUT_MODE',
+        enabled: !!_pgmStreamState.running
+      });
       const viewport = getEmbeddedDisplayViewport();
       const sceneLayers = getOutputSceneLayers();
       if (embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload) {
@@ -303,10 +312,14 @@
         updateEmbeddedProgramDisplayScale();
         layoutProgramScaleControls();
         if (pendingProgramPreviewPayload) {
+          postMessageToEmbeddedProgramDisplay({
+            type: 'SET_STREAM_OUTPUT_MODE',
+            enabled: !!_pgmStreamState.running
+          });
           postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_UPDATE', payload: pendingProgramPreviewPayload });
           pendingProgramPreviewPayload = null;
         } else {
-          syncEmbeddedProgramDisplay();
+	        syncEmbeddedProgramDisplay();
         }
       });
       applyProgramDisplaySource('lyrics', { forceReload: true });
@@ -339,7 +352,9 @@
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
-    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', system-ui, sans-serif; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; font-family: 'Segoe UI', system-ui, sans-serif; }
+    body:not(.lower-third-only-mode):not(.lyrics-lt-mode) { background: #000; }
+    body.lower-third-only-mode, body.lyrics-lt-mode { background: transparent; }
     #bg { position: fixed; inset: 0; z-index: 2; background: #000 center / cover no-repeat; transition: filter 220ms ease, opacity 220ms ease; }
     #bg-video { position: fixed; inset: 0; z-index: 2; width: 100%; height: 100%; object-fit: cover; display: none; }
     #scene-compositor { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
@@ -351,7 +366,7 @@
     #scene-compositor .src-layer .src-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); font-size: 12px; font-weight: 600; }
     #stage { position: fixed; inset: 0; z-index: 3; color: #fff; text-rendering: geometricPrecision; -webkit-font-smoothing: antialiased; display: flex; pointer-events: none; }
     #text-layer { width: 100%; word-break: break-word; }
-    #name-role-overlay { position: fixed; inset: 0; z-index: 8; display: flex; align-items: flex-end; justify-content: flex-start; padding: 0 7vw 8vh; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 700ms ease, visibility 0s linear 700ms; }
+    #name-role-overlay { position: fixed; inset: 0; z-index: 8; display: flex; align-items: flex-end; justify-content: flex-start; padding: 0 7vw 8vh; transform: translate(var(--name-role-offset-x,0vw),var(--name-role-offset-y,0vh)); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 700ms ease, visibility 0s linear 700ms; }
     #name-role-overlay.is-visible { opacity: 1; visibility: visible; transition-delay: 0s; }
     .style-centered#name-role-overlay { justify-content: center; padding-bottom: 8vh; }
     .style-band#name-role-overlay { justify-content: center; padding: 0 0 7vh; }
@@ -398,7 +413,7 @@
     .name-role-social b { display: inline-flex; align-items: center; justify-content: center; width: var(--social-engagement-icon-size,20px); height: var(--social-engagement-icon-size,20px); flex: 0 0 var(--social-engagement-icon-size,20px); color: var(--social-engagement-accent,#b9df45); }
     .name-role-social b svg { display: block; width: 100%; height: 100%; }
     .name-role-social span { max-width: 32vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #social-engagement-overlay { position: fixed; left: 50%; bottom: 17vh; z-index: 8; display: flex; justify-content: center; width: min(920px, 82vw); transform: translateX(-50%); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 360ms ease, visibility 360ms ease; }
+    #social-engagement-overlay { position: fixed; left: 50%; bottom: 17vh; z-index: 8; display: flex; justify-content: center; width: min(920px, 82vw); transform: translate(calc(-50% + var(--social-engagement-offset-x,0vw)),var(--social-engagement-offset-y,0vh)); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 360ms ease, visibility 360ms ease; }
     #social-engagement-overlay.is-visible { opacity: 1; visibility: visible; }
     .social-engagement-overlay-card { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 100%; opacity: 0; transform: translateY(24px) scale(0.96); transition: opacity 560ms ease, transform 700ms cubic-bezier(0.2,0.85,0.25,1); }
     #social-engagement-overlay.is-visible .social-engagement-overlay-card { opacity: 1; transform: translateY(0) scale(1); }
@@ -523,6 +538,7 @@
       const hud = document.getElementById('hud');
       let lastSeq = 0;
       let lowerThirdOnlyMode = false;
+      let streamOutputActive = false;
       let lastNormalUpdate = null;
       const outputStreams = Object.create(null);
       if (IS_PREVIEW && hud) hud.style.display = 'none';
@@ -950,6 +966,12 @@
       }
 
       function applyUpdate(data) {
+        if (!data || typeof data !== 'object') return;
+        const sourceData = data;
+        if (!data.lowerThirdOnly) {
+          const outputMode = IS_PREVIEW ? (streamOutputActive ? 'lt' : null) : 'full';
+          if (outputMode) data = { ...data, mode: outputMode };
+        }
         if (data.seq && data.seq <= lastSeq) return;
         if (data.seq) lastSeq = data.seq;
         if (data.restorePrevious) {
@@ -985,6 +1007,7 @@
           const entering = !lowerThirdOnlyMode;
           lowerThirdOnlyMode = true;
           document.body.classList.add('lower-third-only-mode');
+          document.body.classList.remove('lyrics-lt-mode');
           if (entering) {
             fullText.innerHTML = '';
             ltText.innerHTML = '';
@@ -996,11 +1019,12 @@
           return;
         }
         if (lowerThirdOnlyMode) {
-          lastNormalUpdate = data;
+          lastNormalUpdate = sourceData;
           return;
         }
-        lastNormalUpdate = data;
+        lastNormalUpdate = sourceData;
         document.body.classList.remove('lower-third-only-mode');
+        document.body.classList.toggle('lyrics-lt-mode', String(data.mode || 'full') === 'lt');
         renderSceneLayers(data.sceneLayers);
         updateNameRoleOverlay(data.nameRoleOverlay);
         updateSocialEngagementOverlay(data.socialEngagementOverlay);
@@ -1019,6 +1043,8 @@
         if (!data) {
           overlay.setAttribute('aria-hidden', 'true');
           overlay.classList.remove('is-visible');
+          overlay.style.removeProperty('--name-role-offset-x');
+          overlay.style.removeProperty('--name-role-offset-y');
           return;
         }
         const name = String(data && data.name || '').trim();
@@ -1036,6 +1062,8 @@
         const nameSize = Math.max(24, Math.min(160, Number(data && data.nameSize) || 56));
         const roleSize = Math.max(12, Math.min(72, Number(data && data.roleSize) || 24));
         const logoSize = Math.max(24, Math.min(320, Number(data && data.logoSize) || 128));
+        const offsetX = Math.max(-40, Math.min(40, Number(data.offsetX) || 0));
+        const offsetY = Math.max(-40, Math.min(40, Number(data.offsetY) || 0));
         const enabled = !!(data && data.enabled) && !!name && !!role;
         const nameEl = overlay.querySelector('.name-role-overlay-name');
         const roleEl = overlay.querySelector('.name-role-overlay-role');
@@ -1056,6 +1084,8 @@
         overlay.style.setProperty('--name-role-name-size', nameSize + 'px');
         overlay.style.setProperty('--name-role-role-size', roleSize + 'px');
         overlay.style.setProperty('--name-role-logo-size', logoSize + 'px');
+        overlay.style.setProperty('--name-role-offset-x', offsetX + 'vw');
+        overlay.style.setProperty('--name-role-offset-y', offsetY + 'vh');
         overlay.dataset.name = name;
         overlay.dataset.role = role;
         overlay.dataset.style = style;
@@ -1089,6 +1119,8 @@
         const actionsEl = overlay.querySelector('.social-engagement-overlay-actions');
         const accentColor = /^#[0-9a-f]{6}$/i.test(data && data.accentColor || '') ? data.accentColor : '#b9df45';
         const size = Math.max(10, Math.min(40, Number(data && data.size) || 14));
+        const offsetX = Math.max(-40, Math.min(40, Number(data && data.offsetX) || 0));
+        const offsetY = Math.max(-40, Math.min(40, Number(data && data.offsetY) || 0));
         Object.entries(socialValues).forEach(([key, value]) => {
           const item = socialsEl && socialsEl.querySelector('.name-role-social-' + key);
           if (!item) return;
@@ -1105,7 +1137,7 @@
         const enabled = !!(data && data.enabled) && (
           Object.values(socialValues).some(Boolean) || Object.values(actionValues).some(Boolean)
         );
-        const signature = JSON.stringify({ socialValues, actionValues, accentColor: accentColor, size: size });
+        const signature = JSON.stringify({ socialValues, actionValues, accentColor: accentColor, size: size, offsetX, offsetY });
         const changed = overlay.dataset.signature !== signature;
         if (enabled && changed && overlay.classList.contains('is-visible')) {
           overlay.classList.remove('is-visible');
@@ -1116,6 +1148,8 @@
         overlay.style.setProperty('--social-engagement-size', size + 'px');
         overlay.style.setProperty('--social-engagement-action-size', Math.max(10, Math.round(size * 0.75)) + 'px');
         overlay.style.setProperty('--social-engagement-icon-size', Math.round(size * 1.4) + 'px');
+        overlay.style.setProperty('--social-engagement-offset-x', offsetX + 'vw');
+        overlay.style.setProperty('--social-engagement-offset-y', offsetY + 'vh');
         overlay.setAttribute('aria-hidden', enabled ? 'false' : 'true');
         overlay.classList.toggle('is-visible', enabled);
       }
@@ -1124,7 +1158,7 @@
         const wasLowerThirdOnly = lowerThirdOnlyMode;
         lowerThirdOnlyMode = false;
         lastNormalUpdate = null;
-        document.body.classList.remove('lower-third-only-mode');
+        document.body.classList.remove('lower-third-only-mode', 'lyrics-lt-mode');
         fullText.innerHTML = '';
         ltText.innerHTML = '';
         if (wasLowerThirdOnly) {
@@ -1171,6 +1205,15 @@
 
       window.addEventListener('message', function (event) {
         const data = event.data || {};
+        if (data && data.type === 'SET_STREAM_OUTPUT_MODE' && IS_PREVIEW) {
+          const enabled = !!data.enabled;
+          if (streamOutputActive !== enabled) {
+            streamOutputActive = enabled;
+            lastSeq = 0;
+            if (lastNormalUpdate) applyUpdate(lastNormalUpdate);
+          }
+          return;
+        }
         if (data && data.type === 'REQUEST_FULLSCREEN') {
           document.documentElement.requestFullscreen().catch(function () {});
           return;
@@ -1256,6 +1299,7 @@
       const endBtn = document.getElementById('btn-output-end-live');
       goBtns.forEach((btn) => btn.classList.toggle('live-active', outputLiveActive));
       if (endBtn) endBtn.classList.toggle('show', outputLiveActive);
+      syncLyricsOutputTypeButtons();
       layoutProgramScaleControls();
       if (outputLiveWatcher) {
         clearInterval(outputLiveWatcher);
@@ -1274,6 +1318,35 @@
           }
         }, 3000);
       }
+    }
+
+    function syncLyricsOutputTypeButtons() {
+      const monitorBtn = document.getElementById('lyrics-output-monitor-btn');
+      const streamBtn = document.getElementById('lyrics-output-stream-btn');
+      if (standaloneDisplayWindow && standaloneDisplayWindow.closed) lyricsMonitorOutputOpen = false;
+      const monitorActive = lyricsMonitorOutputOpen || outputLiveActive;
+      const streamActive = !!(_pgmStreamState && (_pgmStreamState.running || _pgmStreamState.starting));
+      if (monitorBtn) {
+        monitorBtn.classList.toggle('active', monitorActive);
+        monitorBtn.setAttribute('aria-pressed', monitorActive ? 'true' : 'false');
+      }
+      if (streamBtn) {
+        streamBtn.classList.toggle('active', streamActive);
+        streamBtn.setAttribute('aria-pressed', streamActive ? 'true' : 'false');
+        streamBtn.disabled = !!_pgmStreamState?.starting;
+      }
+    }
+
+    async function toggleLyricsMonitorOutput() {
+      if (lyricsMonitorOutputOpen || outputLiveActive) {
+        endOutputLive();
+        return;
+      }
+      await openStandaloneOutputFromUi();
+    }
+
+    function toggleLyricsStreamOutput() {
+      pgmStreamToggle();
     }
 
     function getWindowFeaturesForOutput(bounds) {
@@ -1440,6 +1513,8 @@
           showToast(t('output_open_failed'));
           return false;
         }
+        lyricsMonitorOutputOpen = true;
+        syncLyricsOutputTypeButtons();
         sendSyncState();
         queueStandaloneSyncBurst();
         return true;
@@ -1452,6 +1527,8 @@
         showToast(t('output_popup_blocked'));
         return false;
       }
+      lyricsMonitorOutputOpen = true;
+      syncLyricsOutputTypeButtons();
       try { standaloneDisplayWindow.focus(); } catch (e) {}
       if (opts.moveAfterOpen !== false) {
         tryMoveStandaloneOutputWindow(bounds);
@@ -1529,6 +1606,7 @@
         try { standaloneDisplayWindow.close(); } catch (e) {}
       }
       standaloneDisplayWindow = null;
+      lyricsMonitorOutputOpen = false;
       setOutputLiveState(false);
       showToast(t('output_live_ended'));
     }
@@ -1764,6 +1842,7 @@
       if (settingsBtn) {
         settingsBtn.disabled = _pgmStreamState.starting || live;
       }
+      syncLyricsOutputTypeButtons();
     }
 
     function pgmStreamHandlePlatformChange() {
@@ -1881,6 +1960,7 @@
 	        _pgmStreamState.starting = false;
 	        _pgmStreamState.running = false;
 	        _pgmStreamState.status = 'idle';
+          syncEmbeddedProgramDisplay();
 	        pgmStreamRenderState();
         showToast(t('stream_projection_stopped'));
         return;
@@ -1948,13 +2028,16 @@
       }
       _pgmStreamState.running = true;
       _pgmStreamState.status = 'starting';
+      syncEmbeddedProgramDisplay();
       pgmStreamRenderState();
       showToast(t('stream_starting_projection'));
     }
 
     function pgmStreamHandleStatusEvent(status) {
       const st = status || {};
+      const wasRunning = _pgmStreamState.running;
       _pgmStreamState.running = !!st.running && (st.status === 'starting' || st.status === 'live' || st.status === 'stopping');
+      if (wasRunning !== _pgmStreamState.running) syncEmbeddedProgramDisplay();
       _pgmStreamState.status = String(st.status || (_pgmStreamState.running ? 'live' : 'idle'));
       if (st.ffmpegPath) {
         _pgmStreamState.encoderReady = true;
@@ -2090,10 +2173,14 @@
     function initStandaloneTools() {
       initEmbeddedProgramDisplay();
       initProjectionStreamingExtras().catch(() => {});
+      syncLyricsOutputTypeButtons();
       refreshOutputScreenList().catch(() => {});
       refreshPgmOutputDevices().catch(() => {});
       if (hasDesktopOutputBridge() && typeof window.BSPDesktop.onOutputClosed === 'function') {
-        window.BSPDesktop.onOutputClosed(() => setOutputLiveState(false));
+        window.BSPDesktop.onOutputClosed(() => {
+          lyricsMonitorOutputOpen = false;
+          setOutputLiveState(false);
+        });
       }
       refreshCameraDevices().catch(() => {});
       if (navigator.mediaDevices && typeof navigator.mediaDevices.addEventListener === 'function') {
