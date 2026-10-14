@@ -53,6 +53,12 @@
       const barW = bar.clientWidth || 0;
       const goW = goLiveGroup.offsetWidth || 0;
       if (!barW || !goW) return;
+      const compact = barW < 620;
+      bar.classList.toggle('is-compact', compact);
+      if (compact) {
+        goLiveGroup.style.left = '';
+        return;
+      }
 
       const defaultLeft = (barW - goW) / 2;
       const leftBound = (leftBlock.offsetLeft || 0) + (leftBlock.offsetWidth || 0) + 8;
