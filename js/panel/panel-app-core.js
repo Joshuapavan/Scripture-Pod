@@ -271,8 +271,8 @@
     let versionSwitchUpdatesLive = true;
     let ltRefBgColor = '#FFFFFF';
     let refBgEnabled = true;
-    let verseShadowEnabled = false;
-    let referenceShadowEnabled = false;
+    let verseShadowEnabled = true;
+    let referenceShadowEnabled = true;
     let referenceTextCapitalized = true;
     let ltRefFontSize = 30;
     let dualVersionModeEnabled = false;

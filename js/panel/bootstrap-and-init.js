@@ -918,12 +918,12 @@
       if (ui.referenceShadowEnabled != null) {
         setReferenceShadowEnabled(!!ui.referenceShadowEnabled, { silent: true });
       } else {
-        setReferenceShadowEnabled(false, { silent: true });
+        setReferenceShadowEnabled(true, { silent: true });
       }
       if (ui.verseShadowEnabled != null) {
         setVerseShadowEnabled(!!ui.verseShadowEnabled, { silent: true });
       } else {
-        setVerseShadowEnabled(false, { silent: true });
+        setVerseShadowEnabled(true, { silent: true });
       }
       if (ui.referenceTextCapitalized != null) {
         setReferenceCapitalized(!!ui.referenceTextCapitalized, { silent: true });
@@ -4869,8 +4869,8 @@
     }
 
     setRefBgEnabled(true, { silent: true });
-    setReferenceShadowEnabled(false, { silent: true });
-    setVerseShadowEnabled(false, { silent: true });
+    setReferenceShadowEnabled(true, { silent: true });
+    setVerseShadowEnabled(true, { silent: true });
     setReferenceCapitalized(true, { silent: true });
     setDualVersionModeEnabled(false, { silent: true });
     if (document.readyState === 'complete') {

@@ -1104,10 +1104,6 @@
 
         btn.onclick = () => {
           if (annotateMode) return;
-          if (editorMode === 'btn' && isCurrentlyLive) {
-            clearOutput({ fade: true });
-            return;
-          }
           lineCursor = idx;
           if (isBible && linesPerPage === 1) {
             const verseNum = getFirstVerseNumber(p.raw);
@@ -1314,12 +1310,15 @@
         showToast('Preview Only is on. Turn it off to project live.');
         return;
       }
+      if (!currentItem) {
+        showToast('Select a verse or song before going live.');
+        return false;
+      }
       const wasLive = isLive;
       if (trigger) isLive = true;
       if (!isLive) return;
       updateProgramDisplayStatus();
       applyProgramDisplaySource('lyrics');
-      if (!currentItem) return;
       const isBible = getIsBibleItem(currentItem);
       const scheduleProjectIndex = isCurrentItemFromScheduleList() ? currentIndex : -1;
       if (!isBible && activeRatio === 'custom') {
