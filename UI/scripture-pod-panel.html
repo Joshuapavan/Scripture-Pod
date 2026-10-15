@@ -3192,6 +3192,9 @@
           if (snapshot && typeof livePointer !== 'undefined' && livePointer?.source === 'schedule') {
             liveBackgroundState = { ...snapshot };
             if (typeof pushLiveUpdate === 'function') pushLiveUpdate();
+            if (snapshot.bgType === 'video' && typeof sendBackgroundVideoPreload === 'function') {
+              sendBackgroundVideoPreload({ backgroundState: snapshot });
+            }
           }
           return result;
         };

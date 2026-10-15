@@ -1362,8 +1362,9 @@
         delayBibleBgUntilVerse = false;
       }
       pushLiveUpdate(); saveToStorageDebounced(); updateButtonView(); setLtFontInputValue(getEffectiveLtFont());
-      if (!wasLive && document.getElementById('bg-type')?.value === 'video') {
-        sendBackgroundVideoPreload();
+      const projectedBackground = getEffectiveLiveBackgroundState();
+      if (!wasLive && projectedBackground?.bgType === 'video') {
+        sendBackgroundVideoPreload({ backgroundState: projectedBackground });
       }
       if (isScheduleItem) {
         const setlistBehavior = (typeof getSetlistSettingsSnapshot === 'function')

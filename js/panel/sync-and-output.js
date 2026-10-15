@@ -496,12 +496,16 @@
       return compacted;
     }
 
-    async function sendBackgroundVideoPreload() {
-      if (document.getElementById('bg-type')?.value !== 'video') return;
+    async function sendBackgroundVideoPreload(opts = {}) {
+      const backgroundState = opts.backgroundState || null;
+      const bgType = backgroundState?.bgType || document.getElementById('bg-type')?.value;
+      if (bgType !== 'video') return;
       const source = document.getElementById('bg-video-source')?.value || 'upload';
-      const videoData = source === 'upload'
-        ? bgVideoUploadDataUrl
-        : String(document.getElementById('bg-video-url')?.value || '').trim();
+      const videoData = backgroundState
+        ? String(backgroundState.bgVideo || '').trim()
+        : (source === 'upload'
+            ? bgVideoUploadDataUrl
+            : String(document.getElementById('bg-video-url')?.value || '').trim());
       if (!videoData) return;
       let videoUrl = videoData;
       try {
@@ -520,8 +524,10 @@
       broadcastMessage({
         type: 'PRELOAD_BACKGROUND',
         bgVideo: videoUrl,
-        bgVideoLoop: !!document.getElementById('bg-video-loop')?.checked,
-        bgVideoSpeed: Number(document.getElementById('bg-video-speed')?.value || 1),
+        bgVideoLoop: backgroundState?.bgVideoLoop != null
+          ? !!backgroundState.bgVideoLoop
+          : !!document.getElementById('bg-video-loop')?.checked,
+        bgVideoSpeed: Number(backgroundState?.bgVideoSpeed ?? document.getElementById('bg-video-speed')?.value ?? 1),
         resume: resumeSavedLiveVideo
       });
       if (savedLiveVideoMatches) sendSyncState();
