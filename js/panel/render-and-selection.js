@@ -812,6 +812,18 @@
           text: async () => asset.contents
         }));
         await handleImport({ files, value: '' });
+        const versions = Object.keys(bibles || {});
+        const englishVersion = versions.find(version => /^English NKJ\b/i.test(version));
+        const kannadaVersion = versions.find(version => /^Kannada BSI JV\b/i.test(version));
+        const tamilVersion = versions.find(version => /^Tamil\b.*\bBSI\b/i.test(version));
+        if (englishVersion && kannadaVersion && tamilVersion) {
+          if (activeBibleVersion !== englishVersion) changeActiveBibleVersion(englishVersion);
+          setDualVersionSecondaryId(kannadaVersion, { silent: true });
+          setDualVersionTertiaryId(tamilVersion, { silent: true });
+          setDualVersionModeEnabled(true, { silent: true });
+          saveState();
+          await flushAppState();
+        }
         await importBundledChurchLogo();
       } catch (error) {
         console.error('Bundled Bible import failed', error);
@@ -1226,21 +1238,6 @@
         const filename = formatBackupFilename(new Date());
         let saveHandle = null;
         const isObsBrowserSource = !!(window.obsstudio && !(window.BSPDesktop && typeof window.BSPDesktop.saveRecordingFile === 'function'));
-        if (typeof window.showSaveFilePicker === 'function') {
-          try {
-            saveHandle = await window.showSaveFilePicker({
-              suggestedName: filename,
-              types: [{
-                description: 'JSON Backup',
-                accept: { 'application/json': ['.json'] }
-              }]
-            });
-          } catch (pickErr) {
-            // User-cancel should not show a failure toast.
-            if (pickErr && (pickErr.name === 'AbortError' || pickErr.code === 20)) return;
-            console.warn('Backup export: save picker unavailable/fallback', pickErr);
-          }
-        }
         let dbOk = true;
         await openDb().catch(err => {
           console.error('Backup export: openDb failed', err);
@@ -1314,6 +1311,20 @@
           });
           showToast(t('backup_exported_named').replace('{filename}', filename));
           return;
+        }
+        if (typeof window.showSaveFilePicker === 'function') {
+          try {
+            saveHandle = await window.showSaveFilePicker({
+              suggestedName: filename,
+              types: [{
+                description: 'JSON Backup',
+                accept: { 'application/json': ['.json'] }
+              }]
+            });
+          } catch (pickErr) {
+            if (pickErr && (pickErr.name === 'AbortError' || pickErr.code === 20)) return;
+            console.warn('Backup export: save picker unavailable/fallback', pickErr);
+          }
         }
         if (saveHandle) {
           try {
@@ -1440,6 +1451,23 @@
           showToast(t('backup_invalid_file'));
           return;
         }
+        const data = parsed.data;
+        const hasBackupPayload = ['songs', 'bibles', 'appState', 'settings', 'ltStyles', 'customFonts', 'presets', 'extra']
+          .some(key => Object.prototype.hasOwnProperty.call(data, key));
+        const isObject = value => !!value && typeof value === 'object' && !Array.isArray(value);
+        const hasValidCollections =
+          (!Object.prototype.hasOwnProperty.call(data, 'songs') || Array.isArray(data.songs) || isObject(data.songs)) &&
+          (!Object.prototype.hasOwnProperty.call(data, 'bibles') || Array.isArray(data.bibles) || isObject(data.bibles)) &&
+          (!Object.prototype.hasOwnProperty.call(data, 'appState') || isObject(data.appState)) &&
+          (!Object.prototype.hasOwnProperty.call(data, 'settings') || isObject(data.settings)) &&
+          (!Object.prototype.hasOwnProperty.call(data, 'ltStyles') || isObject(data.ltStyles)) &&
+          (!Object.prototype.hasOwnProperty.call(data, 'customFonts') || Array.isArray(data.customFonts)) &&
+          (!Object.prototype.hasOwnProperty.call(data, 'presets') || Array.isArray(data.presets)) &&
+          (!Object.prototype.hasOwnProperty.call(data, 'extra') || isObject(data.extra));
+        if (!hasBackupPayload || !hasValidCollections) {
+          showToast(t('backup_invalid_file'));
+          return;
+        }
         pendingBackupData = parsed;
         showConfirm(t('settings_backup_import'), t('backup_import_overwrite_confirm'), (ok) => {
           if (!ok) return;
@@ -1453,9 +1481,15 @@
 
     async function applyBackupImport(backup) {
       const data = backup && backup.data ? backup.data : {};
-      const songRecords = normalizeSongRecords(data.songs);
-      const bibleRecords = normalizeBibleRecords(data.bibles);
-      const mergedState = mergeAppStateWithDefaults(data.appState);
+      const hasSongRecords = Object.prototype.hasOwnProperty.call(data, 'songs');
+      const hasBibleRecords = Object.prototype.hasOwnProperty.call(data, 'bibles');
+      const songRecords = hasSongRecords
+        ? normalizeSongRecords(data.songs)
+        : songs.map(coerceSongRecord).filter(Boolean);
+      const bibleRecords = hasBibleRecords
+        ? normalizeBibleRecords(data.bibles)
+        : Object.keys(bibles).map(name => buildBibleRecord(name, bibles[name] || [], { isNew: false })).filter(Boolean);
+      const mergedState = mergeAppStateWithDefaults(data.appState || appState || {});
       const settings = (mergedState.settings && typeof mergedState.settings === 'object') ? { ...mergedState.settings } : {};
       if (data.settings && typeof data.settings === 'object') Object.assign(settings, data.settings);
       if (data.ltStyles && typeof data.ltStyles === 'object') settings.ltStyles = data.ltStyles;
@@ -1475,25 +1509,34 @@
       isRestoringBackup = true;
       stateReady = false;
       try {
+        const db = await openDb();
+        const updatedAt = Date.now();
+        await new Promise((resolve, reject) => {
+          const tx = db.transaction([STORE_SONGS, STORE_BIBLES, STORE_STATE], 'readwrite');
+          const songStore = tx.objectStore(STORE_SONGS);
+          const bibleStore = tx.objectStore(STORE_BIBLES);
+          const stateStore = tx.objectStore(STORE_STATE);
+          if (hasSongRecords) songStore.clear();
+          if (hasBibleRecords) bibleStore.clear();
+          stateStore.clear();
+          if (hasSongRecords) songRecords.forEach(record => songStore.put(record));
+          if (hasBibleRecords) bibleRecords.forEach(record => bibleStore.put(record));
+          stateStore.put({ key: 'appState', value: mergedState, updatedAt });
+          if (mergedState.settings?.ltStyles) {
+            stateStore.put({ key: 'ltStyles', value: mergedState.settings.ltStyles, updatedAt });
+          }
+          if (bgSnapshot) stateStore.put({ key: 'bgSettings', value: bgSnapshot, updatedAt });
+          if (animationSnapshot) stateStore.put({ key: 'animationSettings', value: animationSnapshot, updatedAt });
+          if (typographySnapshot) stateStore.put({ key: 'typographySettings', value: typographySnapshot, updatedAt });
+          if (modeSnapshot) stateStore.put({ key: 'modeSettings', value: modeSnapshot, updatedAt });
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => reject(tx.error || new Error('Backup data could not be saved'));
+          tx.onabort = () => reject(tx.error || new Error('Backup restore was interrupted'));
+        });
+        appStateUpdatedAt = updatedAt;
         ltStyles = {};
         customFonts = [];
         loadedFontNames.clear();
-        await openDb();
-        await Promise.all([
-          dbClearStore(STORE_SONGS),
-          dbClearStore(STORE_BIBLES),
-          dbClearStore(STORE_STATE)
-        ]);
-        await Promise.all([
-          dbPutMany(STORE_SONGS, songRecords),
-          dbPutMany(STORE_BIBLES, bibleRecords),
-          dbSetAppState(mergedState),
-          (mergedState.settings && mergedState.settings.ltStyles) ? idbPut(STORE_STATE, { key: 'ltStyles', value: mergedState.settings.ltStyles, updatedAt: Date.now() }) : Promise.resolve(true),
-          bgSnapshot ? idbPut(STORE_STATE, { key: 'bgSettings', value: bgSnapshot, updatedAt: Date.now() }) : Promise.resolve(true),
-          animationSnapshot ? idbPut(STORE_STATE, { key: 'animationSettings', value: animationSnapshot, updatedAt: Date.now() }) : Promise.resolve(true),
-          typographySnapshot ? idbPut(STORE_STATE, { key: 'typographySettings', value: typographySnapshot, updatedAt: Date.now() }) : Promise.resolve(true),
-          modeSnapshot ? idbPut(STORE_STATE, { key: 'modeSettings', value: modeSnapshot, updatedAt: Date.now() }) : Promise.resolve(true)
-        ]);
 
         applyLoadedState(mergedState, songRecords, bibleRecords, { runInit: false });
         stateReady = true;
@@ -1518,9 +1561,11 @@
           pendingModePersist = false;
           persistModeSettings();
         }
+        queueRelayStatePush({ includeSongs: hasSongRecords, includeBibles: hasBibleRecords });
         sendSyncState();
         showToast(t('backup_imported_successfully'));
       } catch (e) {
+        stateReady = true;
         console.error('Backup import restore failed', e);
         const reason = e && e.message ? `: ${e.message}` : '';
         showToast(`${t('backup_import_failed')}${reason}`);
