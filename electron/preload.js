@@ -25,6 +25,15 @@ const BSPDesktop = {
   async getLocalServerInfo() {
     return ipcRenderer.invoke('bsp:get-local-server-info');
   },
+  async listBundledBibleFiles() {
+    return ipcRenderer.invoke('bsp:list-bundled-bible-files');
+  },
+  async readBundledBibleFile(asset) {
+    return ipcRenderer.invoke('bsp:read-bundled-bible-file', asset);
+  },
+  async readBundledChurchLogo() {
+    return ipcRenderer.invoke('bsp:read-bundled-church-logo');
+  },
   async cacheBackgroundMedia(dataUrl) {
     return ipcRenderer.invoke('bsp:cache-background-media', dataUrl);
   },
@@ -46,6 +55,10 @@ const BSPDesktop = {
   onOutputClosed(callback) {
     ipcRenderer.removeAllListeners('bsp:output-closed');
     ipcRenderer.on('bsp:output-closed', () => callback());
+  },
+  onOutputReady(callback) {
+    ipcRenderer.removeAllListeners('bsp:output-ready');
+    ipcRenderer.on('bsp:output-ready', () => callback());
   }
 };
 
@@ -53,6 +66,7 @@ contextBridge.exposeInMainWorld('BSPDesktop', BSPDesktop);
 
 window.addEventListener('DOMContentLoaded', () => {
   ipcRenderer.send('bsp:register-output-closed-listener');
+  ipcRenderer.send('bsp:output-ready');
 });
 
 ipcRenderer.on('bsp:output-message', (_event, message) => {

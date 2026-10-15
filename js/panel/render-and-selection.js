@@ -781,6 +781,59 @@
       document.getElementById('import-file').click();
     }
 
+    async function importBundledBibles() {
+      try {
+        let assets = [];
+        const desktop = window.BSPDesktop;
+        if (desktop && typeof desktop.listBundledBibleFiles === 'function' && typeof desktop.readBundledBibleFile === 'function') {
+          assets = await desktop.listBundledBibleFiles();
+          assets = await Promise.all((Array.isArray(assets) ? assets : []).map((asset) => desktop.readBundledBibleFile(asset)));
+        } else {
+          const manifestUrl = new URL('../bundled-bibles.json', window.location.href);
+          const manifestResponse = await fetch(manifestUrl);
+          if (!manifestResponse.ok) throw new Error('Bundled Bible manifest is unavailable');
+          const manifest = await manifestResponse.json();
+          assets = await Promise.all((Array.isArray(manifest) ? manifest : []).map(async (asset) => {
+            if (!['app_assets/bibles', 'assets/bibles'].includes(asset?.directory) || !asset?.name) return null;
+            const url = new URL(`../${asset.directory}/${encodeURIComponent(asset.name)}`, window.location.href);
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`Unable to read ${asset.name}`);
+            return { name: asset.name, contents: await response.text() };
+          }));
+          assets = assets.filter(Boolean);
+        }
+
+        if (!assets.length) {
+          showToast('No bundled Bibles were found in assets/bibles.');
+          return;
+        }
+        const files = assets.map((asset) => ({
+          name: asset.name,
+          text: async () => asset.contents
+        }));
+        await handleImport({ files, value: '' });
+        await importBundledChurchLogo();
+      } catch (error) {
+        console.error('Bundled Bible import failed', error);
+        showToast(error?.message || 'Bundled Bible import failed');
+      }
+    }
+
+    async function importBundledChurchLogo() {
+      let file;
+      if (window.BSPDesktop && typeof window.BSPDesktop.readBundledChurchLogo === 'function') {
+        const logo = await window.BSPDesktop.readBundledChurchLogo();
+        const bytes = Uint8Array.from(atob(logo.contents), (character) => character.charCodeAt(0));
+        file = new File([bytes], logo.name || 'ACI_Logo.png', { type: 'image/png' });
+      } else {
+        const url = new URL('../app_assets/logo/ACI_Logo.png', window.location.href);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Bundled ACI logo is unavailable');
+        file = new File([await response.blob()], 'ACI_Logo.png', { type: 'image/png' });
+      }
+      await handleNameRoleOverlayLogoChange({ files: [file], value: '' });
+    }
+
     async function handleImport(input) {
       let importedAnyBible = false;
       let importedCount = 0;

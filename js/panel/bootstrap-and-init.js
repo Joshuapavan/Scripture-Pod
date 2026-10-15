@@ -762,6 +762,8 @@
       const socialEnabled = ui.socialEngagementOverlayEnabled === true && !overlayEnabled;
       if (overlayNameInput) overlayNameInput.value = String(ui.nameRoleOverlayName || '');
       if (overlayRoleInput) overlayRoleInput.value = String(ui.nameRoleOverlayRole || '');
+      setLowerThirdSettingsPanelCollapsed('name-role-overlay-panel', ui.nameRoleOverlayCollapsed === true, { persist: false });
+      setLowerThirdSettingsPanelCollapsed('social-engagement-overlay-panel', ui.socialEngagementOverlayCollapsed === true, { persist: false });
       if (overlayEnabledButton) {
         overlayEnabledButton.setAttribute('aria-pressed', overlayEnabled ? 'true' : 'false');
         overlayEnabledButton.textContent = overlayEnabled ? 'Hide Lower Third' : 'Show Lower Third';
@@ -810,7 +812,11 @@
         const savedPrimary = ui.socialEngagementOverlayPrimaryColor;
         socialPrimaryInput.value = /^#[0-9a-f]{6}$/i.test(savedPrimary || '') ? savedPrimary : '#90D5FF';
       }
-      if (socialSizeInput) socialSizeInput.value = String(Math.max(10, Math.min(40, Number(ui.socialEngagementOverlaySize) || 14)));
+      if (socialSizeInput) {
+        const savedSocialSize = Number(ui.socialEngagementOverlaySize);
+        const migratedDefaultSize = ui.socialEngagementOverlaySizeVersion !== 2 && savedSocialSize === 14;
+        socialSizeInput.value = String(Math.max(10, Math.min(40, migratedDefaultSize ? 32 : (savedSocialSize || 32))));
+      }
       if (socialOffsetXInput) socialOffsetXInput.value = String(Math.max(-40, Math.min(40, Number(ui.socialEngagementOverlayOffsetX) || 0)));
       if (socialOffsetYInput) socialOffsetYInput.value = String(Math.max(-40, Math.min(40, Number(ui.socialEngagementOverlayOffsetY) || 0)));
       document.getElementById('social-engagement-offset-x-value').textContent = `${socialOffsetXInput?.value || 0}%`;
@@ -3710,10 +3716,12 @@
       const programHandle = document.getElementById('program-width-handle');
       const leftWorkspace = document.getElementById('left-workspace');
       const workspaceTop = document.getElementById('workspace-top');
+      const programPanel = document.getElementById('program-display-panel');
       const studioDock = document.getElementById('studio-dock');
       const workspaceHandle = document.getElementById('workspace-height-handle');
       if (!sidebar) return;
       const mq = window.matchMedia('(max-width: 768px)');
+      const stackedPreviewMq = window.matchMedia('(max-width: 900px)');
       const unifiedLeftWidthKey = 'leftPanelUnifiedWidth';
       const safeSetPointerCapture = (el, pointerId) => {
         try {
@@ -3941,7 +3949,7 @@
           document.body.style.userSelect = '';
         };
         programHandle.addEventListener('pointerdown', (e) => {
-          if (mq.matches) return;
+          if (stackedPreviewMq.matches) return;
           pDrag = true; pPointerId = e.pointerId; pStartX = e.clientX; pStartW = getCurrentLeftPanelWidth();
           if (leftWorkspace) leftWorkspace.style.transition = 'none';
           main.style.transition = 'none';
@@ -3956,6 +3964,93 @@
         document.addEventListener('pointercancel', finishProgramWidth);
         programHandle.addEventListener('lostpointercapture', finishProgramWidth);
         window.addEventListener('blur', finishProgramWidth);
+      }
+
+      if (programHandle && programPanel && workspaceTop) {
+        let previewDrag = false;
+        let previewStartY = 0;
+        let previewStartHeight = 0;
+        let previewPointerId = null;
+        const previewHeightKey = 'responsiveProgramPreviewHeight';
+        const getPreviewHeightLimits = () => {
+          const available = workspaceTop.clientHeight || window.innerHeight;
+          return { min: 180, max: Math.max(180, Math.round(available * 0.75)) };
+        };
+        const applyPreviewHeight = (height) => {
+          const limits = getPreviewHeightLimits();
+          const nextHeight = Math.min(limits.max, Math.max(limits.min, Math.round(height)));
+          programPanel.style.flex = `0 0 ${nextHeight}px`;
+          programHandle.setAttribute('aria-valuenow', String(nextHeight));
+          return nextHeight;
+        };
+        const updatePreviewHandleOrientation = () => {
+          const stacked = stackedPreviewMq.matches;
+          programHandle.setAttribute('aria-orientation', stacked ? 'horizontal' : 'vertical');
+          programHandle.title = stacked ? 'Drag to resize program preview height' : 'Drag to resize program preview width';
+          if (stacked) {
+            let savedHeight = 0;
+              try { savedHeight = parseFloat(localStorage.getItem(previewHeightKey)) || 0; } catch (_) {}
+            if (savedHeight) applyPreviewHeight(savedHeight);
+          } else {
+            programPanel.style.flex = '';
+            programHandle.removeAttribute('aria-valuenow');
+          }
+        };
+        const movePreviewHeight = (event) => {
+          if (!previewDrag || (previewPointerId != null && event.pointerId !== previewPointerId)) return;
+          applyPreviewHeight(previewStartHeight - (event.clientY - previewStartY));
+        };
+        const finishPreviewHeight = (event) => {
+          if (!previewDrag || (event?.pointerId != null && previewPointerId !== event.pointerId)) return;
+          previewDrag = false;
+          const pointerId = previewPointerId;
+          previewPointerId = null;
+          programPanel.style.transition = '';
+          workspaceTop.style.transition = '';
+          try { localStorage.setItem(previewHeightKey, String(Math.round(programPanel.getBoundingClientRect().height))); } catch (_) {}
+          safeReleasePointerCapture(programHandle, pointerId);
+          hideDragOverlay();
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+        };
+        programHandle.addEventListener('pointerdown', (event) => {
+          if (!stackedPreviewMq.matches || event.button !== 0) return;
+          previewDrag = true;
+          previewPointerId = event.pointerId;
+          previewStartY = event.clientY;
+          previewStartHeight = programPanel.getBoundingClientRect().height;
+          programPanel.style.transition = 'none';
+          workspaceTop.style.transition = 'none';
+          safeSetPointerCapture(programHandle, event.pointerId);
+          showDragOverlay('ns-resize');
+          document.body.style.cursor = 'ns-resize';
+          document.body.style.userSelect = 'none';
+          event.preventDefault();
+          event.stopPropagation();
+        });
+        programHandle.addEventListener('keydown', (event) => {
+          if (!stackedPreviewMq.matches || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return;
+          event.preventDefault();
+          const amount = event.key === 'ArrowUp' ? 24 : -24;
+          const nextHeight = applyPreviewHeight(programPanel.getBoundingClientRect().height + amount);
+          try { localStorage.setItem(previewHeightKey, String(nextHeight)); } catch (_) {}
+        });
+        document.addEventListener('pointermove', movePreviewHeight);
+        document.addEventListener('pointerup', finishPreviewHeight);
+        document.addEventListener('pointercancel', finishPreviewHeight);
+        programHandle.addEventListener('lostpointercapture', finishPreviewHeight);
+        window.addEventListener('blur', finishPreviewHeight);
+        updatePreviewHandleOrientation();
+        if (typeof stackedPreviewMq.addEventListener === 'function') {
+          stackedPreviewMq.addEventListener('change', updatePreviewHandleOrientation);
+        } else if (typeof stackedPreviewMq.addListener === 'function') {
+          stackedPreviewMq.addListener(updatePreviewHandleOrientation);
+        }
+        window.addEventListener('resize', () => {
+          if (stackedPreviewMq.matches && programPanel.style.flex) {
+            applyPreviewHeight(programPanel.getBoundingClientRect().height);
+          }
+        });
       }
 
       // === TOP vs DOCK SPLIT (desktop) ===

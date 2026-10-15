@@ -6,6 +6,7 @@ const fs = require('fs');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const { createRelayAccessToken, verifyRelayUpgrade } = require('./relay-security');
+const { listBundledBibleFiles, readBundledBibleFile, readBundledChurchLogo } = require('./bundled-bibles');
 
 let mainWindow = null;
 let outputWindow = null;
@@ -337,6 +338,9 @@ app.whenReady().then(() => {
     return { ok: true };
   });
   ipcMain.handle('bsp:get-local-server-info', () => getLocalServerInfo());
+  ipcMain.handle('bsp:list-bundled-bible-files', () => listBundledBibleFiles(path.join(__dirname, '..')));
+  ipcMain.handle('bsp:read-bundled-bible-file', (_event, asset) => readBundledBibleFile(path.join(__dirname, '..'), asset));
+  ipcMain.handle('bsp:read-bundled-church-logo', () => readBundledChurchLogo(path.join(__dirname, '..')));
   ipcMain.handle('bsp:cache-background-media', async (_event, dataUrl) => {
     const match = String(dataUrl || '').match(/^data:(image|video)\/([a-z0-9.+-]+);base64,([a-z0-9+/=\s]+)$/i);
     if (!match) throw new Error('Unsupported background media data');
@@ -400,6 +404,13 @@ app.whenReady().then(() => {
     const senderId = event.sender.id;
     outputClosedCallbacks.add(senderId);
     event.sender.once('destroyed', () => outputClosedCallbacks.delete(senderId));
+  });
+
+  ipcMain.on('bsp:output-ready', (event) => {
+    if (!outputWindow || outputWindow.isDestroyed() || event.sender !== outputWindow.webContents) return;
+    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.send('bsp:output-ready');
+    }
   });
 
   startHttpServer();

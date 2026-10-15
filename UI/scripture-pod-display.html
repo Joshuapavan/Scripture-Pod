@@ -567,6 +567,21 @@
             if (!acceptSeq(d.seq)) return;
             applyUpdateWithThrottle(d);
             break;
+          case 'PREVIEW_UPDATE': {
+            const payload = d.payload;
+            if (!payload || typeof payload !== 'object') return;
+            hasSynced = true;
+            if (!acceptSeq(payload.seq)) return;
+            applyUpdateWithThrottle(payload);
+            break;
+          }
+          case 'PREVIEW_CLEAR':
+            hasSynced = true;
+            lowerThirdOnlyMode = false;
+            lastProjectionUpdate = null;
+            document.body.classList.remove('lower-third-only-mode');
+            clearDisplay({ fade: false });
+            break;
           case 'SYNC_STATE': {
             const state = d.state || {};
             const payload = state.payload || null;
@@ -1313,7 +1328,7 @@
       const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
       const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
       const foregroundColor = primaryLuminance >= 0.72 ? '#101216' : '#ffffff';
-      const size = Math.max(10, Math.min(40, Number(data?.size) || 14));
+      const size = Math.max(10, Math.min(40, Number(data?.size) || 32));
       const offsetX = Math.max(-40, Math.min(40, Number(data?.offsetX) || 0));
       const offsetY = Math.max(-40, Math.min(40, Number(data?.offsetY) || 0));
       if (socialEl) {

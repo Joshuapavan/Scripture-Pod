@@ -156,6 +156,7 @@
         displayViewportWidth: viewport.width,
         displayViewportHeight: viewport.height
       };
+      embeddedProgramDisplayState = { kind: 'update', payload: previewPayload };
       if (!embeddedProgramDisplayReady) {
         pendingProgramPreviewPayload = previewPayload;
         return true;
@@ -473,7 +474,7 @@
     #social-engagement-overlay.is-visible .name-role-action-share { transition-delay: 190ms; }
     #social-engagement-overlay.is-visible .name-role-action-subscribe { transition-delay: 280ms; }
     .name-role-action { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border: 1px solid color-mix(in srgb,var(--social-engagement-accent,#90D5FF) 70%,transparent); border-radius: 999px; background: rgba(7,12,16,0.32); color: currentColor; font-size: var(--social-engagement-action-size,11px); font-weight: 800; opacity: 0; transform: translateY(9px) scale(0.96); transition: opacity 360ms ease,transform 460ms cubic-bezier(0.2,0.85,0.25,1); }
-    #social-engagement-overlay .name-role-social { font-size: var(--social-engagement-size,14px); }
+    #social-engagement-overlay .name-role-social { font-size: var(--social-engagement-size,32px); }
     #social-engagement-overlay .name-role-action svg { width: 1em; height: 1em; flex: 0 0 1em; fill: none; stroke: var(--social-engagement-accent,#90D5FF); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: scale(0.55) rotate(-8deg); transition: opacity 300ms ease,transform 420ms cubic-bezier(0.2,0.85,0.25,1); }
     #social-engagement-overlay.is-visible .name-role-action svg { opacity: 1; transform: scale(1) rotate(0); }
     #name-role-overlay.is-visible .name-role-action:not([hidden]) { opacity: 1; transform: translateY(0) scale(1); }
@@ -1180,7 +1181,7 @@
         const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
         const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
         const foregroundColor = primaryLuminance >= 0.72 ? '#101216' : '#ffffff';
-        const size = Math.max(10, Math.min(40, Number(data && data.size) || 14));
+        const size = Math.max(10, Math.min(40, Number(data && data.size) || 32));
         const offsetX = Math.max(-40, Math.min(40, Number(data && data.offsetX) || 0));
         const offsetY = Math.max(-40, Math.min(40, Number(data && data.offsetY) || 0));
         Object.entries(socialValues).forEach(([key, value]) => {
@@ -1625,6 +1626,17 @@
     }
 
     async function startOutputLive() {
+      const hasPreviewPayload = embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload;
+      const hasCurrentSelection = !!currentItem && Number.isInteger(Number(currentIndex)) && Number(currentIndex) >= 0;
+      if ((!isLive || !livePointer) && !hasPreviewPayload && hasCurrentSelection) {
+        projectLive(true);
+      }
+      const hasLivePayload = (isLive && livePointer) ||
+        (embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload);
+      if (!hasLivePayload) {
+        showToast('Select a verse or song before going live.');
+        return;
+      }
       if (!hasDesktopOutputBridge()) {
         // Browser fallback: open immediately in the click gesture so popup placement stays allowed.
         const preOpened = await openStandaloneOutputWindow({ moveAfterOpen: false });
@@ -1644,13 +1656,15 @@
       } else if (embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload) {
         const viewport = getEmbeddedDisplayViewport();
         postMessageToStandaloneOutput({
-          type: 'PREVIEW_UPDATE',
-          payload: {
-            ...embeddedProgramDisplayState.payload,
-            sceneLayers: getOutputSceneLayers(),
-            displayViewportWidth: viewport.width,
-            displayViewportHeight: viewport.height
-          }
+          ...embeddedProgramDisplayState.payload,
+          type: 'UPDATE',
+          proto: 1,
+          sender: 'control',
+          ts: Date.now(),
+          seq: nextSeq(),
+          sceneLayers: getOutputSceneLayers(),
+          displayViewportWidth: viewport.width,
+          displayViewportHeight: viewport.height
         });
       } else {
         sendSyncState();

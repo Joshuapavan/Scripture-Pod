@@ -316,7 +316,7 @@ body.display-full-mode {
     opacity: 0;
     transform: translateY(9px) scale(0.96);
     border-color: color-mix(in srgb, var(--social-engagement-accent, #90D5FF) 70%, transparent);
-    font-size: var(--social-engagement-action-size, 11px);
+    font-size: var(--social-engagement-action-size, 24px);
 }
 
 #social-engagement-overlay.is-visible .name-role-action:not([hidden]) {
@@ -329,14 +329,14 @@ body.display-full-mode {
 #social-engagement-overlay.is-visible .name-role-action-subscribe { transition-delay: 280ms; }
 
 #social-engagement-overlay .name-role-social {
-    font-size: var(--social-engagement-size, 14px);
+    font-size: var(--social-engagement-size, 32px);
     flex: 0 0 auto;
 }
 
 #social-engagement-overlay .name-role-social b {
-    width: var(--social-engagement-icon-size, 20px);
-    height: var(--social-engagement-icon-size, 20px);
-    flex-basis: var(--social-engagement-icon-size, 20px);
+    width: var(--social-engagement-icon-size, 45px);
+    height: var(--social-engagement-icon-size, 45px);
+    flex-basis: var(--social-engagement-icon-size, 45px);
     color: var(--social-engagement-accent, #90D5FF);
 }
 

@@ -22,6 +22,7 @@
       <p>Import your Bible or song library, then choose the display for your congregation.</p>
       <div class="first-run-setup-actions">
         <button class="btn" type="button" onclick="triggerImport()">Import Bible or songs</button>
+        <button class="btn first-run-setup-secondary" type="button" onclick="importBundledBibles()">Import bundled Bibles &amp; ACI logo</button>
         <button class="btn first-run-setup-secondary" type="button" onclick="openFirstRunOutputPicker()">Choose an output display</button>
       </div>
       <button class="first-run-setup-dismiss" type="button" onclick="dismissFirstRunSetup()">Set up later</button>
@@ -326,7 +327,7 @@
       </div>
     </div>
     </div>
-    <div id="program-width-handle" ><div class="grip"></div></div>
+    <div id="program-width-handle" role="separator" aria-orientation="vertical" aria-label="Resize program preview" title="Drag to resize program preview" tabindex="0"><div class="grip"></div></div>
     <aside id="program-display-panel" aria-hidden="false">
       <div class="program-display-header">
         <span class="program-display-title" data-i18n="ui_program_display">Program Display</span>
@@ -363,18 +364,21 @@
           <iframe id="program-display-frame" title="Program Display Preview" data-i18n-title="ui_program_display_preview" allowtransparency="true"></iframe>
         </div>
       </div>
-      <div class="name-role-overlay-panel">
+      <div id="name-role-overlay-panel" class="name-role-overlay-panel">
         <div class="name-role-overlay-heading">
           <strong>Name &amp; Role</strong>
           <div class="name-role-overlay-actions">
             <button type="button" class="name-role-overlay-example-btn" onclick="previewNameRoleLowerThirdExample()">Preview Example</button>
             <button type="button" class="name-role-overlay-show-btn" id="name-role-overlay-show-btn" aria-pressed="false" onclick="toggleNameRoleOverlay()">Show Lower Third</button>
+            <button type="button" class="name-role-overlay-collapse-btn" aria-label="Collapse Name &amp; Role settings" aria-expanded="true" aria-controls="name-role-overlay-body" onclick="toggleLowerThirdSettingsPanel('name-role-overlay-panel')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
           </div>
         </div>
+        <div class="name-role-overlay-body" id="name-role-overlay-body">
         <div class="name-role-overlay-fields">
           <input type="text" id="name-role-overlay-name" maxlength="48" placeholder="Name" aria-label="Overlay name" onchange="handleNameRoleOverlayChange()">
           <input type="text" id="name-role-overlay-role" maxlength="40" placeholder="Role" aria-label="Overlay role" onchange="handleNameRoleOverlayChange()">
         </div>
+        <div class="name-role-overlay-style-row">
         <section class="name-role-overlay-extra-section">
           <div class="name-role-overlay-subheading"><strong>LT design</strong></div>
           <select id="name-role-overlay-design" aria-label="Lower third design" onchange="handleNameRoleOverlayChange()">
@@ -445,6 +449,7 @@
             <option value="expand">Expand</option>
           </select>
         </section>
+        </div>
         <div class="name-role-overlay-customize">
           <select id="name-role-overlay-logo-color" aria-label="Logo color" title="Logo color" onchange="handleNameRoleOverlayChange()">
             <option value="white" selected>White logo</option>
@@ -471,15 +476,18 @@
           <label>Horizontal <input type="range" id="name-role-overlay-offset-x" min="-40" max="40" step="1" value="0" oninput="handleNameRoleOverlayChange()"><output id="name-role-overlay-offset-x-value">0%</output></label>
           <label>Vertical <input type="range" id="name-role-overlay-offset-y" min="-40" max="40" step="1" value="0" oninput="handleNameRoleOverlayChange()"><output id="name-role-overlay-offset-y-value">0%</output></label>
         </div>
+        </div>
       </div>
-      <div class="social-engagement-overlay-panel">
+      <div id="social-engagement-overlay-panel" class="name-role-overlay-panel social-engagement-overlay-panel">
         <div class="name-role-overlay-heading">
           <strong>Social Engagement</strong>
           <div class="name-role-overlay-actions">
             <button type="button" class="name-role-overlay-example-btn" onclick="previewSocialEngagementLowerThirdExample()">Preview Example</button>
             <button type="button" class="name-role-overlay-show-btn" id="social-engagement-overlay-show-btn" aria-pressed="false" onclick="toggleSocialEngagementOverlay()">Show Lower Third</button>
+            <button type="button" class="name-role-overlay-collapse-btn" aria-label="Collapse Social Engagement settings" aria-expanded="true" aria-controls="social-engagement-overlay-body" onclick="toggleLowerThirdSettingsPanel('social-engagement-overlay-panel')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
           </div>
         </div>
+        <div class="name-role-overlay-body" id="social-engagement-overlay-body">
         <section class="name-role-overlay-extra-section">
           <div class="name-role-overlay-subheading">
             <strong>Church socials</strong>
@@ -504,7 +512,7 @@
           <label class="name-role-overlay-accent-picker" title="Social secondary color" aria-label="Social secondary color">
             <input type="color" id="social-engagement-accent" value="#90D5FF" aria-label="Social secondary color" onchange="handleSocialEngagementOverlayChange()">
           </label>
-          <label>Text &amp; icon size <span class="name-role-overlay-pixel-input"><input type="number" id="social-engagement-size" aria-label="Social text and icon size in pixels" min="10" max="40" step="1" value="14" onchange="handleSocialEngagementOverlayChange()"><span>px</span></span></label>
+          <label>Text &amp; icon size <span class="name-role-overlay-pixel-input"><input type="number" id="social-engagement-size" aria-label="Social text and icon size in pixels" min="10" max="40" step="1" value="32" onchange="handleSocialEngagementOverlayChange()"><span>px</span></span></label>
         </div>
         <div class="lt-position-controls">
           <label>Horizontal <input type="range" id="social-engagement-offset-x" min="-40" max="40" step="1" value="0" oninput="handleSocialEngagementOverlayChange()"><output id="social-engagement-offset-x-value">0%</output></label>
@@ -518,6 +526,7 @@
             <label><input type="checkbox" id="social-engagement-subscribe" checked onchange="handleSocialEngagementOverlayChange()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>Subscribe</span></label>
           </div>
         </section>
+        </div>
       </div>
       <div class="program-display-footer">
         <div class="program-display-output-status">
@@ -1705,8 +1714,8 @@
               <div class="settings-field">
                 <label class="settings-label" data-i18n="settings_reference_bg_color">Ref. background colour</label>
                 <div class="color-row">
-                  <input type="text" id="ref-bg-color-hex" value="#FFD500" class="settings-input" oninput="syncRefBgColorFromHex();onAnyControlChange()">
-                  <input type="color" id="ref-bg-color" value="#FFD500" onchange="syncRefBgColorFromPicker();onAnyControlChange()">
+                  <input type="text" id="ref-bg-color-hex" value="#FFFFFF" class="settings-input" oninput="syncRefBgColorFromHex();onAnyControlChange()">
+                  <input type="color" id="ref-bg-color" value="#FFFFFF" onchange="syncRefBgColorFromPicker();onAnyControlChange()">
                 </div>
               </div>
               <div class="settings-field"></div>

@@ -75,6 +75,27 @@
       return `${design}-${animation}`;
     }
 
+    function setLowerThirdSettingsPanelCollapsed(panelId, collapsed, opts = {}) {
+      const panel = document.getElementById(panelId);
+      const body = panel?.querySelector('.name-role-overlay-body');
+      const toggle = panel?.querySelector('.name-role-overlay-collapse-btn');
+      if (!panel || !body || !toggle) return;
+      const isCollapsed = collapsed === true;
+      panel.classList.toggle('is-collapsed', isCollapsed);
+      body.hidden = isCollapsed;
+      toggle.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+      toggle.setAttribute('aria-label', `${isCollapsed ? 'Expand' : 'Collapse'} ${panelId === 'name-role-overlay-panel' ? 'Name & Role' : 'Social Engagement'} settings`);
+      if (opts.persist === false) return;
+      saveState();
+      saveToStorageDebounced();
+    }
+
+    function toggleLowerThirdSettingsPanel(panelId) {
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+      setLowerThirdSettingsPanelCollapsed(panelId, !panel.classList.contains('is-collapsed'));
+    }
+
     function getNameRoleOverlaySettings(enabled) {
       return {
         enabled: !!enabled,
@@ -103,7 +124,7 @@
         },
         primaryColor: document.getElementById('social-engagement-primary')?.value || '#90D5FF',
         accentColor: document.getElementById('social-engagement-accent')?.value || '#90D5FF',
-        size: Number(document.getElementById('social-engagement-size')?.value || 14),
+        size: Number(document.getElementById('social-engagement-size')?.value || 32),
         offsetX: Math.max(-40, Math.min(40, Number(document.getElementById('social-engagement-offset-x')?.value) || 0)),
         offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('social-engagement-offset-y')?.value) || 0)),
         actions: {
@@ -325,6 +346,7 @@
       appState.settings.socialEngagementOverlayPrimaryColor = payload.primaryColor;
       appState.settings.socialEngagementOverlayAccentColor = payload.accentColor;
       appState.settings.socialEngagementOverlaySize = String(payload.size);
+      appState.settings.socialEngagementOverlaySizeVersion = 2;
       appState.settings.socialEngagementOverlayOffsetX = String(payload.offsetX);
       appState.settings.socialEngagementOverlayOffsetY = String(payload.offsetY);
       document.getElementById('social-engagement-offset-x-value').textContent = `${payload.offsetX}%`;
@@ -809,6 +831,11 @@
       channel.onmessage = (e) => {
         handleSyncMessage(e.data || {});
       };
+    }
+    if (window.BSPDesktop && typeof window.BSPDesktop.onOutputReady === 'function') {
+      window.BSPDesktop.onOutputReady(() => {
+        if (typeof queueStandaloneSyncBurst === 'function') queueStandaloneSyncBurst();
+      });
     }
     setInterval(pingDisplays, 5000);
 
