@@ -75,7 +75,8 @@
         name: String(document.getElementById('name-role-overlay-name')?.value || '').trim(),
         role: String(document.getElementById('name-role-overlay-role')?.value || '').trim(),
         style: document.getElementById('name-role-overlay-style')?.value || 'classic',
-        accentColor: document.getElementById('name-role-overlay-accent')?.value || '#b9df45',
+        primaryColor: document.getElementById('name-role-overlay-primary')?.value || '#90D5FF',
+        accentColor: document.getElementById('name-role-overlay-accent')?.value || '#90D5FF',
         logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',
         nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
         roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),
@@ -93,7 +94,8 @@
           facebook: String(document.getElementById('social-engagement-facebook')?.value || '').trim(),
           website: String(document.getElementById('social-engagement-website')?.value || '').trim()
         },
-        accentColor: document.getElementById('social-engagement-accent')?.value || '#b9df45',
+        primaryColor: document.getElementById('social-engagement-primary')?.value || '#90D5FF',
+        accentColor: document.getElementById('social-engagement-accent')?.value || '#90D5FF',
         size: Number(document.getElementById('social-engagement-size')?.value || 14),
         offsetX: Math.max(-40, Math.min(40, Number(document.getElementById('social-engagement-offset-x')?.value) || 0)),
         offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('social-engagement-offset-y')?.value) || 0)),
@@ -267,7 +269,8 @@
       appState.settings.nameRoleOverlayRole = role;
       appState.settings.nameRoleOverlayEnabled = enabled;
       appState.settings.nameRoleOverlayStyle = document.getElementById('name-role-overlay-style')?.value || 'classic';
-      appState.settings.nameRoleOverlayAccentColor = document.getElementById('name-role-overlay-accent')?.value || '#b9df45';
+      appState.settings.nameRoleOverlayPrimaryColor = document.getElementById('name-role-overlay-primary')?.value || '#90D5FF';
+      appState.settings.nameRoleOverlayAccentColor = document.getElementById('name-role-overlay-accent')?.value || '#90D5FF';
       appState.settings.nameRoleOverlayLogo = logoPreview?.dataset.logoDataUrl || '';
       appState.settings.nameRoleOverlayNameSize = document.getElementById('name-role-overlay-name-size')?.value || '56';
       appState.settings.nameRoleOverlayRoleSize = document.getElementById('name-role-overlay-role-size')?.value || '24';
@@ -311,6 +314,7 @@
       appState.settings.nameRoleOverlayShare = payload.actions.share;
       appState.settings.nameRoleOverlaySubscribe = payload.actions.subscribe;
       appState.settings.socialEngagementOverlayEnabled = enabled;
+      appState.settings.socialEngagementOverlayPrimaryColor = payload.primaryColor;
       appState.settings.socialEngagementOverlayAccentColor = payload.accentColor;
       appState.settings.socialEngagementOverlaySize = String(payload.size);
       appState.settings.socialEngagementOverlayOffsetX = String(payload.offsetX);
@@ -907,7 +911,8 @@
           name: String(document.getElementById('name-role-overlay-name')?.value || '').trim(),
           role: String(document.getElementById('name-role-overlay-role')?.value || '').trim(),
           style: document.getElementById('name-role-overlay-style')?.value || 'classic',
-          accentColor: document.getElementById('name-role-overlay-accent')?.value || '#b9df45',
+          primaryColor: document.getElementById('name-role-overlay-primary')?.value || '#90D5FF',
+          accentColor: document.getElementById('name-role-overlay-accent')?.value || '#90D5FF',
           logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',
           nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
           roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),

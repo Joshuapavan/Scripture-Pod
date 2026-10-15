@@ -1224,14 +1224,20 @@
       const role = String(data?.role || '').trim();
       const rawStyle = String(data?.style || 'classic-rise');
       const normalizedStyle = ['classic', 'centered', 'band'].includes(rawStyle) ? `${rawStyle}-rise` : rawStyle;
-      const previousStyle = normalizedStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring)$/);
+      const previousStyle = normalizedStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal)$/);
       const currentStyle = previousStyle ? `${previousStyle[1]}-gms-${previousStyle[2]}` : normalizedStyle;
-      const styleMatch = currentStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy)-(rise|slide|sweep|zoom|shutter|spring)$/);
+      const styleMatch = currentStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal)$/);
       const layout = styleMatch ? styleMatch[1] : 'classic';
       const theme = styleMatch ? styleMatch[2] : 'gms';
       const animation = styleMatch ? styleMatch[3] : 'rise';
       const style = `${layout}-${theme}-${animation}`;
-      const accentColor = /^#[0-9a-f]{6}$/i.test(data?.accentColor || '') ? data.accentColor : '#b9df45';
+      const accentColor = /^#[0-9a-f]{6}$/i.test(data?.accentColor || '') ? data.accentColor : '#90D5FF';
+      const primaryDefaults = { legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF', modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF', glass: '#90D5FF', copper: '#90D5FF' };
+      const primaryColor = /^#[0-9a-f]{6}$/i.test(data?.primaryColor || '') ? data.primaryColor : (primaryDefaults[theme] || '#90D5FF');
+      const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
+      const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
+      const lightBackground = primaryLuminance >= 0.72;
+      const foregroundColor = lightBackground ? '#101216' : '#ffffff';
       const logo = typeof data?.logo === 'string' && data.logo.startsWith('data:image/') ? data.logo : '';
       const nameSize = Math.max(24, Math.min(160, Number(data?.nameSize) || 56));
       const roleSize = Math.max(12, Math.min(72, Number(data?.roleSize) || 24));
@@ -1251,10 +1257,12 @@
         else logoEl.removeAttribute('src');
         logoEl.hidden = !logo;
       }
-      overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring');
+      overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal');
       overlay.classList.add(`style-${layout}`, `theme-${theme}`, `motion-${animation}`);
+      overlay.classList.toggle('is-light-background', lightBackground);
+      overlay.style.setProperty('--name-role-primary', primaryColor);
       overlay.style.setProperty('--name-role-accent', accentColor);
-      overlay.style.setProperty('--name-role-foreground', accentColor.toLowerCase() === '#ffffff' ? '#101216' : '#ffffff');
+      overlay.style.setProperty('--name-role-foreground', foregroundColor);
       overlay.style.setProperty('--name-role-name-size', `${nameSize}px`);
       overlay.style.setProperty('--name-role-role-size', `${roleSize}px`);
       overlay.style.setProperty('--name-role-logo-size', `${logoSize}px`);
@@ -1286,7 +1294,11 @@
       };
       const socialEl = overlay.querySelector('.social-engagement-overlay-socials');
       const actionEl = overlay.querySelector('.social-engagement-overlay-actions');
-      const accentColor = /^#[0-9a-f]{6}$/i.test(data?.accentColor || '') ? data.accentColor : '#b9df45';
+      const accentColor = /^#[0-9a-f]{6}$/i.test(data?.accentColor || '') ? data.accentColor : '#90D5FF';
+      const primaryColor = /^#[0-9a-f]{6}$/i.test(data?.primaryColor || '') ? data.primaryColor : '#90D5FF';
+      const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
+      const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
+      const foregroundColor = primaryLuminance >= 0.72 ? '#101216' : '#ffffff';
       const size = Math.max(10, Math.min(40, Number(data?.size) || 14));
       const offsetX = Math.max(-40, Math.min(40, Number(data?.offsetX) || 0));
       const offsetY = Math.max(-40, Math.min(40, Number(data?.offsetY) || 0));
@@ -1310,13 +1322,15 @@
       const hasSocials = Object.values(socialValues).some(Boolean);
       const hasActions = Object.values(actions).some(Boolean);
       const enabled = !!data?.enabled && (hasSocials || hasActions);
-      const signature = JSON.stringify({ socialValues, actions, accentColor, size, offsetX, offsetY });
+      const signature = JSON.stringify({ socialValues, actions, accentColor, primaryColor, size, offsetX, offsetY });
       const changed = overlay.dataset.signature !== signature;
       if (enabled && changed && overlay.classList.contains('is-visible')) {
         overlay.classList.remove('is-visible');
         void overlay.offsetWidth;
       }
       overlay.dataset.signature = signature;
+      overlay.style.setProperty('--social-engagement-primary', primaryColor);
+      overlay.style.setProperty('--social-engagement-foreground', foregroundColor);
       overlay.style.setProperty('--social-engagement-accent', accentColor);
       overlay.style.setProperty('--social-engagement-size', `${size}px`);
       overlay.style.setProperty('--social-engagement-action-size', `${Math.max(10, Math.round(size * 0.75))}px`);

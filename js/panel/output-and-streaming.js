@@ -376,20 +376,29 @@
     #name-role-overlay.is-visible { opacity: 1; visibility: visible; transition-delay: 0s; }
     .style-centered#name-role-overlay { justify-content: center; padding-bottom: 8vh; }
     .style-band#name-role-overlay { justify-content: center; padding: 0 0 7vh; }
-    .name-role-overlay-card { display: flex; flex-direction: row; align-items: center; gap: 18px; max-width: 86vw; min-height: 92px; padding: 14px 24px; border: 1px solid rgba(218,238,241,0.24); border-left: 5px solid var(--name-role-accent,#b9df45); border-radius: 5px; background: rgba(8,14,18,0.82); box-shadow: 0 20px 64px rgba(0,0,0,0.42); backdrop-filter: blur(14px); color: #fff; text-align: left; opacity: 0; transform: translateY(24px) scale(0.96); transition: opacity 560ms ease, transform 700ms cubic-bezier(0.2,0.85,0.25,1); }
-    .style-centered#name-role-overlay .name-role-overlay-card { border: 0; border-top: 4px solid var(--name-role-accent,#b9df45); text-align: center; }
-    .style-band#name-role-overlay .name-role-overlay-card { width: 100%; max-width: 100%; justify-content: center; border: 0; border-top: 3px solid var(--name-role-accent,#b9df45); border-radius: 0; background: rgba(8,14,18,0.9); text-align: center; }
-    #name-role-overlay.theme-gms .name-role-overlay-card { border: 0; border-radius: 2px; background: linear-gradient(105deg,var(--name-role-accent,#b9df45) 0 76%,#101216 76%); color: var(--name-role-foreground,#fff); box-shadow: 0 12px 34px rgba(0,0,0,0.38); }
+    .name-role-overlay-card { display: flex; flex-direction: row; align-items: center; gap: 18px; max-width: 86vw; min-height: 92px; padding: 14px 24px; border: 1px solid rgba(218,238,241,0.24); border-left: 5px solid var(--name-role-accent,#90D5FF); border-radius: 5px; background: rgba(8,14,18,0.82); box-shadow: 0 20px 64px rgba(0,0,0,0.42); backdrop-filter: blur(14px); color: #fff; text-align: left; opacity: 0; transform: translateY(24px) scale(0.96); transition: opacity 560ms ease, transform 720ms cubic-bezier(0.2,0.85,0.25,1), filter 620ms ease, clip-path 680ms cubic-bezier(0.2,0.85,0.25,1); will-change: opacity, transform, filter, clip-path; }
+    .style-centered#name-role-overlay .name-role-overlay-card { border: 0; border-top: 4px solid var(--name-role-accent,#90D5FF); text-align: center; }
+    .style-band#name-role-overlay .name-role-overlay-card { width: 100%; max-width: 100%; justify-content: center; border: 0; border-top: 3px solid var(--name-role-accent,#90D5FF); border-radius: 0; background: rgba(8,14,18,0.9); text-align: center; }
+    #name-role-overlay.theme-gms .name-role-overlay-card { border: 0; border-radius: 2px; background: linear-gradient(105deg,var(--name-role-primary,var(--name-role-accent,#90D5FF)) 0 76%,#101216 76%); color: var(--name-role-foreground,#fff); box-shadow: 0 12px 34px rgba(0,0,0,0.38); }
     #name-role-overlay.theme-gms .name-role-overlay-role { color: var(--name-role-foreground,#fff); }
-    #name-role-overlay.theme-noir .name-role-overlay-card { border: 1px solid rgba(222,192,132,0.78); border-left: 5px solid #d5b56d; background: linear-gradient(145deg,rgba(27,29,34,0.96),rgba(5,7,10,0.96)); box-shadow: 0 18px 54px rgba(0,0,0,0.58); }
-    #name-role-overlay.theme-broadcast .name-role-overlay-card { border: 0; border-left: 7px solid var(--name-role-accent,#b9df45); border-radius: 0; background: linear-gradient(105deg,#1559a7,#203c79); box-shadow: 0 12px 32px rgba(0,0,0,0.38); }
-    #name-role-overlay.theme-modern .name-role-overlay-card { border: 1px solid rgba(241,248,245,0.72); border-left: 5px solid var(--name-role-accent,#b9df45); border-radius: 2px; background: var(--name-role-accent,#b9df45); color: var(--name-role-foreground,#fff); box-shadow: 0 14px 42px rgba(0,0,0,0.3); }
+    #name-role-overlay.theme-noir .name-role-overlay-card { border: 1px solid rgba(222,192,132,0.78); border-left: 5px solid var(--name-role-accent,#d5b56d); background: linear-gradient(145deg,color-mix(in srgb,var(--name-role-primary,#1b1d22) 82%,#000),color-mix(in srgb,var(--name-role-primary,#1b1d22) 45%,#000)); box-shadow: 0 18px 54px rgba(0,0,0,0.58); }
+    #name-role-overlay.theme-broadcast .name-role-overlay-card { border: 0; border-left: 7px solid var(--name-role-accent,#90D5FF); border-radius: 0; background: linear-gradient(105deg,var(--name-role-primary,#1559a7),color-mix(in srgb,var(--name-role-primary,#1559a7) 66%,#101216)); box-shadow: 0 12px 32px rgba(0,0,0,0.38); }
+    #name-role-overlay.theme-modern .name-role-overlay-card { border: 1px solid rgba(241,248,245,0.72); border-left: 5px solid var(--name-role-accent,#90D5FF); border-radius: 2px; background: var(--name-role-primary,var(--name-role-accent,#90D5FF)); color: var(--name-role-foreground,#fff); box-shadow: 0 14px 42px rgba(0,0,0,0.3); }
     #name-role-overlay.theme-modern .name-role-overlay-role { color: var(--name-role-foreground,#fff); }
-    #name-role-overlay.theme-news .name-role-overlay-card { border: 0; border-left: 8px solid var(--name-role-accent,#b9df45); border-bottom: 3px solid var(--name-role-accent,#b9df45); border-radius: 0; background: linear-gradient(90deg,rgba(13,16,20,0.98),rgba(29,33,38,0.95)); box-shadow: 0 12px 36px rgba(0,0,0,0.48); }
-    #name-role-overlay.theme-spotlight .name-role-overlay-card { border: 1px solid rgba(255,255,255,0.22); border-bottom: 4px solid var(--name-role-accent,#b9df45); border-radius: 12px; background: linear-gradient(135deg,rgba(16,25,37,0.97),rgba(8,11,19,0.94)); box-shadow: 0 0 34px color-mix(in srgb,var(--name-role-accent,#b9df45) 38%,transparent),0 20px 56px rgba(0,0,0,0.5); }
+    #name-role-overlay.theme-clean .name-role-overlay-card { border: 1px solid rgba(16,22,28,0.16); border-left: 5px solid var(--name-role-accent,#90D5FF); border-radius: 3px; background: var(--name-role-primary,#fff); color: var(--name-role-foreground,#101216); box-shadow: 0 14px 42px rgba(0,0,0,0.2); }
+    #name-role-overlay.theme-clean .name-role-overlay-role { color: var(--name-role-foreground,#101216); }
+    #name-role-overlay.theme-glass .name-role-overlay-card { border: 1px solid rgba(255,255,255,0.38); border-left: 5px solid var(--name-role-accent,#90D5FF); border-radius: 8px; background: linear-gradient(120deg,color-mix(in srgb,var(--name-role-primary,#121e2c) 78%,transparent),color-mix(in srgb,var(--name-role-primary,#121e2c) 55%,transparent)); color: var(--name-role-foreground,#fff); box-shadow: 0 18px 48px rgba(0,0,0,0.36); backdrop-filter: blur(18px); }
+    #name-role-overlay.theme-copper .name-role-overlay-card { border: 0; border-left: 6px solid var(--name-role-accent,#90D5FF); border-radius: 3px; background: linear-gradient(105deg,var(--name-role-primary,#503027),color-mix(in srgb,var(--name-role-primary,#503027) 58%,#241a18) 74%,#241a18 74%); color: var(--name-role-foreground,#fff); box-shadow: 0 14px 38px rgba(0,0,0,0.34); }
+    #name-role-overlay.theme-news .name-role-overlay-card { border: 0; border-left: 8px solid var(--name-role-accent,#90D5FF); border-bottom: 3px solid var(--name-role-accent,#90D5FF); border-radius: 0; background: linear-gradient(90deg,color-mix(in srgb,var(--name-role-primary,#0d1014) 82%,#0d1014),color-mix(in srgb,var(--name-role-primary,#1d2126) 82%,#1d2126)); box-shadow: 0 12px 36px rgba(0,0,0,0.48); }
+    #name-role-overlay.theme-spotlight .name-role-overlay-card { border: 1px solid rgba(255,255,255,0.22); border-bottom: 4px solid var(--name-role-accent,#90D5FF); border-radius: 12px; background: linear-gradient(135deg,color-mix(in srgb,var(--name-role-primary,#101925) 76%,#101925),color-mix(in srgb,var(--name-role-primary,#080b13) 62%,#080b13)); box-shadow: 0 0 34px color-mix(in srgb,var(--name-role-accent,#90D5FF) 38%,transparent),0 20px 56px rgba(0,0,0,0.5); }
+    #name-role-overlay.is-light-background .name-role-overlay-card { background: var(--name-role-primary,#fff); color: var(--name-role-foreground,#101216); }
+    #name-role-overlay.is-light-background.theme-legacy .name-role-overlay-copy-panel { background: var(--name-role-primary,#fff); }
     #name-role-overlay.theme-legacy .name-role-overlay-card { flex-direction: row; align-items: center; gap: 18px; width: min(980px,82vw); max-width: 82vw; min-height: 0; padding: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; backdrop-filter: none; }
     #name-role-overlay.theme-legacy .name-role-overlay-stack { align-self: center; flex: 1; }
-    #name-role-overlay.theme-legacy .name-role-overlay-copy-panel { align-self: stretch; min-width: 0; padding: 14px 22px 16px; border-left: 5px solid var(--name-role-accent,#b9df45); background: linear-gradient(90deg,rgba(5,8,12,0.94),rgba(5,8,12,0.76) 72%,transparent); text-shadow: 0 2px 9px rgba(0,0,0,0.85); }
+    #name-role-overlay.theme-legacy .name-role-overlay-copy-panel { align-self: stretch; min-width: 0; padding: 14px 22px 16px; border-left: 5px solid var(--name-role-accent,#90D5FF); background: linear-gradient(90deg,color-mix(in srgb,var(--name-role-primary,#90D5FF) 94%,transparent),color-mix(in srgb,var(--name-role-primary,#90D5FF) 76%,transparent) 72%,transparent); color: var(--name-role-foreground,#fff); text-shadow: 0 2px 9px rgba(0,0,0,0.85); }
+    #name-role-overlay.is-light-background .name-role-overlay-card { background: var(--name-role-primary,#fff); color: var(--name-role-foreground,#101216); }
+    #name-role-overlay.is-light-background .name-role-overlay-role { color: var(--name-role-foreground,#101216); }
+    #name-role-overlay.is-light-background.theme-legacy .name-role-overlay-copy-panel { background: var(--name-role-primary,#fff); color: var(--name-role-foreground,#101216); text-shadow: none; }
     #name-role-overlay.theme-legacy .name-role-overlay-accent { display: none; }
     #name-role-overlay.theme-legacy .name-role-overlay-logo { align-self: center; width: min(var(--name-role-logo-size,128px),22vw); height: min(var(--name-role-logo-size,128px),16vh); margin: 0; }
     #name-role-overlay.is-visible .name-role-overlay-card { opacity: 1; transform: translateY(0) scale(1); }
@@ -402,45 +411,60 @@
     #name-role-overlay.motion-shutter:not(.is-visible) .name-role-overlay-card { transform: scaleX(0.12); }
     #name-role-overlay.motion-shutter.is-visible .name-role-overlay-card { transform: scaleX(1); }
     #name-role-overlay.motion-spring .name-role-overlay-card { transition-timing-function: cubic-bezier(0.2,1.4,0.35,1); }
-    .name-role-overlay-accent { width: 4px; height: 58px; flex: 0 0 4px; border-radius: 2px; background: var(--name-role-accent,#b9df45); transform: scaleY(0.15); transition: transform 540ms cubic-bezier(0.2,0.85,0.25,1) 120ms; }
+    #name-role-overlay.motion-glide:not(.is-visible) .name-role-overlay-card { transform: translateX(-5vw) scale(0.98); }
+    #name-role-overlay.motion-glide.is-visible .name-role-overlay-card { transform: translateX(0) scale(1); }
+    #name-role-overlay.motion-blur:not(.is-visible) .name-role-overlay-card { filter: blur(12px); transform: translateY(14px) scale(1.02); }
+    #name-role-overlay.motion-blur.is-visible .name-role-overlay-card { filter: blur(0); transform: translateY(0) scale(1); }
+    #name-role-overlay.motion-flip:not(.is-visible) .name-role-overlay-card { transform: perspective(900px) rotateX(18deg) translateY(18px); transform-origin: center bottom; }
+    #name-role-overlay.motion-flip.is-visible .name-role-overlay-card { transform: perspective(900px) rotateX(0) translateY(0); }
+    #name-role-overlay.motion-wipe:not(.is-visible) .name-role-overlay-card { clip-path: inset(0 100% 0 0); transform: translateX(-18px); }
+    #name-role-overlay.motion-wipe.is-visible .name-role-overlay-card { clip-path: inset(0); transform: translateX(0); }
+    #name-role-overlay.motion-float:not(.is-visible) .name-role-overlay-card { transform: translateY(30px) scale(0.97); }
+    #name-role-overlay.motion-float.is-visible .name-role-overlay-card { transform: translateY(0) scale(1); }
+    #name-role-overlay.motion-glow:not(.is-visible) .name-role-overlay-card { filter: blur(10px); transform: scale(0.95); }
+    #name-role-overlay.motion-glow.is-visible .name-role-overlay-card { filter: drop-shadow(0 0 18px color-mix(in srgb,var(--name-role-accent,#90D5FF) 55%,transparent)); transform: scale(1); }
+    #name-role-overlay.motion-reveal:not(.is-visible) .name-role-overlay-card { clip-path: inset(100% 0 0 0); transform: translateY(18px); }
+    #name-role-overlay.motion-reveal.is-visible .name-role-overlay-card { clip-path: inset(0); transform: translateY(0); }
+    .name-role-overlay-accent { width: 4px; height: 58px; flex: 0 0 4px; border-radius: 2px; background: var(--name-role-accent,#90D5FF); transform: scaleY(0.15); transition: transform 540ms cubic-bezier(0.2,0.85,0.25,1) 120ms; }
     #name-role-overlay.is-visible .name-role-overlay-accent { transform: scaleY(1); }
     .style-centered#name-role-overlay .name-role-overlay-accent { width: 34px; height: 3px; flex-basis: 34px; align-self: flex-start; margin-top: 8px; transform: scaleX(0.15); }
     .style-centered#name-role-overlay.is-visible .name-role-overlay-accent { transform: scaleX(1); }
     .style-band#name-role-overlay .name-role-overlay-accent { display: none; }
     .name-role-overlay-logo { display: block; width: var(--name-role-logo-size,128px); height: var(--name-role-logo-size,128px); max-width: min(24vw,320px); max-height: min(28vh,320px); object-fit: contain; flex: 0 0 auto; }
+    #name-role-overlay.is-light-background .name-role-overlay-logo { filter: brightness(0); }
     .name-role-overlay-logo[hidden] { display: none; }
     .name-role-overlay-content { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; }
     .name-role-overlay-copy { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 0.08em; }
     .name-role-overlay-stack { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; }
-    .name-role-overlay-copy-panel { display: flex; min-width: 0; align-items: center; padding: 12px 18px; border: 1px solid rgba(255,255,255,0.14); border-left: 4px solid var(--name-role-accent,#b9df45); border-radius: 4px; background: rgba(8,14,18,0.76); }
+    .name-role-overlay-copy-panel { display: flex; min-width: 0; align-items: center; padding: 12px 18px; border: 1px solid rgba(255,255,255,0.14); border-left: 4px solid var(--name-role-accent,#90D5FF); border-radius: 4px; background: rgba(8,14,18,0.76); }
     .style-centered#name-role-overlay .name-role-overlay-content, .style-band#name-role-overlay .name-role-overlay-content { align-items: center; }
     .name-role-social[hidden], .name-role-action[hidden] { display: none; }
     .name-role-social { display: inline-flex; align-items: center; gap: 5px; min-width: 0; flex: 0 0 auto; }
-    .name-role-social b { display: inline-flex; align-items: center; justify-content: center; width: var(--social-engagement-icon-size,20px); height: var(--social-engagement-icon-size,20px); flex: 0 0 var(--social-engagement-icon-size,20px); color: var(--social-engagement-accent,#b9df45); }
+    .name-role-social b { display: inline-flex; align-items: center; justify-content: center; width: var(--social-engagement-icon-size,20px); height: var(--social-engagement-icon-size,20px); flex: 0 0 var(--social-engagement-icon-size,20px); color: var(--social-engagement-accent,#90D5FF); }
     .name-role-social b svg { display: block; width: 100%; height: 100%; }
     .name-role-social span { max-width: 32vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     #social-engagement-overlay { position: fixed; left: 50%; bottom: 17vh; z-index: 8; display: flex; justify-content: center; width: min(920px, 82vw); transform: translate(calc(-50% + var(--social-engagement-offset-x,0vw)),var(--social-engagement-offset-y,0vh)); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 360ms ease, visibility 360ms ease; }
     #social-engagement-overlay.is-visible { opacity: 1; visibility: visible; }
     .social-engagement-overlay-card { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 100%; opacity: 0; transform: translateY(24px) scale(0.96); transition: opacity 560ms ease, transform 700ms cubic-bezier(0.2,0.85,0.25,1); }
     #social-engagement-overlay.is-visible .social-engagement-overlay-card { opacity: 1; transform: translateY(0) scale(1); }
-    .social-engagement-overlay-socials, .social-engagement-overlay-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; width: max-content; max-width: 100%; justify-content: center; padding: 7px 12px; border: 1px solid color-mix(in srgb,var(--social-engagement-accent,#b9df45) 42%,transparent); border-radius: 999px; background: rgba(10,15,18,0.68); color: #fff; }
+    .social-engagement-overlay-socials, .social-engagement-overlay-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; width: max-content; max-width: 100%; justify-content: center; padding: 7px 12px; border: 1px solid color-mix(in srgb,var(--social-engagement-accent,#90D5FF) 42%,transparent); border-radius: 999px; background: color-mix(in srgb,var(--social-engagement-primary,#90D5FF) 68%,transparent); color: var(--social-engagement-foreground,#fff); }
     .social-engagement-overlay-actions { padding: 6px 10px 7px; }
     .social-engagement-overlay-socials[hidden], .social-engagement-overlay-actions[hidden] { display: none; }
-    #social-engagement-overlay .name-role-action { opacity: 0; transform: translateY(9px) scale(0.96); border-color: color-mix(in srgb,var(--social-engagement-accent,#b9df45) 70%,transparent); font-size: var(--social-engagement-action-size,11px); }
+    #social-engagement-overlay .name-role-action { opacity: 0; transform: translateY(9px) scale(0.96); border-color: color-mix(in srgb,var(--social-engagement-accent,#90D5FF) 70%,transparent); font-size: var(--social-engagement-action-size,11px); }
     #social-engagement-overlay.is-visible .name-role-action:not([hidden]) { opacity: 1; transform: translateY(0) scale(1); }
     #social-engagement-overlay.is-visible .name-role-action-like { transition-delay: 100ms; }
     #social-engagement-overlay.is-visible .name-role-action-share { transition-delay: 190ms; }
     #social-engagement-overlay.is-visible .name-role-action-subscribe { transition-delay: 280ms; }
-    .name-role-action { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border: 1px solid color-mix(in srgb,var(--social-engagement-accent,#b9df45) 70%,transparent); border-radius: 999px; background: rgba(7,12,16,0.32); color: currentColor; font-size: var(--social-engagement-action-size,11px); font-weight: 800; opacity: 0; transform: translateY(9px) scale(0.96); transition: opacity 360ms ease,transform 460ms cubic-bezier(0.2,0.85,0.25,1); }
+    .name-role-action { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border: 1px solid color-mix(in srgb,var(--social-engagement-accent,#90D5FF) 70%,transparent); border-radius: 999px; background: rgba(7,12,16,0.32); color: currentColor; font-size: var(--social-engagement-action-size,11px); font-weight: 800; opacity: 0; transform: translateY(9px) scale(0.96); transition: opacity 360ms ease,transform 460ms cubic-bezier(0.2,0.85,0.25,1); }
     #social-engagement-overlay .name-role-social { font-size: var(--social-engagement-size,14px); }
-    #social-engagement-overlay .name-role-action svg { width: 1em; height: 1em; flex: 0 0 1em; fill: none; stroke: var(--social-engagement-accent,#b9df45); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: scale(0.55) rotate(-8deg); transition: opacity 300ms ease,transform 420ms cubic-bezier(0.2,0.85,0.25,1); }
+    #social-engagement-overlay .name-role-action svg { width: 1em; height: 1em; flex: 0 0 1em; fill: none; stroke: var(--social-engagement-accent,#90D5FF); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: scale(0.55) rotate(-8deg); transition: opacity 300ms ease,transform 420ms cubic-bezier(0.2,0.85,0.25,1); }
     #social-engagement-overlay.is-visible .name-role-action svg { opacity: 1; transform: scale(1) rotate(0); }
     #name-role-overlay.is-visible .name-role-action:not([hidden]) { opacity: 1; transform: translateY(0) scale(1); }
     #name-role-overlay.is-visible .name-role-action-like { transition-delay: 100ms; }
     #name-role-overlay.is-visible .name-role-action-share { transition-delay: 190ms; }
     #name-role-overlay.is-visible .name-role-action-subscribe { transition-delay: 280ms; }
     .name-role-overlay-name { max-width: 72vw; overflow-wrap: anywhere; font-size: var(--name-role-name-size,56px); font-weight: 800; line-height: 1.04; }
-    .name-role-overlay-role { color: var(--name-role-accent,#b9df45); font-size: var(--name-role-role-size,24px); font-weight: 600; line-height: 1.15; opacity: 0; transform: translateY(10px); transition: opacity 440ms ease 180ms, transform 520ms ease 180ms; }
+    .name-role-overlay-role { color: var(--name-role-accent,#90D5FF); font-size: var(--name-role-role-size,24px); font-weight: 600; line-height: 1.15; opacity: 0; transform: translateY(10px); transition: opacity 440ms ease 180ms, transform 520ms ease 180ms; }
     #name-role-overlay.is-visible .name-role-overlay-role { opacity: 1; transform: translateY(0); }
     #stage.mode-full { align-items: center; justify-content: center; padding: 20px; }
     #stage.mode-full #text-layer { max-width: calc(100vw - 40px); text-align: center; }
@@ -1056,14 +1080,20 @@
         const name = String(data && data.name || '').trim();
         const role = String(data && data.role || '').trim();
         const rawStyle = String(data && data.style || 'classic-rise');
-        const legacyStyle = rawStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring)$/);
+        const legacyStyle = rawStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal)$/);
         const normalizedStyle = legacyStyle ? legacyStyle[1] + '-gms-' + legacyStyle[2] : rawStyle;
-        const styleMatch = normalizedStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy)-(rise|slide|sweep|zoom|shutter|spring)$/);
+        const styleMatch = normalizedStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal)$/);
         const layout = styleMatch ? styleMatch[1] : 'classic';
         const theme = styleMatch ? styleMatch[2] : 'gms';
         const animation = styleMatch ? styleMatch[3] : 'rise';
         const style = layout + '-' + theme + '-' + animation;
-        const accentColor = /^#[0-9a-f]{6}$/i.test(data && data.accentColor || '') ? data.accentColor : '#b9df45';
+        const accentColor = /^#[0-9a-f]{6}$/i.test(data && data.accentColor || '') ? data.accentColor : '#90D5FF';
+        const primaryDefaults = { legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF', modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF', glass: '#90D5FF', copper: '#90D5FF' };
+        const primaryColor = /^#[0-9a-f]{6}$/i.test(data && data.primaryColor || '') ? data.primaryColor : (primaryDefaults[theme] || '#90D5FF');
+        const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
+        const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
+        const lightBackground = primaryLuminance >= 0.72;
+        const foregroundColor = lightBackground ? '#101216' : '#ffffff';
         const logo = typeof (data && data.logo) === 'string' && data.logo.startsWith('data:image/') ? data.logo : '';
         const nameSize = Math.max(24, Math.min(160, Number(data && data.nameSize) || 56));
         const roleSize = Math.max(12, Math.min(72, Number(data && data.roleSize) || 24));
@@ -1083,10 +1113,12 @@
           else logoEl.removeAttribute('src');
           logoEl.hidden = !logo;
         }
-        overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring');
+        overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal');
         overlay.classList.add('style-' + layout, 'theme-' + theme, 'motion-' + animation);
+        overlay.classList.toggle('is-light-background', lightBackground);
+        overlay.style.setProperty('--name-role-primary', primaryColor);
         overlay.style.setProperty('--name-role-accent', accentColor);
-        overlay.style.setProperty('--name-role-foreground', accentColor.toLowerCase() === '#ffffff' ? '#101216' : '#ffffff');
+        overlay.style.setProperty('--name-role-foreground', foregroundColor);
         overlay.style.setProperty('--name-role-name-size', nameSize + 'px');
         overlay.style.setProperty('--name-role-role-size', roleSize + 'px');
         overlay.style.setProperty('--name-role-logo-size', logoSize + 'px');
@@ -1123,7 +1155,11 @@
         };
         const socialsEl = overlay.querySelector('.social-engagement-overlay-socials');
         const actionsEl = overlay.querySelector('.social-engagement-overlay-actions');
-        const accentColor = /^#[0-9a-f]{6}$/i.test(data && data.accentColor || '') ? data.accentColor : '#b9df45';
+        const accentColor = /^#[0-9a-f]{6}$/i.test(data && data.accentColor || '') ? data.accentColor : '#90D5FF';
+        const primaryColor = /^#[0-9a-f]{6}$/i.test(data && data.primaryColor || '') ? data.primaryColor : '#90D5FF';
+        const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
+        const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
+        const foregroundColor = primaryLuminance >= 0.72 ? '#101216' : '#ffffff';
         const size = Math.max(10, Math.min(40, Number(data && data.size) || 14));
         const offsetX = Math.max(-40, Math.min(40, Number(data && data.offsetX) || 0));
         const offsetY = Math.max(-40, Math.min(40, Number(data && data.offsetY) || 0));
@@ -1143,13 +1179,15 @@
         const enabled = !!(data && data.enabled) && (
           Object.values(socialValues).some(Boolean) || Object.values(actionValues).some(Boolean)
         );
-        const signature = JSON.stringify({ socialValues, actionValues, accentColor: accentColor, size: size, offsetX, offsetY });
+        const signature = JSON.stringify({ socialValues, actionValues, accentColor: accentColor, primaryColor, size: size, offsetX, offsetY });
         const changed = overlay.dataset.signature !== signature;
         if (enabled && changed && overlay.classList.contains('is-visible')) {
           overlay.classList.remove('is-visible');
           void overlay.offsetWidth;
         }
         overlay.dataset.signature = signature;
+        overlay.style.setProperty('--social-engagement-primary', primaryColor);
+        overlay.style.setProperty('--social-engagement-foreground', foregroundColor);
         overlay.style.setProperty('--social-engagement-accent', accentColor);
         overlay.style.setProperty('--social-engagement-size', size + 'px');
         overlay.style.setProperty('--social-engagement-action-size', Math.max(10, Math.round(size * 0.75)) + 'px');

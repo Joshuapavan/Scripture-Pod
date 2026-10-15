@@ -339,7 +339,7 @@
             <span>End Live</span>
           </button>
         </div>
-        <button class="btn ls-btn ls-btn-go-live program-output-launch" id="btn-open-standalone-output" onclick="toggleOutputPopover()" title="Open Output Window">
+        <button class="btn ls-btn ls-btn-go-live program-output-launch" id="btn-open-standalone-output" onclick="toggleOutputPopover()" title="Choose an output screen">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/></svg>
           <span>Output</span>
         </button>
@@ -368,32 +368,62 @@
             <optgroup label="Left Title Bar">
               <option value="classic-legacy-rise">Legacy LT</option>
               <option value="classic-gms-rise">GMS Lime</option>
+              <option value="classic-gms-sweep">GMS Lime Clean Sweep</option>
               <option value="classic-noir-slide">Midnight Glass</option>
               <option value="classic-broadcast-sweep">Broadcast Blue</option>
               <option value="classic-modern-zoom">Modern Slate</option>
               <option value="classic-news-shutter">News Bar</option>
               <option value="classic-spotlight-spring">Spotlight</option>
+              <option value="classic-modern-glide">Modern Glide</option>
+              <option value="classic-spotlight-blur">Soft Blur</option>
+              <option value="classic-noir-flip">Depth Flip</option>
+              <option value="classic-broadcast-wipe">Clean Wipe</option>
+              <option value="classic-clean-glide">Clean White</option>
+              <option value="classic-glass-blur">Glass Slate</option>
+              <option value="classic-copper-sweep">Copper Broadcast</option>
+              <option value="classic-copper-float">Copper Float</option>
+              <option value="classic-glass-glow">Glass Glow</option>
+              <option value="classic-clean-reveal">Clean Reveal</option>
             </optgroup>
             <optgroup label="Centered Banner">
               <option value="centered-gms-rise">Centered Lime</option>
+              <option value="centered-gms-sweep">Centered Lime Sweep</option>
               <option value="centered-noir-slide">Centered Glass</option>
               <option value="centered-broadcast-sweep">Centered Blue</option>
               <option value="centered-modern-zoom">Centered Slate</option>
               <option value="centered-news-shutter">Centered News</option>
               <option value="centered-spotlight-spring">Centered Spotlight</option>
+              <option value="centered-modern-glide">Centered Glide</option>
+              <option value="centered-spotlight-blur">Centered Blur</option>
+              <option value="centered-noir-flip">Centered Flip</option>
+              <option value="centered-broadcast-wipe">Centered Wipe</option>
+              <option value="centered-clean-wipe">Centered White</option>
+              <option value="centered-glass-blur">Centered Glass Slate</option>
+              <option value="centered-copper-sweep">Centered Copper</option>
+              <option value="centered-copper-glow">Centered Copper Glow</option>
+              <option value="centered-glass-float">Centered Glass Float</option>
+              <option value="centered-clean-reveal">Centered Clean Reveal</option>
             </optgroup>
             <optgroup label="Wide Band">
               <option value="band-gms-rise">Lime Band</option>
+              <option value="band-gms-sweep">Lime Sweep Band</option>
               <option value="band-noir-slide">Noir Band</option>
               <option value="band-broadcast-sweep">Broadcast Band</option>
               <option value="band-modern-zoom">Modern Band</option>
               <option value="band-news-shutter">News Ticker</option>
               <option value="band-spotlight-spring">Spotlight Band</option>
+              <option value="band-modern-glide">Glide Band</option>
+              <option value="band-spotlight-blur">Blur Band</option>
+              <option value="band-noir-flip">Flip Band</option>
+              <option value="band-broadcast-wipe">Wipe Band</option>
+              <option value="band-clean-wipe">White Band</option>
+              <option value="band-glass-blur">Glass Band</option>
+              <option value="band-copper-sweep">Copper Band</option>
+              <option value="band-copper-reveal">Copper Reveal Band</option>
+              <option value="band-glass-glow">Glass Glow Band</option>
+              <option value="band-clean-float">Clean Float Band</option>
             </optgroup>
           </select>
-          <label class="name-role-overlay-accent-picker" title="Accent color" aria-label="Accent color">
-            <input type="color" id="name-role-overlay-accent" value="#b9df45" onchange="handleNameRoleOverlayChange()">
-          </label>
           <button type="button" class="name-role-overlay-logo-btn" onclick="document.getElementById('name-role-overlay-logo-file').click()" title="Choose church logo" aria-label="Choose church logo">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
             <span>Logo</span>
@@ -401,6 +431,10 @@
           <input type="file" id="name-role-overlay-logo-file" accept="image/png,image/jpeg,image/webp" hidden onchange="handleNameRoleOverlayLogoChange(this)">
           <img id="name-role-overlay-logo-preview" alt="Church logo preview" hidden>
           <button type="button" id="name-role-overlay-logo-remove" onclick="removeNameRoleOverlayLogo()" title="Remove church logo" aria-label="Remove church logo" hidden>×</button>
+        </div>
+        <div class="name-role-overlay-colors">
+          <label><span>Primary</span><span class="name-role-overlay-accent-picker" title="Primary color"><input type="color" id="name-role-overlay-primary" value="#90D5FF" aria-label="Name and role primary color" onchange="handleNameRoleOverlayChange()"></span></label>
+          <label><span>Secondary</span><span class="name-role-overlay-accent-picker" title="Secondary color"><input type="color" id="name-role-overlay-accent" value="#90D5FF" aria-label="Name and role secondary color" onchange="handleNameRoleOverlayChange()"></span></label>
         </div>
         <div class="name-role-overlay-sizes">
           <label>Name <span class="name-role-overlay-pixel-input"><input type="number" id="name-role-overlay-name-size" aria-label="Name text size in pixels" min="24" max="160" step="1" value="56" onchange="handleNameRoleOverlayChange()"><span>px</span></span></label>
@@ -438,8 +472,11 @@
           </label>
         </section>
         <div class="social-engagement-overlay-customize">
-          <label class="name-role-overlay-accent-picker" title="Social accent color" aria-label="Social accent color">
-            <input type="color" id="social-engagement-accent" value="#b9df45" aria-label="Social accent color" onchange="handleSocialEngagementOverlayChange()">
+          <label class="name-role-overlay-accent-picker" title="Social primary color" aria-label="Social primary color">
+            <input type="color" id="social-engagement-primary" value="#90D5FF" aria-label="Social primary color" onchange="handleSocialEngagementOverlayChange()">
+          </label>
+          <label class="name-role-overlay-accent-picker" title="Social secondary color" aria-label="Social secondary color">
+            <input type="color" id="social-engagement-accent" value="#90D5FF" aria-label="Social secondary color" onchange="handleSocialEngagementOverlayChange()">
           </label>
           <label>Text &amp; icon size <span class="name-role-overlay-pixel-input"><input type="number" id="social-engagement-size" aria-label="Social text and icon size in pixels" min="10" max="40" step="1" value="14" onchange="handleSocialEngagementOverlayChange()"><span>px</span></span></label>
         </div>

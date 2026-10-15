@@ -708,6 +708,7 @@
       const overlayRoleInput = document.getElementById('name-role-overlay-role');
       const overlayEnabledButton = document.getElementById('name-role-overlay-show-btn');
       const overlayStyleInput = document.getElementById('name-role-overlay-style');
+      const overlayPrimaryInput = document.getElementById('name-role-overlay-primary');
       const overlayAccentInput = document.getElementById('name-role-overlay-accent');
       const overlayNameSizeInput = document.getElementById('name-role-overlay-name-size');
       const overlayRoleSizeInput = document.getElementById('name-role-overlay-role-size');
@@ -721,6 +722,7 @@
       const overlayShare = document.getElementById('social-engagement-share');
       const overlaySubscribe = document.getElementById('social-engagement-subscribe');
       const socialEnabledButton = document.getElementById('social-engagement-overlay-show-btn');
+      const socialPrimaryInput = document.getElementById('social-engagement-primary');
       const socialAccentInput = document.getElementById('social-engagement-accent');
       const socialSizeInput = document.getElementById('social-engagement-size');
       const socialOffsetXInput = document.getElementById('social-engagement-offset-x');
@@ -738,14 +740,26 @@
       }
       if (overlayStyleInput) {
         const savedOverlayStyle = String(ui.nameRoleOverlayStyle || 'classic-gms-rise');
-        const isCurrentStyle = /^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy)-(rise|slide|sweep|zoom|shutter|spring)$/.test(savedOverlayStyle);
-        const previousStyle = savedOverlayStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring)$/);
+        const isCurrentStyle = /^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal)$/.test(savedOverlayStyle);
+        const previousStyle = savedOverlayStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal)$/);
         const previousLayout = ['classic', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : 'classic';
         overlayStyleInput.value = isCurrentStyle
           ? savedOverlayStyle
           : previousStyle
             ? `${previousStyle[1]}-gms-${previousStyle[2]}`
             : `${previousLayout}-gms-rise`;
+      }
+      const overlayTheme = String(overlayStyleInput?.value || 'classic-legacy-rise').split('-')[1] || 'legacy';
+      const defaultPrimaryColors = {
+        legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF',
+        modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF',
+        glass: '#90D5FF', copper: '#90D5FF'
+      };
+      if (overlayPrimaryInput) {
+        const savedPrimary = ui.nameRoleOverlayPrimaryColor;
+        overlayPrimaryInput.value = /^#[0-9a-f]{6}$/i.test(savedPrimary || '')
+          ? savedPrimary
+          : (defaultPrimaryColors[overlayTheme] || '#90D5FF');
       }
       if (overlayAccentInput && /^#[0-9a-f]{6}$/i.test(ui.nameRoleOverlayAccentColor || '')) overlayAccentInput.value = ui.nameRoleOverlayAccentColor;
       if (overlayNameSizeInput) overlayNameSizeInput.value = String(Math.max(24, Math.min(160, Number(ui.nameRoleOverlayNameSize) || 56)));
@@ -763,6 +777,10 @@
       if (overlaySubscribe) overlaySubscribe.checked = ui.nameRoleOverlaySubscribe === true;
       if (socialAccentInput && /^#[0-9a-f]{6}$/i.test(ui.socialEngagementOverlayAccentColor || '')) {
         socialAccentInput.value = ui.socialEngagementOverlayAccentColor;
+      }
+      if (socialPrimaryInput) {
+        const savedPrimary = ui.socialEngagementOverlayPrimaryColor;
+        socialPrimaryInput.value = /^#[0-9a-f]{6}$/i.test(savedPrimary || '') ? savedPrimary : '#90D5FF';
       }
       if (socialSizeInput) socialSizeInput.value = String(Math.max(10, Math.min(40, Number(ui.socialEngagementOverlaySize) || 14)));
       if (socialOffsetXInput) socialOffsetXInput.value = String(Math.max(-40, Math.min(40, Number(ui.socialEngagementOverlayOffsetX) || 0)));
