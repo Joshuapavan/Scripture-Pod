@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const http = require('http');
 const { WebSocketServer } = require('ws');
+const { createRelayAccessToken, verifyRelayUpgrade } = require('./relay-security');
 
 let mainWindow = null;
 let outputWindow = null;
@@ -15,6 +16,7 @@ const relayClients = new Set();
 const backgroundMedia = new Map();
 const LOCAL_HTTP_PORT = 5510;
 const LOCAL_RELAY_PORT = 5511;
+const relayAccessToken = createRelayAccessToken();
 let backgroundMediaDirectory = '';
 let httpServerReady = false;
 let relayServerReady = false;
@@ -52,14 +54,19 @@ function getLanAddresses() {
 function getLocalServerInfo() {
   const addresses = getLanAddresses();
   const preferredHost = addresses[0] || '127.0.0.1';
+  const displayUrl = new URL(`http://${preferredHost}:${LOCAL_HTTP_PORT}/UI/scripture-pod-display.html`);
+  displayUrl.searchParams.set('hostMode', 'websocket');
+  displayUrl.searchParams.set('relay', `ws://${preferredHost}:${LOCAL_RELAY_PORT}`);
+  displayUrl.searchParams.set('relayToken', relayAccessToken);
   return {
     httpPort: LOCAL_HTTP_PORT,
     relayPort: LOCAL_RELAY_PORT,
     preferredHost,
     availableHosts: ['127.0.0.1', ...addresses],
     displayPath: '/UI/scripture-pod-display.html',
-    displayUrl: `http://${preferredHost}:${LOCAL_HTTP_PORT}/UI/scripture-pod-display.html?hostMode=websocket&relay=ws://${preferredHost}:${LOCAL_RELAY_PORT}`,
-    relayUrl: `ws://${preferredHost}:${LOCAL_RELAY_PORT}`
+    displayUrl: displayUrl.toString(),
+    relayUrl: `ws://${preferredHost}:${LOCAL_RELAY_PORT}`,
+    relayToken: relayAccessToken
   };
 }
 
@@ -150,7 +157,11 @@ function startHttpServer() {
 
 function startRelayServer() {
   if (relayServer) return;
-  relayServer = new WebSocketServer({ host: '0.0.0.0', port: LOCAL_RELAY_PORT });
+  relayServer = new WebSocketServer({
+    host: '0.0.0.0',
+    port: LOCAL_RELAY_PORT,
+    verifyClient: (info, callback) => verifyRelayUpgrade(info, callback, relayAccessToken)
+  });
   relayServer.once('listening', () => {
     relayServerReady = true;
     logDisplayUrlWhenReady();

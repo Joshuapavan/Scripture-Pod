@@ -21,7 +21,8 @@
     function ensureRemoteShowCredentials() {
       const pairCodeInput = document.getElementById('remote-show-pair-code');
       if (!pairCodeInput) return;
-      let code = normalizePairCode(pairCodeInput.value);
+      const sharedCode = normalizePairCode(new URLSearchParams(window.location.search).get('pairCode'));
+      let code = sharedCode || normalizePairCode(pairCodeInput.value);
       if (!code) code = generatePairCode();
       pairCodeInput.value = code;
       remoteShowSessionId = `session_${code.toLowerCase()}`;
@@ -138,7 +139,10 @@
       const host = resolveRelayHost();
       const port = getRelayPort();
       if (!host || !port) return '';
-      return `${protocol}//${host}:${port}`;
+      const relayUrl = new URL(`${protocol}//${host}:${port}`);
+      const relayToken = String(localServerInfo?.relayToken || new URLSearchParams(window.location.search).get('relayToken') || '');
+      if (relayToken) relayUrl.searchParams.set('token', relayToken);
+      return relayUrl.toString();
     }
 
     function isLocalhostHost(host) {
@@ -241,51 +245,47 @@
       if (!host) return '';
       const port = getHttpPort();
       const portSegment = port ? `:${port}` : '';
-      return `${protocol}//${host}${portSegment}${path}${search}${hash}`;
-    }
-
-    function buildRemoteShowQrPrimaryUrl(url) {
-      return `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=0&data=${encodeURIComponent(url)}`;
-    }
-
-    function buildRemoteShowQrFallbackUrl(url) {
-      return `https://quickchart.io/qr?size=220&margin=0&text=${encodeURIComponent(url)}`;
+      const url = new URL(`${protocol}//${host}${portSegment}${path}${search}${hash}`);
+      const relayToken = String(localServerInfo?.relayToken || new URLSearchParams(search).get('relayToken') || '');
+      const pairCode = getRemoteShowPairCode();
+      if (relayToken) url.searchParams.set('relayToken', relayToken);
+      if (pairCode) url.searchParams.set('pairCode', pairCode);
+      return url.toString();
     }
 
     function updateRemoteShowQr(url, qrImg, qrBox) {
       if (!qrImg || !qrBox) return;
       if (!url) {
+        qrImg.dataset.qrUrl = '';
         qrImg.removeAttribute('src');
-        qrImg.removeAttribute('data-qr-fallback');
         qrImg.alt = 'RemoteShow QR';
         qrBox.classList.add('is-empty');
         qrBox.title = '';
         return;
       }
 
-      const primary = buildRemoteShowQrPrimaryUrl(url);
-      const fallback = buildRemoteShowQrFallbackUrl(url);
+      const encoder = window.qrcode;
       qrImg.alt = 'RemoteShow QR';
-      qrImg.setAttribute('referrerpolicy', 'no-referrer');
-      qrImg.setAttribute('crossorigin', 'anonymous');
-      qrImg.onload = () => {
+      qrImg.dataset.qrUrl = url;
+      if (typeof encoder !== 'function') {
+        qrImg.removeAttribute('src');
+        qrBox.classList.add('is-empty');
+        qrBox.title = 'QR generator unavailable. Copy the URL instead.';
+        return;
+      }
+      try {
+        const qr = encoder(0, 'M');
+        qr.addData(url);
+        qr.make();
+        if (qrImg.dataset.qrUrl !== url) return;
+        qrImg.src = qr.createDataURL(4, 0);
         qrBox.classList.remove('is-empty');
         qrBox.title = url;
-      };
-      qrImg.onerror = () => {
-        const hasFallback = qrImg.getAttribute('data-qr-fallback') === '1';
-        if (!hasFallback) {
-          qrImg.setAttribute('data-qr-fallback', '1');
-          qrImg.src = fallback;
-          return;
-        }
+      } catch (_) {
         qrImg.removeAttribute('src');
-        qrImg.removeAttribute('data-qr-fallback');
         qrBox.classList.add('is-empty');
-        qrBox.title = 'Unable to load QR image. Copy URL instead.';
-      };
-      qrImg.setAttribute('data-qr-fallback', '0');
-      qrImg.src = primary;
+        qrBox.title = 'Unable to generate QR image. Copy the URL instead.';
+      }
     }
 
     function copyRemoteShowRelayUrl() {

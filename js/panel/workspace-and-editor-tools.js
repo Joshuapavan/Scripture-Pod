@@ -68,6 +68,8 @@
         const relayPort = getRelayPort();
         params.set('relayPort', relayPort);
         params.set('relay', `ws://${relayHost}:${relayPort}`);
+        const relayToken = String(localServerInfo?.relayToken || new URLSearchParams(window.location.search).get('relayToken') || '');
+        if (relayToken) params.set('relayToken', relayToken);
       }
       return `scripture-pod-display.html?${params.toString()}`;
     }

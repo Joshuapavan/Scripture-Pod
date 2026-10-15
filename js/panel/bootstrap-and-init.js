@@ -702,12 +702,41 @@
       });
     })();
 
+    function updateFirstRunSetupVisibility() {
+      const setup = document.getElementById('first-run-setup');
+      if (!setup) return;
+      const hasContent = (Array.isArray(songs) && songs.length > 0) ||
+        (bibles && Object.keys(bibles).length > 0);
+      setup.hidden = setup.dataset.dismissed === 'true' || hasContent;
+    }
+
+    function dismissFirstRunSetup() {
+      const setup = document.getElementById('first-run-setup');
+      if (!setup) return;
+      setup.dataset.dismissed = 'true';
+      updateFirstRunSetupVisibility();
+      if (!appState) appState = buildDefaultAppState();
+      if (!appState.settings) appState.settings = getUiSnapshot();
+      appState.settings.firstRunSetupDismissed = true;
+      saveState();
+      saveToStorageDebounced();
+    }
+
+    function openFirstRunOutputPicker() {
+      dismissFirstRunSetup();
+      toggleOutputPopover();
+    }
+
     function applyUiSnapshot(ui) {
       if (!ui) return;
+      const firstRunSetup = document.getElementById('first-run-setup');
+      if (firstRunSetup) firstRunSetup.dataset.dismissed = ui.firstRunSetupDismissed === true ? 'true' : 'false';
       const overlayNameInput = document.getElementById('name-role-overlay-name');
       const overlayRoleInput = document.getElementById('name-role-overlay-role');
       const overlayEnabledButton = document.getElementById('name-role-overlay-show-btn');
-      const overlayStyleInput = document.getElementById('name-role-overlay-style');
+      const overlayDesignInput = document.getElementById('name-role-overlay-design');
+      const overlayAnimationInput = document.getElementById('name-role-overlay-animation');
+      const overlayLogoColorInput = document.getElementById('name-role-overlay-logo-color');
       const overlayPrimaryInput = document.getElementById('name-role-overlay-primary');
       const overlayAccentInput = document.getElementById('name-role-overlay-accent');
       const overlayNameSizeInput = document.getElementById('name-role-overlay-name-size');
@@ -738,22 +767,20 @@
         overlayEnabledButton.textContent = overlayEnabled ? 'Hide Lower Third' : 'Show Lower Third';
         overlayEnabledButton.classList.toggle('active', overlayEnabled);
       }
-      if (overlayStyleInput) {
+      if (overlayDesignInput && overlayAnimationInput) {
         const savedOverlayStyle = String(ui.nameRoleOverlayStyle || 'classic-gms-rise');
-        const isCurrentStyle = /^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal)$/.test(savedOverlayStyle);
-        const previousStyle = savedOverlayStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal)$/);
-        const previousLayout = ['classic', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : 'classic';
-        overlayStyleInput.value = isCurrentStyle
-          ? savedOverlayStyle
-          : previousStyle
-            ? `${previousStyle[1]}-gms-${previousStyle[2]}`
-            : `${previousLayout}-gms-rise`;
+        const currentStyle = savedOverlayStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand)$/);
+        const previousStyle = savedOverlayStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand)$/);
+        const layoutOnly = ['classic', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : '';
+        const design = currentStyle ? `${currentStyle[1]}-${currentStyle[2]}` : `${previousStyle?.[1] || layoutOnly || 'classic'}-gms`;
+        overlayDesignInput.value = Array.from(overlayDesignInput.options).some((option) => option.value === design) ? design : 'classic-gms';
+        overlayAnimationInput.value = currentStyle?.[3] || previousStyle?.[2] || 'rise';
       }
-      const overlayTheme = String(overlayStyleInput?.value || 'classic-legacy-rise').split('-')[1] || 'legacy';
+      const overlayTheme = String(overlayDesignInput?.value || 'classic-gms').split('-')[1] || 'gms';
       const defaultPrimaryColors = {
         legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF',
         modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF',
-        glass: '#90D5FF', copper: '#90D5FF'
+        glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF'
       };
       if (overlayPrimaryInput) {
         const savedPrimary = ui.nameRoleOverlayPrimaryColor;
@@ -772,9 +799,10 @@
       if (overlayInstagram) overlayInstagram.value = String(ui.nameRoleOverlayInstagram || '');
       if (overlayFacebook) overlayFacebook.value = String(ui.nameRoleOverlayFacebook || '');
       if (overlayWebsite) overlayWebsite.value = String(ui.nameRoleOverlayWebsite || '');
-      if (overlayLike) overlayLike.checked = ui.nameRoleOverlayLike === true;
-      if (overlayShare) overlayShare.checked = ui.nameRoleOverlayShare === true;
-      if (overlaySubscribe) overlaySubscribe.checked = ui.nameRoleOverlaySubscribe === true;
+      if (overlayLike) overlayLike.checked = ui.nameRoleOverlayLike !== false;
+      if (overlayShare) overlayShare.checked = ui.nameRoleOverlayShare !== false;
+      if (overlaySubscribe) overlaySubscribe.checked = ui.nameRoleOverlaySubscribe !== false;
+      if (overlayLogoColorInput) overlayLogoColorInput.value = ui.nameRoleOverlayLogoColor === 'black' ? 'black' : 'white';
       if (socialAccentInput && /^#[0-9a-f]{6}$/i.test(ui.socialEngagementOverlayAccentColor || '')) {
         socialAccentInput.value = ui.socialEngagementOverlayAccentColor;
       }
@@ -801,6 +829,7 @@
         overlayLogoPreview.hidden = !logoDataUrl;
       }
       if (overlayLogoRemoveButton) overlayLogoRemoveButton.hidden = !ui.nameRoleOverlayLogo;
+      updateFirstRunSetupVisibility();
       if (typeof updateProgramDisplayStatus === 'function') updateProgramDisplayStatus();
       loadFocusedWorkspaceControlsFromUi(ui);
       loadProjectionSettingsProfilesFromUi(ui);
@@ -924,6 +953,7 @@
       const versionToggle = document.getElementById('version-switch-updates-live');
       if (versionToggle) versionToggle.checked = versionSwitchUpdatesLive;
     }
+
     if (ui.dualVersionModeEnabled != null) {
       setDualVersionModeEnabled(!!ui.dualVersionModeEnabled, { silent: true });
     }
@@ -1285,6 +1315,7 @@
       }
       const host = document.getElementById('output-screen-list-popover');
       if (host) host.innerHTML = `<div class="placeholder">${esc(t('output_detecting_displays'))}</div>`;
+      if (pop.parentElement !== document.body) document.body.appendChild(pop);
       positionPopover(pop, btn);
       pop.classList.add('open');
       outputPopoverOpen = true;
@@ -4649,6 +4680,13 @@
 
       appStateUpdatedAt = stateEntry ? (stateEntry.updatedAt || 0) : 0;
       stateReady = true;
+      updateFirstRunSetupVisibility();
+      if (typeof refreshLocalServerInfo === 'function') {
+        refreshLocalServerInfo().then(() => {
+          if (document.getElementById('remote-show-toggle')?.checked && typeof reconnectRelay === 'function') reconnectRelay();
+          if (typeof updateRemoteShowDetails === 'function') updateRemoteShowDetails();
+        }).catch(() => {});
+      }
       saveState();
       if (pendingHello) {
         pendingHello = false;

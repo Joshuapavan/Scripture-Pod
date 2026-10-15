@@ -11,6 +11,13 @@ for (const directory of ['UI', 'js']) {
   fs.cpSync(path.join(projectRoot, directory), path.join(webRoot, directory), { recursive: true });
 }
 
+const qrCodeBuildDirectory = path.join(webRoot, 'node_modules', 'qrcode-generator', 'dist');
+fs.mkdirSync(qrCodeBuildDirectory, { recursive: true });
+fs.copyFileSync(
+  path.join(projectRoot, 'node_modules', 'qrcode-generator', 'dist', 'qrcode.js'),
+  path.join(qrCodeBuildDirectory, 'qrcode.js')
+);
+
 const logoDirectory = path.join(webRoot, 'electron', 'resources');
 fs.mkdirSync(logoDirectory, { recursive: true });
 fs.copyFileSync(

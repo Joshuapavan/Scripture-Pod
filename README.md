@@ -46,6 +46,8 @@ The Electron app can serve the display over the local network. Both computers mu
 
 The app also prints the current display URL to the terminal after its local HTTP and WebSocket servers start. The URL uses the control computer's current LAN IP, so it can change when that computer joins another network. Allow inbound TCP ports `5510` (display page) and `5511` (update relay) through the control computer's firewall. Do not expose these ports directly to the public internet.
 
+Generated display and RemoteShow links contain a per-launch relay access token. Treat them like passwords: share them only with intended displays, and refresh copied links after restarting the desktop app. RemoteShow QR codes are generated locally and do not send the link to an external QR service.
+
 This is a browser-based network display, not an NDI output stream. Both computers need browser access to the host computer; an NDI receiver will not discover this URL as an NDI source.
 
 ## Building installers (macOS/Windows/Linux)

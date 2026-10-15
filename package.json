@@ -8,6 +8,7 @@
   "private": true,
   "scripts": {
     "start": "electron .",
+    "test": "node --test",
     "pack:mac": "electron-builder --mac dir",
     "dist:mac": "electron-builder --mac",
     "pack:win": "electron-builder --win nsis portable",
@@ -27,6 +28,7 @@
       "assets/**/*",
       "js/**/*",
       "electron/main.js",
+      "electron/relay-security.js",
       "electron/preload.js",
       "electron/resources/Logo.svg",
       "package.json",
@@ -75,6 +77,7 @@
     }
   },
   "dependencies": {
+    "qrcode-generator": "^2.0.4",
     "ws": "^8.18.0"
   },
   "devDependencies": {

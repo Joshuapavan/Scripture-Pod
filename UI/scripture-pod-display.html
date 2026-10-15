@@ -443,13 +443,24 @@
     function buildRelayUrl() {
       const params = new URLSearchParams(window.location.search);
       const override = params.get('relay');
-      if (override) return override;
+      const relayToken = params.get('relayToken') || '';
+      if (override) {
+        try {
+          const relayUrl = new URL(override, window.location.href);
+          if (relayToken) relayUrl.searchParams.set('token', relayToken);
+          return relayUrl.toString();
+        } catch (_) {
+          return '';
+        }
+      }
       const protocol = (window.location.protocol === 'https:') ? 'wss:' : 'ws:';
       let host = window.location.hostname || '';
       if (!host || host === 'localhost') host = '127.0.0.1';
       const port = params.get('relayPort') || RELAY_DEFAULT_PORT;
       if (!host || !port) return '';
-      return `${protocol}//${host}:${port}`;
+      const relayUrl = new URL(`${protocol}//${host}:${port}`);
+      if (relayToken) relayUrl.searchParams.set('token', relayToken);
+      return relayUrl.toString();
     }
 
     function disconnectRelay() {
@@ -1224,21 +1235,22 @@
       const role = String(data?.role || '').trim();
       const rawStyle = String(data?.style || 'classic-rise');
       const normalizedStyle = ['classic', 'centered', 'band'].includes(rawStyle) ? `${rawStyle}-rise` : rawStyle;
-      const previousStyle = normalizedStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal)$/);
+      const previousStyle = normalizedStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand)$/);
       const currentStyle = previousStyle ? `${previousStyle[1]}-gms-${previousStyle[2]}` : normalizedStyle;
-      const styleMatch = currentStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal)$/);
+      const styleMatch = currentStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand)$/);
       const layout = styleMatch ? styleMatch[1] : 'classic';
       const theme = styleMatch ? styleMatch[2] : 'gms';
       const animation = styleMatch ? styleMatch[3] : 'rise';
       const style = `${layout}-${theme}-${animation}`;
       const accentColor = /^#[0-9a-f]{6}$/i.test(data?.accentColor || '') ? data.accentColor : '#90D5FF';
-      const primaryDefaults = { legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF', modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF', glass: '#90D5FF', copper: '#90D5FF' };
+      const primaryDefaults = { legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF', modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF', glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF' };
       const primaryColor = /^#[0-9a-f]{6}$/i.test(data?.primaryColor || '') ? data.primaryColor : (primaryDefaults[theme] || '#90D5FF');
       const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
       const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
       const lightBackground = primaryLuminance >= 0.72;
       const foregroundColor = lightBackground ? '#101216' : '#ffffff';
       const logo = typeof data?.logo === 'string' && data.logo.startsWith('data:image/') ? data.logo : '';
+      const logoColor = data?.logoColor === 'black' ? 'black' : 'white';
       const nameSize = Math.max(24, Math.min(160, Number(data?.nameSize) || 56));
       const roleSize = Math.max(12, Math.min(72, Number(data?.roleSize) || 24));
       const logoSize = Math.max(24, Math.min(320, Number(data?.logoSize) || 128));
@@ -1249,7 +1261,7 @@
       const roleEl = overlay.querySelector('.name-role-overlay-role');
       const logoEl = overlay.querySelector('.name-role-overlay-logo');
       const changed = overlay.dataset.name !== name || overlay.dataset.role !== role ||
-        overlay.dataset.style !== style || overlay.dataset.accentColor !== accentColor || overlay.dataset.logo !== logo;
+        overlay.dataset.style !== style || overlay.dataset.accentColor !== accentColor || overlay.dataset.logo !== logo || overlay.dataset.logoColor !== logoColor;
       if (nameEl) nameEl.textContent = name;
       if (roleEl) roleEl.textContent = role;
       if (logoEl) {
@@ -1257,8 +1269,9 @@
         else logoEl.removeAttribute('src');
         logoEl.hidden = !logo;
       }
-      overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal');
+      overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand');
       overlay.classList.add(`style-${layout}`, `theme-${theme}`, `motion-${animation}`);
+      overlay.classList.toggle('logo-black', logoColor === 'black');
       overlay.classList.toggle('is-light-background', lightBackground);
       overlay.style.setProperty('--name-role-primary', primaryColor);
       overlay.style.setProperty('--name-role-accent', accentColor);
@@ -1274,6 +1287,7 @@
       overlay.dataset.theme = theme;
       overlay.dataset.accentColor = accentColor;
       overlay.dataset.logo = logo;
+      overlay.dataset.logoColor = logoColor;
       overlay.setAttribute('aria-hidden', enabled ? 'false' : 'true');
       if (enabled && changed && overlay.classList.contains('is-visible')) {
         overlay.classList.remove('is-visible');

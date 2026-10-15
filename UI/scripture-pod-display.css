@@ -442,6 +442,42 @@ body.display-full-mode {
     background: var(--name-role-accent, #fff);
 }
 
+#name-role-overlay.theme-editorial .name-role-overlay-card {
+    border: 0;
+    border-left: 7px solid var(--name-role-accent, #90D5FF);
+    border-radius: 1px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--name-role-primary, #90D5FF) 24%, #131820), #131820 78%);
+    color: #f5f2ea;
+    box-shadow: 0 15px 42px rgba(0, 0, 0, 0.42);
+}
+
+#name-role-overlay.theme-editorial .name-role-overlay-role {
+    color: var(--name-role-accent, #90D5FF);
+}
+
+#name-role-overlay.theme-neon .name-role-overlay-card {
+    border: 1px solid color-mix(in srgb, var(--name-role-accent, #90D5FF) 64%, transparent);
+    border-left: 5px solid var(--name-role-accent, #90D5FF);
+    border-radius: 10px;
+    background: linear-gradient(115deg, #080c12, color-mix(in srgb, var(--name-role-primary, #90D5FF) 25%, #080c12));
+    color: #f8fafc;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--name-role-accent, #90D5FF) 22%, transparent), 0 0 28px color-mix(in srgb, var(--name-role-accent, #90D5FF) 30%, transparent);
+}
+
+#name-role-overlay.theme-neon .name-role-overlay-role {
+    color: var(--name-role-accent, #90D5FF);
+}
+
+#name-role-overlay.theme-ribbon .name-role-overlay-card {
+    border: 0;
+    border-left: 12px solid var(--name-role-accent, #90D5FF);
+    border-bottom: 2px solid var(--name-role-accent, #90D5FF);
+    border-radius: 0 6px 6px 0;
+    background: var(--name-role-primary, #90D5FF);
+    color: var(--name-role-foreground, #101216);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
+}
+
 #name-role-overlay.theme-news .name-role-overlay-card {
     border: 0;
     border-left: 8px solid var(--name-role-accent, #90D5FF);
@@ -497,6 +533,21 @@ body.display-full-mode {
 
 #name-role-overlay.is-light-background .name-role-overlay-role {
     color: var(--name-role-foreground, #101216);
+}
+
+#name-role-overlay.is-light-background.theme-editorial .name-role-overlay-card {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--name-role-primary, #90D5FF) 24%, #131820), #131820 78%);
+    color: #f5f2ea;
+}
+
+#name-role-overlay.is-light-background.theme-neon .name-role-overlay-card {
+    background: linear-gradient(115deg, #080c12, color-mix(in srgb, var(--name-role-primary, #90D5FF) 25%, #080c12));
+    color: #f8fafc;
+}
+
+#name-role-overlay.is-light-background.theme-editorial .name-role-overlay-role,
+#name-role-overlay.is-light-background.theme-neon .name-role-overlay-role {
+    color: var(--name-role-accent, #90D5FF);
 }
 
 #name-role-overlay.is-light-background.theme-legacy .name-role-overlay-copy-panel {
@@ -571,6 +622,14 @@ body.display-full-mode {
 #name-role-overlay.motion-glow.is-visible .name-role-overlay-card { filter: drop-shadow(0 0 18px color-mix(in srgb, var(--name-role-accent, #90D5FF) 55%, transparent)); transform: scale(1); }
 #name-role-overlay.motion-reveal:not(.is-visible) .name-role-overlay-card { clip-path: inset(100% 0 0 0); transform: translateY(18px); }
 #name-role-overlay.motion-reveal.is-visible .name-role-overlay-card { clip-path: inset(0); transform: translateY(0); }
+#name-role-overlay.motion-drop:not(.is-visible) .name-role-overlay-card { transform: translateY(-6vh) scale(0.95); }
+#name-role-overlay.motion-drop.is-visible .name-role-overlay-card { transform: translateY(0) scale(1); }
+#name-role-overlay.motion-curtain:not(.is-visible) .name-role-overlay-card { clip-path: inset(0 50% 0 50%); transform: scaleX(0.82); }
+#name-role-overlay.motion-curtain.is-visible .name-role-overlay-card { clip-path: inset(0); transform: scaleX(1); }
+#name-role-overlay.motion-pop:not(.is-visible) .name-role-overlay-card { transform: scale(0.68) rotate(-5deg); }
+#name-role-overlay.motion-pop.is-visible .name-role-overlay-card { transform: scale(1) rotate(0); }
+#name-role-overlay.motion-expand:not(.is-visible) .name-role-overlay-card { clip-path: inset(0 0 60% 0); transform: scaleY(0.76); transform-origin: center bottom; }
+#name-role-overlay.motion-expand.is-visible .name-role-overlay-card { clip-path: inset(0); transform: scaleY(1); }
 
 .name-role-overlay-accent {
     width: 4px;
@@ -613,11 +672,11 @@ body.display-full-mode {
     flex: 0 0 auto;
 }
 
-#name-role-overlay.is-light-background .name-role-overlay-logo {
-    filter: brightness(0);
+#name-role-overlay .name-role-overlay-logo {
+    filter: brightness(0) invert(1);
 }
 
-#name-role-overlay.is-light-background .name-role-overlay-logo {
+#name-role-overlay.logo-black .name-role-overlay-logo {
     filter: brightness(0);
 }
 

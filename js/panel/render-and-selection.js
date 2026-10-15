@@ -876,6 +876,7 @@
     }
       renderSongs();
       ensureSelectionFallback();
+      if (typeof updateFirstRunSetupVisibility === 'function') updateFirstRunSetupVisibility();
       input.value = "";
       if (importedCount > 0) {
         showToast(importedCount === 1

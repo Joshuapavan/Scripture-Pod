@@ -69,15 +69,22 @@
       if (routeLabel) routeLabel.textContent = isPreviewOnly ? 'Preview' : 'Live';
     }
 
+    function getNameRoleOverlayStyle() {
+      const design = document.getElementById('name-role-overlay-design')?.value || 'classic-gms';
+      const animation = document.getElementById('name-role-overlay-animation')?.value || 'rise';
+      return `${design}-${animation}`;
+    }
+
     function getNameRoleOverlaySettings(enabled) {
       return {
         enabled: !!enabled,
         name: String(document.getElementById('name-role-overlay-name')?.value || '').trim(),
         role: String(document.getElementById('name-role-overlay-role')?.value || '').trim(),
-        style: document.getElementById('name-role-overlay-style')?.value || 'classic',
+        style: getNameRoleOverlayStyle(),
         primaryColor: document.getElementById('name-role-overlay-primary')?.value || '#90D5FF',
         accentColor: document.getElementById('name-role-overlay-accent')?.value || '#90D5FF',
         logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',
+        logoColor: document.getElementById('name-role-overlay-logo-color')?.value || 'white',
         nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
         roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),
         logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128),
@@ -268,10 +275,11 @@
       appState.settings.nameRoleOverlayName = name;
       appState.settings.nameRoleOverlayRole = role;
       appState.settings.nameRoleOverlayEnabled = enabled;
-      appState.settings.nameRoleOverlayStyle = document.getElementById('name-role-overlay-style')?.value || 'classic';
+      appState.settings.nameRoleOverlayStyle = getNameRoleOverlayStyle();
       appState.settings.nameRoleOverlayPrimaryColor = document.getElementById('name-role-overlay-primary')?.value || '#90D5FF';
       appState.settings.nameRoleOverlayAccentColor = document.getElementById('name-role-overlay-accent')?.value || '#90D5FF';
       appState.settings.nameRoleOverlayLogo = logoPreview?.dataset.logoDataUrl || '';
+      appState.settings.nameRoleOverlayLogoColor = document.getElementById('name-role-overlay-logo-color')?.value || 'white';
       appState.settings.nameRoleOverlayNameSize = document.getElementById('name-role-overlay-name-size')?.value || '56';
       appState.settings.nameRoleOverlayRoleSize = document.getElementById('name-role-overlay-role-size')?.value || '24';
       appState.settings.nameRoleOverlayLogoSize = document.getElementById('name-role-overlay-logo-size')?.value || '128';
@@ -910,7 +918,7 @@
           enabled: document.getElementById('name-role-overlay-show-btn')?.getAttribute('aria-pressed') === 'true',
           name: String(document.getElementById('name-role-overlay-name')?.value || '').trim(),
           role: String(document.getElementById('name-role-overlay-role')?.value || '').trim(),
-          style: document.getElementById('name-role-overlay-style')?.value || 'classic',
+          style: getNameRoleOverlayStyle(),
           primaryColor: document.getElementById('name-role-overlay-primary')?.value || '#90D5FF',
           accentColor: document.getElementById('name-role-overlay-accent')?.value || '#90D5FF',
           logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',

@@ -11103,6 +11103,78 @@
       animation: fadeIn var(--duration-fast) var(--ease-out);
     }
 
+    .first-run-setup {
+      position: fixed;
+      inset: 0;
+      z-index: 12000;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(5, 8, 12, 0.72);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .first-run-setup[hidden] {
+      display: none;
+    }
+
+    .first-run-setup-dialog {
+      width: min(460px, 100%);
+      padding: 28px;
+      border: 1px solid var(--border-elevated);
+      border-radius: var(--radius-lg);
+      background: var(--material-chrome);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+    }
+
+    .first-run-setup-kicker {
+      color: var(--accent-light);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .first-run-setup-dialog h2 {
+      margin: 10px 0 8px;
+      color: var(--text);
+      font-size: 22px;
+    }
+
+    .first-run-setup-dialog p {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .first-run-setup-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .first-run-setup-secondary {
+      border-color: var(--border-elevated);
+      background: transparent;
+      color: var(--text);
+    }
+
+    .first-run-setup-dismiss {
+      display: block;
+      margin: 14px auto 0;
+      padding: 6px 10px;
+      border: 0;
+      background: transparent;
+      color: var(--text-tertiary);
+      font: inherit;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .first-run-setup-dismiss:hover {
+      color: var(--text);
+    }
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -17450,6 +17522,14 @@
   min-width: 0;
   height: 27px;
   padding: 0 7px;
+  font-size: 10px;
+}
+
+.name-role-overlay-extra-section > select {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 0 6px;
   font-size: 10px;
 }
 
