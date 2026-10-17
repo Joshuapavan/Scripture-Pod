@@ -1116,7 +1116,7 @@
           }
           pendingVerseProjectFrame = requestAnimationFrame(() => {
             pendingVerseProjectFrame = 0;
-            projectLive(true);
+            projectLive(true, true);
           });
         };
 
@@ -1304,7 +1304,7 @@
       }
     }
 
-    function projectLive(trigger = false) {
+    function projectLive(trigger = false, toggleIfSame = false) {
       if (isPreviewOnlyMode()) {
         previewCurrentSelection();
         showToast('Preview Only is on. Turn it off to project live.');
@@ -1314,13 +1314,25 @@
         showToast('Select a verse or song before going live.');
         return false;
       }
+      const isBible = getIsBibleItem(currentItem);
+      const scheduleProjectIndex = isCurrentItemFromScheduleList() ? currentIndex : -1;
+      const targetKind = isBible ? 'bible' : 'songs';
+      const targetSource = scheduleProjectIndex >= 0 ? 'schedule' : targetKind;
+      const isSameLiveSelection = isLive && livePointer &&
+        livePointer.kind === targetKind &&
+        livePointer.source === targetSource &&
+        livePointer.index === currentIndex &&
+        (!isBible || livePointer.version === currentItem.version) &&
+        liveLineCursor === lineCursor;
+      if (toggleIfSame && isSameLiveSelection) {
+        clearOutput();
+        return false;
+      }
       const wasLive = isLive;
       if (trigger) isLive = true;
       if (!isLive) return;
       updateProgramDisplayStatus();
       applyProgramDisplaySource('lyrics');
-      const isBible = getIsBibleItem(currentItem);
-      const scheduleProjectIndex = isCurrentItemFromScheduleList() ? currentIndex : -1;
       if (!isBible && activeRatio === 'custom') {
         activeRatio = 'full';
         document.getElementById('ratio-full').classList.add('active');

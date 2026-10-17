@@ -253,7 +253,7 @@
           <button class="btn" id="panel-inline-style-32" onclick="clearOutput()"><span data-i18n="common_clear">Clear</span></button>
           <div class="nav-live-actions">
             <button type="button" class="btn nav-preview-btn" id="btn-preview" onclick="togglePreviewOnlyMode()" aria-pressed="false" title="Toggle preview-only mode">Preview</button>
-            <button class="btn btn-live" id="btn-project-live" onclick="projectLive(true)"><span data-i18n="common_project_live">Project Live</span></button>
+            <button class="btn btn-live" id="btn-project-live" onclick="projectLive(true, true)"><span data-i18n="common_project_live">Project Live</span></button>
           </div>
           <div id="nav-mirror-search-wrap">
             <input type="text" id="nav-mirror-search" placeholder="Search..." data-i18n-placeholder="ui_search_generic" autocomplete="off" >
@@ -3191,14 +3191,14 @@
       }
       const originalProjectLive = window.projectLive;
       if (typeof originalProjectLive === 'function') {
-        window.projectLive = (trigger = false) => {
+        window.projectLive = (trigger = false, toggleIfSame = false) => {
           let snapshot = null;
           try {
             if (typeof schedule !== 'undefined' && typeof currentIndex !== 'undefined' && Array.isArray(schedule)) {
               snapshot = schedule[currentIndex]?.backgroundSnapshot || null;
             }
           } catch (_) {}
-          const result = originalProjectLive(trigger);
+          const result = originalProjectLive(trigger, toggleIfSame);
           if (snapshot && typeof livePointer !== 'undefined' && livePointer?.source === 'schedule') {
             liveBackgroundState = { ...snapshot };
             if (typeof pushLiveUpdate === 'function') pushLiveUpdate();
