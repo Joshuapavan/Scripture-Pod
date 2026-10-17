@@ -132,17 +132,31 @@ jobs:
             version=$(node -p "require('./package.json').version")
             tag="v${version}-build.${GITHUB_RUN_NUMBER}"
           fi
-          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "Release $tag already exists; refusing to overwrite it." >&2
-            exit 1
-          fi
           release_flags=()
           if [[ "$tag" == *-* ]]; then
             release_flags+=(--prerelease)
           fi
-          gh release create "$tag" release-assets/* \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" \
-            --title "Scripture Pod $tag" \
-            --notes "Automated release from commit $GITHUB_SHA." \
-            "${release_flags[@]}"
+          mapfile -d '' release_assets < <(
+            find release-assets -type f \( -iname '*.appimage' -o -iname '*.apk' -o -iname '*.exe' -o -iname '*.zip' \) -print0 | sort -z
+          )
+          if (( ${#release_assets[@]} == 0 )); then
+            echo 'No distributable release assets were found.' >&2
+            exit 1
+          fi
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            existing_asset_count=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets | length')
+            if [[ "$existing_asset_count" != '0' ]]; then
+              echo "Release $tag already has assets; refusing to overwrite them." >&2
+              exit 1
+            fi
+            gh release upload "$tag" "${release_assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          else
+            gh release create "$tag" "${release_assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "Scripture Pod $tag" \
+              --notes "Automated release from commit $GITHUB_SHA." \
+              "${release_flags[@]}"
+          fi
