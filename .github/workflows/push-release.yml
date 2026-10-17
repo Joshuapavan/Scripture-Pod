@@ -34,16 +34,16 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            command: npm run dist:mac -- --arm64 --publish never
+            command: npm run dist:mac -- --arm64
             artifact: mac-arm64
           - os: macos-latest
-            command: npm run dist:mac -- --x64 --publish never
+            command: npm run dist:mac -- --x64
             artifact: mac-x64
           - os: windows-latest
-            command: npm run dist:win -- --publish never
+            command: npm run dist:win
             artifact: windows
           - os: ubuntu-latest
-            command: npm run dist:linux -- --publish never
+            command: npm run dist:linux
             artifact: linux
     runs-on: ${{ matrix.os }}
     steps:
