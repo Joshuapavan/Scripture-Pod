@@ -825,6 +825,13 @@
           await flushAppState();
         }
         await importBundledChurchLogo();
+        const bundledBackgroundUrl = document.getElementById('bg-video-url');
+        const bundledBackgroundSource = document.getElementById('bg-video-source');
+        if (bundledBackgroundUrl && bundledBackgroundSource && typeof setBgTypePicker === 'function') {
+          bundledBackgroundUrl.value = 'https://aci-stream.vercel.app/bg';
+          bundledBackgroundSource.value = 'url';
+          setBgTypePicker('video');
+        }
       } catch (error) {
         console.error('Bundled Bible import failed', error);
         showToast(error?.message || 'Bundled Bible import failed');

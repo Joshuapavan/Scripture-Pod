@@ -364,6 +364,7 @@
     body.lower-third-only-mode, body.lyrics-lt-mode { background: transparent; }
     #bg { position: fixed; inset: 0; z-index: 2; background: #000 center / cover no-repeat; transition: filter 220ms ease, opacity 220ms ease; }
     #bg-video { position: fixed; inset: 0; z-index: 2; width: 100%; height: 100%; object-fit: cover; display: none; }
+    #bg-page { position: fixed; inset: 0; z-index: 2; width: 100%; height: 100%; border: 0; display: none; pointer-events: none; }
     #scene-compositor { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
     #scene-compositor .src-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; }
     #scene-compositor .src-layer video { width: 100%; height: 100%; object-fit: contain; display: block; }
@@ -500,6 +501,7 @@
 <body>
   <div id="bg"></div>
   <video id="bg-video" muted autoplay playsinline></video>
+  <iframe id="bg-page" title="Background web page" allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>
   <div id="scene-compositor"></div>
   <div id="stage" class="mode-full">
     <div id="lt-wrap">
@@ -543,6 +545,7 @@
       const channel = IS_PREVIEW ? null : new BroadcastChannel(CHANNEL_NAME);
       const bg = document.getElementById('bg');
       const bgVideo = document.getElementById('bg-video');
+      const bgPage = document.getElementById('bg-page');
       // Ensure loop behavior works reliably across sources/browsers
       try {
         bgVideo.addEventListener('ended', function () {
@@ -922,6 +925,19 @@
         channel.postMessage({ type: 'PONG', proto: 1, sender: 'display', ts: Date.now() });
       }
 
+      function getWebPageBackgroundUrl(src) {
+        const raw = String(src || '').trim();
+        if (!raw) return '';
+        try {
+          const url = new URL(/^https?:\\/\\//i.test(raw) ? raw : 'https://' + raw);
+          if (url.protocol !== 'http:' && url.protocol !== 'https:') return '';
+          if (/\\.(?:3gp|avi|flv|gif|m3u8|m4v|mkv|mov|mp4|mpeg|mpg|mpd|ogv|ogg|ts|webm|wmv)$/i.test(url.pathname)) return '';
+          return url.href;
+        } catch (_) {
+          return '';
+        }
+      }
+
       function setBackground(data) {
         const enabled = !!data.bgEnabled;
         const bgType = String(data.bgType || 'color');
@@ -933,6 +949,9 @@
         if (!enabled) {
           bg.style.background = '#000';
           bg.style.backgroundImage = 'none';
+          bgPage.style.display = 'none';
+          bgPage.removeAttribute('src');
+          bgPage.dataset.src = '';
           bgVideo.pause();
           bgVideo.removeAttribute('src');
           bgVideo.style.display = 'none';
@@ -942,6 +961,21 @@
         if (bgType === 'video' && data.bgVideo) {
           bg.style.background = '#000';
           bg.style.backgroundImage = 'none';
+          const pageUrl = getWebPageBackgroundUrl(data.bgVideo);
+          if (pageUrl) {
+            bgVideo.pause();
+            bgVideo.removeAttribute('src');
+            bgVideo.style.display = 'none';
+            if (bgPage.dataset.src !== pageUrl) {
+              bgPage.dataset.src = pageUrl;
+              bgPage.src = pageUrl;
+            }
+            bgPage.style.display = 'block';
+            return;
+          }
+          bgPage.style.display = 'none';
+          bgPage.removeAttribute('src');
+          bgPage.dataset.src = '';
           try {
             if (bgVideo.src !== data.bgVideo) bgVideo.src = data.bgVideo;
             bgVideo.loop = !!data.bgVideoLoop;
@@ -955,6 +989,9 @@
         bgVideo.pause();
         bgVideo.style.display = 'none';
         bgVideo.removeAttribute('src');
+        bgPage.style.display = 'none';
+        bgPage.removeAttribute('src');
+        bgPage.dataset.src = '';
 
         if (bgType === 'image' && data.bgImage) {
           bg.style.background = '#000';

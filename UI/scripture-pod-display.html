@@ -538,7 +538,7 @@
               currentState.bgEnabled === true &&
               Number(currentState.bgOpacity ?? 1) > 0 &&
               (mode === 'full' || mode === 'lt');
-            if (src && !isGifSource(src) && !getYouTubeInfo(src) && videoEl) {
+            if (src && !isGifSource(src) && !getYouTubeInfo(src) && !getWebPageBackgroundUrl(src) && videoEl) {
               syncVideoState(videoEl, src, shouldResume, {
                 loop: d.bgVideoLoop !== false,
                 playbackRate: d.bgVideoSpeed || 1,
@@ -2145,6 +2145,19 @@
       return `https://www.youtube.com/embed/${info.id}?${params.toString()}`;
     }
 
+    function getWebPageBackgroundUrl(src) {
+      const raw = String(src || '').trim();
+      if (!raw || getYouTubeInfo(raw)) return '';
+      try {
+        const url = new URL(normalizeUrlInput(raw));
+        if (url.protocol !== 'http:' && url.protocol !== 'https:') return '';
+        if (/\.(?:3gp|avi|flv|m3u8|m4v|mkv|mov|mp4|mpeg|mpg|mpd|ogv|ogg|ts|webm|wmv)$/i.test(url.pathname)) return '';
+        return url.href;
+      } catch (_) {
+        return '';
+      }
+    }
+
     function sizeYoutubeFrame(container, frame) {
       if (!container || !frame) return;
       const rect = container.getBoundingClientRect();
@@ -2476,7 +2489,9 @@
       const isFade = (currentState.transitionType || '').toLowerCase() === 'fade';
       const isGifVideo = (d.bgType === 'video' && !!d.bgVideo && isGifSource(d.bgVideo));
       const youtubeInfo = (d.bgType === 'video' && !!d.bgVideo) ? getYouTubeInfo(d.bgVideo) : null;
-      const bgYoutubeSrc = youtubeInfo ? buildYouTubeEmbedUrl(youtubeInfo, d.bgVideoLoop !== false) : null;
+      const bgYoutubeSrc = youtubeInfo
+        ? buildYouTubeEmbedUrl(youtubeInfo, d.bgVideoLoop !== false)
+        : getWebPageBackgroundUrl(d.bgVideo);
       const bgVideoSrc = (d.bgType === 'video' && !!d.bgVideo && !isGifVideo && !bgYoutubeSrc) ? d.bgVideo : null;
       const bgGifSrc = (d.bgType === 'video' && !!d.bgVideo && isGifVideo) ? d.bgVideo : null;
       const videoSettings = {
