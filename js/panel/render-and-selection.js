@@ -828,7 +828,18 @@
         const bundledBackgroundUrl = document.getElementById('bg-video-url');
         const bundledBackgroundSource = document.getElementById('bg-video-source');
         if (bundledBackgroundUrl && bundledBackgroundSource && typeof setBgTypePicker === 'function') {
-          bundledBackgroundUrl.value = 'https://aci-stream.vercel.app/bg';
+          let backgroundAssetUrl = '../app_assets/bg/bg.mov';
+          if (desktop && typeof desktop.getLocalServerInfo === 'function') {
+            try {
+              const serverInfo = await desktop.getLocalServerInfo();
+              if (serverInfo?.displayUrl) {
+                backgroundAssetUrl = new URL('/app_assets/bg/bg.mov', serverInfo.displayUrl).href;
+              }
+            } catch (error) {
+              console.warn('Unable to resolve the bundled background URL', error);
+            }
+          }
+          bundledBackgroundUrl.value = backgroundAssetUrl;
           bundledBackgroundSource.value = 'url';
           setBgTypePicker('video');
         }

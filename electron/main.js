@@ -34,6 +34,7 @@ function getContentType(filePath) {
   if (ext === '.css') return 'text/css; charset=utf-8';
   if (ext === '.svg') return 'image/svg+xml';
   if (ext === '.png') return 'image/png';
+  if (ext === '.mov') return 'video/quicktime';
   if (ext === '.jpg' || ext === '.jpeg') return 'image/jpeg';
   if (ext === '.json') return 'application/json; charset=utf-8';
   return 'application/octet-stream';

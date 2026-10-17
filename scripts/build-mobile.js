@@ -7,7 +7,7 @@ const webRoot = path.join(projectRoot, 'mobile', 'www');
 fs.rmSync(webRoot, { recursive: true, force: true });
 fs.mkdirSync(webRoot, { recursive: true });
 
-for (const directory of ['UI', 'js']) {
+for (const directory of ['UI', 'js', 'app_assets/bg']) {
   fs.cpSync(path.join(projectRoot, directory), path.join(webRoot, directory), { recursive: true });
 }
 

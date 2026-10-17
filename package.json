@@ -27,6 +27,7 @@
       "index.html",
       "assets/**/*",
       "app_assets/bibles/**/*",
+      "app_assets/bg/bg.mov",
       "app_assets/logo/ACI_Logo.png",
       "js/**/*",
       "electron/main.js",
