@@ -1,0 +1,145 @@
+name: Push Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
+
+  build:
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            command: npm run dist:mac -- --arm64
+            artifact: mac-arm64
+          - os: macos-latest
+            command: npm run dist:mac -- --x64
+            artifact: mac-x64
+          - os: windows-latest
+            command: npm run dist:win
+            artifact: windows
+          - os: ubuntu-latest
+            command: npm run dist:linux
+            artifact: linux
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build release assets
+        run: ${{ matrix.command }}
+        shell: bash
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaged-${{ matrix.artifact }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  android:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android SDK platform
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Install dependencies
+        run: npm ci
+      - name: Build mobile web assets
+        run: npm run mobile:build
+      - name: Sync Capacitor Android project
+        run: npx cap sync android
+      - name: Build Android APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        working-directory: android
+        shell: bash
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaged-android
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    needs: [build, android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: packaged-*
+          path: release-assets
+          merge-multiple: true
+      - name: Create versioned tag and GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="$GITHUB_REF_NAME"
+          else
+            version=$(node -p "require('./package.json').version")
+            tag="v${version}-build.${GITHUB_RUN_NUMBER}"
+          fi
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $tag already exists; refusing to overwrite it." >&2
+            exit 1
+          fi
+          release_flags=()
+          if [[ "$tag" == *-* ]]; then
+            release_flags+=(--prerelease)
+          fi
+          gh release create "$tag" release-assets/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Scripture Pod $tag" \
+            --notes "Automated release from commit $GITHUB_SHA." \
+            "${release_flags[@]}"
