@@ -1,6 +1,6 @@
 {
   "name": "scripture-pod-desktop",
-  "version": "2.0.0",
+  "version": "2.0.5",
   "description": "Scripture Pod desktop presentation control application",
   "main": "electron/main.js",
   "author": "Joshua Pavan",
