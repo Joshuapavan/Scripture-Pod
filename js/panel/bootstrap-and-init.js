@@ -4856,6 +4856,7 @@
       controlPanelInitStarted = true;
       try {
         initStandaloneTools();
+        restoreBibleReaderView();
         _restoreAudioBufferSizeSetting();
         bindHostModeInput();
         applyObsCompatibilityUi();

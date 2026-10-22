@@ -1310,7 +1310,8 @@ body.overlays-workspace-active #workspace-height-handle { display: none !importa
 body[data-sidebar-tab="schedule"] #focused-editor-banner-main { display: none; }
 /* The old banner row now only carries the song section chips */
 #focused-editor-banner:not(:has(#focused-editor-section-nav.has-items)) { display: none !important; }
-body[data-sidebar-tab="bible"] .toolbar-mode-switch { display: none !important; }
+body[data-sidebar-tab="bible"] .toolbar-mode-switch:not(#bible-view-switch) { display: none !important; }
+body:not([data-sidebar-tab="bible"]) #bible-view-switch { display: none !important; }
 #main .header-toolbar .toolbar-icon-btn,
 #main .header-toolbar .add-btn {
   width: 40px !important;
@@ -1354,10 +1355,11 @@ body[data-sidebar-tab="bible"] .toolbar-mode-switch { display: none !important; 
 #sidebar { display: flex !important; flex-direction: column !important; }
 #sidebar > #library-label-search { order: 1; }
 #sidebar > .search-container { order: 2; }
-#sidebar > .library-label-bible { order: 3; }
-#sidebar > #version-bar { order: 4; }
-#sidebar > #bible-nav { order: 5; }
-#sidebar > #song-list { order: 6; }
+#sidebar > #library-quick-refs { order: 3; }
+#sidebar > .library-label-bible { order: 4; }
+#sidebar > #version-bar { order: 5; }
+#sidebar > #bible-nav { order: 6; }
+#sidebar > #song-list { order: 7; }
 #sidebar .library-label {
   padding: 16px 16px 0;
   color: var(--sp-subtle);
@@ -1427,3 +1429,227 @@ body[data-sidebar-tab="bible"] #sidebar .library-label-bible { display: block; }
 /* Narrow monitors column: pickers wrap rather than overlap words */
 #look-card .segmented-picker { flex-wrap: wrap !important; }
 #look-card .segmented-picker .seg-btn { min-width: min-content !important; }
+
+/* ── Library: Pinned & recent ─────────────────────────────────────────────── */
+body:not([data-sidebar-tab="bible"]) #library-quick-refs { display: none !important; }
+#library-quick-refs[hidden] { display: none !important; }
+#library-quick-refs .library-quick-refs-list { display: flex; flex-direction: column; gap: 2px; padding: 6px 12px 0; }
+.library-quick-ref {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 10px 0 22px;
+  position: relative;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sp-text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.library-quick-ref:hover { background: var(--sp-raised); }
+.library-quick-ref::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  border: 1.5px solid var(--sp-subtle);
+}
+.library-quick-ref.is-pinned::before { background: #E8B04B; border-color: #E8B04B; }
+.library-quick-ref-label { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.library-quick-ref-version { max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sp-subtle); font-family: var(--sp-mono); font-size: 11px; }
+
+/* ── Top bar: Stream status ───────────────────────────────────────────────── */
+#app-topbar .topbar-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--sp-line);
+  background: var(--sp-panel);
+  color: var(--sp-text);
+  font-size: 13px;
+  font-weight: 500;
+}
+#app-topbar .topbar-pill-state { color: var(--sp-muted); }
+#app-topbar .topbar-pill-dot { width: 8px; height: 8px; border-radius: 999px; background: #5C636B; }
+#app-topbar .topbar-pill.is-starting .topbar-pill-dot { background: #E8B04B; }
+#app-topbar .topbar-pill.is-live .topbar-pill-dot { background: var(--sp-live); }
+#app-topbar .topbar-pill.is-live .topbar-pill-state { color: var(--sp-text); }
+
+/* ── Bible Reader view: the chapter as one passage ────────────────────────── */
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons,
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .section-block { display: block !important; }
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .section-label { display: block; margin-bottom: 8px; }
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .section-block {
+  max-width: 72ch;
+  padding: 8px 8px 24px;
+  font-family: var(--sp-serif);
+  font-size: 18px;
+  line-height: 1.8;
+  color: var(--sp-text);
+}
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .lyric-row { display: inline !important; margin: 0 !important; }
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .lyric-row .quick-add,
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .live-indicator { display: none !important; }
+/* A <button> is always laid out as an inline block, so verses could not flow
+   as one paragraph; display: contents lets the text run on while the click
+   still lands on the verse's button. */
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .lyric-btn {
+  display: contents !important;
+  color: var(--sp-text) !important;
+  cursor: pointer;
+}
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .lyric-btn.active { color: #9CCBFF !important; }
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .lyric-btn:has(.live-indicator) { color: #FF9A90 !important; }
+body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .lyric-btn .jo-verse-sup {
+  min-width: 0;
+  height: auto;
+  margin-right: 4px !important;
+  padding: 0 4px !important;
+  vertical-align: super;
+  font-size: 10px !important;
+}
+
+/* ── Overlays tab: list · large preview · settings (matches the artboard) ── */
+body.overlays-workspace-active #sidebar,
+body.overlays-workspace-active #sidebar-width-handle,
+body.overlays-workspace-active #sidebar-resize-handle,
+body.overlays-workspace-active #sidebar-quick-actions-btn,
+body.overlays-workspace-active #program-display-panel,
+body.overlays-workspace-active #program-width-handle { display: none !important; }
+body.overlays-workspace-active #left-workspace,
+body.overlays-workspace-active #main {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  max-width: none !important;
+}
+body.overlays-workspace-active #overlays-workspace {
+  display: grid !important;
+  grid-template-columns: minmax(200px, 264px) minmax(0, 1fr) minmax(320px, 400px);
+  gap: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+#overlays-workspace > * { min-height: 0; overflow-y: auto; }
+
+.overlays-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 12px 16px;
+  background: var(--sp-panel);
+  border-right: 1px solid var(--sp-line);
+}
+.overlays-list .library-label { padding: 16px 4px 8px; color: var(--sp-subtle); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.overlay-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--sp-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.overlay-list-item:hover { background: var(--sp-raised); }
+.overlay-list-item[aria-pressed="true"] { background: var(--sp-raised); border-color: var(--sp-line-3); }
+.overlay-list-icon {
+  flex: 0 0 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--sp-line-2);
+  color: var(--sp-muted);
+}
+.overlay-list-item[aria-pressed="true"] .overlay-list-icon { background: var(--sp-text); color: var(--sp-ground); }
+.overlay-list-icon svg { width: 16px; height: 16px; }
+.overlay-list-copy { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.overlay-list-name { font-size: 14px; font-weight: 500; }
+.overlay-list-state { color: var(--sp-muted); font-size: 12px; }
+.overlay-list-state .is-on-air { display: none; color: var(--sp-text); }
+.overlay-list-state .is-on-air::before { content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 999px; background: var(--sp-live); }
+body:has(#name-role-overlay-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="name-role"] .is-ready,
+body:has(#social-engagement-overlay-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="social"] .is-ready { display: none; }
+body:has(#name-role-overlay-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="name-role"] .is-on-air,
+body:has(#social-engagement-overlay-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="social"] .is-on-air { display: inline; }
+
+.overlays-stage { display: flex; flex-direction: column; gap: 18px; padding: 18px 24px 24px; }
+.overlays-stage-head { display: flex; align-items: flex-end; gap: 12px; }
+.overlays-stage-head .overlays-workspace-head { margin-right: auto; }
+.overlays-stage-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.overlays-stage-tag.is-preview { background: var(--sp-cue); color: var(--sp-cue-ink); }
+.overlays-stage-tag.is-on-air { display: none; background: var(--sp-live); color: var(--sp-live-ink); }
+.overlays-stage-tag.is-on-air::before { content: ""; width: 6px; height: 6px; border-radius: 999px; background: currentColor; }
+#overlay-preview-shell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #000;
+  box-shadow: 0 0 0 2px var(--sp-cue);
+}
+#overlay-preview-frame { position: absolute; left: 0; top: 0; border: 0; transform-origin: top left; pointer-events: none; }
+body[data-overlay="name-role"]:has(#name-role-overlay-show-btn[aria-pressed="true"]) .overlays-stage-tag.is-preview,
+body[data-overlay="social"]:has(#social-engagement-overlay-show-btn[aria-pressed="true"]) .overlays-stage-tag.is-preview { display: none; }
+body[data-overlay="name-role"]:has(#name-role-overlay-show-btn[aria-pressed="true"]) .overlays-stage-tag.is-on-air,
+body[data-overlay="social"]:has(#social-engagement-overlay-show-btn[aria-pressed="true"]) .overlays-stage-tag.is-on-air { display: inline-flex; }
+body[data-overlay="name-role"]:has(#name-role-overlay-show-btn[aria-pressed="true"]) #overlay-preview-shell,
+body[data-overlay="social"]:has(#social-engagement-overlay-show-btn[aria-pressed="true"]) #overlay-preview-shell { box-shadow: 0 0 0 2px var(--sp-live); }
+.overlays-design h2 { margin: 0 0 10px; color: var(--sp-text); font-size: 14px; font-weight: 600; }
+body[data-overlay="social"] .overlays-design { display: none; }
+.overlays-design .lt-design-grid { max-height: none; }
+
+.overlays-settings { padding: 16px; background: var(--sp-ground); border-left: 1px solid var(--sp-line); }
+body:not([data-overlay="social"]) #overlays-workspace #social-engagement-overlay-panel,
+body[data-overlay="social"] #overlays-workspace #name-role-overlay-panel { display: none !important; }
+#overlays-workspace .overlays-settings .name-role-overlay-show-btn {
+  height: 36px !important;
+  padding: 0 14px !important;
+  border-radius: 9px !important;
+  background: var(--sp-live) !important;
+  border-color: var(--sp-live) !important;
+  color: var(--sp-live-ink) !important;
+  font-weight: 600 !important;
+}
+#overlays-workspace .overlays-settings .name-role-overlay-show-btn[aria-pressed="true"] {
+  background: var(--sp-raised) !important;
+  border-color: var(--sp-line-3) !important;
+  color: var(--sp-text) !important;
+}
+@media (max-width: 1100px) {
+  body.overlays-workspace-active #overlays-workspace { grid-template-columns: minmax(0, 1fr); overflow-y: auto; }
+  #overlays-workspace > * { overflow: visible; }
+  .overlays-list { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid var(--sp-line); }
+  .overlays-list .library-label { flex: 1 1 100%; }
+  .overlays-settings { border-left: 0; }
+}
+body.overlays-workspace-active #page-projection #program-display-panel#program-display-panel,
+body.overlays-workspace-active #page-projection #program-width-handle { display: none !important; }
+/* The design picker lives under the large preview; its old box goes */
+#overlays-workspace .name-role-overlay-style-row > .name-role-overlay-extra-section:has(#name-role-overlay-design) { display: none !important; }

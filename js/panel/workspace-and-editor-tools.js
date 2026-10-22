@@ -2158,6 +2158,25 @@
       return normalizeWorkspaceLayoutMode(workspaceLayoutMode) === 'focused';
     }
 
+    // Bible "Reader" view: the same verse buttons, laid out as one passage.
+    const BIBLE_READER_VIEW_KEY = 'scripturePod.bibleReaderView.v1';
+
+    function setBibleReaderView(enabled) {
+      const on = !!enabled;
+      document.body.classList.toggle('bible-reader-view', on);
+      document.getElementById('bible-view-verses')?.classList.toggle('active', !on);
+      document.getElementById('bible-view-verses')?.setAttribute('aria-pressed', on ? 'false' : 'true');
+      document.getElementById('bible-view-reader')?.classList.toggle('active', on);
+      document.getElementById('bible-view-reader')?.setAttribute('aria-pressed', on ? 'true' : 'false');
+      try { localStorage.setItem(BIBLE_READER_VIEW_KEY, on ? '1' : '0'); } catch (_) {}
+    }
+
+    function restoreBibleReaderView() {
+      let on = false;
+      try { on = localStorage.getItem(BIBLE_READER_VIEW_KEY) === '1'; } catch (_) {}
+      setBibleReaderView(on);
+    }
+
     function renderFocusedMainPanel() {
       const panel = document.getElementById('focused-main-panel');
       if (!panel) return;

@@ -23,6 +23,11 @@
       <div id="status-dot"></div>
       <span id="status-text" data-i18n="status_offline">Display Offline</span>
     </div>
+    <div id="topbar-stream-status" class="topbar-pill">
+      <span class="topbar-pill-dot"></span>
+      <span>Stream</span>
+      <span class="topbar-pill-state" id="topbar-stream-state">Offline</span>
+    </div>
     <button type="button" class="topbar-btn" id="btn-topbar-outputs" onclick="showOutputsCard()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg><span>Outputs</span></button>
     <button class="topbar-btn topbar-icon-btn" aria-label="Settings" id="btn-settings" onclick="openModal('settingsModal')" title="Settings" data-i18n-title="common_settings"><svg width="16" height="16" viewBox="1 1 22 22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="panel-inline-style-16"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </div>
@@ -76,6 +81,10 @@
         </select>
       </div>
 
+      <div id="library-quick-refs" hidden>
+        <div class="library-label">Pinned &amp; recent</div>
+        <div class="library-quick-refs-list"></div>
+      </div>
       <div class="library-label library-label-bible">Versions</div>
       <div id="version-bar"></div>
       <div id="song-list"></div>
@@ -95,6 +104,10 @@
           <div id="focused-editor-banner-subtitle"></div>
         </div>
         <button type="button" class="add-btn" title="New song" aria-label="New song" onclick="openModal('newSongModal')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="toolbar-mode-switch" id="bible-view-switch" role="group" aria-label="Bible view">
+          <button type="button" class="t-btn active" id="bible-view-verses" aria-pressed="true" onclick="setBibleReaderView(false)">Verses</button>
+          <button type="button" class="t-btn" id="bible-view-reader" aria-pressed="false" onclick="setBibleReaderView(true)">Reader</button>
+        </div>
         <div class="toolbar-mode-switch">
           <button class="t-btn" id="mode-text" onclick="setEditorMode('text')"><span data-i18n="ui_mode_text">Text</span></button>
           <button class="t-btn active" id="mode-btn" onclick="setEditorMode('btn')"><span data-i18n="ui_mode_buttons">Buttons</span></button>
@@ -226,11 +239,35 @@
       <div id="main-workspace">
         <div id="focused-main-panel" aria-hidden="true"></div>
         <section id="overlays-workspace" aria-labelledby="overlays-workspace-title">
-          <div class="overlays-workspace-head">
-            <span class="overlays-workspace-eyebrow">Overlays</span>
-            <h1 id="overlays-workspace-title">Lower thirds</h1>
+          <nav class="overlays-list" aria-label="Overlays">
+            <div class="library-label">Overlays</div>
+            <button type="button" class="overlay-list-item" data-overlay="name-role" aria-pressed="true" onclick="selectOverlayPanel('name-role')">
+              <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+              <span class="overlay-list-copy"><span class="overlay-list-name">Name &amp; Role</span><span class="overlay-list-state"><span class="is-ready">Ready</span><span class="is-on-air">On air</span></span></span>
+            </button>
+            <button type="button" class="overlay-list-item" data-overlay="social" aria-pressed="false" onclick="selectOverlayPanel('social')">
+              <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 10l5-8c1.5 0 2.5 1.4 2 2.8L13 9h6a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 18 20H7"/></svg></span>
+              <span class="overlay-list-copy"><span class="overlay-list-name">Social engagement</span><span class="overlay-list-state"><span class="is-ready">Like · Share · Subscribe</span><span class="is-on-air">On air</span></span></span>
+            </button>
+          </nav>
+          <div class="overlays-stage">
+            <div class="overlays-stage-head">
+              <div class="overlays-workspace-head">
+                <span class="overlays-workspace-eyebrow">Overlay</span>
+                <h1 id="overlays-workspace-title">Name &amp; Role</h1>
+              </div>
+              <span class="overlays-stage-tag is-preview">Preview</span>
+              <span class="overlays-stage-tag is-on-air">On air</span>
+            </div>
+            <div id="overlay-preview-shell" class="sp-monitor-shell">
+              <iframe id="overlay-preview-frame" title="Overlay preview" tabindex="-1" allowtransparency="true"></iframe>
+            </div>
+            <section class="overlays-design" aria-labelledby="overlays-design-title">
+              <h2 id="overlays-design-title">Design</h2>
+              <div id="lt-design-picker" class="lt-design-picker"></div>
+            </section>
           </div>
-          <div class="overlays-workspace-grid">
+          <div class="overlays-settings">
             <div id="name-role-overlay-panel" class="name-role-overlay-panel">
               <div class="name-role-overlay-heading">
                 <strong>Name &amp; Role</strong>
@@ -356,7 +393,6 @@
                     <option value="band-parchment">Parchment Band</option>
                   </optgroup>
                 </select>
-                <div id="lt-design-picker" class="lt-design-picker"></div>
               </section>
               <section class="name-role-overlay-extra-section">
                 <div class="name-role-overlay-subheading"><strong>Animation</strong></div>

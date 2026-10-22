@@ -45,6 +45,22 @@
       document.body.classList.add('overlays-workspace-active');
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-overlays'));
       updateBottomNavSidebarButtons('overlays');
+      selectOverlayPanel(document.body.dataset.overlay || 'name-role');
+    }
+
+    // Overlays tab: the list picks which overlay's settings and preview show.
+    const OVERLAY_TITLES = { 'name-role': 'Name & Role', social: 'Social engagement' };
+
+    function selectOverlayPanel(which) {
+      const overlay = OVERLAY_TITLES[which] ? which : 'name-role';
+      document.body.dataset.overlay = overlay;
+      document.querySelectorAll('.overlay-list-item').forEach((item) => {
+        item.setAttribute('aria-pressed', item.dataset.overlay === overlay ? 'true' : 'false');
+      });
+      const title = document.getElementById('overlays-workspace-title');
+      if (title) title.textContent = OVERLAY_TITLES[overlay];
+      if (overlay === 'social') previewSocialEngagementLowerThirdExample();
+      else previewNameRoleLowerThirdExample();
     }
 
 

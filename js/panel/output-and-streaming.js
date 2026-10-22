@@ -150,7 +150,13 @@
     // A second embedded display beside Program. Preview payloads land here,
     // so the Program monitor (and the output synced from it) only ever shows
     // what is actually live.
-    let previewMonitorReady = false;
+    // Preview payloads go to every preview display: the Preview monitor and
+    // the large preview on the Overlays tab ({ shell, frame } element ids).
+    const PREVIEW_DISPLAYS = [
+      { shell: 'preview-display-shell', frame: 'preview-display-frame' },
+      { shell: 'overlay-preview-shell', frame: 'overlay-preview-frame' }
+    ];
+    const previewDisplaysReady = new Set();
     let previewMonitorState = { kind: 'clear' };
 
     function hasPreviewMonitor() {
@@ -158,14 +164,18 @@
     }
 
     function postMessageToPreviewMonitor(message) {
-      const frame = document.getElementById('preview-display-frame');
-      if (!frame || !frame.contentWindow || !previewMonitorReady) return false;
-      frame.contentWindow.postMessage(message, '*');
-      return true;
+      let posted = false;
+      PREVIEW_DISPLAYS.forEach(({ frame: frameId }) => {
+        const frame = document.getElementById(frameId);
+        if (!frame || !frame.contentWindow || !previewDisplaysReady.has(frameId)) return;
+        frame.contentWindow.postMessage(message, '*');
+        posted = true;
+      });
+      return posted;
     }
 
     function syncPreviewMonitor() {
-      if (!previewMonitorReady) return;
+      if (!previewDisplaysReady.size) return;
       postMessageToPreviewMonitor({ type: 'SET_STREAM_OUTPUT_MODE', enabled: !!_pgmStreamState.running });
       if (previewMonitorState.kind === 'update' && previewMonitorState.payload) {
         postMessageToPreviewMonitor({ type: 'PREVIEW_UPDATE', payload: previewMonitorState.payload });
@@ -174,9 +184,9 @@
       }
     }
 
-    function updatePreviewMonitorScale() {
-      const shell = document.getElementById('preview-display-shell');
-      const frame = document.getElementById('preview-display-frame');
+    function scalePreviewDisplay(shellId, frameId) {
+      const shell = document.getElementById(shellId);
+      const frame = document.getElementById(frameId);
       if (!shell || !frame) return;
       const shellW = shell.clientWidth || 0;
       const shellH = shell.clientHeight || 0;
@@ -190,23 +200,29 @@
       frame.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
     }
 
+    function updatePreviewMonitorScale() {
+      PREVIEW_DISPLAYS.forEach(({ shell, frame }) => scalePreviewDisplay(shell, frame));
+    }
+
     function initPreviewMonitor() {
-      const frame = document.getElementById('preview-display-frame');
-      const shell = document.getElementById('preview-display-shell');
-      if (!frame || frame.dataset.bound) return;
-      frame.dataset.bound = '1';
-      previewMonitorReady = false;
-      frame.addEventListener('load', () => {
-        previewMonitorReady = true;
-        updatePreviewMonitorScale();
-        syncPreviewMonitor();
+      PREVIEW_DISPLAYS.forEach(({ shell: shellId, frame: frameId }) => {
+        const frame = document.getElementById(frameId);
+        const shell = document.getElementById(shellId);
+        if (!frame || frame.dataset.bound) return;
+        frame.dataset.bound = '1';
+        previewDisplaysReady.delete(frameId);
+        frame.addEventListener('load', () => {
+          previewDisplaysReady.add(frameId);
+          scalePreviewDisplay(shellId, frameId);
+          syncPreviewMonitor();
+        });
+        frame.srcdoc = buildStandaloneDisplayHtml({ preview: true });
+        if (shell && typeof ResizeObserver === 'function') {
+          new ResizeObserver(() => scalePreviewDisplay(shellId, frameId)).observe(shell);
+        } else {
+          window.addEventListener('resize', () => scalePreviewDisplay(shellId, frameId));
+        }
       });
-      frame.srcdoc = buildStandaloneDisplayHtml({ preview: true });
-      if (shell && typeof ResizeObserver === 'function') {
-        new ResizeObserver(updatePreviewMonitorScale).observe(shell);
-      } else {
-        window.addEventListener('resize', updatePreviewMonitorScale);
-      }
     }
 
     function setPreviewMonitorCaption(text) {
@@ -2202,6 +2218,15 @@
       if (errEl) errEl.textContent = _pgmStreamState.lastError || 'None';
 
       const live = _pgmStreamState.running;
+      const topbarStream = document.getElementById('topbar-stream-status');
+      const topbarStreamState = document.getElementById('topbar-stream-state');
+      if (topbarStream) {
+        topbarStream.classList.toggle('is-live', live);
+        topbarStream.classList.toggle('is-starting', !!_pgmStreamState.starting);
+      }
+      if (topbarStreamState) {
+        topbarStreamState.textContent = _pgmStreamState.starting ? 'Starting' : (live ? 'Live' : 'Offline');
+      }
       if (pill) {
         pill.classList.toggle('live', live);
         if (_pgmStreamState.starting) pill.textContent = 'STARTING';

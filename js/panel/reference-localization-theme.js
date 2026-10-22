@@ -205,7 +205,41 @@
       addBibleRecentReference(entry);
     }
 
+    // Library "Pinned & recent": the first few references, always visible
+    // under the passage search (the full list stays in the history popover).
+    function renderLibraryQuickRefs() {
+      const host = document.getElementById('library-quick-refs');
+      if (!host) return;
+      const seen = new Set();
+      const entries = [
+        ...biblePinnedRefs.map(ref => ({ ref, pinned: true })),
+        ...bibleRecentRefs.map(ref => ({ ref, pinned: false }))
+      ].filter(({ ref }) => {
+        const key = `${normalizeBibleRefKey(ref.query)}|${normalizeBibleRefKey(ref.versionId || '')}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 4);
+      host.hidden = !entries.length;
+      host.querySelector('.library-quick-refs-list')?.replaceChildren(...entries.map(({ ref, pinned }) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'library-quick-ref' + (pinned ? ' is-pinned' : '');
+        const label = document.createElement('span');
+        label.className = 'library-quick-ref-label';
+        label.textContent = ref.title || ref.query;
+        const version = document.createElement('span');
+        version.className = 'library-quick-ref-version';
+        version.textContent = ref.versionId || '';
+        btn.append(label, version);
+        btn.title = pinned ? 'Pinned' : 'Recent';
+        btn.onclick = () => applyBibleReferenceEntry(ref);
+        return btn;
+      }));
+    }
+
     function renderBibleReferencePicker() {
+      renderLibraryQuickRefs();
       const picker = document.getElementById('bible-ref-picker');
       if (!picker) return;
       if (sidebarTab !== 'bible') {
