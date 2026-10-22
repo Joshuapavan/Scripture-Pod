@@ -786,8 +786,13 @@
         let assets = [];
         const desktop = window.BSPDesktop;
         if (desktop && typeof desktop.listBundledBibleFiles === 'function' && typeof desktop.readBundledBibleFile === 'function') {
-          assets = await desktop.listBundledBibleFiles();
-          assets = await Promise.all((Array.isArray(assets) ? assets : []).map((asset) => desktop.readBundledBibleFile(asset)));
+          // List only; each file is read lazily inside handleImport so just one
+          // multi-MB XML string (plus its DOM) is alive at a time.
+          assets = (await desktop.listBundledBibleFiles()) || [];
+          assets = (Array.isArray(assets) ? assets : []).map((asset) => ({
+            name: asset.name,
+            read: async () => (await desktop.readBundledBibleFile(asset)).contents
+          }));
         } else {
           const manifestUrl = new URL('../bundled-bibles.json', window.location.href);
           const manifestResponse = await fetch(manifestUrl);
@@ -796,9 +801,14 @@
           assets = await Promise.all((Array.isArray(manifest) ? manifest : []).map(async (asset) => {
             if (!['app_assets/bibles', 'assets/bibles'].includes(asset?.directory) || !asset?.name) return null;
             const url = new URL(`../${asset.directory}/${encodeURIComponent(asset.name)}`, window.location.href);
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`Unable to read ${asset.name}`);
-            return { name: asset.name, contents: await response.text() };
+            return {
+              name: asset.name,
+              read: async () => {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`Unable to read ${asset.name}`);
+                return response.text();
+              }
+            };
           }));
           assets = assets.filter(Boolean);
         }
@@ -809,7 +819,7 @@
         }
         const files = assets.map((asset) => ({
           name: asset.name,
-          text: async () => asset.contents
+          text: () => asset.read()
         }));
         await handleImport({ files, value: '' });
         const versions = Object.keys(bibles || {});

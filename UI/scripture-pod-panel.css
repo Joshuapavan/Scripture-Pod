@@ -17466,6 +17466,19 @@
   }
 }
 
+@media (max-height: 680px) {
+  #program-display-panel {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  #program-display-stage {
+    flex: 0 0 clamp(190px, 32vh, 240px);
+    min-height: 190px;
+    padding: 10px !important;
+  }
+}
+
 .program-display-link-row {
   display: flex;
   align-items: center;

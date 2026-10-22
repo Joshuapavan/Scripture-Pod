@@ -931,6 +931,7 @@
         try {
           const url = new URL(/^https?:\\/\\//i.test(raw) ? raw : 'https://' + raw);
           if (url.protocol !== 'http:' && url.protocol !== 'https:') return '';
+          if (/\\/background-media\\/[a-f0-9-]+\\/?$/i.test(url.pathname)) return '';
           if (/\\.(?:3gp|avi|flv|gif|m3u8|m4v|mkv|mov|mp4|mpeg|mpg|mpd|ogv|ogg|ts|webm|wmv)$/i.test(url.pathname)) return '';
           return url.href;
         } catch (_) {
@@ -1160,7 +1161,7 @@
         const logoSize = Math.max(24, Math.min(320, Number(data && data.logoSize) || 128));
         const offsetX = Math.max(-40, Math.min(40, Number(data.offsetX) || 0));
         const offsetY = Math.max(-40, Math.min(40, Number(data.offsetY) || 0));
-        const enabled = !!(data && data.enabled) && !!name && !!role;
+        const enabled = !!(data && data.enabled) && !!name;
         const nameEl = overlay.querySelector('.name-role-overlay-name');
         const roleEl = overlay.querySelector('.name-role-overlay-role');
         const logoEl = overlay.querySelector('.name-role-overlay-logo');

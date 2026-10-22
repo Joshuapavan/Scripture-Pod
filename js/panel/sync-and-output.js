@@ -260,8 +260,8 @@
       if (!button) return;
       const enabled = button.getAttribute('aria-pressed') !== 'true';
       const overlay = getNameRoleOverlaySettings(enabled);
-      if (enabled && (!overlay.name || !overlay.role)) {
-        showToast('Enter a name and role before showing the lower third');
+      if (enabled && !overlay.name) {
+        showToast('Enter a name before showing the lower third');
         return;
       }
       if (enabled) {
@@ -318,13 +318,13 @@
       saveState();
       saveToStorageDebounced();
       if (enabled) {
-        if (!name || !role) {
+        if (!name) {
           enabledButton?.setAttribute('aria-pressed', 'false');
           if (enabledButton) enabledButton.textContent = 'Show Lower Third';
           appState.settings.nameRoleOverlayEnabled = false;
           saveState();
           saveToStorageDebounced();
-          showToast('Enter a name and role before showing the lower third');
+          showToast('Enter a name before showing the lower third');
           publishNameRoleOverlay({ positionEdit });
           return;
         }
