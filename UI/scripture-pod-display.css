@@ -28,6 +28,14 @@ body.lower-third-only-mode {
 body.display-full-mode {
     background: #000;
 }
+/* Stream feed over a cable: a cable cannot carry transparency, so a solid key
+   colour stands in for it (OBS: Luma Key for black, Chroma Key for green). */
+html.has-key-bg,
+html.has-key-bg body,
+html.has-key-bg body.lower-third-only-mode,
+html.has-key-bg body.display-full-mode {
+    background: var(--key-bg) !important;
+}
 #name-role-overlay {
     transform: translate(var(--name-role-offset-x, 0vw), var(--name-role-offset-y, 0vh));
 }

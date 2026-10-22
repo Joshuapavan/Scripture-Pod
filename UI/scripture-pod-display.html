@@ -199,6 +199,12 @@
     // Debug mode controlled by URL param `?debug=1` or `?debug`
     const DEBUG_MODE = new URLSearchParams(window.location.search).has('debug');
     const IS_STANDALONE_MONITOR = new URLSearchParams(window.location.search).get('hostMode') === 'standalone';
+    // Stream feed over a cable: fill transparent areas with a key colour
+    const KEY_BACKGROUND = { black: '#000000', green: '#00B140' }[new URLSearchParams(window.location.search).get('keyBg')] || '';
+    if (KEY_BACKGROUND) {
+      document.documentElement.classList.add('has-key-bg');
+      document.documentElement.style.setProperty('--key-bg', KEY_BACKGROUND);
+    }
 
     // DOM Elements
     const elements = {

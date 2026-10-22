@@ -1619,6 +1619,7 @@
           select.innerHTML = options.join('');
           select.value = outputScreenList.some(s => s.id === prevValue) ? prevValue : 'auto';
         }
+        renderStreamFeedScreens();
         if (outputPopoverOpen) {
           renderOutputScreenPopover();
         }
@@ -1823,6 +1824,154 @@
       lyricsMonitorOutputOpen = false;
       setOutputLiveState(false);
       showToast(t('output_live_ended'));
+    }
+
+    // ── Stream feed (cable) ────────────────────────────────────────────────
+    // A second output window on its own display, meant for an HDMI cable into
+    // the streaming computer's capture card. Transparent areas are filled with
+    // a key colour because a cable cannot carry transparency.
+    const STREAM_FEED_STORAGE_KEY = 'scripturePod.streamFeed.v1';
+    const STREAM_FEED_OBS_HINTS = {
+      black: 'In OBS, add the capture card as a Video Capture Device, then a Luma Key filter.',
+      green: 'In OBS, add the capture card as a Video Capture Device, then a Chroma Key filter (green).'
+    };
+    let streamFeedOpen = false;
+    let streamFeedSettings = { displayId: '', key: 'black' };
+
+    function loadStreamFeedSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STREAM_FEED_STORAGE_KEY) || '{}');
+        streamFeedSettings = {
+          displayId: typeof saved.displayId === 'string' ? saved.displayId : '',
+          key: saved.key === 'green' ? 'green' : 'black'
+        };
+      } catch (_) {}
+    }
+
+    function saveStreamFeedSettings() {
+      try { localStorage.setItem(STREAM_FEED_STORAGE_KEY, JSON.stringify(streamFeedSettings)); } catch (_) {}
+    }
+
+    // Default to an external screen other than the one the main output uses.
+    function getDefaultStreamFeedScreen() {
+      const screens = Array.isArray(outputScreenList) ? outputScreenList : [];
+      const mainChoice = String(document.getElementById('output-screen-select')?.value || 'auto');
+      const mainId = mainChoice === 'auto' ? (getPreferredExternalScreen()?.id || '') : mainChoice;
+      const externals = screens.filter(s => !s.isInternal);
+      return externals.find(s => s.id !== mainId) || externals[0] || screens[0] || null;
+    }
+
+    function renderStreamFeedScreens() {
+      const select = document.getElementById('stream-feed-display');
+      if (!select) return;
+      const screens = Array.isArray(outputScreenList) ? outputScreenList : [];
+      select.replaceChildren(...screens.map((screen, idx) => {
+        const option = document.createElement('option');
+        option.value = screen.id;
+        const kind = screen.isInternal ? 'Built-in' : 'External';
+        option.textContent = `${screen.label || ('Display ' + (idx + 1))} · ${kind} · ${screen.width}×${screen.height}`;
+        return option;
+      }));
+      const saved = screens.find(s => s.id === streamFeedSettings.displayId);
+      const chosen = saved || getDefaultStreamFeedScreen();
+      if (chosen) select.value = chosen.id;
+    }
+
+    function syncStreamFeedUi() {
+      const available = hasDesktopOutputBridge() && typeof window.BSPDesktop.openFeed === 'function';
+      const button = document.getElementById('btn-stream-feed');
+      const state = document.getElementById('stream-feed-state');
+      const hint = document.getElementById('stream-feed-obs-hint');
+      const select = document.getElementById('stream-feed-display');
+      document.getElementById('output-route-feed')?.classList.toggle('is-unavailable', !available);
+      if (button) {
+        button.disabled = !available;
+        button.textContent = streamFeedOpen ? 'Stop feed' : 'Start feed';
+        button.setAttribute('aria-pressed', streamFeedOpen ? 'true' : 'false');
+        button.classList.toggle('active', streamFeedOpen);
+      }
+      if (select) select.disabled = !available;
+      if (state) {
+        state.textContent = streamFeedOpen ? 'On' : 'Off';
+        state.classList.toggle('is-on', streamFeedOpen);
+      }
+      ['black', 'green'].forEach((key) => {
+        const keyBtn = document.getElementById(`stream-feed-key-${key}`);
+        if (!keyBtn) return;
+        const active = streamFeedSettings.key === key;
+        keyBtn.classList.toggle('active', active);
+        keyBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      if (hint) {
+        hint.textContent = available
+          ? STREAM_FEED_OBS_HINTS[streamFeedSettings.key]
+          : 'The stream feed needs the desktop app.';
+      }
+    }
+
+    async function openStreamFeed() {
+      const select = document.getElementById('stream-feed-display');
+      const displayId = String(select?.value || streamFeedSettings.displayId || '');
+      const result = await window.BSPDesktop.openFeed({
+        displayId,
+        keyBackground: streamFeedSettings.key
+      }).catch(() => null);
+      if (!result || !result.ok) {
+        showToast('Could not open the stream feed');
+        return false;
+      }
+      streamFeedOpen = true;
+      syncStreamFeedUi();
+      sendSyncState();
+      queueStandaloneSyncBurst();
+      return true;
+    }
+
+    async function toggleStreamFeed() {
+      if (!hasDesktopOutputBridge() || typeof window.BSPDesktop.openFeed !== 'function') return;
+      if (streamFeedOpen) {
+        await window.BSPDesktop.closeFeed().catch(() => {});
+        streamFeedOpen = false;
+        syncStreamFeedUi();
+        showToast('Stream feed stopped');
+        return;
+      }
+      const select = document.getElementById('stream-feed-display');
+      const chosen = (Array.isArray(outputScreenList) ? outputScreenList : []).find(s => s.id === select?.value);
+      if (await openStreamFeed()) {
+        showToast(`Stream feed on ${chosen ? chosen.label : 'the selected screen'}`);
+      }
+    }
+
+    // Changing screen or key colour while the feed runs reopens it in place.
+    function handleStreamFeedDisplayChange() {
+      const select = document.getElementById('stream-feed-display');
+      streamFeedSettings.displayId = String(select?.value || '');
+      saveStreamFeedSettings();
+      if (streamFeedOpen) openStreamFeed();
+    }
+
+    function setStreamFeedKey(key) {
+      streamFeedSettings.key = key === 'green' ? 'green' : 'black';
+      saveStreamFeedSettings();
+      syncStreamFeedUi();
+      if (streamFeedOpen) openStreamFeed();
+    }
+
+    function initStreamFeedControls() {
+      loadStreamFeedSettings();
+      renderStreamFeedScreens();
+      syncStreamFeedUi();
+      if (hasDesktopOutputBridge() && typeof window.BSPDesktop.onFeedClosed === 'function') {
+        window.BSPDesktop.onFeedClosed(() => {
+          streamFeedOpen = false;
+          syncStreamFeedUi();
+        });
+        window.BSPDesktop.isFeedOpen().then((isOpen) => {
+          streamFeedOpen = !!isOpen;
+          syncStreamFeedUi();
+        }).catch(() => {});
+      }
     }
 
     const _PGM_STREAM_CONFIG_KEY = 'projection_stream_config_v1';
@@ -2388,6 +2537,7 @@
       initEmbeddedProgramDisplay();
       initProjectionStreamingExtras().catch(() => {});
       syncLyricsOutputTypeButtons();
+      initStreamFeedControls();
       refreshOutputScreenList().catch(() => {});
       refreshPgmOutputDevices().catch(() => {});
       if (hasDesktopOutputBridge() && typeof window.BSPDesktop.onOutputClosed === 'function') {

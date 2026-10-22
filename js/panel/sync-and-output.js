@@ -211,8 +211,8 @@
         lowerThirdOnly: true,
         nameRoleOverlay: {
           ...settings,
-          name: 'PS. Samson Arthur Paul',
-          role: 'Senior Pastor'
+          name: settings.name || 'PS. Samson Arthur Paul',
+          role: settings.name ? settings.role : 'Senior Pastor'
         }
       });
       showToast('Lower-third example sent to preview');
@@ -289,7 +289,65 @@
       handleSocialEngagementOverlayChange(true);
     }
 
+    // Lower-third design picker: one tab per family and one button per design,
+    // built from the <select>, which stays the source of truth. Picking a
+    // design also shows it on the Preview monitor.
+    let ltDesignPickerFamily = '';
+
+    function renderLtDesignPicker() {
+      const select = document.getElementById('name-role-overlay-design');
+      const host = document.getElementById('lt-design-picker');
+      if (!select || !host) return;
+      const groups = Array.from(select.querySelectorAll('optgroup'));
+      if (!groups.length) return;
+      const current = select.value;
+      const currentGroup = groups.find(g => Array.from(g.children).some(o => o.value === current)) || groups[0];
+      if (!groups.some(g => g.label === ltDesignPickerFamily)) ltDesignPickerFamily = currentGroup.label;
+
+      const families = document.createElement('div');
+      families.className = 'lt-design-families';
+      families.setAttribute('role', 'group');
+      families.setAttribute('aria-label', 'Design family');
+      groups.forEach((group) => {
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = 'lt-design-family';
+        tab.textContent = group.label;
+        tab.setAttribute('aria-pressed', group.label === ltDesignPickerFamily ? 'true' : 'false');
+        tab.onclick = () => {
+          ltDesignPickerFamily = group.label;
+          renderLtDesignPicker();
+        };
+        families.appendChild(tab);
+      });
+
+      const grid = document.createElement('div');
+      grid.className = 'lt-design-grid';
+      grid.setAttribute('role', 'group');
+      grid.setAttribute('aria-label', `${ltDesignPickerFamily} designs`);
+      const group = groups.find(g => g.label === ltDesignPickerFamily);
+      Array.from(group ? group.children : []).forEach((option) => {
+        const tile = document.createElement('button');
+        tile.type = 'button';
+        tile.className = 'lt-design-tile';
+        tile.textContent = option.textContent;
+        tile.setAttribute('aria-pressed', option.value === current ? 'true' : 'false');
+        tile.onclick = () => pickLtDesign(option.value);
+        grid.appendChild(tile);
+      });
+      host.replaceChildren(families, grid);
+    }
+
+    function pickLtDesign(value) {
+      const select = document.getElementById('name-role-overlay-design');
+      if (!select) return;
+      select.value = value;
+      handleNameRoleOverlayChange();
+      previewNameRoleLowerThirdExample();
+    }
+
     function handleNameRoleOverlayChange(visibilityChanged = false, positionEdit = false) {
+      renderLtDesignPicker();
       const nameInput = document.getElementById('name-role-overlay-name');
       const roleInput = document.getElementById('name-role-overlay-role');
       const enabledButton = document.getElementById('name-role-overlay-show-btn');
@@ -899,6 +957,7 @@
       schedulePersistAppState();
       setProgramMonitorOnAir(true);
       schedulePreviewMonitorRefresh();
+      if (sidebarTab === 'schedule') setTimeout(renderFocusedMainPanel, 0);
     }
 
     function postClear(opts = {}) {
@@ -928,6 +987,7 @@
       schedulePersistAppState();
       setProgramMonitorOnAir(false);
       schedulePreviewMonitorRefresh();
+      if (sidebarTab === 'schedule') setTimeout(renderFocusedMainPanel, 0);
     }
 
 

@@ -103,7 +103,7 @@
       if (gradBtn) gradBtn.classList.toggle('active', isOn && bgMode === 'gradient');
       if (offBtn) {
         offBtn.classList.toggle('active', !isOn);
-        offBtn.textContent = isOn ? 'OFF' : 'OFF ✓';
+        offBtn.textContent = 'Off';
       }
     }
 

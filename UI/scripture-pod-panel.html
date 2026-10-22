@@ -348,6 +348,7 @@
                     <option value="band-parchment">Parchment Band</option>
                   </optgroup>
                 </select>
+                <div id="lt-design-picker" class="lt-design-picker"></div>
               </section>
               <section class="name-role-overlay-extra-section">
                 <div class="name-role-overlay-subheading"><strong>Animation</strong></div>
@@ -531,25 +532,15 @@
           <button type="button" class="program-scale-btn" id="program-scale-fit">Fit</button>
           <span id="program-scale-size">Scaled (0x0)</span>
         </div>
-        <div class="program-display-controls">
-          <button class="btn ls-btn ls-btn-go-live" id="btn-output-go-live-panel" onclick="startOutputLive()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
-            <span>Go Live</span>
-          </button>
-          <button class="btn ls-btn ls-btn-go-live" id="btn-output-end-live" onclick="endOutputLive()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
-            <span>End Live</span>
-          </button>
-        </div>
-        <button class="btn ls-btn ls-btn-go-live program-output-launch" id="btn-open-standalone-output" onclick="toggleOutputPopover()" title="Choose an output screen">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/></svg>
-          <span>Output</span>
-        </button>
       </div>
       <section id="preview-monitor" class="sp-monitor" aria-label="Preview monitor">
         <div class="sp-monitor-head">
           <span class="sp-monitor-tag is-preview">Preview</span>
           <span class="sp-monitor-caption" id="preview-monitor-caption">Next</span>
+          <button type="button" class="btn" id="btn-clear-program-preview" onclick="clearProgramPreview()" title="Clear the preview without clearing live output">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
+            <span>Clear</span>
+          </button>
         </div>
         <div id="preview-display-shell" class="sp-monitor-shell">
           <iframe id="preview-display-frame" title="Preview monitor" tabindex="-1" allowtransparency="true"></iframe>
@@ -629,33 +620,83 @@
           </div>
         </div>
       </section>
-      <div class="program-display-footer">
-        <div class="program-display-output-status">
-          <span class="program-display-status-dot" id="program-display-status-dot"></span>
-          <span id="program-display-output-state">Display offline</span>
+      <section id="outputs-card" aria-labelledby="outputs-card-title">
+        <h2 id="outputs-card-title">Outputs</h2>
+        <div class="output-route" id="output-route-screen">
+          <div class="output-route-head">
+            <strong>Main screen</strong>
+            <span class="output-route-kind">Cable</span>
+          </div>
+          <p class="output-route-hint">Projector or TV plugged into this computer.</p>
+          <div class="output-route-actions">
+            <div class="program-display-controls">
+              <button class="btn ls-btn ls-btn-go-live" id="btn-output-go-live-panel" onclick="startOutputLive()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+                <span>Start</span>
+              </button>
+              <button class="btn ls-btn ls-btn-go-live" id="btn-output-end-live" onclick="endOutputLive()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg>
+                <span>Stop</span>
+              </button>
+            </div>
+            <button class="btn ls-btn ls-btn-go-live program-output-launch" id="btn-open-standalone-output" onclick="toggleOutputPopover()" title="Choose an output screen">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><line x1="8" y1="20" x2="16" y2="20"/><line x1="12" y1="16" x2="12" y2="20"/></svg>
+              <span>Choose screen</span>
+            </button>
+          </div>
         </div>
+        <div class="output-route" id="output-route-feed">
+          <div class="output-route-head">
+            <strong>Stream feed</strong>
+            <span class="output-route-kind">Cable · HDMI</span>
+            <span class="output-route-state" id="stream-feed-state">Off</span>
+          </div>
+          <p class="output-route-hint">Live output over HDMI into the streaming laptop's capture card, on a key colour OBS can remove.</p>
+          <div class="output-route-grid">
+            <label for="stream-feed-display">Screen</label>
+            <select id="stream-feed-display" onchange="handleStreamFeedDisplayChange()"></select>
+            <span id="stream-feed-key-label">Key colour</span>
+            <div class="segmented-picker" role="group" aria-labelledby="stream-feed-key-label">
+              <button type="button" class="seg-btn" id="stream-feed-key-black" aria-pressed="true" onclick="setStreamFeedKey('black')">Black</button>
+              <button type="button" class="seg-btn" id="stream-feed-key-green" aria-pressed="false" onclick="setStreamFeedKey('green')">Green</button>
+            </div>
+          </div>
+          <div class="output-route-actions">
+            <button type="button" class="btn" id="btn-stream-feed" aria-pressed="false" onclick="toggleStreamFeed()">Start feed</button>
+          </div>
+          <p class="output-route-hint" id="stream-feed-obs-hint">In OBS, add the capture card as a Video Capture Device, then a Luma Key filter.</p>
+        </div>
+        <div class="output-route" id="output-route-network">
+          <div class="output-route-head">
+            <strong>Wireless</strong>
+            <span class="output-route-kind">Same network</span>
+          </div>
+          <div class="program-display-output-status">
+            <span class="program-display-status-dot" id="program-display-status-dot"></span>
+            <span id="program-display-output-state">Display offline</span>
+          </div>
+          <p class="output-route-hint">Open the Display link in a browser on the other computer, or in OBS as a Browser Source. A Browser Source keeps transparency, so no keying is needed.</p>
+          <div class="program-display-link-row">
+            <label for="program-display-link">Display Link</label>
+            <input type="text" id="program-display-link" readonly placeholder="Launch display to load URL">
+            <button type="button" class="btn" id="copy-program-display-link" onclick="copyLocalDisplayUrl()" title="Copy display link" aria-label="Copy display link">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+            </button>
+          </div>
+          <div class="program-display-link-row">
+            <label for="monitor-display-link">Monitor Link</label>
+            <input type="text" id="monitor-display-link" readonly placeholder="Launch display to load URL">
+            <button type="button" class="btn" id="copy-monitor-display-link" onclick="copyLocalMonitorUrl()" title="Copy monitor link" aria-label="Copy monitor link">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+      <div class="program-display-footer">
         <div class="program-display-route-status">
           <span>Routing</span>
           <strong id="program-display-route-label">Live</strong>
         </div>
-        <button type="button" class="btn" id="btn-clear-program-preview" onclick="clearProgramPreview()" title="Clear the preview without clearing live output">
-          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
-          <span>Clear Preview</span>
-        </button>
-      </div>
-      <div class="program-display-link-row">
-        <label for="program-display-link">Display Link</label>
-        <input type="text" id="program-display-link" readonly placeholder="Launch display to load URL">
-        <button type="button" class="btn" id="copy-program-display-link" onclick="copyLocalDisplayUrl()" title="Copy display link" aria-label="Copy display link">
-          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
-        </button>
-      </div>
-      <div class="program-display-link-row">
-        <label for="monitor-display-link">Monitor Link</label>
-        <input type="text" id="monitor-display-link" readonly placeholder="Launch display to load URL">
-        <button type="button" class="btn" id="copy-monitor-display-link" onclick="copyLocalMonitorUrl()" title="Copy monitor link" aria-label="Copy monitor link">
-          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
-        </button>
       </div>
     </aside>
     </div>

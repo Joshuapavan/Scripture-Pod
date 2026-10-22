@@ -777,6 +777,7 @@
         const design = currentStyle ? `${currentStyle[1]}-${currentStyle[2]}` : `${previousStyle?.[1] || layoutOnly || 'classic'}-gms`;
         overlayDesignInput.value = Array.from(overlayDesignInput.options).some((option) => option.value === design) ? design : 'classic-gms';
         overlayAnimationInput.value = currentStyle?.[3] || previousStyle?.[2] || 'rise';
+        renderLtDesignPicker();
       }
       const overlayTheme = String(overlayDesignInput?.value || 'classic-gms').split('-')[1] || 'gms';
       const defaultPrimaryColors = {

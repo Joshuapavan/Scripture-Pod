@@ -2169,28 +2169,49 @@
       panel.setAttribute('aria-hidden', 'false');
       const activeScheduleIndex = (sidebarTab === 'schedule' && buttonContextTab === 'schedule') ? currentIndex : -1;
       const entries = Array.isArray(schedule) ? schedule : [];
+      const liveScheduleIndex = (isLive && livePointer && livePointer.source === 'schedule') ? livePointer.index : -1;
+      const icons = {
+        passage: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>',
+        song: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+        up: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',
+        down: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+        remove: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
+      };
       const itemsHtml = entries.length ? entries.map((entry, idx) => {
         const isActive = idx === activeScheduleIndex;
+        const isOnAir = idx === liveScheduleIndex;
+        const isUpNext = liveScheduleIndex >= 0 && idx === liveScheduleIndex + 1;
+        const isPassage = getIsBibleItem(entry);
         const previewSource = String(entry?.content || entry?.text || '').replace(/\[[^\]]+\]/g, ' ').replace(/\s+/g, ' ').trim();
         const preview = esc(previewSource || (entry?.title || 'Untitled'));
         const title = esc(entry?.title || `Item ${idx + 1}`);
+        const kind = isPassage ? 'Passage' : 'Song';
+        const tag = isOnAir
+          ? '<span class="setlist-tag is-live">Live</span>'
+          : (isUpNext ? '<span class="setlist-tag is-next">Up next</span>' : '');
         return `
-          <div class="focused-main-item${isActive ? ' active' : ''}" data-focused-schedule-index="${idx}">
-            <div class="focused-main-item-copy">
-              <div class="focused-main-item-title">${title}</div>
-              <div class="focused-main-item-preview">${preview}</div>
-            </div>
+          <div class="focused-main-item setlist-row${isActive ? ' active' : ''}${isOnAir ? ' is-live' : ''}${isUpNext ? ' is-next' : ''}" data-focused-schedule-index="${idx}">
+            <span class="setlist-number">${String(idx + 1).padStart(2, '0')}</span>
+            <span class="setlist-kind" title="${kind}">${isPassage ? icons.passage : icons.song}</span>
+            <button type="button" class="focused-main-item-copy setlist-open" data-focused-action="select" data-focused-schedule-index="${idx}">
+              <span class="focused-main-item-title">${title}</span>
+              <span class="focused-main-item-preview"><span class="setlist-kind-label">${kind}</span> · ${preview}</span>
+            </button>
+            ${tag}
             <div class="focused-main-item-actions">
-              <button type="button" class="btn focused-main-mini-btn" data-focused-action="live" data-focused-schedule-index="${idx}">Live</button>
+              <button type="button" class="btn setlist-icon-btn" data-focused-action="up" data-focused-schedule-index="${idx}" aria-label="Move ${title} up"${idx === 0 ? ' disabled' : ''}>${icons.up}</button>
+              <button type="button" class="btn setlist-icon-btn" data-focused-action="down" data-focused-schedule-index="${idx}" aria-label="Move ${title} down"${idx === entries.length - 1 ? ' disabled' : ''}>${icons.down}</button>
+              <button type="button" class="btn setlist-icon-btn" data-focused-action="remove" data-focused-schedule-index="${idx}" aria-label="Remove ${title} from setlist">${icons.remove}</button>
+              <button type="button" class="btn focused-main-mini-btn setlist-live-btn" data-focused-action="live" data-focused-schedule-index="${idx}">Go live</button>
             </div>
           </div>
         `;
-      }).join('') : `<div class="focused-main-empty">Setlist is empty. Add songs or Bible verses from the sidebar and they will appear here.</div>`;
+      }).join('') : `<div class="focused-main-empty">The setlist is empty. Add verses or songs with their + buttons, or right-click a chapter or song and choose Add to setlist.</div>`;
 
       panel.innerHTML = `
         <div class="focused-main-shell">
           <div class="focused-main-header">
-            <div class="focused-main-title">Setlist Workspace</div>
+            <div class="focused-main-title">Setlist</div>
             <div class="focused-main-subtitle">${entries.length} item${entries.length === 1 ? '' : 's'}</div>
           </div>
           <div class="focused-main-list">${itemsHtml}</div>
