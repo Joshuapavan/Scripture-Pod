@@ -22,7 +22,7 @@
       <h2 id="first-run-setup-title">Get ready for your first service</h2>
       <p>Import your Bible or song library, then choose the display for your congregation.</p>
       <div class="first-run-setup-actions">
-        <button class="btn" type="button" onclick="triggerImport()">Import Bible or songs</button>
+        <button class="btn" type="button" onclick="triggerImport()">Import Bible or songs</button>`
         <button class="btn first-run-setup-secondary" type="button" onclick="triggerBackupImport()" data-i18n="settings_backup_import">Import Backup</button>
         <button class="btn first-run-setup-secondary" type="button" onclick="importBundledBibles()">Import bundled Bibles &amp; ACI logo</button>
         <button class="btn first-run-setup-secondary" type="button" onclick="openFirstRunOutputPicker()">Choose an output display</button>
@@ -398,6 +398,18 @@
               <option value="classic-editorial">Editorial</option>
               <option value="classic-neon">Neon Edge</option>
               <option value="classic-ribbon">Ribbon</option>
+              <option value="classic-aurora">Aurora</option>
+              <option value="classic-sunrise">Sunrise</option>
+              <option value="classic-royal">Royal Gold</option>
+              <option value="classic-minimal">Minimal</option>
+              <option value="classic-pill">Pill</option>
+              <option value="classic-holo">Holo Edge</option>
+              <option value="classic-frost">Frost</option>
+              <option value="classic-cinema">Cinema</option>
+              <option value="classic-sharp">Sharp Block</option>
+              <option value="classic-emerald">Emerald</option>
+              <option value="classic-pulse">Pulse Bar</option>
+              <option value="classic-parchment">Parchment</option>
             </optgroup>
             <optgroup label="Centered Banner">
               <option value="centered-gms">Centered Lime</option>
@@ -412,6 +424,18 @@
               <option value="centered-editorial">Centered Editorial</option>
               <option value="centered-neon">Centered Neon</option>
               <option value="centered-ribbon">Centered Ribbon</option>
+              <option value="centered-aurora">Centered Aurora</option>
+              <option value="centered-sunrise">Centered Sunrise</option>
+              <option value="centered-royal">Centered Royal Gold</option>
+              <option value="centered-minimal">Centered Minimal</option>
+              <option value="centered-pill">Centered Pill</option>
+              <option value="centered-holo">Centered Holo Edge</option>
+              <option value="centered-frost">Centered Frost</option>
+              <option value="centered-cinema">Centered Cinema</option>
+              <option value="centered-sharp">Centered Sharp Block</option>
+              <option value="centered-emerald">Centered Emerald</option>
+              <option value="centered-pulse">Centered Pulse Bar</option>
+              <option value="centered-parchment">Centered Parchment</option>
             </optgroup>
             <optgroup label="Wide Band">
               <option value="band-gms">Lime Band</option>
@@ -426,6 +450,18 @@
               <option value="band-editorial">Editorial Band</option>
               <option value="band-neon">Neon Band</option>
               <option value="band-ribbon">Ribbon Band</option>
+              <option value="band-aurora">Aurora Band</option>
+              <option value="band-sunrise">Sunrise Band</option>
+              <option value="band-royal">Royal Gold Band</option>
+              <option value="band-minimal">Minimal Band</option>
+              <option value="band-pill">Pill Band</option>
+              <option value="band-holo">Holo Edge Band</option>
+              <option value="band-frost">Frost Band</option>
+              <option value="band-cinema">Cinema Band</option>
+              <option value="band-sharp">Sharp Block Band</option>
+              <option value="band-emerald">Emerald Band</option>
+              <option value="band-pulse">Pulse Bar Band</option>
+              <option value="band-parchment">Parchment Band</option>
             </optgroup>
           </select>
         </section>
@@ -449,6 +485,16 @@
             <option value="curtain">Curtain</option>
             <option value="pop">Pop</option>
             <option value="expand">Expand</option>
+            <option value="bounce">Bounce</option>
+            <option value="elastic">Elastic</option>
+            <option value="iris">Iris</option>
+            <option value="slice">Slice</option>
+            <option value="swing">Swing</option>
+            <option value="turn">Turn</option>
+            <option value="cascade">Cascade</option>
+            <option value="typewriter">Typewriter</option>
+            <option value="glitch">Glitch</option>
+            <option value="flicker">Flicker</option>
           </select>
         </section>
         </div>
@@ -3105,6 +3151,7 @@
   <input type="file" id="import-file" hidden multiple onchange="handleImport(this)">
   <input type="file" id="import-style-file" hidden accept=".fstemplate,.json,application/json" onchange="handleStyleImport(this)">
   <script src="../node_modules/qrcode-generator/dist/qrcode.js"></script>
+  <script src="../js/shared/lower-third-extra.js"></script>
   <script src="../js/panel/state-and-storage.js"></script>
   <script src="../js/panel/panel-app-core.js"></script>
   <script src="../js/panel/reference-localization-theme.js"></script>

@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Scripture Pod - Display</title>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Noto fonts: improve Arabic and CJK coverage -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
@@ -69,6 +68,8 @@
     <div id="debug-logs"></div>
   </div>
 
+  <script src="../js/shared/lower-third-extra.js"></script>
+  <script>if (window.SP_LT_EXTRA) window.SP_LT_EXTRA.inject(document);</script>
   <script>
     'use strict';
 
@@ -1250,15 +1251,15 @@
       const role = String(data?.role || '').trim();
       const rawStyle = String(data?.style || 'classic-rise');
       const normalizedStyle = ['classic', 'centered', 'band'].includes(rawStyle) ? `${rawStyle}-rise` : rawStyle;
-      const previousStyle = normalizedStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand)$/);
+      const previousStyle = normalizedStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
       const currentStyle = previousStyle ? `${previousStyle[1]}-gms-${previousStyle[2]}` : normalizedStyle;
-      const styleMatch = currentStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand)$/);
+      const styleMatch = currentStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
       const layout = styleMatch ? styleMatch[1] : 'classic';
       const theme = styleMatch ? styleMatch[2] : 'gms';
       const animation = styleMatch ? styleMatch[3] : 'rise';
       const style = `${layout}-${theme}-${animation}`;
       const accentColor = /^#[0-9a-f]{6}$/i.test(data?.accentColor || '') ? data.accentColor : '#90D5FF';
-      const primaryDefaults = { legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF', modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF', glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF' };
+      const primaryDefaults = { legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF', modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF', glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF', aurora: '#90D5FF', sunrise: '#90D5FF', royal: '#90D5FF', minimal: '#90D5FF', pill: '#90D5FF', holo: '#90D5FF', frost: '#90D5FF', cinema: '#90D5FF', sharp: '#90D5FF', emerald: '#90D5FF', pulse: '#90D5FF', parchment: '#90D5FF' };
       const primaryColor = /^#[0-9a-f]{6}$/i.test(data?.primaryColor || '') ? data.primaryColor : (primaryDefaults[theme] || '#90D5FF');
       const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
       const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
@@ -1284,7 +1285,7 @@
         else logoEl.removeAttribute('src');
         logoEl.hidden = !logo;
       }
-      overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand');
+      overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
       overlay.classList.add(`style-${layout}`, `theme-${theme}`, `motion-${animation}`);
       overlay.classList.toggle('logo-black', logoColor === 'black');
       overlay.classList.toggle('is-light-background', lightBackground);

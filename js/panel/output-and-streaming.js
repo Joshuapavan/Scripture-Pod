@@ -496,6 +496,7 @@
     .dual-primary-block { margin-bottom: 20px; }
     .dual-secondary-wrapper { margin-top: 12px; opacity: 0.96; }
     #hud { position: fixed; right: 10px; top: 10px; z-index: 9; font-size: 11px; color: rgba(255,255,255,0.65); background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.15); border-radius: 7px; padding: 4px 8px; }
+    ${(typeof window !== 'undefined' && window.SP_LT_EXTRA && window.SP_LT_EXTRA.css) || ''}
   </style>
 </head>
 <body>
@@ -1140,15 +1141,15 @@
         const name = String(data && data.name || '').trim();
         const role = String(data && data.role || '').trim();
         const rawStyle = String(data && data.style || 'classic-rise');
-        const legacyStyle = rawStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand)$/);
+        const legacyStyle = rawStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const normalizedStyle = legacyStyle ? legacyStyle[1] + '-gms-' + legacyStyle[2] : rawStyle;
-        const styleMatch = normalizedStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand)$/);
+        const styleMatch = normalizedStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const layout = styleMatch ? styleMatch[1] : 'classic';
         const theme = styleMatch ? styleMatch[2] : 'gms';
         const animation = styleMatch ? styleMatch[3] : 'rise';
         const style = layout + '-' + theme + '-' + animation;
         const accentColor = /^#[0-9a-f]{6}$/i.test(data && data.accentColor || '') ? data.accentColor : '#90D5FF';
-        const primaryDefaults = { legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF', modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF', glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF' };
+        const primaryDefaults = { legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF', modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF', glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF', aurora: '#90D5FF', sunrise: '#90D5FF', royal: '#90D5FF', minimal: '#90D5FF', pill: '#90D5FF', holo: '#90D5FF', frost: '#90D5FF', cinema: '#90D5FF', sharp: '#90D5FF', emerald: '#90D5FF', pulse: '#90D5FF', parchment: '#90D5FF' };
         const primaryColor = /^#[0-9a-f]{6}$/i.test(data && data.primaryColor || '') ? data.primaryColor : (primaryDefaults[theme] || '#90D5FF');
         const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
         const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
@@ -1174,7 +1175,7 @@
           else logoEl.removeAttribute('src');
           logoEl.hidden = !logo;
         }
-        overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand');
+        overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
         overlay.classList.add('style-' + layout, 'theme-' + theme, 'motion-' + animation);
         overlay.classList.toggle('logo-black', logoColor === 'black');
         overlay.classList.toggle('is-light-background', lightBackground);

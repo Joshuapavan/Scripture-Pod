@@ -771,8 +771,8 @@
       }
       if (overlayDesignInput && overlayAnimationInput) {
         const savedOverlayStyle = String(ui.nameRoleOverlayStyle || 'classic-gms-rise');
-        const currentStyle = savedOverlayStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand)$/);
-        const previousStyle = savedOverlayStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand)$/);
+        const currentStyle = savedOverlayStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const previousStyle = savedOverlayStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const layoutOnly = ['classic', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : '';
         const design = currentStyle ? `${currentStyle[1]}-${currentStyle[2]}` : `${previousStyle?.[1] || layoutOnly || 'classic'}-gms`;
         overlayDesignInput.value = Array.from(overlayDesignInput.options).some((option) => option.value === design) ? design : 'classic-gms';
@@ -782,7 +782,8 @@
       const defaultPrimaryColors = {
         legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF',
         modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF',
-        glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF'
+        glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF',
+        aurora: '#90D5FF', sunrise: '#90D5FF', royal: '#90D5FF', minimal: '#90D5FF', pill: '#90D5FF', holo: '#90D5FF', frost: '#90D5FF', cinema: '#90D5FF', sharp: '#90D5FF', emerald: '#90D5FF', pulse: '#90D5FF', parchment: '#90D5FF'
       };
       if (overlayPrimaryInput) {
         const savedPrimary = ui.nameRoleOverlayPrimaryColor;
