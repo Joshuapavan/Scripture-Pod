@@ -20,9 +20,9 @@ test('extra lower-third CSS is safe to inline in a template literal', () => {
   assert.ok(!extra.css.includes('${'));
 });
 
-test('every extra design is selectable in all three layouts and styled', () => {
+test('every extra design is selectable in all four layouts and styled', () => {
   for (const theme of extra.themes) {
-    for (const layout of ['classic', 'centered', 'band']) {
+    for (const layout of ['classic', 'right', 'centered', 'band']) {
       assert.ok(panelHtml.includes(`value="${layout}-${theme}"`), `panel option ${layout}-${theme}`);
     }
     assert.ok(extra.css.includes(`.theme-${theme}`), `css for ${theme}`);

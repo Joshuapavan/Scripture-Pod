@@ -662,6 +662,7 @@
       const qRaw = document.getElementById('song-search').value || "";
       const q = normalizeSearchText(qRaw);
       list.replaceChildren();
+      list.classList.remove('chapter-grid-mode');
       if (sidebarTab === 'bible' && qRaw.trim().length >= 2) {
         renderBibleSearchResults(qRaw);
         return;
@@ -687,9 +688,50 @@
         }
       }
       const frag = document.createDocumentFragment();
+      // Bible chapters render as a number grid per book; add-to-setlist stays
+      // on the right-click menu.
+      const chapterGrid = sidebarTab === 'bible' && buttonContextTab === 'bible';
+      list.classList.toggle('chapter-grid-mode', chapterGrid);
+      let gridBook = null;
+      let grid = null;
+      const openSidebarContextMenu = (e, s, itemIndex, i) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof window._openSidebarContextMenu !== 'function') return;
+        window._openSidebarContextMenu(sidebarTab, s, itemIndex, i, e.clientX, e.clientY);
+      };
       displayList.forEach((s, i) => {
         if (q && !getItemSearchableText(s).includes(q)) return;
         const itemIndex = (sidebarTab === 'bible' && displayIndices) ? displayIndices[i] : i;
+        const { book, chap } = chapterGrid ? extractBookAndChapter(s) : {};
+        if (chapterGrid && chap) {
+          if (!grid || book !== gridBook) {
+            gridBook = book;
+            const heading = document.createElement('div');
+            heading.className = 'chapter-grid-book';
+            heading.textContent = book;
+            grid = document.createElement('div');
+            grid.className = 'chapter-grid';
+            grid.setAttribute('role', 'group');
+            grid.setAttribute('aria-label', `${book} chapters`);
+            frag.appendChild(heading);
+            frag.appendChild(grid);
+          }
+          const cell = document.createElement('button');
+          cell.type = 'button';
+          cell.className = 'song-item chapter-cell' + (currentItem === s ? ' active' : '');
+          cell.dataset.index = String(itemIndex);
+          cell.textContent = chap;
+          cell.title = s.title;
+          cell.setAttribute('aria-label', s.title);
+          cell.onclick = () => {
+            buttonContextTab = sidebarTab;
+            selectItem(itemIndex);
+          };
+          cell.addEventListener('contextmenu', (e) => openSidebarContextMenu(e, s, itemIndex, i));
+          grid.appendChild(cell);
+          return;
+        }
         const div = document.createElement('div');
         div.className = 'song-item' + (currentItem === s ? ' active' : '');
         div.dataset.index = String(itemIndex);
@@ -753,12 +795,7 @@
           };
         }
         /* ── Right-click context menu ── */
-        div.addEventListener('contextmenu', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          if (typeof window._openSidebarContextMenu !== 'function') return;
-          window._openSidebarContextMenu(sidebarTab, s, itemIndex, i, e.clientX, e.clientY);
-        });
+        div.addEventListener('contextmenu', (e) => openSidebarContextMenu(e, s, itemIndex, i));
         frag.appendChild(div);
       });
       list.appendChild(frag);
@@ -2104,6 +2141,7 @@
       maybeTranslateCurrentSongOnOpen();
       if (!preserveButtonScroll && !skipButtonView) scrollButtonsToTop();
       saveToStorageDebounced();
+      schedulePreviewMonitorRefresh();
     }
 
     function focusActiveSongInSidebar() {

@@ -1,0 +1,694 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Scripture Pod — "console" redesign layer (control panel only)
+   Loaded after scripture-pod-modern.css. Remove its <link> to revert.
+
+   Graphite ground, one red for what is on air (LIVE / PROGRAM) and one blue for
+   what is cued (PREVIEW). Every tally state also carries a text label, so the
+   two never rely on hue alone. Light theme modes keep the modern layer's tokens.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --sp-live: #E5372A;
+  --sp-live-ink: #FFFFFF;
+  --sp-live-wash: #24110F;
+  --sp-cue: #3B9EFF;
+  --sp-cue-ink: #04121F;
+  --sp-cue-wash: #0D1926;
+  --sp-ok: #3DD68C;
+  --sp-serif: "Source Serif 4", "Iowan Old Style", "Charter", Georgia, "Noto Serif Kannada", "Noto Serif Tamil", serif;
+  --sp-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+:root:not([data-theme-mode="light"]) {
+  --sp-chrome: #090A0C;
+  --sp-ground: #0C0D0F;
+  --sp-panel: #101215;
+  --sp-card: #131518;
+  --sp-raised: #181B1F;
+  --sp-inset: #0F1113;
+  --sp-line: #1F2327;
+  --sp-line-2: #2A2E34;
+  --sp-line-3: #33383E;
+  --sp-text: #EDEEF0;
+  --sp-muted: #A3A9B0;
+  --sp-subtle: #8B9299;
+
+  /* Re-point the modern layer's shadcn tokens at the console palette */
+  --background: 220 11% 5%;
+  --card: 216 10% 8%;
+  --popover: 216 11% 9%;
+  --muted: 214 13% 11%;
+  --secondary: 214 13% 13%;
+  --accent: 214 12% 14%;
+  --border: 210 11% 14%;
+  --input: 213 11% 20%;
+  --muted-foreground: 213 7% 66%;
+  --destructive: 4 78% 53%;
+  --ring: 211 100% 62%;
+}
+
+[data-theme-mode="light"] {
+  --sp-chrome: #F4F5F7;
+  --sp-ground: #FFFFFF;
+  --sp-panel: #F7F8FA;
+  --sp-card: #FFFFFF;
+  --sp-raised: #F1F2F4;
+  --sp-inset: #F4F5F7;
+  --sp-line: #E3E5E8;
+  --sp-line-2: #D5D8DC;
+  --sp-line-3: #C6CAD0;
+  --sp-text: #111316;
+  --sp-muted: #4E555D;
+  --sp-subtle: #5F666E;
+  --sp-live-wash: #FDECEA;
+  --sp-cue-wash: #E8F2FF;
+}
+
+/* ── Top bar: brand · workspaces · status ─────────────────────────────────── */
+#app-topbar {
+  height: auto !important;
+  min-height: 56px;
+  display: flex !important;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  padding: 8px 16px !important;
+  background: var(--sp-chrome) !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom: 1px solid var(--sp-line) !important;
+}
+#app-topbar::after { content: none !important; display: none !important; }
+#app-topbar-title { color: var(--sp-text) !important; font-size: 15px !important; font-weight: 600 !important; letter-spacing: -0.01em !important; text-transform: none !important; }
+#app-topbar-logo { width: 32px !important; height: 32px !important; border-radius: 8px !important; }
+
+#app-topbar .sidebar-tabs {
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin: 0 !important;
+  padding: 3px !important;
+  background: var(--sp-panel) !important;
+  border: 1px solid var(--sp-line) !important;
+  border-radius: 10px !important;
+}
+#app-topbar .sidebar-tabs .tab {
+  height: 36px;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--sp-muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+#app-topbar .sidebar-tabs .tab:hover { color: var(--sp-text); }
+#app-topbar .sidebar-tabs .tab.active {
+  background: var(--sp-line-2) !important;
+  color: var(--sp-text) !important;
+}
+#app-topbar .sidebar-tabs .tab.active::after,
+#app-topbar .sidebar-tabs .tab::before { display: none !important; }
+/* Below 768px the panel shows its own bottom tab bar (#page-nav-bar) */
+@media (max-width: 767px) {
+  #app-topbar .sidebar-tabs { display: none !important; }
+}
+
+#app-topbar #status-bar {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  margin-left: auto;
+  padding: 0 14px !important;
+  border: 1px solid var(--sp-line) !important;
+  border-radius: 999px !important;
+  background: var(--sp-panel) !important;
+  color: var(--sp-muted) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  box-shadow: none !important;
+  position: static !important;
+}
+#app-topbar #status-dot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 999px !important;
+  background: #5C636B !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+#app-topbar #status-bar.connected { color: var(--sp-text) !important; }
+#app-topbar #status-bar.connected #status-dot { background: var(--sp-ok) !important; }
+
+/* ── Library (sidebar) ────────────────────────────────────────────────────── */
+#sidebar { background: var(--sp-panel) !important; border-right: 1px solid var(--sp-line) !important; }
+#sidebar .search-container { padding: 16px 16px 8px !important; }
+#sidebar #song-search {
+  height: 44px !important;
+  border-radius: 10px !important;
+  background: var(--sp-raised) !important;
+  border: 1px solid var(--sp-line-2) !important;
+  color: var(--sp-text) !important;
+  font-size: 14px !important;
+}
+#bible-nav { padding: 0 16px 8px !important; gap: 8px !important; }
+#bible-nav .nav-input {
+  height: 40px !important;
+  border-radius: 10px !important;
+  background: var(--sp-raised) !important;
+  border: 1px solid var(--sp-line-2) !important;
+  color: var(--sp-text) !important;
+}
+
+#version-bar { padding: 4px 16px 10px !important; }
+#version-bar .version-row { gap: 6px !important; }
+#version-bar .version-wrapper {
+  border-radius: 999px !important;
+  background: var(--sp-raised) !important;
+  border: 1px solid var(--sp-line-2) !important;
+  border-left-width: 1px !important;
+}
+#version-bar .version-wrapper.active {
+  background: var(--sp-text) !important;
+  border-color: var(--sp-text) !important;
+}
+#version-bar .version-wrapper .version-btn { color: var(--sp-muted) !important; font-weight: 500 !important; }
+#version-bar .version-wrapper.active .version-btn { color: var(--sp-ground) !important; }
+
+#song-list .song-item {
+  min-height: 40px;
+  margin: 1px 8px !important;
+  padding: 0 10px 0 12px !important;
+  border-radius: 8px !important;
+  border: 1px solid transparent !important;
+  color: var(--sp-muted) !important;
+  font-size: 14px !important;
+}
+#song-list .song-item:hover { background: var(--sp-raised) !important; color: var(--sp-text) !important; }
+#song-list .song-item.active {
+  background: var(--sp-raised) !important;
+  border-color: var(--sp-line-3) !important;
+  color: var(--sp-text) !important;
+  font-weight: 500;
+}
+
+#sidebar-quick-actions-btn {
+  background: var(--sp-raised) !important;
+  border: 1px solid var(--sp-line-2) !important;
+  color: var(--sp-muted) !important;
+}
+
+/* ── Workspace header and toolbar ─────────────────────────────────────────── */
+#main .header-toolbar {
+  background: var(--sp-ground) !important;
+  border-bottom: 1px solid var(--sp-line) !important;
+}
+#main .header-toolbar .toolbar-icon-btn,
+#main .header-toolbar .t-btn {
+  border-radius: 10px !important;
+}
+#focused-editor-banner {
+  flex-wrap: wrap;
+  row-gap: 2px !important;
+  background: var(--sp-ground) !important;
+  border-bottom: 1px solid var(--sp-line) !important;
+}
+#focused-editor-banner-title {
+  white-space: nowrap;
+  font-family: var(--sp-serif) !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  color: var(--sp-text) !important;
+  text-transform: none !important;
+}
+#focused-editor-banner-main { flex: 0 0 auto !important; max-width: 100%; }
+#focused-editor-banner-subtitle { min-width: 0; font-family: var(--sp-mono) !important; font-size: 12px !important; color: var(--sp-muted) !important; }
+
+/* ── Verse and slide cards ────────────────────────────────────────────────── */
+#lyric-buttons .section-label {
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--sp-subtle) !important;
+}
+#lyric-buttons .lyric-row { gap: 8px !important; margin-bottom: 8px !important; }
+#lyric-buttons .lyric-btn {
+  position: relative;
+  padding: 14px 16px !important;
+  border-radius: 12px !important;
+  background: var(--sp-card) !important;
+  border: 1px solid var(--sp-line) !important;
+  box-shadow: none !important;
+  color: var(--sp-text) !important;
+  font-family: var(--sp-serif) !important;
+  font-size: 17px !important;
+  line-height: 1.55 !important;
+  text-align: left !important;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+#lyric-buttons .lyric-btn:hover { border-color: var(--sp-line-3) !important; }
+
+/* Cued: the operator's cursor (Preview) */
+#lyric-buttons .lyric-btn.active {
+  background: var(--sp-cue-wash) !important;
+  border-color: var(--sp-cue) !important;
+  box-shadow: 0 0 0 1px var(--sp-cue) !important;
+}
+/* On air: wins over cued when it is the same card */
+#lyric-buttons .lyric-btn:has(.live-indicator) {
+  background: var(--sp-live-wash) !important;
+  border-color: var(--sp-live) !important;
+  box-shadow: 0 0 0 1px var(--sp-live) !important;
+  padding-right: 84px !important;
+}
+
+#lyric-buttons .lyric-btn .jo-verse-sup {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 22px;
+  margin-right: 10px !important;
+  padding: 0 6px !important;
+  border-radius: 6px !important;
+  vertical-align: 2px;
+  background: var(--sp-line-2) !important;
+  color: var(--sp-muted) !important;
+  font-family: var(--sp-mono) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  line-height: 1 !important;
+  top: 0 !important;
+}
+#lyric-buttons .lyric-btn.active .jo-verse-sup { background: var(--sp-cue) !important; color: var(--sp-cue-ink) !important; }
+#lyric-buttons .lyric-btn:has(.live-indicator) .jo-verse-sup { background: var(--sp-live) !important; color: var(--sp-live-ink) !important; }
+
+#lyric-buttons .live-indicator {
+  position: absolute !important;
+  top: 14px !important;
+  right: 14px !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px !important;
+  border-radius: 999px !important;
+  background: var(--sp-live) !important;
+  color: var(--sp-live-ink) !important;
+  font-family: inherit;
+  font-family: var(--ui-font, system-ui, sans-serif) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  line-height: 1 !important;
+  animation: none !important;
+}
+#lyric-buttons .live-indicator::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+#lyric-buttons .quick-add {
+  width: 40px !important;
+  min-width: 40px !important;
+  border-radius: 10px !important;
+  background: var(--sp-card) !important;
+  border: 1px solid var(--sp-line) !important;
+  color: var(--sp-muted) !important;
+}
+#lyric-buttons .quick-add:hover { color: var(--sp-text) !important; border-color: var(--sp-line-3) !important; }
+
+/* ── Transport bar ────────────────────────────────────────────────────────── */
+#main .live-controls {
+  background: var(--sp-inset) !important;
+  border-top: 1px solid var(--sp-line) !important;
+}
+#main .live-controls .nav-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  grid-template-columns: none !important;
+  gap: 8px !important;
+  align-items: center !important;
+}
+/* Clear · prev · next · jump field · preview-only + Go live at the far end */
+#main .live-controls .nav-row > #panel-inline-style-32 { order: 1; }
+#main .live-controls .nav-row > #btn-prev { order: 2; }
+#main .live-controls .nav-row > #btn-next { order: 3; }
+#main .live-controls .nav-row > #nav-mirror-search-wrap { order: 4; flex: 1 1 160px !important; min-width: 120px !important; width: auto !important; }
+#main .live-controls .nav-row > .nav-live-actions { order: 5; margin-left: auto !important; display: flex !important; flex-direction: row !important; align-items: center; gap: 8px !important; }
+#main .live-controls .nav-row > .btn,
+#main .live-controls .nav-live-actions > .btn {
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  background: var(--sp-raised) !important;
+  border: 1px solid var(--sp-line-2) !important;
+  color: var(--sp-text) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+#main .live-controls #btn-prev,
+#main .live-controls #btn-next {
+  flex: 0 0 44px !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  padding: 0 !important;
+  font-size: 18px !important;
+}
+#main .live-controls #btn-preview[aria-pressed="true"] {
+  background: var(--sp-cue-wash) !important;
+  border-color: var(--sp-cue) !important;
+  color: var(--sp-cue) !important;
+}
+#main .live-controls #btn-project-live,
+#main .live-controls .nav-live-actions > #btn-project-live {
+  min-width: 132px;
+  height: 48px !important;
+  padding: 0 22px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: var(--sp-live) !important;
+  color: var(--sp-live-ink) !important;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow: none !important;
+}
+#main .live-controls #btn-project-live:hover { filter: brightness(1.08); }
+#nav-mirror-search {
+  height: 44px !important;
+  border-radius: 10px !important;
+  background: var(--sp-raised) !important;
+  border: 1px solid var(--sp-line-2) !important;
+  color: var(--sp-text) !important;
+}
+
+.segmented-picker {
+  background: var(--sp-inset) !important;
+  border: 1px solid var(--sp-line) !important;
+  border-radius: 9px !important;
+  box-shadow: none !important;
+}
+.segmented-picker .seg-btn {
+  border-radius: 6px !important;
+  color: var(--sp-muted) !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+.segmented-picker .seg-btn.active {
+  background: var(--sp-text) !important;
+  color: var(--sp-ground) !important;
+}
+
+/* ── Monitors column: Preview · Program · Look ──────────────────────────── */
+#program-display-panel {
+  overflow-y: auto !important;
+  background: var(--sp-ground) !important;
+  border-left: 1px solid var(--sp-line) !important;
+}
+/* Each monitor carries its own tally tag, so the old column title goes */
+#program-display-panel .program-display-header { display: none !important; }
+
+.sp-monitor-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 8px;
+  flex: 0 0 auto;
+}
+.sp-monitor-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: var(--sp-line-2);
+  color: var(--sp-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.sp-monitor-tag.is-preview { background: var(--sp-cue); color: var(--sp-cue-ink); }
+body.sp-program-on-air .sp-monitor-tag.is-program { background: var(--sp-live); color: var(--sp-live-ink); }
+body.sp-program-on-air .sp-monitor-tag.is-program::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+.sp-monitor-caption {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sp-muted);
+  font-size: 12px;
+}
+
+#preview-monitor { flex: 0 0 auto; padding: 0 12px 4px; }
+#preview-monitor .sp-monitor-head { padding: 12px 0 8px; }
+#preview-display-shell {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #000;
+  box-shadow: 0 0 0 1px var(--sp-cue);
+}
+#preview-display-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 0;
+  transform-origin: top left;
+  pointer-events: none;
+  background: transparent;
+}
+
+/* Program keeps its 16:9 height; the cards below it scroll instead */
+#program-display-stage { flex: 0 0 auto !important; padding-top: 0 !important; background: transparent !important; }
+#program-display-shell {
+  border-radius: 8px !important;
+  box-shadow: 0 0 0 2px var(--sp-line-2) !important;
+}
+body.sp-program-on-air #program-display-shell { box-shadow: 0 0 0 2px var(--sp-live) !important; }
+
+#btn-go-live,
+#program-display-panel .go-live-btn {
+  border-radius: 10px !important;
+}
+
+/* Look card: Lines · Mode · Background · Type, as label/control rows */
+#look-card {
+  flex: 0 0 auto;
+  margin: 12px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--sp-card);
+  border: 1px solid var(--sp-line);
+}
+#look-card > h2 {
+  margin: 0 0 12px;
+  color: var(--sp-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+#look-card .main-panel-stacks {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
+#look-card .main-panel-stacks > div {
+  display: grid !important;
+  grid-template-columns: 72px minmax(0, 1fr) !important;
+  align-items: center !important;
+  gap: 6px 10px !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+#look-card .main-panel-stacks > div > span:first-child {
+  grid-column: 1;
+  align-self: center;
+  color: var(--sp-muted) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  text-align: left !important;
+}
+#look-card .main-panel-stacks > div > :not(span:first-child) { grid-column: 2; min-width: 0; }
+#look-card #bg-toggle { display: none !important; }
+#look-card .segmented-picker {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 2px !important;
+  width: 100% !important;
+  padding: 3px !important;
+}
+#look-card .segmented-picker .seg-btn {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 30px !important;
+  padding: 4px !important;
+  font-size: 12px !important;
+  line-height: 1.15 !important;
+  white-space: normal !important;
+  text-transform: none !important;
+}
+#look-card #line-picker .seg-btn { font-family: var(--sp-mono) !important; }
+#look-card #ratio-custom { display: none !important; }
+#look-card .bg-color-wrap { display: flex !important; flex: 0 0 auto !important; align-items: center; margin-left: 4px !important; }
+#look-card .bg-color-wrap input[type="color"] { width: 28px !important; height: 28px !important; border-radius: 6px !important; }
+#look-card #footer-bible-version-btn,
+#look-card #main-get-lyrics-btn {
+  width: auto !important;
+  justify-self: start;
+  height: 32px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  background: var(--sp-raised) !important;
+  border: 1px solid var(--sp-line-2) !important;
+  color: var(--sp-text) !important;
+  font-size: 12px !important;
+}
+#look-card #lyrics-output-types {
+  margin-top: 12px !important;
+  padding: 12px 0 0 !important;
+  border-top: 1px solid var(--sp-line) !important;
+  background: none !important;
+}
+
+#program-display-panel .program-display-footer,
+#program-display-panel .program-display-link-row {
+  border-top: 1px solid var(--sp-line) !important;
+  background: transparent !important;
+}
+
+/* ── Overlays workspace ───────────────────────────────────────────────────── */
+#overlays-workspace { display: none; }
+body.overlays-workspace-active #overlays-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 24px 24px;
+  background: var(--sp-ground);
+}
+body.overlays-workspace-active #editor-container,
+body.overlays-workspace-active #focused-main-panel,
+body.overlays-workspace-active #focused-editor-banner,
+body.overlays-workspace-active #main .header-toolbar,
+body.overlays-workspace-active #main .live-controls,
+body.overlays-workspace-active #workspace-height-handle { display: none !important; }
+
+.overlays-workspace-head { display: flex; flex-direction: column; gap: 2px; }
+.overlays-workspace-eyebrow {
+  color: var(--sp-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+#overlays-workspace-title {
+  margin: 0;
+  color: var(--sp-text);
+  font-family: var(--sp-serif);
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.overlays-workspace-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  align-items: start;
+  gap: 16px;
+}
+#overlays-workspace .name-role-overlay-panel {
+  margin: 0 !important;
+  padding: 16px !important;
+  border-radius: 12px !important;
+  background: var(--sp-card) !important;
+  border: 1px solid var(--sp-line) !important;
+}
+#overlays-workspace .name-role-overlay-heading strong,
+#overlays-workspace .name-role-overlay-heading > span:first-child { font-size: 15px !important; font-weight: 600 !important; }
+#overlays-workspace .name-role-overlay-show-btn.active,
+#overlays-workspace .name-role-overlay-show-btn[aria-pressed="true"] {
+  background: var(--sp-live) !important;
+  border-color: var(--sp-live) !important;
+  color: var(--sp-live-ink) !important;
+}
+#overlays-workspace input[type="text"],
+#overlays-workspace input[type="number"],
+#overlays-workspace select {
+  border-radius: 8px !important;
+  background: var(--sp-inset) !important;
+  border-color: var(--sp-line-2) !important;
+  color: var(--sp-text) !important;
+}
+
+/* ── Bible chapter grid ───────────────────────────────────────────────────── */
+#song-list.chapter-grid-mode { padding: 4px 16px 16px !important; }
+#song-list .chapter-grid-book {
+  padding: 12px 0 6px;
+  color: var(--sp-subtle);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+#song-list .chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+  gap: 4px;
+}
+#song-list .song-item.chapter-cell {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  height: 36px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  background: var(--sp-card) !important;
+  border: 1px solid var(--sp-line) !important;
+  color: var(--sp-muted) !important;
+  font-family: var(--sp-mono) !important;
+  font-size: 13px !important;
+  cursor: pointer;
+}
+#song-list .song-item.chapter-cell:hover { color: var(--sp-text) !important; border-color: var(--sp-line-3) !important; }
+#song-list .song-item.chapter-cell.active {
+  background: var(--sp-text) !important;
+  border-color: var(--sp-text) !important;
+  color: var(--sp-ground) !important;
+  font-weight: 600;
+}

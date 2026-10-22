@@ -897,6 +897,8 @@
       lastLiveState = { kind: 'update', payload: msg };
       if (appState && appState.live) appState.live.lastLiveState = lastLiveState;
       schedulePersistAppState();
+      setProgramMonitorOnAir(true);
+      schedulePreviewMonitorRefresh();
     }
 
     function postClear(opts = {}) {
@@ -924,6 +926,8 @@
       lastLiveState = { kind: 'clear' };
       if (appState && appState.live) appState.live.lastLiveState = lastLiveState;
       schedulePersistAppState();
+      setProgramMonitorOnAir(false);
+      schedulePreviewMonitorRefresh();
     }
 
 

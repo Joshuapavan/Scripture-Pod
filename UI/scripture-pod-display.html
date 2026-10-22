@@ -1250,10 +1250,10 @@
       const name = String(data?.name || '').trim();
       const role = String(data?.role || '').trim();
       const rawStyle = String(data?.style || 'classic-rise');
-      const normalizedStyle = ['classic', 'centered', 'band'].includes(rawStyle) ? `${rawStyle}-rise` : rawStyle;
-      const previousStyle = normalizedStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+      const normalizedStyle = ['classic', 'right', 'centered', 'band'].includes(rawStyle) ? `${rawStyle}-rise` : rawStyle;
+      const previousStyle = normalizedStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
       const currentStyle = previousStyle ? `${previousStyle[1]}-gms-${previousStyle[2]}` : normalizedStyle;
-      const styleMatch = currentStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+      const styleMatch = currentStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
       const layout = styleMatch ? styleMatch[1] : 'classic';
       const theme = styleMatch ? styleMatch[2] : 'gms';
       const animation = styleMatch ? styleMatch[3] : 'rise';
@@ -1285,7 +1285,7 @@
         else logoEl.removeAttribute('src');
         logoEl.hidden = !logo;
       }
-      overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
+      overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
       overlay.classList.add(`style-${layout}`, `theme-${theme}`, `motion-${animation}`);
       overlay.classList.toggle('logo-black', logoColor === 'black');
       overlay.classList.toggle('is-light-background', lightBackground);

@@ -1094,7 +1094,7 @@
         if (isCurrentlyLive) {
           const badge = document.createElement('span');
           badge.className = 'live-indicator';
-          badge.innerText = '[LIVE]';
+          badge.innerText = 'LIVE';
           btn.appendChild(badge);
         }
 
@@ -1247,6 +1247,7 @@
         : 'Toggle preview-only mode';
       updateProgramDisplayStatus();
       if (enabled) previewCurrentSelection();
+      else schedulePreviewMonitorRefresh();
     }
 
     function previewCurrentSelection() {
@@ -1254,7 +1255,47 @@
         showToast('Select a verse or song to preview');
         return false;
       }
+      setPreviewMonitorCaption('Cued · not on air');
+      const previewed = renderSelectionToPreview(lineCursor);
+      if (previewed) showToast('Preview updated');
+      return previewed;
+    }
 
+    // Outside Preview Only, the Preview monitor shows what Next (→) would send,
+    // or the selected page when nothing from this item is on air.
+    let previewMonitorRefreshTimer = 0;
+    let renderingPreviewMonitor = false;
+
+    function schedulePreviewMonitorRefresh() {
+      if (previewMonitorRefreshTimer || renderingPreviewMonitor || !hasPreviewMonitor()) return;
+      previewMonitorRefreshTimer = setTimeout(() => {
+        previewMonitorRefreshTimer = 0;
+        refreshPreviewMonitor();
+      }, 0);
+    }
+
+    function refreshPreviewMonitor() {
+      if (isPreviewOnlyMode()) return;
+      if (!currentItem) {
+        clearPreviewMonitor();
+        setPreviewMonitorCaption('Nothing selected');
+        return;
+      }
+      const isBible = getIsBibleItem(currentItem);
+      const pages = getPagesFromItem(currentItem, isBible);
+      const onAir = isCurrentSelectionLive();
+      const target = onAir ? lineCursor + 1 : lineCursor;
+      if (target >= pages.length) {
+        clearPreviewMonitor();
+        setPreviewMonitorCaption(isBible ? 'End of chapter' : 'End of song');
+        return;
+      }
+      setPreviewMonitorCaption(onAir ? 'Next' : 'Selected');
+      renderSelectionToPreview(target, { silent: true });
+    }
+
+    function renderSelectionToPreview(pageIndex, opts = {}) {
+      if (!currentItem) return false;
       const previousLiveState = {
         kind: liveKind,
         pointer: livePointer,
@@ -1267,6 +1308,7 @@
       const isBible = getIsBibleItem(currentItem);
       const scheduleProjectIndex = isCurrentItemFromScheduleList() ? currentIndex : -1;
 
+      renderingPreviewMonitor = true;
       try {
         liveKind = isBible ? 'bible' : 'songs';
         livePointer = isBible
@@ -1281,19 +1323,18 @@
               index: currentIndex,
               source: scheduleProjectIndex >= 0 ? 'schedule' : 'songs'
             };
-        liveLineCursor = lineCursor;
+        liveLineCursor = pageIndex;
         liveLinesPerPage = linesPerPage;
         liveBackgroundState = captureBackgroundStateFromUi();
         liveRatio = !isBible && activeRatio === 'custom' ? 'full' : activeRatio;
         liveTextTransformState = captureTextTransformStateFromUi();
         applyProgramDisplaySource('lyrics');
-        const previewed = pushLiveUpdate({ previewOnly: true });
-        if (previewed) showToast('Preview updated');
-        return previewed;
+        return pushLiveUpdate({ previewOnly: true });
       } catch (error) {
-        showToast(error && error.message ? error.message : 'Unable to preview selection');
+        if (!opts.silent) showToast(error && error.message ? error.message : 'Unable to preview selection');
         return false;
       } finally {
+        renderingPreviewMonitor = false;
         liveKind = previousLiveState.kind;
         livePointer = previousLiveState.pointer;
         liveLineCursor = previousLiveState.lineCursor;

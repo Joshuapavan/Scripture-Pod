@@ -38,6 +38,15 @@
       updateBottomNavSidebarButtons(tab);
     }
 
+    // Overlays is a workspace view rather than a library tab: the sidebar keeps
+    // the last Bible/Lyrics/Setlist library while the lower-third controls fill
+    // the workspace. Any setSidebarTab() call leaves it.
+    function openOverlaysWorkspace() {
+      document.body.classList.add('overlays-workspace-active');
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-overlays'));
+      updateBottomNavSidebarButtons('overlays');
+    }
+
 
     function setDockSceneTab(tabId) {
       activeWorkspaceTab = tabId;
@@ -62,6 +71,7 @@
     }
 
     function setSidebarTab(tab) {
+      document.body.classList.remove('overlays-workspace-active');
       const prevTab = sidebarTab;
       saveProjectionSettingsProfileForTab(getEffectiveSettingsTargetTab());
       const useFocusedWorkspaceControls = isFocusedWorkspaceMode();

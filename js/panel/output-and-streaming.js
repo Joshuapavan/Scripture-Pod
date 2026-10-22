@@ -146,6 +146,85 @@
       return true;
     }
 
+    // ── Preview monitor ────────────────────────────────────────────────────
+    // A second embedded display beside Program. Preview payloads land here,
+    // so the Program monitor (and the output synced from it) only ever shows
+    // what is actually live.
+    let previewMonitorReady = false;
+    let previewMonitorState = { kind: 'clear' };
+
+    function hasPreviewMonitor() {
+      return !!document.getElementById('preview-display-frame');
+    }
+
+    function postMessageToPreviewMonitor(message) {
+      const frame = document.getElementById('preview-display-frame');
+      if (!frame || !frame.contentWindow || !previewMonitorReady) return false;
+      frame.contentWindow.postMessage(message, '*');
+      return true;
+    }
+
+    function syncPreviewMonitor() {
+      if (!previewMonitorReady) return;
+      postMessageToPreviewMonitor({ type: 'SET_STREAM_OUTPUT_MODE', enabled: !!_pgmStreamState.running });
+      if (previewMonitorState.kind === 'update' && previewMonitorState.payload) {
+        postMessageToPreviewMonitor({ type: 'PREVIEW_UPDATE', payload: previewMonitorState.payload });
+      } else {
+        postMessageToPreviewMonitor({ type: 'PREVIEW_CLEAR', sceneLayers: getOutputSceneLayers() });
+      }
+    }
+
+    function updatePreviewMonitorScale() {
+      const shell = document.getElementById('preview-display-shell');
+      const frame = document.getElementById('preview-display-frame');
+      if (!shell || !frame) return;
+      const shellW = shell.clientWidth || 0;
+      const shellH = shell.clientHeight || 0;
+      if (!shellW || !shellH) return;
+      const { width: baseW, height: baseH } = getEmbeddedDisplayViewport();
+      const scale = Math.min(shellW / baseW, shellH / baseH);
+      const offsetX = Math.round((shellW - baseW * scale) / 2);
+      const offsetY = Math.round((shellH - baseH * scale) / 2);
+      frame.style.width = baseW + 'px';
+      frame.style.height = baseH + 'px';
+      frame.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    }
+
+    function initPreviewMonitor() {
+      const frame = document.getElementById('preview-display-frame');
+      const shell = document.getElementById('preview-display-shell');
+      if (!frame || frame.dataset.bound) return;
+      frame.dataset.bound = '1';
+      previewMonitorReady = false;
+      frame.addEventListener('load', () => {
+        previewMonitorReady = true;
+        updatePreviewMonitorScale();
+        syncPreviewMonitor();
+      });
+      frame.srcdoc = buildStandaloneDisplayHtml({ preview: true });
+      if (shell && typeof ResizeObserver === 'function') {
+        new ResizeObserver(updatePreviewMonitorScale).observe(shell);
+      } else {
+        window.addEventListener('resize', updatePreviewMonitorScale);
+      }
+    }
+
+    function setPreviewMonitorCaption(text) {
+      const caption = document.getElementById('preview-monitor-caption');
+      if (caption) caption.textContent = text;
+    }
+
+    function setProgramMonitorOnAir(onAir) {
+      document.body.classList.toggle('sp-program-on-air', !!onAir);
+      const caption = document.getElementById('program-monitor-caption');
+      if (caption) caption.textContent = onAir ? 'On air' : 'Clear';
+    }
+
+    function clearPreviewMonitor() {
+      previewMonitorState = { kind: 'clear' };
+      return postMessageToPreviewMonitor({ type: 'PREVIEW_CLEAR', sceneLayers: getOutputSceneLayers() });
+    }
+
     function sendProgramPreview(payload) {
       if (!payload) return false;
       const viewport = getEmbeddedDisplayViewport();
@@ -156,6 +235,11 @@
         displayViewportWidth: viewport.width,
         displayViewportHeight: viewport.height
       };
+      if (hasPreviewMonitor()) {
+        previewMonitorState = { kind: 'update', payload: previewPayload };
+        syncPreviewMonitor();
+        return true;
+      }
       embeddedProgramDisplayState = { kind: 'update', payload: previewPayload };
       if (!embeddedProgramDisplayReady) {
         pendingProgramPreviewPayload = previewPayload;
@@ -170,6 +254,14 @@
     }
 
     function clearProgramPreview() {
+      if (hasPreviewMonitor()) {
+        if (!clearPreviewMonitor()) {
+          showToast('Preview display is not ready');
+          return false;
+        }
+        showToast('Preview cleared');
+        return true;
+      }
       pendingProgramPreviewPayload = null;
       embeddedProgramDisplayState = { kind: 'clear' };
       if (!postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_CLEAR' })) {
@@ -330,6 +422,7 @@
         }
       });
       applyProgramDisplaySource('lyrics', { forceReload: true });
+      initPreviewMonitor();
       setProgramDisplayAspect('16:9');
       setProgramPreviewZoom(programPreviewZoom);
       layoutProgramScaleControls();
@@ -378,6 +471,9 @@
     #name-role-overlay.is-visible { opacity: 1; visibility: visible; transition-delay: 0s; }
     .style-centered#name-role-overlay { justify-content: center; padding-bottom: 8vh; }
     .style-band#name-role-overlay { justify-content: center; padding: 0 0 7vh; }
+    .style-right#name-role-overlay { scale: -1 1; transform: translate(calc(var(--name-role-offset-x,0vw) * -1),var(--name-role-offset-y,0vh)); }
+    .style-right#name-role-overlay .name-role-overlay-copy, .style-right#name-role-overlay .name-role-overlay-logo { scale: -1 1; }
+    .style-right#name-role-overlay .name-role-overlay-copy { align-items: flex-end; text-align: right; }
     .name-role-overlay-card { display: flex; flex-direction: row; align-items: center; gap: 18px; max-width: 86vw; min-height: 92px; padding: 14px 24px; border: 1px solid rgba(218,238,241,0.24); border-left: 5px solid var(--name-role-accent,#90D5FF); border-radius: 5px; background: rgba(8,14,18,0.82); box-shadow: 0 20px 64px rgba(0,0,0,0.42); backdrop-filter: blur(14px); color: #fff; text-align: left; opacity: 0; transform: translateY(24px) scale(0.96); transition: opacity 560ms ease, transform 720ms cubic-bezier(0.2,0.85,0.25,1), filter 620ms ease, clip-path 680ms cubic-bezier(0.2,0.85,0.25,1); will-change: opacity, transform, filter, clip-path; }
     .style-centered#name-role-overlay .name-role-overlay-card { border: 0; border-top: 4px solid var(--name-role-accent,#90D5FF); text-align: center; }
     .style-band#name-role-overlay .name-role-overlay-card { width: 100%; max-width: 100%; justify-content: center; border: 0; border-top: 3px solid var(--name-role-accent,#90D5FF); border-radius: 0; background: rgba(8,14,18,0.9); text-align: center; }
@@ -1141,9 +1237,9 @@
         const name = String(data && data.name || '').trim();
         const role = String(data && data.role || '').trim();
         const rawStyle = String(data && data.style || 'classic-rise');
-        const legacyStyle = rawStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const legacyStyle = rawStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const normalizedStyle = legacyStyle ? legacyStyle[1] + '-gms-' + legacyStyle[2] : rawStyle;
-        const styleMatch = normalizedStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const styleMatch = normalizedStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const layout = styleMatch ? styleMatch[1] : 'classic';
         const theme = styleMatch ? styleMatch[2] : 'gms';
         const animation = styleMatch ? styleMatch[3] : 'rise';
@@ -1175,7 +1271,7 @@
           else logoEl.removeAttribute('src');
           logoEl.hidden = !logo;
         }
-        overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
+        overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
         overlay.classList.add('style-' + layout, 'theme-' + theme, 'motion-' + animation);
         overlay.classList.toggle('logo-black', logoColor === 'black');
         overlay.classList.toggle('is-light-background', lightBackground);

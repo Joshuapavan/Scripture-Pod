@@ -186,6 +186,23 @@ body.display-full-mode {
     padding: 0 0 7vh;
 }
 
+/* Right title bar: the left title bar mirrored, so every theme's accents and
+   every motion flip with it; the text and logo are flipped back to read normally. */
+.style-right#name-role-overlay {
+    scale: -1 1;
+    transform: translate(calc(var(--name-role-offset-x, 0vw) * -1), var(--name-role-offset-y, 0vh));
+}
+
+.style-right#name-role-overlay .name-role-overlay-copy,
+.style-right#name-role-overlay .name-role-overlay-logo {
+    scale: -1 1;
+}
+
+.style-right#name-role-overlay .name-role-overlay-copy {
+    align-items: flex-end;
+    text-align: right;
+}
+
 .name-role-overlay-card {
     display: flex;
     flex-direction: row;

@@ -771,9 +771,9 @@
       }
       if (overlayDesignInput && overlayAnimationInput) {
         const savedOverlayStyle = String(ui.nameRoleOverlayStyle || 'classic-gms-rise');
-        const currentStyle = savedOverlayStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
-        const previousStyle = savedOverlayStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
-        const layoutOnly = ['classic', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : '';
+        const currentStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const previousStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const layoutOnly = ['classic', 'right', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : '';
         const design = currentStyle ? `${currentStyle[1]}-${currentStyle[2]}` : `${previousStyle?.[1] || layoutOnly || 'classic'}-gms`;
         overlayDesignInput.value = Array.from(overlayDesignInput.options).some((option) => option.value === design) ? design : 'classic-gms';
         overlayAnimationInput.value = currentStyle?.[3] || previousStyle?.[2] || 'rise';
