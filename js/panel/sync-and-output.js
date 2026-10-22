@@ -135,7 +135,12 @@
       };
     }
 
-    function publishLowerThirdOverlays() {
+    function isLiveLowerThirdOverlayActive(overlayName) {
+      const livePayload = lastLiveState?.kind === 'update' ? lastLiveState.payload : null;
+      return !!livePayload?.lowerThirdOnly && !!livePayload[overlayName]?.enabled;
+    }
+
+    function publishLowerThirdOverlays(opts = {}) {
       const nameRoleEnabled = document.getElementById('name-role-overlay-show-btn')?.getAttribute('aria-pressed') === 'true';
       const socialEnabled = document.getElementById('social-engagement-overlay-show-btn')?.getAttribute('aria-pressed') === 'true';
       const anyEnabled = nameRoleEnabled || socialEnabled;
@@ -162,16 +167,18 @@
         nameRoleOverlay: getNameRoleOverlaySettings(nameRoleEnabled),
         socialEngagementOverlay: getSocialEngagementOverlaySettings(socialEnabled)
       };
+      const updateLivePosition = opts.positionEdit === true && isPreviewOnlyMode() &&
+        isLiveLowerThirdOverlayActive(opts.overlayName);
+      if (!isPreviewOnlyMode() || updateLivePosition) postUpdate(payload);
       if (isPreviewOnlyMode()) sendProgramPreview(payload);
-      else postUpdate(payload);
     }
 
-    function publishNameRoleOverlay() {
-      publishLowerThirdOverlays();
+    function publishNameRoleOverlay(opts) {
+      publishLowerThirdOverlays(opts);
     }
 
-    function publishSocialEngagementOverlay() {
-      publishLowerThirdOverlays();
+    function publishSocialEngagementOverlay(opts) {
+      publishLowerThirdOverlays(opts);
     }
 
     function setLowerThirdButtonState(button, enabled, title) {
@@ -282,7 +289,7 @@
       handleSocialEngagementOverlayChange(true);
     }
 
-    function handleNameRoleOverlayChange(visibilityChanged = false) {
+    function handleNameRoleOverlayChange(visibilityChanged = false, positionEdit = false) {
       const nameInput = document.getElementById('name-role-overlay-name');
       const roleInput = document.getElementById('name-role-overlay-role');
       const enabledButton = document.getElementById('name-role-overlay-show-btn');
@@ -318,17 +325,17 @@
           saveState();
           saveToStorageDebounced();
           showToast('Enter a name and role before showing the lower third');
-          publishNameRoleOverlay();
+          publishNameRoleOverlay({ positionEdit });
           return;
         }
-        publishNameRoleOverlay();
+        publishNameRoleOverlay({ positionEdit, overlayName: 'nameRoleOverlay' });
       } else if (visibilityChanged) {
         publishNameRoleOverlay();
       } else if (isPreviewOnlyMode()) previewCurrentSelection();
       else if (isLive && livePointer) pushLiveUpdate();
     }
 
-    function handleSocialEngagementOverlayChange(visibilityChanged = false) {
+    function handleSocialEngagementOverlayChange(visibilityChanged = false, positionEdit = false) {
       const enabledButton = document.getElementById('social-engagement-overlay-show-btn');
       const enabled = enabledButton?.getAttribute('aria-pressed') === 'true';
       const payload = getSocialEngagementOverlaySettings(enabled);
@@ -362,10 +369,10 @@
           appState.settings.socialEngagementOverlayEnabled = false;
           saveState();
           saveToStorageDebounced();
-          publishSocialEngagementOverlay();
+          publishSocialEngagementOverlay({ positionEdit });
           return;
         }
-        publishSocialEngagementOverlay();
+        publishSocialEngagementOverlay({ positionEdit, overlayName: 'socialEngagementOverlay' });
       } else if (visibilityChanged) {
         publishSocialEngagementOverlay();
       } else if (isPreviewOnlyMode()) previewCurrentSelection();

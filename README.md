@@ -94,6 +94,9 @@ Build Windows installers with:
 npm run dist:win
 ```
 
+The default Windows package targets x64 so builds made on Apple Silicon or Linux
+are usable on standard 64-bit Windows PCs.
+
 Build Linux packages with:
 
 ```bash
@@ -101,6 +104,9 @@ npm run dist:linux
 ```
 
 For reliable releases, build each target on its corresponding operating system.
+macOS release builds use an available Developer ID signing identity; without
+signing and notarization credentials, downloaded apps may be blocked by
+Gatekeeper.
 
 ## Installation instructions
 

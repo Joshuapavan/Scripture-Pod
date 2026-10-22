@@ -190,11 +190,13 @@ function broadcastRelayMessage(message) {
 }
 
 function createMainWindow() {
+  const { width: workAreaWidth, height: workAreaHeight } = screen.getPrimaryDisplay().workAreaSize;
   mainWindow = new BrowserWindow({
-    width: 1600,
-    height: 980,
-    minWidth: 560,
-    minHeight: 760,
+    width: Math.min(1600, Math.max(480, workAreaWidth - 32)),
+    height: Math.min(980, Math.max(560, workAreaHeight - 48)),
+    minWidth: 480,
+    minHeight: 560,
+    center: true,
     backgroundColor: '#101318',
     title: 'Scripture Pod',
     webPreferences: {

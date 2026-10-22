@@ -17445,6 +17445,27 @@
   }
 }
 
+@media (max-width: 900px) and (max-height: 620px) {
+  #workspace-top {
+    min-height: 0;
+  }
+
+  #left-workspace {
+    flex: 0 0 150px;
+    min-height: 150px;
+  }
+
+  #page-projection #program-display-panel#program-display-panel {
+    flex: 0 0 250px;
+    min-height: 250px;
+  }
+
+  #program-display-stage {
+    height: 140px;
+    min-height: 140px;
+  }
+}
+
 .program-display-link-row {
   display: flex;
   align-items: center;

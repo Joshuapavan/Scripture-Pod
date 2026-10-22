@@ -11,8 +11,8 @@
     "test": "node --test",
     "pack:mac": "electron-builder --mac dir",
     "dist:mac": "electron-builder --mac",
-    "pack:win": "electron-builder --win nsis portable",
-    "dist:win": "electron-builder --win",
+    "pack:win": "electron-builder --x64 --win nsis portable",
+    "dist:win": "electron-builder --x64 --win",
     "dist:linux": "electron-builder --linux",
     "mobile:build": "node scripts/build-mobile.js",
     "mobile:sync": "npm run mobile:build && cap sync",
@@ -24,8 +24,6 @@
     "productName": "Scripture Pod",
     "files": [
       "UI/**/*",
-      "index.html",
-      "assets/**/*",
       "app_assets/bibles/**/*",
       "app_assets/bg/bg.mov",
       "app_assets/logo/ACI_Logo.png",
@@ -36,8 +34,7 @@
       "electron/preload.js",
       "electron/resources/Logo.svg",
       "package.json",
-      "README.md",
-      "LICENSE"
+      "README.md"
     ],
     "directories": {
       "buildResources": "electron/resources",
@@ -49,7 +46,6 @@
     "mac": {
       "category": "public.app-category.productivity",
       "icon": "electron/resources/scripture-pod.png",
-      "identity": null,
       "target": [
         "zip"
       ],
@@ -59,8 +55,7 @@
       "target": [
         "nsis",
         "portable"
-      ],
-      "icon": "scripture-pod-pro.ico"
+      ]
     },
     "nsis": {
       "oneClick": false,
@@ -75,7 +70,7 @@
         "AppImage",
         "zip"
       ],
-      "icon": "electron/resources/linux-icon.png",
+      "icon": "electron/resources/scripture-pod.png",
       "category": "Utility",
       "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
     }

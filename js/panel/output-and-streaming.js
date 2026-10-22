@@ -360,7 +360,7 @@
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; font-family: 'Segoe UI', system-ui, sans-serif; }
-    body:not(.lower-third-only-mode):not(.lyrics-lt-mode) { background: #000; }
+    body.display-full-mode, body.display-custom-mode { background: #000; }
     body.lower-third-only-mode, body.lyrics-lt-mode { background: transparent; }
     #bg { position: fixed; inset: 0; z-index: 2; background: #000 center / cover no-repeat; transition: filter 220ms ease, opacity 220ms ease; }
     #bg-video { position: fixed; inset: 0; z-index: 2; width: 100%; height: 100%; object-fit: cover; display: none; }
@@ -1061,7 +1061,7 @@
         if (data.seq) lastSeq = data.seq;
         if (data.restorePrevious) {
           lowerThirdOnlyMode = false;
-          document.body.classList.remove('lower-third-only-mode');
+          document.body.classList.remove('lower-third-only-mode', 'display-full-mode');
           if (lastNormalUpdate) {
             applyUpdate({
               ...lastNormalUpdate,
@@ -1085,6 +1085,7 @@
             ltText.innerHTML = '';
             renderSceneLayers([]);
             setBackground({ bgEnabled: false });
+            document.body.classList.remove('lyrics-lt-mode', 'display-full-mode', 'display-custom-mode');
           }
           return;
         }
@@ -1092,7 +1093,7 @@
           const entering = !lowerThirdOnlyMode;
           lowerThirdOnlyMode = true;
           document.body.classList.add('lower-third-only-mode');
-          document.body.classList.remove('lyrics-lt-mode');
+          document.body.classList.remove('lyrics-lt-mode', 'display-full-mode', 'display-custom-mode');
           if (entering) {
             fullText.innerHTML = '';
             ltText.innerHTML = '';
@@ -1109,7 +1110,10 @@
         }
         lastNormalUpdate = sourceData;
         document.body.classList.remove('lower-third-only-mode');
-        document.body.classList.toggle('lyrics-lt-mode', String(data.mode || 'full') === 'lt');
+        const displayMode = String(data.mode || 'full');
+        document.body.classList.toggle('display-full-mode', displayMode === 'full');
+        document.body.classList.toggle('display-custom-mode', displayMode === 'custom');
+        document.body.classList.toggle('lyrics-lt-mode', displayMode === 'lt');
         renderSceneLayers(data.sceneLayers);
         updateNameRoleOverlay(data.nameRoleOverlay);
         updateSocialEngagementOverlay(data.socialEngagementOverlay);
@@ -1257,16 +1261,13 @@
       }
 
       function clearOutput() {
-        const wasLowerThirdOnly = lowerThirdOnlyMode;
         lowerThirdOnlyMode = false;
         lastNormalUpdate = null;
-        document.body.classList.remove('lower-third-only-mode', 'lyrics-lt-mode');
+        document.body.classList.remove('lower-third-only-mode', 'lyrics-lt-mode', 'display-full-mode', 'display-custom-mode');
         fullText.innerHTML = '';
         ltText.innerHTML = '';
-        if (wasLowerThirdOnly) {
-          renderSceneLayers([]);
-          setBackground({ bgEnabled: false });
-        }
+        renderSceneLayers([]);
+        setBackground({ bgEnabled: false });
         updateNameRoleOverlay(null);
         updateSocialEngagementOverlay(null);
       }
