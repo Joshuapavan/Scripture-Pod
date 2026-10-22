@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "panel-static",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-I", "/private/tmp/claude-501/-Users-joshua--claude-spares-spare-q6sbAz/0506e689-569f-4098-87d9-d1e5119eaa4a/scratchpad/devserve.py", "/Users/joshua/Desktop/Scripture Pod Pro/Scripture-Pod-V2", "5599"],
+      "port": 5599
+    }
+  ]
+}

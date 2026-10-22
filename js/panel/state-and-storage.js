@@ -1093,6 +1093,7 @@
       if (isLockedInactiveTarget) {
         applyProjectionRuntimeSnapshot(getProjectionSettingsSnapshotForTab(sidebarTab));
       }
+      if (typeof ensureVisibleSettingsTab === 'function') ensureVisibleSettingsTab();
       if (!opts.silent) saveToStorageDebounced();
     }
 

@@ -651,20 +651,21 @@
             <span class="output-route-kind">Cable · HDMI</span>
             <span class="output-route-state" id="stream-feed-state">Off</span>
           </div>
-          <p class="output-route-hint">Live output over HDMI into the streaming laptop's capture card, on a key colour OBS can remove.</p>
+          <p class="output-route-hint">Live output over HDMI into the streaming laptop's capture card, transparent when nothing is projected, or on a key colour OBS can remove.</p>
           <div class="output-route-grid">
             <label for="stream-feed-display">Screen</label>
             <select id="stream-feed-display" onchange="handleStreamFeedDisplayChange()"></select>
-            <span id="stream-feed-key-label">Key colour</span>
+            <span id="stream-feed-key-label">Background</span>
             <div class="segmented-picker" role="group" aria-labelledby="stream-feed-key-label">
-              <button type="button" class="seg-btn" id="stream-feed-key-black" aria-pressed="true" onclick="setStreamFeedKey('black')">Black</button>
+              <button type="button" class="seg-btn" id="stream-feed-key-none" aria-pressed="true" onclick="setStreamFeedKey('none')">Transparent</button>
+              <button type="button" class="seg-btn" id="stream-feed-key-black" aria-pressed="false" onclick="setStreamFeedKey('black')">Black</button>
               <button type="button" class="seg-btn" id="stream-feed-key-green" aria-pressed="false" onclick="setStreamFeedKey('green')">Green</button>
             </div>
           </div>
           <div class="output-route-actions">
             <button type="button" class="btn" id="btn-stream-feed" aria-pressed="false" onclick="toggleStreamFeed()">Start feed</button>
           </div>
-          <p class="output-route-hint" id="stream-feed-obs-hint">In OBS, add the capture card as a Video Capture Device, then a Luma Key filter.</p>
+          <p class="output-route-hint" id="stream-feed-obs-hint">Empty areas stay transparent, as on the main output.</p>
         </div>
         <div class="output-route" id="output-route-network">
           <div class="output-route-head">

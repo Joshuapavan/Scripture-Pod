@@ -1832,18 +1832,19 @@
     // a key colour because a cable cannot carry transparency.
     const STREAM_FEED_STORAGE_KEY = 'scripturePod.streamFeed.v1';
     const STREAM_FEED_OBS_HINTS = {
+      none: 'Empty areas stay transparent, as on the main output. A cable cannot carry transparency, so choose Black or Green if OBS needs to key it out.',
       black: 'In OBS, add the capture card as a Video Capture Device, then a Luma Key filter.',
       green: 'In OBS, add the capture card as a Video Capture Device, then a Chroma Key filter (green).'
     };
     let streamFeedOpen = false;
-    let streamFeedSettings = { displayId: '', key: 'black' };
+    let streamFeedSettings = { displayId: '', key: 'none' };
 
     function loadStreamFeedSettings() {
       try {
         const saved = JSON.parse(localStorage.getItem(STREAM_FEED_STORAGE_KEY) || '{}');
         streamFeedSettings = {
           displayId: typeof saved.displayId === 'string' ? saved.displayId : '',
-          key: saved.key === 'green' ? 'green' : 'black'
+          key: ['black', 'green'].includes(saved.key) ? saved.key : 'none'
         };
       } catch (_) {}
     }
@@ -1895,7 +1896,7 @@
         state.textContent = streamFeedOpen ? 'On' : 'Off';
         state.classList.toggle('is-on', streamFeedOpen);
       }
-      ['black', 'green'].forEach((key) => {
+      ['none', 'black', 'green'].forEach((key) => {
         const keyBtn = document.getElementById(`stream-feed-key-${key}`);
         if (!keyBtn) return;
         const active = streamFeedSettings.key === key;
@@ -1952,7 +1953,7 @@
     }
 
     function setStreamFeedKey(key) {
-      streamFeedSettings.key = key === 'green' ? 'green' : 'black';
+      streamFeedSettings.key = ['black', 'green'].includes(key) ? key : 'none';
       saveStreamFeedSettings();
       syncStreamFeedUi();
       if (streamFeedOpen) openStreamFeed();

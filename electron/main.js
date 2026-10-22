@@ -287,8 +287,8 @@ function createOutputWindow(options = {}) {
 // Stream feed: a second, opaque output for a cable into another computer's
 // capture card (e.g. an OBS laptop). A cable cannot carry transparency, so the
 // page is filled with a key colour that OBS removes with Luma Key (black) or
-// Chroma Key (green).
-const FEED_KEY_COLORS = { black: '#000000', green: '#00B140' };
+// Chroma Key (green). 'none' keeps the window transparent like the main output.
+const FEED_KEY_COLORS = { none: '#00000000', black: '#000000', green: '#00B140' };
 
 function notifyMainWindow(channel) {
   if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
@@ -310,7 +310,8 @@ function closeFeedWindow(options = {}) {
 function createFeedWindow(options = {}) {
   closeFeedWindow({ silent: true });
   const bounds = getDisplayBounds(options.displayId);
-  const keyBackground = FEED_KEY_COLORS[options.keyBackground] ? options.keyBackground : 'black';
+  const keyBackground = FEED_KEY_COLORS[options.keyBackground] ? options.keyBackground : 'none';
+  const transparent = keyBackground === 'none';
   const win = new BrowserWindow({
     x: bounds.x,
     y: bounds.y,
@@ -319,6 +320,7 @@ function createFeedWindow(options = {}) {
     frame: false,
     show: true,
     backgroundColor: FEED_KEY_COLORS[keyBackground],
+    transparent,
     autoHideMenuBar: true,
     fullscreen: true,
     webPreferences: {
@@ -334,7 +336,7 @@ function createFeedWindow(options = {}) {
       standalone: '1',
       hostMode: 'standalone',
       feed: '1',
-      keyBg: keyBackground
+      ...(transparent ? {} : { keyBg: keyBackground })
     }
   });
   win.on('closed', () => {

@@ -4276,6 +4276,15 @@
       });
     }
 
+    // The remembered tab can be one the current mode hides (e.g. Custom Mode
+    // Style while on Setlist), which left the content pane empty.
+    function ensureVisibleSettingsTab() {
+      const isShown = (item) => item && getComputedStyle(item).display !== 'none';
+      if (isShown(document.querySelector('.sm-sidebar-item.active'))) return;
+      const first = Array.from(document.querySelectorAll('.sm-sidebar-item')).find(isShown);
+      if (first) switchSettingsTab(first.dataset.smTab);
+    }
+
     /* ---- Footer Status Bar ---- */
     function formatBytes(bytes) {
       if (bytes < 1024) return bytes + ' B';
