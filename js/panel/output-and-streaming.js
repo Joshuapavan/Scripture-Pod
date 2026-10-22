@@ -1826,6 +1826,15 @@
       showToast(t('output_live_ended'));
     }
 
+    // Top bar Outputs button: bring the Outputs card into view.
+    function showOutputsCard() {
+      const card = document.getElementById('outputs-card');
+      if (!card) return;
+      card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      card.classList.add('is-flash');
+      setTimeout(() => card.classList.remove('is-flash'), 1200);
+    }
+
     // ── Stream feed (cable) ────────────────────────────────────────────────
     // A second output window on its own display, meant for an HDMI cable into
     // the streaming computer's capture card. Transparent areas are filled with

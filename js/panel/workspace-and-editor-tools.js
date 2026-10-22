@@ -2331,6 +2331,19 @@
       const subtitleEl = document.getElementById('focused-editor-banner-subtitle');
       const sectionNavEl = document.getElementById('focused-editor-section-nav');
       if (!titleEl || !subtitleEl || !sectionNavEl) return;
+      const eyebrowEl = document.getElementById('focused-editor-banner-eyebrow');
+      const searchLabelEl = document.getElementById('library-label-search');
+      const setEyebrow = (text) => { if (eyebrowEl) eyebrowEl.textContent = text; };
+      // View toggle labels follow the workspace (the design's Slides / Edit text)
+      const modeTextLabel = document.querySelector('#mode-text span');
+      const modeBtnLabel = document.querySelector('#mode-btn span');
+      if (modeTextLabel && modeBtnLabel && sidebarTab === 'songs') {
+        modeTextLabel.textContent = 'Edit text';
+        modeBtnLabel.textContent = 'Slides';
+      }
+      if (searchLabelEl) {
+        searchLabelEl.textContent = sidebarTab === 'songs' ? 'Find a song' : (sidebarTab === 'schedule' ? 'Find in setlist' : 'Go to passage');
+      }
       const renderSectionNav = (items = []) => {
         const list = Array.isArray(items) ? items : [];
         if (!list.length) {
@@ -2346,16 +2359,17 @@
         sectionNavEl.classList.add('has-items');
       };
       if (!isFocusedWorkspaceMode()) {
+        setEyebrow('');
         titleEl.textContent = 'Workspace';
         subtitleEl.textContent = '';
         renderSectionNav([]);
         return;
       }
       if (sidebarTab === 'songs') {
-        titleEl.textContent = 'Songs Workspace';
-        subtitleEl.textContent = currentItem && !getIsBibleItem(currentItem)
-          ? (currentItem.title || 'Untitled song')
-          : 'Select a song from the sidebar';
+        const hasSong = currentItem && !getIsBibleItem(currentItem);
+        setEyebrow('Lyrics workspace');
+        titleEl.textContent = hasSong ? (currentItem.title || 'Untitled song') : 'Lyrics';
+        subtitleEl.textContent = hasSong ? '' : 'Select a song from the library';
         if (currentItem && !getIsBibleItem(currentItem)) {
           const pages = getPagesFromItem(currentItem, false);
           const seen = new Set();
@@ -2386,15 +2400,18 @@
         return;
       }
       if (sidebarTab === 'bible') {
-        titleEl.textContent = 'Bible Workspace';
-        subtitleEl.textContent = currentItem && getIsBibleItem(currentItem)
-          ? `${currentItem.title || 'Bible'}${currentItem.version ? ` • ${currentItem.version}` : ''}`
-          : 'Select a Bible chapter or search a reference';
+        const hasChapter = currentItem && getIsBibleItem(currentItem);
+        setEyebrow('Bible workspace');
+        titleEl.textContent = hasChapter ? (currentItem.title || 'Bible') : 'Bible';
+        subtitleEl.textContent = hasChapter
+          ? (currentItem.version || '')
+          : 'Select a chapter or search a reference';
         renderSectionNav([]);
         return;
       }
       if (sidebarTab === 'schedule') {
-        titleEl.textContent = 'Setlist Workspace';
+        setEyebrow('Setlist');
+        titleEl.textContent = 'Setlist';
         subtitleEl.textContent = `${Array.isArray(schedule) ? schedule.length : 0} item${Array.isArray(schedule) && schedule.length === 1 ? '' : 's'}`;
         renderSectionNav([]);
         return;

@@ -450,7 +450,7 @@
         ui_animate_background: "Animate Background",
         ui_placeholder_lyrics: "Type/Paste Lyrics here...",
         common_clear: "Clear",
-        common_project_live: "Project Live",
+        common_project_live: "Go live",
         common_prev: "Prev",
         common_next: "Next",
         common_lines: "Lines",
