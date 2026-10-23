@@ -6,35 +6,35 @@ on:
       - main
   create:
   pull_request:
+
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
+  # Fast checks: the Node tests and the Rust core crate (no windowing, so no system libraries
+  # and no Tauri compile). Runs alongside the installer builds instead of in front of them.
   test:
     if: ${{ github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Linux system libraries (WebKitGTK)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
+      - run: node --test
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-      - run: npm test
+      - run: cargo test -p sp-core
+        working-directory: src-tauri
 
   build:
-    if: ${{ github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) }}
-    needs: test
+    if: ${{ github.event_name != 'pull_request' && (github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v'))) }}
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       matrix:
@@ -58,7 +58,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Linux system libraries (WebKitGTK)
         if: matrix.os == 'ubuntu-22.04'
         run: |
@@ -98,7 +98,7 @@ jobs:
 
   release:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' || (github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) }}
-    needs: build
+    needs: [test, build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

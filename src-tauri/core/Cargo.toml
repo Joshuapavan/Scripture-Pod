@@ -1,0 +1,13 @@
+[package]
+name = "sp-core"
+version = "0.1.0"
+edition = "2021"
+description = "Scripture Pod core: file serving, relay and Bible search (no windowing, so it builds and tests fast)"
+
+[dependencies]
+tiny_http = "0.12"
+tungstenite = "0.24"
+serde_json = "1"
+rand = "0.8"
+rusqlite = { version = "0.32", features = ["bundled"] }
+unicode-normalization = "0.1"

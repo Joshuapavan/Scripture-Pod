@@ -1,5 +1,6 @@
 // What the desktop bridge offers the pages, as /__bsp/<name> calls.
-use crate::{search, state::*, windows};
+use crate::windows;
+use sp_core::{search, state::*};
 use base64::Engine;
 use serde_json::{json, Value};
 use std::{fs, path::PathBuf, sync::{atomic::Ordering, Arc}};

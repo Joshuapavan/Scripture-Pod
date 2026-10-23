@@ -3237,17 +3237,13 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "if-addrs",
- "rand",
- "rusqlite",
  "serde_json",
+ "sp-core",
  "tauri",
  "tauri-build",
  "tauri-plugin-clipboard-manager",
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
- "tiny_http",
- "tungstenite",
- "unicode-normalization",
 ]
 
 [[package]]
@@ -3556,6 +3552,18 @@ dependencies = [
  "gobject-sys",
  "libc",
  "system-deps",
+]
+
+[[package]]
+name = "sp-core"
+version = "0.1.0"
+dependencies = [
+ "rand",
+ "rusqlite",
+ "serde_json",
+ "tiny_http",
+ "tungstenite",
+ "unicode-normalization",
 ]
 
 [[package]]

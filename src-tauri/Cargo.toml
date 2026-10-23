@@ -1,3 +1,6 @@
+[workspace]
+members = ["core"]
+
 [package]
 name = "scripture-pod-tauri"
 version = "0.1.0"
@@ -12,14 +15,10 @@ tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-clipboard-manager = "2"
 tauri-plugin-opener = "2"
-tiny_http = "0.12"
-tungstenite = "0.24"
+sp-core = { path = "core" }
 serde_json = "1"
 base64 = "0.22"
-rand = "0.8"
 if-addrs = "0.13"
-rusqlite = { version = "0.32", features = ["bundled"] }
-unicode-normalization = "0.1"
 
 [features]
 harness = []

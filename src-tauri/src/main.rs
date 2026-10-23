@@ -1,12 +1,8 @@
 // Scripture Pod desktop app: servers, relay, Bible search and windows.
 mod api;
-mod relay;
-mod search;
-mod server;
-mod state;
 mod windows;
 
-use state::*;
+use sp_core::{relay, server, state::*};
 use std::{fs, path::PathBuf, sync::{atomic::Ordering, Arc}, thread};
 use tauri::{http::Response, Manager};
 
