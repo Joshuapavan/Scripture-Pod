@@ -30,7 +30,7 @@
     O + '.style-band:is(' + THEMES.map(function (x) { return '.theme-' + x; }).join(',') + ')' + CARD + '{border-radius:0;}',
     ANY_THEME + ' .name-role-overlay-accent{display:none;}',
     ANY_THEME + ' .name-role-overlay-copy-panel{padding:0;border:0;border-radius:0;background:none;}',
-    ANY_THEME + '.style-classic' + CARD + '{--lt-origin:left center;}',
+    ANY_THEME + ':is(.style-classic,.style-right)' + CARD + '{--lt-origin:left center;}',
     ANY_THEME + CARD + '{transform-origin:var(--lt-origin,center center);}',
 
     /* ── Aurora: violet/cyan gradient glass with a gloss and a one-time shine ── */

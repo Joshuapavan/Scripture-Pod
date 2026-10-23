@@ -190,22 +190,92 @@
 
     function applyBibleReferenceEntry(entry) {
       if (!entry || !entry.query) return;
+      if (entry.versionId && bibles[entry.versionId] && !isBibleLoaded(entry.versionId)) {
+        ensureBibleLoaded(entry.versionId).then((loaded) => { if (loaded) applyBibleReferenceEntry(entry); });
+        return;
+      }
       if (entry.versionId && bibles[entry.versionId]) {
         activeBibleVersion = entry.versionId;
         renderVersionBar();
       }
-      const input = document.getElementById('song-search');
-      if (input) input.value = entry.query;
-      const mirror = document.getElementById('nav-mirror-search');
-      if (mirror) mirror.value = entry.query;
-      setSearchValueForTab('bible', entry.query);
       setBibleReferencePickerOpen(false);
       setMirrorBibleReferencePickerOpen(false);
-      handleSearchImmediate(entry.query, 'bible');
-      addBibleRecentReference(entry);
+      // Open the passage in its book (cued, not live), as the ⌘K palette does
+      openPassageFromPalette(entry.query);
+    }
+
+    // Library "Pinned & recent": the first few references, always visible
+    // under the passage search (the full list stays in the history popover).
+    function renderLibraryQuickRefs() {
+      const host = document.getElementById('library-quick-refs');
+      if (!host) return;
+      const seen = new Set();
+      const entries = [
+        ...biblePinnedRefs.map(ref => ({ ref, pinned: true })),
+        ...bibleRecentRefs.map(ref => ({ ref, pinned: false }))
+      ].filter(({ ref }) => {
+        const key = `${normalizeBibleRefKey(ref.query)}|${normalizeBibleRefKey(ref.versionId || '')}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 4);
+      host.hidden = !entries.length;
+      host.querySelector('.library-quick-refs-list')?.replaceChildren(...entries.map(({ ref, pinned }) => {
+        const row = document.createElement('div');
+        row.className = 'library-quick-ref' + (pinned ? ' is-pinned' : '');
+        // The icon is the pin control: click a pinned row's pin to unpin it,
+        // or a recent row's clock to pin it
+        const iconBtn = document.createElement('button');
+        iconBtn.type = 'button';
+        iconBtn.className = 'library-quick-ref-icon';
+        iconBtn.title = pinned ? 'Unpin' : 'Pin';
+        iconBtn.setAttribute('aria-label', `${pinned ? 'Unpin' : 'Pin'} ${ref.title || ref.query}`);
+        iconBtn.innerHTML = pinned
+          ? '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M5 17h14l-2-4V5H7v8z"/></svg>'
+          : '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+        iconBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (pinned) {
+            unpinBibleReference(ref.query, ref.versionId);
+            showToast('Reference unpinned');
+          } else {
+            pinBibleReference(ref);
+            showToast(t('reference_pinned'));
+          }
+        };
+        const open = document.createElement('button');
+        open.type = 'button';
+        open.className = 'library-quick-ref-open';
+        open.title = pinned ? 'Pinned' : 'Recent';
+        const label = document.createElement('span');
+        label.className = 'library-quick-ref-label';
+        label.textContent = ref.title || ref.query;
+        const version = document.createElement('span');
+        version.className = 'library-quick-ref-version';
+        version.textContent = ref.versionId ? getVersionCode(ref.versionId) : '';
+        open.append(label, version);
+        open.onclick = () => applyBibleReferenceEntry(ref);
+        row.append(iconBtn, open);
+        return row;
+      }));
+      updateBibleRefPinButtons();
+    }
+
+    // The search box's pin button shows whether the open passage is pinned
+    function updateBibleRefPinButtons() {
+      const ref = typeof getCurrentBibleRefFromView === 'function' ? getCurrentBibleRefFromView() : null;
+      const pinned = !!ref && isPinnedBibleReference(ref.query, ref.versionId);
+      ['bible-ref-pin-current', 'nav-mirror-ref-pin-current'].forEach((id) => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.classList.toggle('active', pinned);
+        btn.title = pinned ? 'Unpin current reference' : 'Pin current reference';
+        btn.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+      });
     }
 
     function renderBibleReferencePicker() {
+      renderLibraryQuickRefs();
       const picker = document.getElementById('bible-ref-picker');
       if (!picker) return;
       if (sidebarTab !== 'bible') {
@@ -377,6 +447,11 @@
         const ref = getCurrentBibleRefFromView();
         if (!ref) {
           showToast('No active Bible reference to pin');
+          return;
+        }
+        if (isPinnedBibleReference(ref.query, ref.versionId)) {
+          unpinBibleReference(ref.query, ref.versionId);
+          showToast('Reference unpinned');
           return;
         }
         pinBibleReference(ref);

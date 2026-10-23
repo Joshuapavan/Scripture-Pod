@@ -38,6 +38,38 @@
       updateBottomNavSidebarButtons(tab);
     }
 
+    // Overlays is a workspace view rather than a library tab: the sidebar keeps
+    // the last Bible/Lyrics/Setlist library while the lower-third controls fill
+    // the workspace. Any setSidebarTab() call leaves it.
+    function openOverlaysWorkspace() {
+      document.body.classList.add('overlays-workspace-active');
+      document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-overlays'));
+      updateBottomNavSidebarButtons('overlays');
+      initOverlayPreview();
+      selectOverlayPanel(document.body.dataset.overlay || 'name-role');
+    }
+
+    // Overlays tab: the list picks which overlay's settings and preview show.
+    const OVERLAY_TITLES = { 'name-role': 'Name & Role', social: 'Social engagement' };
+
+    // "Scripture lower third" follows the Bible workspace: open it in Lower third mode
+    function openScriptureLowerThird() {
+      setSidebarTab('bible');
+      if (typeof setRatio === 'function') setRatio('16-9');
+    }
+
+    function selectOverlayPanel(which) {
+      const overlay = OVERLAY_TITLES[which] ? which : 'name-role';
+      document.body.dataset.overlay = overlay;
+      document.querySelectorAll('.overlay-list-item').forEach((item) => {
+        item.setAttribute('aria-pressed', item.dataset.overlay === overlay ? 'true' : 'false');
+      });
+      const title = document.getElementById('overlays-workspace-title');
+      if (title) title.textContent = OVERLAY_TITLES[overlay];
+      if (overlay === 'social') previewSocialEngagementLowerThirdExample();
+      else previewNameRoleLowerThirdExample();
+    }
+
 
     function setDockSceneTab(tabId) {
       activeWorkspaceTab = tabId;
@@ -62,6 +94,7 @@
     }
 
     function setSidebarTab(tab) {
+      document.body.classList.remove('overlays-workspace-active');
       const prevTab = sidebarTab;
       saveProjectionSettingsProfileForTab(getEffectiveSettingsTargetTab());
       const useFocusedWorkspaceControls = isFocusedWorkspaceMode();
@@ -559,41 +592,31 @@
       positionSidebarQuickActions();
     }
 
+    // The Quick button lives in the top bar; its panel drops down beneath it
     function positionSidebarQuickActions() {
-      const sidebar = document.getElementById('sidebar');
-      const handle = document.getElementById('sidebar-width-handle');
       const btn = document.getElementById('sidebar-quick-actions-btn');
       const panel = document.getElementById('sidebar-quick-actions-panel');
-      if (!sidebar || !btn || !panel) return;
+      if (!btn || !panel) return;
+      // It drops down from the top bar, so it must not sit inside the clipped library column
+      if (panel.parentElement !== document.body) document.body.appendChild(panel);
 
-      const visible = isSidebarQuickActionsVisible();
-      if (!visible) {
-        btn.style.display = 'none';
+      if (!isSidebarQuickActionsVisible()) {
         panel.classList.remove('open');
         panel.setAttribute('aria-hidden', 'true');
         sidebarQuickActionsOpen = false;
+        btn.classList.remove('active');
         return;
       }
 
-      const sidebarRect = sidebar.getBoundingClientRect();
-      const handleRect = handle ? handle.getBoundingClientRect() : null;
-      const gap = 0;
-      const top = Math.max(64, sidebarRect.top + 110);
-      btn.style.display = 'flex';
-      const handleCenter = handleRect && handleRect.width > 0
-        ? (handleRect.left + handleRect.right) / 2
-        : sidebarRect.right;
-      const anchorLeft = Math.round(handleCenter - (btn.offsetWidth || 26) / 2);
-      btn.style.left = `${anchorLeft}px`;
-      btn.style.top = `${Math.round(top)}px`;
       btn.classList.toggle('active', sidebarQuickActionsOpen);
-
       if (!sidebarQuickActionsOpen) return;
 
+      const rect = btn.getBoundingClientRect();
       panel.classList.add('open');
       panel.setAttribute('aria-hidden', 'false');
-      panel.style.left = `${Math.round(anchorLeft + btn.offsetWidth + gap + 6)}px`;
-      panel.style.top = `${Math.round(Math.max(56, Math.min(top - 10, window.innerHeight - panel.offsetHeight - 14)))}px`;
+      const width = panel.offsetWidth || 280;
+      panel.style.left = `${Math.round(Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)))}px`;
+      panel.style.top = `${Math.round(rect.bottom + 8)}px`;
     }
 
     function toggleSidebarQuickActions(forceOpen) {

@@ -1539,6 +1539,37 @@
       }
     }
 
+    // Header "Imports" menu: one place for everything the app can bring in
+    function closeImportsPopover() {
+      const pop = document.getElementById('imports-popover');
+      if (pop) pop.hidden = true;
+      document.getElementById('btn-imports')?.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleImportsPopover(event) {
+      if (event) event.stopPropagation();
+      const pop = document.getElementById('imports-popover');
+      if (!pop) return;
+      pop.hidden = !pop.hidden;
+      document.getElementById('btn-imports')?.setAttribute('aria-expanded', String(!pop.hidden));
+    }
+
+    function runImportAction(kind) {
+      closeImportsPopover();
+      if (kind === 'files') triggerImport();
+      else if (kind === 'bundled') importBundledBibles();
+      else if (kind === 'style') document.getElementById('import-style-file')?.click();
+      else if (kind === 'backup') document.getElementById('backup-import-file')?.click();
+    }
+
+    document.addEventListener('click', (event) => {
+      const pop = document.getElementById('imports-popover');
+      if (pop && !pop.hidden && !event.target.closest('.imports-wrap')) closeImportsPopover();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeImportsPopover();
+    });
+
     function openModal(id) {
       const modal = document.getElementById(id);
       if (!modal) return;
@@ -2158,6 +2189,25 @@
       return normalizeWorkspaceLayoutMode(workspaceLayoutMode) === 'focused';
     }
 
+    // Bible "Reader" view: the same verse buttons, laid out as one passage.
+    const BIBLE_READER_VIEW_KEY = 'scripturePod.bibleReaderView.v1';
+
+    function setBibleReaderView(enabled) {
+      const on = !!enabled;
+      document.body.classList.toggle('bible-reader-view', on);
+      document.getElementById('bible-view-verses')?.classList.toggle('active', !on);
+      document.getElementById('bible-view-verses')?.setAttribute('aria-pressed', on ? 'false' : 'true');
+      document.getElementById('bible-view-reader')?.classList.toggle('active', on);
+      document.getElementById('bible-view-reader')?.setAttribute('aria-pressed', on ? 'true' : 'false');
+      try { localStorage.setItem(BIBLE_READER_VIEW_KEY, on ? '1' : '0'); } catch (_) {}
+    }
+
+    function restoreBibleReaderView() {
+      let on = false;
+      try { on = localStorage.getItem(BIBLE_READER_VIEW_KEY) === '1'; } catch (_) {}
+      setBibleReaderView(on);
+    }
+
     function renderFocusedMainPanel() {
       const panel = document.getElementById('focused-main-panel');
       if (!panel) return;
@@ -2169,33 +2219,110 @@
       panel.setAttribute('aria-hidden', 'false');
       const activeScheduleIndex = (sidebarTab === 'schedule' && buttonContextTab === 'schedule') ? currentIndex : -1;
       const entries = Array.isArray(schedule) ? schedule : [];
+      const liveScheduleIndex = (isLive && livePointer && livePointer.source === 'schedule') ? livePointer.index : -1;
+      const icons = {
+        passage: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg>',
+        song: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+        up: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m18 15-6-6-6 6"/></svg>',
+        down: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+        remove: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>'
+      };
       const itemsHtml = entries.length ? entries.map((entry, idx) => {
         const isActive = idx === activeScheduleIndex;
+        const isOnAir = idx === liveScheduleIndex;
+        const isUpNext = liveScheduleIndex >= 0 && idx === liveScheduleIndex + 1;
+        const isPassage = getIsBibleItem(entry);
         const previewSource = String(entry?.content || entry?.text || '').replace(/\[[^\]]+\]/g, ' ').replace(/\s+/g, ' ').trim();
         const preview = esc(previewSource || (entry?.title || 'Untitled'));
         const title = esc(entry?.title || `Item ${idx + 1}`);
+        const kind = isPassage ? 'Passage' : 'Song';
+        const tag = isOnAir
+          ? '<span class="setlist-tag is-live">Live</span>'
+          : (isUpNext ? '<span class="setlist-tag is-next">Up next</span>' : '');
         return `
-          <div class="focused-main-item${isActive ? ' active' : ''}" data-focused-schedule-index="${idx}">
-            <div class="focused-main-item-copy">
-              <div class="focused-main-item-title">${title}</div>
-              <div class="focused-main-item-preview">${preview}</div>
-            </div>
+          <div class="focused-main-item setlist-row${isActive ? ' active' : ''}${isOnAir ? ' is-live' : ''}${isUpNext ? ' is-next' : ''}" data-focused-schedule-index="${idx}">
+            <span class="setlist-number">${String(idx + 1).padStart(2, '0')}</span>
+            <span class="setlist-kind" title="${kind}">${isPassage ? icons.passage : icons.song}</span>
+            <button type="button" class="focused-main-item-copy setlist-open" data-focused-action="select" data-focused-schedule-index="${idx}">
+              <span class="focused-main-item-title">${title}</span>
+              <span class="focused-main-item-preview"><span class="setlist-kind-label">${kind}</span> · ${preview}</span>
+            </button>
+            ${tag}
             <div class="focused-main-item-actions">
-              <button type="button" class="btn focused-main-mini-btn" data-focused-action="live" data-focused-schedule-index="${idx}">Live</button>
+              <button type="button" class="btn setlist-icon-btn" data-focused-action="up" data-focused-schedule-index="${idx}" aria-label="Move ${title} up"${idx === 0 ? ' disabled' : ''}>${icons.up}</button>
+              <button type="button" class="btn setlist-icon-btn" data-focused-action="down" data-focused-schedule-index="${idx}" aria-label="Move ${title} down"${idx === entries.length - 1 ? ' disabled' : ''}>${icons.down}</button>
+              <button type="button" class="btn setlist-icon-btn" data-focused-action="remove" data-focused-schedule-index="${idx}" aria-label="Remove ${title} from setlist">${icons.remove}</button>
+              <button type="button" class="btn focused-main-mini-btn setlist-live-btn" data-focused-action="live" data-focused-schedule-index="${idx}">Go live</button>
             </div>
           </div>
         `;
-      }).join('') : `<div class="focused-main-empty">Setlist is empty. Add songs or Bible verses from the sidebar and they will appear here.</div>`;
+      }).join('') : `<div class="focused-main-empty">The setlist is empty. Add verses or songs with their + buttons, or right-click a chapter or song and choose Add to setlist.</div>`;
 
       panel.innerHTML = `
         <div class="focused-main-shell">
           <div class="focused-main-header">
-            <div class="focused-main-title">Setlist Workspace</div>
+            <div class="focused-main-title">Setlist</div>
             <div class="focused-main-subtitle">${entries.length} item${entries.length === 1 ? '' : 's'}</div>
           </div>
           <div class="focused-main-list">${itemsHtml}</div>
         </div>
       `;
+      renderSetlistNextCard();
+    }
+
+    // Setlist "Up next" card (right column): the item after the live one, else
+    // after the selected one, else the first. Operator notes are saved on the
+    // setlist item itself.
+    let setlistNextIndex = -1;
+
+    function getSetlistUpNextIndex() {
+      const entries = Array.isArray(schedule) ? schedule : [];
+      if (!entries.length) return -1;
+      const liveIndex = (isLive && livePointer && livePointer.source === 'schedule') ? livePointer.index : -1;
+      const selected = (buttonContextTab === 'schedule') ? currentIndex : -1;
+      const anchor = liveIndex >= 0 ? liveIndex : selected;
+      const next = anchor >= 0 ? anchor + 1 : 0;
+      return next < entries.length ? next : -1;
+    }
+
+    function renderSetlistNextCard() {
+      const body = document.getElementById('setlist-next-body');
+      const number = document.getElementById('setlist-next-number');
+      const notes = document.getElementById('setlist-next-notes');
+      const notesWrap = document.getElementById('setlist-next-notes-wrap');
+      if (!body) return;
+      const idx = getSetlistUpNextIndex();
+      const entry = idx >= 0 ? schedule[idx] : null;
+      if (number) number.textContent = entry ? String(idx + 1).padStart(2, '0') : '';
+      if (notesWrap) notesWrap.hidden = !entry;
+      if (!entry) {
+        body.innerHTML = '<p class="setlist-next-empty">Nothing after this item.</p>';
+        setlistNextIndex = -1;
+        return;
+      }
+      const isPassage = getIsBibleItem(entry);
+      const pages = getPagesFromItem(entry, isPassage);
+      const rows = [
+        ['Type', isPassage ? 'Passage' : 'Song'],
+        isPassage && entry.version ? ['Version', entry.version] : null,
+        ['Slides', String(pages.length)]
+      ].filter(Boolean);
+      body.innerHTML = `
+        <div class="setlist-next-title">${esc(entry.title || `Item ${idx + 1}`)}</div>
+        <dl class="setlist-next-facts">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+        <button type="button" class="btn setlist-next-cue" onclick="handleFocusedSchedulePanelAction('select', ${idx})">Cue in preview</button>
+      `;
+      // Only refill the notes when the up-next item changes, so typing is never interrupted
+      if (notes && setlistNextIndex !== idx) notes.value = entry.notes || '';
+      setlistNextIndex = idx;
+    }
+
+    function handleSetlistNotesInput(value) {
+      const entry = setlistNextIndex >= 0 ? schedule[setlistNextIndex] : null;
+      if (!entry) return;
+      entry.notes = String(value || '');
+      saveState();
+      saveToStorageDebounced();
     }
 
     function handleFocusedSchedulePanelAction(action, idx) {
@@ -2287,11 +2414,9 @@
 
     function updateFocusedWorkspaceToolbar() {
       const addBtn = document.querySelector('.header-toolbar > .add-btn');
-      const modeSwitch = document.querySelector('.toolbar-mode-switch');
-      const importBtn = document.getElementById('btn-import');
-      const bibleToolWrap = document.querySelector('.bible-tool-wrap');
-      const annotateWrap = document.querySelector('.annotate-wrap');
-      const presetBtn = document.getElementById('btn-preset');
+      const modeSwitch = document.getElementById('editor-mode-switch');
+      const importsWrap = document.querySelector('.imports-wrap');
+      const fxCard = document.getElementById('fx-card');
       const focused = isFocusedWorkspaceMode();
       const isSongsTab = sidebarTab === 'songs';
       const isBibleTab = sidebarTab === 'bible';
@@ -2299,10 +2424,8 @@
 
       if (addBtn) addBtn.style.display = (!focused || isSongsTab) ? '' : 'none';
       if (modeSwitch) modeSwitch.style.display = (!focused || !isScheduleTab) ? '' : 'none';
-      if (importBtn) importBtn.style.display = (!focused || isSongsTab) ? '' : 'none';
-      if (bibleToolWrap) bibleToolWrap.style.display = (!focused || isBibleTab) ? '' : 'none';
-      if (annotateWrap) annotateWrap.style.display = (!focused || isSongsTab || isBibleTab) ? '' : 'none';
-      if (presetBtn) presetBtn.style.display = (!focused || !isScheduleTab) ? '' : 'none';
+      if (importsWrap) importsWrap.style.display = (!focused || isSongsTab || isBibleTab) ? '' : 'none';
+      if (fxCard) fxCard.style.display = (!focused || !isScheduleTab) ? '' : 'none';
     }
 
     function updateFocusedEditorBanner() {
@@ -2310,6 +2433,19 @@
       const subtitleEl = document.getElementById('focused-editor-banner-subtitle');
       const sectionNavEl = document.getElementById('focused-editor-section-nav');
       if (!titleEl || !subtitleEl || !sectionNavEl) return;
+      const eyebrowEl = document.getElementById('focused-editor-banner-eyebrow');
+      const searchLabelEl = document.getElementById('library-label-search');
+      const setEyebrow = (text) => { if (eyebrowEl) eyebrowEl.textContent = text; };
+      // View toggle labels follow the workspace (the design's Slides / Edit text)
+      const modeTextLabel = document.querySelector('#mode-text span');
+      const modeBtnLabel = document.querySelector('#mode-btn span');
+      if (modeTextLabel && modeBtnLabel && sidebarTab === 'songs') {
+        modeTextLabel.textContent = 'Edit text';
+        modeBtnLabel.textContent = 'Slides';
+      }
+      if (searchLabelEl) {
+        searchLabelEl.textContent = sidebarTab === 'songs' ? 'Find a song' : (sidebarTab === 'schedule' ? 'Find in setlist' : 'Go to passage');
+      }
       const renderSectionNav = (items = []) => {
         const list = Array.isArray(items) ? items : [];
         if (!list.length) {
@@ -2325,16 +2461,17 @@
         sectionNavEl.classList.add('has-items');
       };
       if (!isFocusedWorkspaceMode()) {
+        setEyebrow('');
         titleEl.textContent = 'Workspace';
         subtitleEl.textContent = '';
         renderSectionNav([]);
         return;
       }
       if (sidebarTab === 'songs') {
-        titleEl.textContent = 'Songs Workspace';
-        subtitleEl.textContent = currentItem && !getIsBibleItem(currentItem)
-          ? (currentItem.title || 'Untitled song')
-          : 'Select a song from the sidebar';
+        const hasSong = currentItem && !getIsBibleItem(currentItem);
+        setEyebrow('Lyrics workspace');
+        titleEl.textContent = hasSong ? (currentItem.title || 'Untitled song') : 'Lyrics';
+        subtitleEl.textContent = hasSong ? '' : 'Select a song from the library';
         if (currentItem && !getIsBibleItem(currentItem)) {
           const pages = getPagesFromItem(currentItem, false);
           const seen = new Set();
@@ -2342,13 +2479,15 @@
           const getSectionLabel = (tag) => {
             const trimmed = String(tag || '').trim();
             if (!trimmed) return '';
-            const match = trimmed.match(/^(verse|chorus|bridge|refrain|pre[-\s]?chorus|intro|outro|tag|hook)\b/i);
+            const match = trimmed.match(/^(verse|chorus|bridge|refrain|pre[-\s]?chorus|intro|outro|tag|hook)\b\s*(\d+)?/i);
             if (!match) return trimmed;
             const base = match[1].replace(/^pre[-\s]?chorus$/i, 'Pre-Chorus');
-            return base
+            const label = base
               .split(/[\s-]+/)
               .map(part => part ? (part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()) : '')
               .join(base.includes('-') ? '-' : ' ');
+            // Keep the section number so Verse 1, Verse 2… each get a chip
+            return match[2] ? `${label} ${match[2]}` : label;
           };
           pages.forEach((page) => {
             const tag = String(page?.tag || '').trim();
@@ -2365,15 +2504,18 @@
         return;
       }
       if (sidebarTab === 'bible') {
-        titleEl.textContent = 'Bible Workspace';
-        subtitleEl.textContent = currentItem && getIsBibleItem(currentItem)
-          ? `${currentItem.title || 'Bible'}${currentItem.version ? ` • ${currentItem.version}` : ''}`
-          : 'Select a Bible chapter or search a reference';
+        const hasChapter = currentItem && getIsBibleItem(currentItem);
+        setEyebrow('Bible workspace');
+        titleEl.textContent = hasChapter ? (currentItem.title || 'Bible') : 'Bible';
+        subtitleEl.textContent = hasChapter
+          ? (getOnScreenVersionIds().map(getVersionCode).join(' · ') || getVersionCode(currentItem.version))
+          : 'Select a chapter or search a reference';
         renderSectionNav([]);
         return;
       }
       if (sidebarTab === 'schedule') {
-        titleEl.textContent = 'Setlist Workspace';
+        setEyebrow('Setlist');
+        titleEl.textContent = 'Setlist';
         subtitleEl.textContent = `${Array.isArray(schedule) ? schedule.length : 0} item${Array.isArray(schedule) && schedule.length === 1 ? '' : 's'}`;
         renderSectionNav([]);
         return;

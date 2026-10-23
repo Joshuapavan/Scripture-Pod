@@ -30,6 +30,8 @@
       "js/**/*",
       "electron/main.js",
       "electron/bundled-bibles.js",
+      "electron/bible-search.js",
+      "electron/bible-search-worker.js",
       "electron/relay-security.js",
       "electron/preload.js",
       "electron/resources/Logo.svg",

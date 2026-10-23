@@ -199,6 +199,12 @@
     // Debug mode controlled by URL param `?debug=1` or `?debug`
     const DEBUG_MODE = new URLSearchParams(window.location.search).has('debug');
     const IS_STANDALONE_MONITOR = new URLSearchParams(window.location.search).get('hostMode') === 'standalone';
+    // Stream feed over a cable: fill transparent areas with a key colour
+    const KEY_BACKGROUND = { black: '#000000', green: '#00B140' }[new URLSearchParams(window.location.search).get('keyBg')] || '';
+    if (KEY_BACKGROUND) {
+      document.documentElement.classList.add('has-key-bg');
+      document.documentElement.style.setProperty('--key-bg', KEY_BACKGROUND);
+    }
 
     // DOM Elements
     const elements = {
@@ -1243,17 +1249,15 @@
       if (!data) {
         overlay.setAttribute('aria-hidden', 'true');
         overlay.classList.remove('is-visible');
-        overlay.style.removeProperty('--name-role-offset-x');
-        overlay.style.removeProperty('--name-role-offset-y');
         return;
       }
       const name = String(data?.name || '').trim();
       const role = String(data?.role || '').trim();
       const rawStyle = String(data?.style || 'classic-rise');
-      const normalizedStyle = ['classic', 'centered', 'band'].includes(rawStyle) ? `${rawStyle}-rise` : rawStyle;
-      const previousStyle = normalizedStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+      const normalizedStyle = ['classic', 'right', 'centered', 'band'].includes(rawStyle) ? `${rawStyle}-rise` : rawStyle;
+      const previousStyle = normalizedStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
       const currentStyle = previousStyle ? `${previousStyle[1]}-gms-${previousStyle[2]}` : normalizedStyle;
-      const styleMatch = currentStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+      const styleMatch = currentStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
       const layout = styleMatch ? styleMatch[1] : 'classic';
       const theme = styleMatch ? styleMatch[2] : 'gms';
       const animation = styleMatch ? styleMatch[3] : 'rise';
@@ -1266,7 +1270,7 @@
       const lightBackground = primaryLuminance >= 0.72;
       const foregroundColor = lightBackground ? '#101216' : '#ffffff';
       const logo = typeof data?.logo === 'string' && data.logo.startsWith('data:image/') ? data.logo : '';
-      const logoColor = data?.logoColor === 'black' ? 'black' : 'white';
+      const logoColor = data?.logoColor === 'black' ? 'black' : (data?.logoColor === 'off' ? 'off' : 'white');
       const nameSize = Math.max(24, Math.min(160, Number(data?.nameSize) || 56));
       const roleSize = Math.max(12, Math.min(72, Number(data?.roleSize) || 24));
       const logoSize = Math.max(24, Math.min(320, Number(data?.logoSize) || 128));
@@ -1285,9 +1289,10 @@
         else logoEl.removeAttribute('src');
         logoEl.hidden = !logo;
       }
-      overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
+      overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
       overlay.classList.add(`style-${layout}`, `theme-${theme}`, `motion-${animation}`);
       overlay.classList.toggle('logo-black', logoColor === 'black');
+      overlay.classList.toggle('logo-off', logoColor === 'off');
       overlay.classList.toggle('is-light-background', lightBackground);
       overlay.style.setProperty('--name-role-primary', primaryColor);
       overlay.style.setProperty('--name-role-accent', accentColor);
@@ -1308,6 +1313,13 @@
       if (enabled && changed && overlay.classList.contains('is-visible')) {
         overlay.classList.remove('is-visible');
         void overlay.offsetWidth;
+      }
+      // Coming on: settle the card in the chosen animation's hidden pose first,
+      // so it animates in from there rather than from the previous animation's pose
+      if (enabled && !overlay.classList.contains('is-visible')) {
+        overlay.classList.add('is-resetting');
+        void overlay.offsetWidth;
+        overlay.classList.remove('is-resetting');
       }
       overlay.classList.toggle('is-visible', enabled);
     }

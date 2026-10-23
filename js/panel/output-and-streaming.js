@@ -146,6 +146,124 @@
       return true;
     }
 
+    // ── Preview monitor ────────────────────────────────────────────────────
+    // A second embedded display beside Program. Preview payloads land here,
+    // so the Program monitor (and the output synced from it) only ever shows
+    // what is actually live.
+    // Preview payloads go to every preview display: the Preview monitor and
+    // the large preview on the Overlays tab ({ shell, frame } element ids).
+    const PREVIEW_DISPLAYS = [
+      { shell: 'preview-display-shell', frame: 'preview-display-frame' },
+      // Built the first time the Overlays tab opens, not at startup
+      { shell: 'overlay-preview-shell', frame: 'overlay-preview-frame', lazy: true }
+    ];
+    const previewDisplaysReady = new Set();
+    let previewMonitorState = { kind: 'clear' };
+
+    function hasPreviewMonitor() {
+      return !!document.getElementById('preview-display-frame');
+    }
+
+    function postMessageToPreviewMonitor(message) {
+      let posted = false;
+      PREVIEW_DISPLAYS.forEach(({ frame: frameId }) => {
+        const frame = document.getElementById(frameId);
+        if (!frame || !frame.contentWindow || !previewDisplaysReady.has(frameId)) return;
+        frame.contentWindow.postMessage(message, '*');
+        posted = true;
+      });
+      return posted;
+    }
+
+    function syncPreviewMonitor() {
+      if (!previewDisplaysReady.size) return;
+      postMessageToPreviewMonitor({ type: 'SET_STREAM_OUTPUT_MODE', enabled: !!_pgmStreamState.running });
+      if (previewMonitorState.kind === 'update' && previewMonitorState.payload) {
+        postMessageToPreviewMonitor({ type: 'PREVIEW_UPDATE', payload: previewMonitorState.payload });
+      } else {
+        postMessageToPreviewMonitor({ type: 'PREVIEW_CLEAR', sceneLayers: getOutputSceneLayers() });
+      }
+    }
+
+    function scalePreviewDisplay(shellId, frameId) {
+      const shell = document.getElementById(shellId);
+      const frame = document.getElementById(frameId);
+      if (!shell || !frame) return;
+      const shellW = shell.clientWidth || 0;
+      const shellH = shell.clientHeight || 0;
+      if (!shellW || !shellH) return;
+      const { width: baseW, height: baseH } = getEmbeddedDisplayViewport();
+      const scale = Math.min(shellW / baseW, shellH / baseH);
+      const offsetX = Math.round((shellW - baseW * scale) / 2);
+      const offsetY = Math.round((shellH - baseH * scale) / 2);
+      frame.style.width = baseW + 'px';
+      frame.style.height = baseH + 'px';
+      frame.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+    }
+
+    function updatePreviewMonitorScale() {
+      PREVIEW_DISPLAYS.forEach(({ shell, frame }) => scalePreviewDisplay(shell, frame));
+    }
+
+    function initPreviewMonitor() {
+      PREVIEW_DISPLAYS.filter(display => !display.lazy).forEach(initPreviewDisplay);
+    }
+
+    function initOverlayPreview() {
+      PREVIEW_DISPLAYS.filter(display => display.lazy).forEach(initPreviewDisplay);
+    }
+
+    function initPreviewDisplay({ shell: shellId, frame: frameId }) {
+      const frame = document.getElementById(frameId);
+      const shell = document.getElementById(shellId);
+      if (!frame || frame.dataset.bound) return;
+      frame.dataset.bound = '1';
+      previewDisplaysReady.delete(frameId);
+      frame.addEventListener('load', () => {
+        previewDisplaysReady.add(frameId);
+        // The Overlays preview sits over a program feed, so the page itself is see-through
+        if (frameId === 'overlay-preview-frame') {
+          try {
+            const doc = frame.contentDocument;
+            doc.documentElement.style.background = 'transparent';
+            doc.body.style.background = 'transparent';
+          } catch (error) { /* cross-origin: keep the default */ }
+        }
+        scalePreviewDisplay(shellId, frameId);
+        syncPreviewMonitor();
+      });
+      frame.srcdoc = buildStandaloneDisplayHtml({ preview: true });
+      if (shell && typeof ResizeObserver === 'function') {
+        new ResizeObserver(() => scalePreviewDisplay(shellId, frameId)).observe(shell);
+      } else {
+        window.addEventListener('resize', () => scalePreviewDisplay(shellId, frameId));
+      }
+    }
+
+    function setPreviewMonitorCaption(text) {
+      const caption = document.getElementById('preview-monitor-caption');
+      if (caption) caption.textContent = text;
+    }
+
+    function setProgramMonitorOnAir(onAir) {
+      document.body.classList.toggle('sp-program-on-air', !!onAir);
+      const caption = document.getElementById('program-monitor-caption');
+      if (caption) caption.textContent = onAir ? 'On air' : 'Clear';
+      const ref = document.getElementById('program-monitor-ref');
+      const liveItem = onAir ? getLiveItem() : null;
+      if (ref) ref.textContent = liveItem ? getItemPageRef(liveItem, liveLineCursor) : '';
+    }
+
+    function setPreviewMonitorRef(text) {
+      const ref = document.getElementById('preview-monitor-ref');
+      if (ref) ref.textContent = text || '';
+    }
+
+    function clearPreviewMonitor() {
+      previewMonitorState = { kind: 'clear' };
+      return postMessageToPreviewMonitor({ type: 'PREVIEW_CLEAR', sceneLayers: getOutputSceneLayers() });
+    }
+
     function sendProgramPreview(payload) {
       if (!payload) return false;
       const viewport = getEmbeddedDisplayViewport();
@@ -156,6 +274,11 @@
         displayViewportWidth: viewport.width,
         displayViewportHeight: viewport.height
       };
+      if (hasPreviewMonitor()) {
+        previewMonitorState = { kind: 'update', payload: previewPayload };
+        syncPreviewMonitor();
+        return true;
+      }
       embeddedProgramDisplayState = { kind: 'update', payload: previewPayload };
       if (!embeddedProgramDisplayReady) {
         pendingProgramPreviewPayload = previewPayload;
@@ -170,6 +293,14 @@
     }
 
     function clearProgramPreview() {
+      if (hasPreviewMonitor()) {
+        if (!clearPreviewMonitor()) {
+          showToast('Preview display is not ready');
+          return false;
+        }
+        showToast('Preview cleared');
+        return true;
+      }
       pendingProgramPreviewPayload = null;
       embeddedProgramDisplayState = { kind: 'clear' };
       if (!postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_CLEAR' })) {
@@ -330,6 +461,7 @@
         }
       });
       applyProgramDisplaySource('lyrics', { forceReload: true });
+      initPreviewMonitor();
       setProgramDisplayAspect('16:9');
       setProgramPreviewZoom(programPreviewZoom);
       layoutProgramScaleControls();
@@ -378,6 +510,9 @@
     #name-role-overlay.is-visible { opacity: 1; visibility: visible; transition-delay: 0s; }
     .style-centered#name-role-overlay { justify-content: center; padding-bottom: 8vh; }
     .style-band#name-role-overlay { justify-content: center; padding: 0 0 7vh; }
+    .style-right#name-role-overlay { scale: -1 1; transform: translate(calc(var(--name-role-offset-x,0vw) * -1),var(--name-role-offset-y,0vh)); }
+    .style-right#name-role-overlay .name-role-overlay-copy, .style-right#name-role-overlay .name-role-overlay-logo { scale: -1 1; }
+    .style-right#name-role-overlay .name-role-overlay-copy { align-items: flex-end; text-align: right; }
     .name-role-overlay-card { display: flex; flex-direction: row; align-items: center; gap: 18px; max-width: 86vw; min-height: 92px; padding: 14px 24px; border: 1px solid rgba(218,238,241,0.24); border-left: 5px solid var(--name-role-accent,#90D5FF); border-radius: 5px; background: rgba(8,14,18,0.82); box-shadow: 0 20px 64px rgba(0,0,0,0.42); backdrop-filter: blur(14px); color: #fff; text-align: left; opacity: 0; transform: translateY(24px) scale(0.96); transition: opacity 560ms ease, transform 720ms cubic-bezier(0.2,0.85,0.25,1), filter 620ms ease, clip-path 680ms cubic-bezier(0.2,0.85,0.25,1); will-change: opacity, transform, filter, clip-path; }
     .style-centered#name-role-overlay .name-role-overlay-card { border: 0; border-top: 4px solid var(--name-role-accent,#90D5FF); text-align: center; }
     .style-band#name-role-overlay .name-role-overlay-card { width: 100%; max-width: 100%; justify-content: center; border: 0; border-top: 3px solid var(--name-role-accent,#90D5FF); border-radius: 0; background: rgba(8,14,18,0.9); text-align: center; }
@@ -451,6 +586,8 @@
     .name-role-overlay-logo { display: block; width: var(--name-role-logo-size,128px); height: var(--name-role-logo-size,128px); max-width: min(24vw,320px); max-height: min(28vh,320px); object-fit: contain; flex: 0 0 auto; }
     #name-role-overlay .name-role-overlay-logo { filter: brightness(0) invert(1); }
     #name-role-overlay.logo-black .name-role-overlay-logo { filter: brightness(0); }
+    #name-role-overlay.logo-off .name-role-overlay-logo { display: none; }
+    #name-role-overlay.is-resetting, #name-role-overlay.is-resetting * { transition: none !important; animation: none !important; }
     .name-role-overlay-logo[hidden] { display: none; }
     .name-role-overlay-content { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; }
     .name-role-overlay-copy { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 0.08em; }
@@ -1134,16 +1271,14 @@
         if (!data) {
           overlay.setAttribute('aria-hidden', 'true');
           overlay.classList.remove('is-visible');
-          overlay.style.removeProperty('--name-role-offset-x');
-          overlay.style.removeProperty('--name-role-offset-y');
           return;
         }
         const name = String(data && data.name || '').trim();
         const role = String(data && data.role || '').trim();
         const rawStyle = String(data && data.style || 'classic-rise');
-        const legacyStyle = rawStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const legacyStyle = rawStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const normalizedStyle = legacyStyle ? legacyStyle[1] + '-gms-' + legacyStyle[2] : rawStyle;
-        const styleMatch = normalizedStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const styleMatch = normalizedStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const layout = styleMatch ? styleMatch[1] : 'classic';
         const theme = styleMatch ? styleMatch[2] : 'gms';
         const animation = styleMatch ? styleMatch[3] : 'rise';
@@ -1156,7 +1291,7 @@
         const lightBackground = primaryLuminance >= 0.72;
         const foregroundColor = lightBackground ? '#101216' : '#ffffff';
         const logo = typeof (data && data.logo) === 'string' && data.logo.startsWith('data:image/') ? data.logo : '';
-        const logoColor = data && data.logoColor === 'black' ? 'black' : 'white';
+        const logoColor = data && data.logoColor === 'black' ? 'black' : (data && data.logoColor === 'off' ? 'off' : 'white');
         const nameSize = Math.max(24, Math.min(160, Number(data && data.nameSize) || 56));
         const roleSize = Math.max(12, Math.min(72, Number(data && data.roleSize) || 24));
         const logoSize = Math.max(24, Math.min(320, Number(data && data.logoSize) || 128));
@@ -1175,9 +1310,10 @@
           else logoEl.removeAttribute('src');
           logoEl.hidden = !logo;
         }
-        overlay.classList.remove('style-classic', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
+        overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
         overlay.classList.add('style-' + layout, 'theme-' + theme, 'motion-' + animation);
         overlay.classList.toggle('logo-black', logoColor === 'black');
+        overlay.classList.toggle('logo-off', logoColor === 'off');
         overlay.classList.toggle('is-light-background', lightBackground);
         overlay.style.setProperty('--name-role-primary', primaryColor);
         overlay.style.setProperty('--name-role-accent', accentColor);
@@ -1198,6 +1334,12 @@
         if (enabled && changed && overlay.classList.contains('is-visible')) {
           overlay.classList.remove('is-visible');
           void overlay.offsetWidth;
+        }
+        // Coming on: settle the card in the chosen animation's hidden pose first
+        if (enabled && !overlay.classList.contains('is-visible')) {
+          overlay.classList.add('is-resetting');
+          void overlay.offsetWidth;
+          overlay.classList.remove('is-resetting');
         }
         overlay.classList.toggle('is-visible', enabled);
       }
@@ -1523,6 +1665,7 @@
           select.innerHTML = options.join('');
           select.value = outputScreenList.some(s => s.id === prevValue) ? prevValue : 'auto';
         }
+        renderStreamFeedScreens();
         if (outputPopoverOpen) {
           renderOutputScreenPopover();
         }
@@ -1727,6 +1870,164 @@
       lyricsMonitorOutputOpen = false;
       setOutputLiveState(false);
       showToast(t('output_live_ended'));
+    }
+
+    // Top bar Outputs button: bring the Outputs card into view.
+    function showOutputsCard() {
+      const card = document.getElementById('outputs-card');
+      if (!card) return;
+      card.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      card.classList.add('is-flash');
+      setTimeout(() => card.classList.remove('is-flash'), 1200);
+    }
+
+    // ── Stream feed (cable) ────────────────────────────────────────────────
+    // A second output window on its own display, meant for an HDMI cable into
+    // the streaming computer's capture card. Transparent areas are filled with
+    // a key colour because a cable cannot carry transparency.
+    const STREAM_FEED_STORAGE_KEY = 'scripturePod.streamFeed.v1';
+    const STREAM_FEED_OBS_HINTS = {
+      none: 'Empty areas stay transparent, as on the main output. A cable cannot carry transparency, so choose Black or Green if OBS needs to key it out.',
+      black: 'In OBS, add the capture card as a Video Capture Device, then a Luma Key filter.',
+      green: 'In OBS, add the capture card as a Video Capture Device, then a Chroma Key filter (green).'
+    };
+    let streamFeedOpen = false;
+    let streamFeedSettings = { displayId: '', key: 'none' };
+
+    function loadStreamFeedSettings() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STREAM_FEED_STORAGE_KEY) || '{}');
+        streamFeedSettings = {
+          displayId: typeof saved.displayId === 'string' ? saved.displayId : '',
+          key: ['black', 'green'].includes(saved.key) ? saved.key : 'none'
+        };
+      } catch (_) {}
+    }
+
+    function saveStreamFeedSettings() {
+      try { localStorage.setItem(STREAM_FEED_STORAGE_KEY, JSON.stringify(streamFeedSettings)); } catch (_) {}
+    }
+
+    // Default to an external screen other than the one the main output uses.
+    function getDefaultStreamFeedScreen() {
+      const screens = Array.isArray(outputScreenList) ? outputScreenList : [];
+      const mainChoice = String(document.getElementById('output-screen-select')?.value || 'auto');
+      const mainId = mainChoice === 'auto' ? (getPreferredExternalScreen()?.id || '') : mainChoice;
+      const externals = screens.filter(s => !s.isInternal);
+      return externals.find(s => s.id !== mainId) || externals[0] || screens[0] || null;
+    }
+
+    function renderStreamFeedScreens() {
+      const select = document.getElementById('stream-feed-display');
+      if (!select) return;
+      const screens = Array.isArray(outputScreenList) ? outputScreenList : [];
+      select.replaceChildren(...screens.map((screen, idx) => {
+        const option = document.createElement('option');
+        option.value = screen.id;
+        const kind = screen.isInternal ? 'Built-in' : 'External';
+        option.textContent = `${screen.label || ('Display ' + (idx + 1))} · ${kind} · ${screen.width}×${screen.height}`;
+        return option;
+      }));
+      const saved = screens.find(s => s.id === streamFeedSettings.displayId);
+      const chosen = saved || getDefaultStreamFeedScreen();
+      if (chosen) select.value = chosen.id;
+    }
+
+    function syncStreamFeedUi() {
+      const available = hasDesktopOutputBridge() && typeof window.BSPDesktop.openFeed === 'function';
+      const button = document.getElementById('btn-stream-feed');
+      const state = document.getElementById('stream-feed-state');
+      const hint = document.getElementById('stream-feed-obs-hint');
+      const select = document.getElementById('stream-feed-display');
+      document.getElementById('output-route-feed')?.classList.toggle('is-unavailable', !available);
+      if (button) {
+        button.disabled = !available;
+        button.textContent = streamFeedOpen ? 'Stop feed' : 'Start feed';
+        button.setAttribute('aria-pressed', streamFeedOpen ? 'true' : 'false');
+        button.classList.toggle('active', streamFeedOpen);
+      }
+      if (select) select.disabled = !available;
+      if (state) {
+        state.textContent = streamFeedOpen ? 'On' : 'Off';
+        state.classList.toggle('is-on', streamFeedOpen);
+      }
+      ['none', 'black', 'green'].forEach((key) => {
+        const keyBtn = document.getElementById(`stream-feed-key-${key}`);
+        if (!keyBtn) return;
+        const active = streamFeedSettings.key === key;
+        keyBtn.classList.toggle('active', active);
+        keyBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      if (hint) {
+        hint.textContent = available
+          ? STREAM_FEED_OBS_HINTS[streamFeedSettings.key]
+          : 'The stream feed needs the desktop app.';
+      }
+    }
+
+    async function openStreamFeed() {
+      const select = document.getElementById('stream-feed-display');
+      const displayId = String(select?.value || streamFeedSettings.displayId || '');
+      const result = await window.BSPDesktop.openFeed({
+        displayId,
+        keyBackground: streamFeedSettings.key
+      }).catch(() => null);
+      if (!result || !result.ok) {
+        showToast('Could not open the stream feed');
+        return false;
+      }
+      streamFeedOpen = true;
+      syncStreamFeedUi();
+      sendSyncState();
+      queueStandaloneSyncBurst();
+      return true;
+    }
+
+    async function toggleStreamFeed() {
+      if (!hasDesktopOutputBridge() || typeof window.BSPDesktop.openFeed !== 'function') return;
+      if (streamFeedOpen) {
+        await window.BSPDesktop.closeFeed().catch(() => {});
+        streamFeedOpen = false;
+        syncStreamFeedUi();
+        showToast('Stream feed stopped');
+        return;
+      }
+      const select = document.getElementById('stream-feed-display');
+      const chosen = (Array.isArray(outputScreenList) ? outputScreenList : []).find(s => s.id === select?.value);
+      if (await openStreamFeed()) {
+        showToast(`Stream feed on ${chosen ? chosen.label : 'the selected screen'}`);
+      }
+    }
+
+    // Changing screen or key colour while the feed runs reopens it in place.
+    function handleStreamFeedDisplayChange() {
+      const select = document.getElementById('stream-feed-display');
+      streamFeedSettings.displayId = String(select?.value || '');
+      saveStreamFeedSettings();
+      if (streamFeedOpen) openStreamFeed();
+    }
+
+    function setStreamFeedKey(key) {
+      streamFeedSettings.key = ['black', 'green'].includes(key) ? key : 'none';
+      saveStreamFeedSettings();
+      syncStreamFeedUi();
+      if (streamFeedOpen) openStreamFeed();
+    }
+
+    function initStreamFeedControls() {
+      loadStreamFeedSettings();
+      renderStreamFeedScreens();
+      syncStreamFeedUi();
+      if (hasDesktopOutputBridge() && typeof window.BSPDesktop.onFeedClosed === 'function') {
+        window.BSPDesktop.onFeedClosed(() => {
+          streamFeedOpen = false;
+          syncStreamFeedUi();
+        });
+        window.BSPDesktop.isFeedOpen().then((isOpen) => {
+          streamFeedOpen = !!isOpen;
+          syncStreamFeedUi();
+        }).catch(() => {});
+      }
     }
 
     const _PGM_STREAM_CONFIG_KEY = 'projection_stream_config_v1';
@@ -1947,6 +2248,15 @@
       if (errEl) errEl.textContent = _pgmStreamState.lastError || 'None';
 
       const live = _pgmStreamState.running;
+      const topbarStream = document.getElementById('topbar-stream-status');
+      const topbarStreamState = document.getElementById('topbar-stream-state');
+      if (topbarStream) {
+        topbarStream.classList.toggle('is-live', live);
+        topbarStream.classList.toggle('is-starting', !!_pgmStreamState.starting);
+      }
+      if (topbarStreamState) {
+        topbarStreamState.textContent = _pgmStreamState.starting ? 'Starting' : (live ? 'Live' : 'Offline');
+      }
       if (pill) {
         pill.classList.toggle('live', live);
         if (_pgmStreamState.starting) pill.textContent = 'STARTING';
@@ -2292,6 +2602,7 @@
       initEmbeddedProgramDisplay();
       initProjectionStreamingExtras().catch(() => {});
       syncLyricsOutputTypeButtons();
+      initStreamFeedControls();
       refreshOutputScreenList().catch(() => {});
       refreshPgmOutputDevices().catch(() => {});
       if (hasDesktopOutputBridge() && typeof window.BSPDesktop.onOutputClosed === 'function') {

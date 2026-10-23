@@ -1012,7 +1012,33 @@
       return true;
     }
 
+    // "Genesis 1:28" for a Bible page, "Amazing Grace · 3/8" for a song slide.
+    function getItemPageRef(item, pageIndex, opts = {}) {
+      if (!item) return '';
+      const isBible = getIsBibleItem(item);
+      const pages = getPagesFromItem(item, isBible);
+      const page = pages[pageIndex];
+      if (!page) return '';
+      if (isBible) {
+        const { book, chap } = extractBookAndChapter(item);
+        const verse = getFirstVerseNumber(page.raw);
+        if (opts.short) return verse ? `${chap}:${verse}` : String(chap || '');
+        return verse ? `${book} ${chap}:${verse}` : (item.title || '');
+      }
+      const slide = `${pageIndex + 1}/${pages.length}`;
+      return opts.short ? String(pageIndex + 1).padStart(2, '0') : `${item.title || 'Song'} · ${slide}`;
+    }
+
+    function getLiveItem() {
+      if (!isLive || !livePointer) return null;
+      if (livePointer.source === 'schedule') return schedule[livePointer.index] || null;
+      if (livePointer.kind === 'bible') return (bibles[livePointer.version] || [])[livePointer.index] || null;
+      return songs[livePointer.index] || null;
+    }
+
     function refreshProjectLiveButtonState() {
+      const refEl = document.getElementById('go-live-ref');
+      if (refEl) refEl.textContent = currentItem ? getItemPageRef(currentItem, lineCursor, { short: true }) : '';
       const btn = document.getElementById('btn-project-live');
       if (!btn) return;
       if (isCurrentSelectionLive()) {
@@ -1094,7 +1120,7 @@
         if (isCurrentlyLive) {
           const badge = document.createElement('span');
           badge.className = 'live-indicator';
-          badge.innerText = '[LIVE]';
+          badge.innerText = 'LIVE';
           btn.appendChild(badge);
         }
 
@@ -1103,7 +1129,6 @@
         }
 
         btn.onclick = () => {
-          if (annotateMode) return;
           lineCursor = idx;
           if (isBible && linesPerPage === 1) {
             const verseNum = getFirstVerseNumber(p.raw);
@@ -1243,10 +1268,11 @@
       button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
       button.classList.toggle('active', enabled);
       button.title = enabled
-        ? 'Preview Only is on. Turn it off to send Project Live to the output.'
-        : 'Toggle preview-only mode';
+        ? 'Preview Only is on. Turn it off to send Go live to the output.'
+        : 'Preview only: selections go to Preview, not on air · Alt+Space previews the selection';
       updateProgramDisplayStatus();
       if (enabled) previewCurrentSelection();
+      else schedulePreviewMonitorRefresh();
     }
 
     function previewCurrentSelection() {
@@ -1254,7 +1280,51 @@
         showToast('Select a verse or song to preview');
         return false;
       }
+      setPreviewMonitorCaption('Cued · not on air');
+      setPreviewMonitorRef(getItemPageRef(currentItem, lineCursor));
+      const previewed = renderSelectionToPreview(lineCursor);
+      if (previewed) showToast('Preview updated');
+      return previewed;
+    }
 
+    // Outside Preview Only, the Preview monitor shows what Next (→) would send,
+    // or the selected page when nothing from this item is on air.
+    let previewMonitorRefreshTimer = 0;
+    let renderingPreviewMonitor = false;
+
+    function schedulePreviewMonitorRefresh() {
+      if (previewMonitorRefreshTimer || renderingPreviewMonitor || !hasPreviewMonitor()) return;
+      previewMonitorRefreshTimer = setTimeout(() => {
+        previewMonitorRefreshTimer = 0;
+        refreshPreviewMonitor();
+      }, 0);
+    }
+
+    function refreshPreviewMonitor() {
+      if (isPreviewOnlyMode()) return;
+      if (!currentItem) {
+        clearPreviewMonitor();
+        setPreviewMonitorCaption('Nothing selected');
+        setPreviewMonitorRef('');
+        return;
+      }
+      const isBible = getIsBibleItem(currentItem);
+      const pages = getPagesFromItem(currentItem, isBible);
+      const onAir = isCurrentSelectionLive();
+      const target = onAir ? lineCursor + 1 : lineCursor;
+      if (target >= pages.length) {
+        clearPreviewMonitor();
+        setPreviewMonitorCaption(isBible ? 'End of chapter' : 'End of song');
+        setPreviewMonitorRef('');
+        return;
+      }
+      setPreviewMonitorCaption(onAir ? 'Next' : 'Not on air');
+      setPreviewMonitorRef(getItemPageRef(currentItem, target));
+      renderSelectionToPreview(target, { silent: true });
+    }
+
+    function renderSelectionToPreview(pageIndex, opts = {}) {
+      if (!currentItem) return false;
       const previousLiveState = {
         kind: liveKind,
         pointer: livePointer,
@@ -1267,6 +1337,7 @@
       const isBible = getIsBibleItem(currentItem);
       const scheduleProjectIndex = isCurrentItemFromScheduleList() ? currentIndex : -1;
 
+      renderingPreviewMonitor = true;
       try {
         liveKind = isBible ? 'bible' : 'songs';
         livePointer = isBible
@@ -1281,19 +1352,18 @@
               index: currentIndex,
               source: scheduleProjectIndex >= 0 ? 'schedule' : 'songs'
             };
-        liveLineCursor = lineCursor;
+        liveLineCursor = pageIndex;
         liveLinesPerPage = linesPerPage;
         liveBackgroundState = captureBackgroundStateFromUi();
         liveRatio = !isBible && activeRatio === 'custom' ? 'full' : activeRatio;
         liveTextTransformState = captureTextTransformStateFromUi();
         applyProgramDisplaySource('lyrics');
-        const previewed = pushLiveUpdate({ previewOnly: true });
-        if (previewed) showToast('Preview updated');
-        return previewed;
+        return pushLiveUpdate({ previewOnly: true });
       } catch (error) {
-        showToast(error && error.message ? error.message : 'Unable to preview selection');
+        if (!opts.silent) showToast(error && error.message ? error.message : 'Unable to preview selection');
         return false;
       } finally {
+        renderingPreviewMonitor = false;
         liveKind = previousLiveState.kind;
         livePointer = previousLiveState.pointer;
         liveLineCursor = previousLiveState.lineCursor;

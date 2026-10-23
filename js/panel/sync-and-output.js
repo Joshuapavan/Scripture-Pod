@@ -184,12 +184,35 @@
     function setLowerThirdButtonState(button, enabled, title) {
       if (!button) return;
       button.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-      button.textContent = enabled ? 'Hide Lower Third' : 'Show Lower Third';
+      button.textContent = enabled ? 'Hide from air' : 'Show on air';
       button.classList.toggle('active', enabled);
       button.title = enabled ? `Hide ${title}` : `Show ${title}`;
     }
 
-    function previewNameRoleLowerThirdExample() {
+    // Test / replay: the example comes in, holds, then goes out, so both the
+    // intro and the outro of the chosen animation are seen. Choosing a design or
+    // an overlay keeps its example on the Preview instead.
+    const LT_TEST_HOLD_MS = 3200;
+    let lowerThirdTestTimers = [];
+
+    function playLowerThirdTest(show) {
+      lowerThirdTestTimers.forEach(clearTimeout);
+      lowerThirdTestTimers = [];
+      show(false);                                   // start hidden so the intro plays every time
+      lowerThirdTestTimers.push(setTimeout(() => show(true), 120));
+      lowerThirdTestTimers.push(setTimeout(() => show(false), 120 + LT_TEST_HOLD_MS));
+    }
+
+    function testNameRoleLowerThird() {
+      playLowerThirdTest(visible => previewNameRoleLowerThirdExample(visible, { keepTimers: true }));
+    }
+
+    function testSocialEngagementLowerThird() {
+      playLowerThirdTest(visible => previewSocialEngagementLowerThirdExample(visible, { keepTimers: true }));
+    }
+
+    function previewNameRoleLowerThirdExample(visible = true, opts = {}) {
+      if (!opts.keepTimers) { lowerThirdTestTimers.forEach(clearTimeout); lowerThirdTestTimers = []; }
       const settings = getNameRoleOverlaySettings(true);
       sendProgramPreview({
         text: '',
@@ -211,14 +234,16 @@
         lowerThirdOnly: true,
         nameRoleOverlay: {
           ...settings,
-          name: 'PS. Samson Arthur Paul',
-          role: 'Senior Pastor'
+          enabled: visible !== false,
+          name: settings.name || 'PS. Samson Arthur Paul',
+          role: settings.name ? settings.role : 'Senior Pastor'
         }
       });
-      showToast('Lower-third example sent to preview');
+      if (!opts.keepTimers || visible) showToast('Lower-third example sent to preview');
     }
 
-    function previewSocialEngagementLowerThirdExample() {
+    function previewSocialEngagementLowerThirdExample(visible = true, opts = {}) {
+      if (!opts.keepTimers) { lowerThirdTestTimers.forEach(clearTimeout); lowerThirdTestTimers = []; }
       const settings = getSocialEngagementOverlaySettings(true);
       sendProgramPreview({
         text: '',
@@ -240,6 +265,7 @@
         lowerThirdOnly: true,
         socialEngagementOverlay: {
           ...settings,
+          enabled: visible !== false,
           socials: {
             instagram: '@church',
             facebook: 'facebook.com/church',
@@ -252,7 +278,26 @@
           }
         }
       });
-      showToast('Social lower-third example sent to preview');
+      if (!opts.keepTimers || visible) showToast('Social lower-third example sent to preview');
+    }
+
+    // One thing on the live output at a time: a verse or lyric replaces a lower
+    // third, and a lower third replaces the verse or lyric.
+    function hideLiveLowerThirds() {
+      const nameRole = document.getElementById('name-role-overlay-show-btn');
+      const social = document.getElementById('social-engagement-overlay-show-btn');
+      const shown = [nameRole, social].filter(button => button && button.getAttribute('aria-pressed') === 'true');
+      if (!shown.length) return false;
+      shown.forEach(button => setLowerThirdButtonState(button, false, button === nameRole ? 'lower third' : 'social lower third'));
+      // The display leaves lower-third mode (restoring the last slide) before the new slide arrives
+      publishLowerThirdOverlays();
+      handleNameRoleOverlayChange(true);
+      handleSocialEngagementOverlayChange(true);
+      return true;
+    }
+
+    function takeLiveOutputForLowerThird() {
+      if (isLive && !isPreviewOnlyMode()) clearOutput({ fade: false });
     }
 
     function toggleNameRoleOverlay() {
@@ -266,6 +311,8 @@
       }
       if (enabled) {
         setLowerThirdButtonState(document.getElementById('social-engagement-overlay-show-btn'), false, 'social lower third');
+        takeLiveOutputForLowerThird();
+        rememberSavedName(overlay.name, overlay.role);
       }
       setLowerThirdButtonState(button, enabled, 'lower third');
       updateProgramDisplayStatus();
@@ -284,12 +331,228 @@
       }
       if (enabled) {
         setLowerThirdButtonState(document.getElementById('name-role-overlay-show-btn'), false, 'lower third');
+        takeLiveOutputForLowerThird();
       }
       setLowerThirdButtonState(button, enabled, 'social lower third');
       handleSocialEngagementOverlayChange(true);
     }
 
+    // Lower-third design picker: one tab per family and one button per design,
+    // built from the <select>, which stays the source of truth. Picking a
+    // design also shows it on the Preview monitor.
+    let ltDesignPickerFamily = '';
+
+    // Colors for the little design previews: bar, accent edge, name and role
+    // text, role background. Only used to draw the picker thumbnails.
+    const LT_THUMB_THEMES = {
+      legacy: ['#12395F', '#90D5FF', '#FFFFFF', '#90D5FF', '#0B0D10'],
+      gms: ['#0F1B33', '#C6F432', '#FFFFFF', '#C6F432', '#0B0D10'],
+      noir: ['#1B1D22', '#D5B56D', '#F4EBD6', '#2A2C33', '#D5B56D'],
+      broadcast: ['#1559A7', '#90D5FF', '#FFFFFF', '#0E3E78', '#FFFFFF'],
+      modern: ['#90D5FF', '#0B0D10', '#0B0D10', '#0B0D10', '#FFFFFF'],
+      news: ['#B3261E', '#FFFFFF', '#FFFFFF', '#101216', '#FFFFFF'],
+      spotlight: ['#F4F6F8', '#E5372A', '#101216', '#101216', '#FFFFFF'],
+      clean: ['#FFFFFF', '#90D5FF', '#101216', '#E7EEF4', '#101216'],
+      glass: ['#2A3647', '#90D5FF', '#FFFFFF', '#1B2431', '#C9D6E6'],
+      copper: ['#8A4B22', '#E8A26B', '#FFF1E4', '#5A2E12', '#FFD9B8'],
+      editorial: ['#101216', '#FFFFFF', '#FFFFFF', '#F4F4F2', '#101216'],
+      neon: ['#0B0D10', '#39F5C8', '#39F5C8', '#0B0D10', '#9BFFE6'],
+      ribbon: ['#7B1FA2', '#F3C4FF', '#FFFFFF', '#4A148C', '#F3C4FF'],
+      aurora: ['#1F6F8B', '#99F6E4', '#FFFFFF', '#17496B', '#CFFAF0'],
+      sunrise: ['#F59E0B', '#FDE68A', '#2B1700', '#B45309', '#FFF7E0'],
+      royal: ['#1E1B4B', '#E8B04B', '#FDE9B8', '#2E2A6B', '#E8B04B'],
+      minimal: ['#00000000', '#FFFFFF', '#FFFFFF', '#00000000', '#D5D9DE'],
+      pill: ['#101216', '#90D5FF', '#FFFFFF', '#90D5FF', '#0B0D10'],
+      holo: ['#1B2A4A', '#7DD3FC', '#FFFFFF', '#243B6B', '#BAE6FD'],
+      frost: ['#DDE9F3', '#FFFFFF', '#101216', '#FFFFFF', '#33414F'],
+      cinema: ['#0B0D10', '#C8102E', '#FFFFFF', '#0B0D10', '#D5D9DE'],
+      sharp: ['#101216', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#101216'],
+      emerald: ['#065F46', '#6EE7B7', '#FFFFFF', '#044535', '#A7F3D0'],
+      pulse: ['#B91C1C', '#FCA5A5', '#FFFFFF', '#7F1212', '#FECACA'],
+      parchment: ['#F1E6C8', '#8B5E34', '#3B2A16', '#E3D3A8', '#3B2A16']
+    };
+
+    // A miniature lower third in the design's colors and layout family
+    function buildLtDesignThumb(value) {
+      const [family, theme] = String(value).split('-');
+      const [bar, accent, nameFg, roleBg, roleFg] = LT_THUMB_THEMES[theme] || LT_THUMB_THEMES.gms;
+      const thumb = document.createElement('span');
+      thumb.className = `lt-design-thumb is-${family}`;
+      const stack = document.createElement('span');
+      stack.className = 'lt-thumb-stack';
+      const name = document.createElement('span');
+      name.className = 'lt-thumb-name';
+      name.textContent = 'Name Surname';
+      name.style.cssText = `background:${bar};color:${nameFg};`;
+      const edge = document.createElement('span');
+      edge.className = 'lt-thumb-edge';
+      edge.style.background = accent;
+      const row = document.createElement('span');
+      row.className = 'lt-thumb-row';
+      row.append(edge, name);
+      const role = document.createElement('span');
+      role.className = 'lt-thumb-role';
+      role.textContent = 'Role';
+      role.style.cssText = `background:${roleBg};color:${roleFg};`;
+      stack.append(row, role);
+      thumb.appendChild(stack);
+      return thumb;
+    }
+
+    function renderLtDesignPicker() {
+      const select = document.getElementById('name-role-overlay-design');
+      const host = document.getElementById('lt-design-picker');
+      if (!select || !host) return;
+      const groups = Array.from(select.querySelectorAll('optgroup'));
+      if (!groups.length) return;
+      const current = select.value;
+      const currentGroup = groups.find(g => Array.from(g.children).some(o => o.value === current)) || groups[0];
+      if (!groups.some(g => g.label === ltDesignPickerFamily)) ltDesignPickerFamily = currentGroup.label;
+
+      const families = document.createElement('div');
+      families.className = 'lt-design-families';
+      families.setAttribute('role', 'group');
+      families.setAttribute('aria-label', 'Design family');
+      groups.forEach((group) => {
+        const tab = document.createElement('button');
+        tab.type = 'button';
+        tab.className = 'lt-design-family';
+        tab.textContent = group.label;
+        tab.setAttribute('aria-pressed', group.label === ltDesignPickerFamily ? 'true' : 'false');
+        tab.onclick = () => {
+          ltDesignPickerFamily = group.label;
+          renderLtDesignPicker();
+        };
+        families.appendChild(tab);
+      });
+
+      const total = groups.reduce((n, g) => n + g.children.length, 0);
+      const count = document.createElement('span');
+      count.className = 'lt-design-count';
+      count.textContent = `${total} designs in ${groups.length} families`;
+
+      const grid = document.createElement('div');
+      grid.className = 'lt-design-grid';
+      grid.setAttribute('role', 'group');
+      grid.setAttribute('aria-label', `${ltDesignPickerFamily} designs`);
+      const group = groups.find(g => g.label === ltDesignPickerFamily);
+      Array.from(group ? group.children : []).forEach((option) => {
+        const tile = document.createElement('button');
+        tile.type = 'button';
+        tile.className = 'lt-design-tile';
+        const label = document.createElement('span');
+        label.className = 'lt-design-label';
+        label.textContent = option.textContent;
+        tile.append(buildLtDesignThumb(option.value), label);
+        tile.setAttribute('aria-pressed', option.value === current ? 'true' : 'false');
+        tile.onclick = () => pickLtDesign(option.value);
+        grid.appendChild(tile);
+      });
+      host.replaceChildren(families, count, grid);
+    }
+
+    // Saved names: people shown before, one click refills Name and Role
+    const SAVED_NAMES_KEY = 'scripturePod.savedNames.v1';
+
+    function readSavedNames() {
+      try {
+        const list = JSON.parse(localStorage.getItem(SAVED_NAMES_KEY) || '[]');
+        return Array.isArray(list) ? list.filter(p => p && p.name) : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function writeSavedNames(list) {
+      try { localStorage.setItem(SAVED_NAMES_KEY, JSON.stringify(list.slice(0, 12))); } catch (error) { /* storage unavailable */ }
+    }
+
+    function rememberSavedName(name, role) {
+      const clean = String(name || '').trim();
+      if (!clean) return;
+      const list = readSavedNames().filter(p => !(p.name === clean && (p.role || '') === String(role || '').trim()));
+      list.unshift({ name: clean, role: String(role || '').trim() });
+      writeSavedNames(list);
+      renderSavedNames();
+    }
+
+    function renderSavedNames() {
+      const host = document.getElementById('saved-names-list');
+      if (!host) return;
+      const list = readSavedNames();
+      const nameInput = document.getElementById('name-role-overlay-name');
+      const roleInput = document.getElementById('name-role-overlay-role');
+      if (!list.length) {
+        const empty = document.createElement('p');
+        empty.className = 'saved-names-empty';
+        empty.textContent = 'Names you put on screen are kept here.';
+        host.replaceChildren(empty);
+        return;
+      }
+      host.replaceChildren(...list.map((person) => {
+        const row = document.createElement('div');
+        row.className = 'saved-name';
+        const pick = document.createElement('button');
+        pick.type = 'button';
+        pick.className = 'saved-name-pick';
+        const active = nameInput && nameInput.value.trim() === person.name && (roleInput?.value || '').trim() === (person.role || '');
+        pick.setAttribute('aria-pressed', active ? 'true' : 'false');
+        const name = document.createElement('span');
+        name.className = 'saved-name-name';
+        name.textContent = person.name;
+        const role = document.createElement('span');
+        role.className = 'saved-name-role';
+        role.textContent = person.role || 'No role';
+        pick.append(name, role);
+        pick.onclick = () => {
+          if (nameInput) nameInput.value = person.name;
+          if (roleInput) roleInput.value = person.role || '';
+          handleNameRoleOverlayChange();
+          previewNameRoleLowerThirdExample();
+          renderSavedNames();
+        };
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'saved-name-remove';
+        remove.setAttribute('aria-label', `Remove ${person.name}`);
+        remove.textContent = '×';
+        remove.onclick = () => {
+          writeSavedNames(readSavedNames().filter(p => !(p.name === person.name && (p.role || '') === (person.role || ''))));
+          renderSavedNames();
+        };
+        row.append(pick, remove);
+        return row;
+      }));
+    }
+
+    // Logo: White / Black / Off buttons drive the hidden select
+    function setNameRoleOverlayLogoColor(value) {
+      const select = document.getElementById('name-role-overlay-logo-color');
+      if (!select) return;
+      select.value = value;
+      syncNameRoleOverlayLogoButtons();
+      handleNameRoleOverlayChange();
+    }
+
+    function syncNameRoleOverlayLogoButtons() {
+      const value = document.getElementById('name-role-overlay-logo-color')?.value || 'white';
+      document.querySelectorAll('[data-logo-color]').forEach(button => {
+        button.setAttribute('aria-pressed', button.dataset.logoColor === value ? 'true' : 'false');
+      });
+    }
+
+    function pickLtDesign(value) {
+      const select = document.getElementById('name-role-overlay-design');
+      if (!select) return;
+      select.value = value;
+      handleNameRoleOverlayChange();
+      previewNameRoleLowerThirdExample();
+    }
+
     function handleNameRoleOverlayChange(visibilityChanged = false, positionEdit = false) {
+      renderLtDesignPicker();
+      syncNameRoleOverlayLogoButtons();
+      renderSavedNames();
       const nameInput = document.getElementById('name-role-overlay-name');
       const roleInput = document.getElementById('name-role-overlay-role');
       const enabledButton = document.getElementById('name-role-overlay-show-btn');
@@ -320,7 +583,7 @@
       if (enabled) {
         if (!name) {
           enabledButton?.setAttribute('aria-pressed', 'false');
-          if (enabledButton) enabledButton.textContent = 'Show Lower Third';
+          if (enabledButton) enabledButton.textContent = 'Show on air';
           appState.settings.nameRoleOverlayEnabled = false;
           saveState();
           saveToStorageDebounced();
@@ -364,7 +627,7 @@
         const hasAnyContent = Object.values(payload.socials).some(Boolean) || Object.values(payload.actions).some(Boolean);
         if (!hasAnyContent) {
           enabledButton?.setAttribute('aria-pressed', 'false');
-          if (enabledButton) enabledButton.textContent = 'Show Lower Third';
+          if (enabledButton) enabledButton.textContent = 'Show on air';
           appState.settings.nameRoleOverlaySocialsEnabled = false;
           appState.settings.socialEngagementOverlayEnabled = false;
           saveState();
@@ -655,12 +918,17 @@
       if (includeSongs) {
         payload.songRecords = songs.map(song => buildSongRecord(song, { isNew: false }));
       }
-      if (includeBibles) {
-        payload.bibleRecords = Object.keys(bibles).map(name => buildBibleRecord(name, bibles[name] || [], { isNew: false }));
-      }
-      relaySend(payload);
       relayStateIncludeSongs = false;
       relayStateIncludeBibles = false;
+      if (includeBibles) {
+        // Unloaded versions are read from storage so the other panel gets the
+        // whole library, never an empty placeholder
+        getAllBibleRecordsForSync()
+          .then((records) => { payload.bibleRecords = records; relaySend(payload); })
+          .catch(() => {});
+        return true;
+      }
+      relaySend(payload);
       return true;
     }
 
@@ -897,6 +1165,9 @@
       lastLiveState = { kind: 'update', payload: msg };
       if (appState && appState.live) appState.live.lastLiveState = lastLiveState;
       schedulePersistAppState();
+      setProgramMonitorOnAir(true);
+      schedulePreviewMonitorRefresh();
+      if (sidebarTab === 'schedule') setTimeout(renderFocusedMainPanel, 0);
     }
 
     function postClear(opts = {}) {
@@ -924,6 +1195,9 @@
       lastLiveState = { kind: 'clear' };
       if (appState && appState.live) appState.live.lastLiveState = lastLiveState;
       schedulePersistAppState();
+      setProgramMonitorOnAir(false);
+      schedulePreviewMonitorRefresh();
+      if (sidebarTab === 'schedule') setTimeout(renderFocusedMainPanel, 0);
     }
 
 
@@ -983,8 +1257,19 @@
 
     function pushLiveUpdate(opts = {}) {
       const previewOnly = opts.previewOnly === true;
+      const missingVersions = getMissingBibleVersionsInUse();
+      if (missingVersions.length) {
+        if (previewOnly) {
+          // Preview is not on air: show it now, refresh once the version is in
+          ensureBiblesLoaded(missingVersions).then(() => { refreshAfterBibleLoad(); schedulePreviewMonitorRefresh(); });
+        } else {
+          ensureBiblesLoaded(missingVersions).then(() => { refreshAfterBibleLoad(); pushLiveUpdate(opts); });
+          return true;
+        }
+      }
       if (!previewOnly && document.getElementById('btn-preview')?.getAttribute('aria-pressed') === 'true') return false;
       if ((!isLive && !previewOnly) || !livePointer) return false;
+      if (!previewOnly) hideLiveLowerThirds();
       const effectiveLiveLinesPerPage = Math.max(1, Number(liveLinesPerPage) || Number(linesPerPage) || 1);
       const liveBgState = getEffectiveLiveBackgroundState();
       const effectiveLiveRatio = liveRatio || activeRatio || 'full';

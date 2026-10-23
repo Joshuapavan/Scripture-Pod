@@ -198,7 +198,7 @@
     let isLive = false, linesPerPage = 1, activeRatio = 'full', sidebarTab = 'bible';
     let activeWorkspaceTab = 'bible';
     let currentProgramDisplaySource = 'lyrics';
-    let programPreviewZoom = 0.82;
+    let programPreviewZoom = 1;
     let singleLineFontSizeSnapshot = null;
     let preDualFontSize = null;
     let currentSearchPos = null;
@@ -450,7 +450,7 @@
         ui_animate_background: "Animate Background",
         ui_placeholder_lyrics: "Type/Paste Lyrics here...",
         common_clear: "Clear",
-        common_project_live: "Project Live",
+        common_project_live: "Go live",
         common_prev: "Prev",
         common_next: "Next",
         common_lines: "Lines",

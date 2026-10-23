@@ -419,6 +419,11 @@
             showToast('No active Bible reference to pin');
             return;
           }
+          if (isPinnedBibleReference(ref.query, ref.versionId)) {
+            unpinBibleReference(ref.query, ref.versionId);
+            showToast('Reference unpinned');
+            return;
+          }
           pinBibleReference(ref);
           showToast(t('reference_pinned'));
         };
@@ -766,17 +771,20 @@
       setLowerThirdSettingsPanelCollapsed('social-engagement-overlay-panel', ui.socialEngagementOverlayCollapsed === true, { persist: false });
       if (overlayEnabledButton) {
         overlayEnabledButton.setAttribute('aria-pressed', overlayEnabled ? 'true' : 'false');
-        overlayEnabledButton.textContent = overlayEnabled ? 'Hide Lower Third' : 'Show Lower Third';
+        overlayEnabledButton.textContent = overlayEnabled ? 'Hide from air' : 'Show on air';
         overlayEnabledButton.classList.toggle('active', overlayEnabled);
       }
       if (overlayDesignInput && overlayAnimationInput) {
         const savedOverlayStyle = String(ui.nameRoleOverlayStyle || 'classic-gms-rise');
-        const currentStyle = savedOverlayStyle.match(/^(classic|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
-        const previousStyle = savedOverlayStyle.match(/^(classic|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
-        const layoutOnly = ['classic', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : '';
+        const currentStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const previousStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const layoutOnly = ['classic', 'right', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : '';
         const design = currentStyle ? `${currentStyle[1]}-${currentStyle[2]}` : `${previousStyle?.[1] || layoutOnly || 'classic'}-gms`;
         overlayDesignInput.value = Array.from(overlayDesignInput.options).some((option) => option.value === design) ? design : 'classic-gms';
         overlayAnimationInput.value = currentStyle?.[3] || previousStyle?.[2] || 'rise';
+        renderLtDesignPicker();
+      renderSavedNames();
+      syncNameRoleOverlayLogoButtons();
       }
       const overlayTheme = String(overlayDesignInput?.value || 'classic-gms').split('-')[1] || 'gms';
       const defaultPrimaryColors = {
@@ -805,7 +813,7 @@
       if (overlayLike) overlayLike.checked = ui.nameRoleOverlayLike !== false;
       if (overlayShare) overlayShare.checked = ui.nameRoleOverlayShare !== false;
       if (overlaySubscribe) overlaySubscribe.checked = ui.nameRoleOverlaySubscribe !== false;
-      if (overlayLogoColorInput) overlayLogoColorInput.value = ui.nameRoleOverlayLogoColor === 'black' ? 'black' : 'white';
+      if (overlayLogoColorInput) overlayLogoColorInput.value = ['black', 'off'].includes(ui.nameRoleOverlayLogoColor) ? ui.nameRoleOverlayLogoColor : 'white';
       if (socialAccentInput && /^#[0-9a-f]{6}$/i.test(ui.socialEngagementOverlayAccentColor || '')) {
         socialAccentInput.value = ui.socialEngagementOverlayAccentColor;
       }
@@ -825,7 +833,7 @@
       if (socialEnabledButton) {
         const socialEnabled = ui.socialEngagementOverlayEnabled === true;
         socialEnabledButton.setAttribute('aria-pressed', socialEnabled ? 'true' : 'false');
-        socialEnabledButton.textContent = socialEnabled ? 'Hide Lower Third' : 'Show Lower Third';
+        socialEnabledButton.textContent = socialEnabled ? 'Hide from air' : 'Show on air';
         socialEnabledButton.classList.toggle('active', socialEnabled);
       }
       if (overlayLogoPreview) {
@@ -4275,6 +4283,15 @@
       });
     }
 
+    // The remembered tab can be one the current mode hides (e.g. Custom Mode
+    // Style while on Setlist), which left the content pane empty.
+    function ensureVisibleSettingsTab() {
+      const isShown = (item) => item && getComputedStyle(item).display !== 'none';
+      if (isShown(document.querySelector('.sm-sidebar-item.active'))) return;
+      const first = Array.from(document.querySelectorAll('.sm-sidebar-item')).find(isShown);
+      if (first) switchSettingsTab(first.dataset.smTab);
+    }
+
     /* ---- Footer Status Bar ---- */
     function formatBytes(bytes) {
       if (bytes < 1024) return bytes + ' B';
@@ -4744,16 +4761,17 @@
     // ===== INIT =====
     async function bootApp() {
       await openDb();
-      const [stateEntry, songRecords, bibleRecords, ltStylesEntry, bgSettingsEntry, animationSettingsEntry, typographySettingsEntry, modeSettingsEntry] = await Promise.all([
+      const [stateEntry, songRecords, ltStylesEntry, bgSettingsEntry, animationSettingsEntry, typographySettingsEntry, modeSettingsEntry] = await Promise.all([
         idbGet(STORE_STATE, 'appState'),
         idbGetAll(STORE_SONGS),
-        idbGetAll(STORE_BIBLES),
         idbGet(STORE_STATE, 'ltStyles'),
         idbGet(STORE_STATE, 'bgSettings'),
         idbGet(STORE_STATE, 'animationSettings'),
         idbGet(STORE_STATE, 'typographySettings'),
         idbGet(STORE_STATE, 'modeSettings')
       ]);
+      // Bibles: only the versions the saved state uses are read into memory
+      const bibleRecords = await loadBibleRecordsForBoot(stateEntry ? stateEntry.value : null);
 
       applyLoadedState(
         (stateEntry && stateEntry.value) ? stateEntry.value : null,
@@ -4776,6 +4794,12 @@
 
       appStateUpdatedAt = stateEntry ? (stateEntry.updatedAt || 0) : 0;
       stateReady = true;
+      // Anything in use that the saved state did not name gets loaded now
+      ensureBiblesLoaded(getBibleVersionsInUse()).then((results) => {
+        if (results.some(Boolean)) refreshAfterBibleLoad();
+      });
+      setInterval(unloadIdleBibles, 60000);
+      setTimeout(syncBibleSearchDb, 3000);
       updateFirstRunSetupVisibility();
       if (typeof refreshLocalServerInfo === 'function') {
         refreshLocalServerInfo().then(() => {
@@ -4846,6 +4870,8 @@
       controlPanelInitStarted = true;
       try {
         initStandaloneTools();
+        restoreBibleReaderView();
+        setupCommandPalette();
         _restoreAudioBufferSizeSetting();
         bindHostModeInput();
         applyObsCompatibilityUi();

@@ -28,6 +28,14 @@ body.lower-third-only-mode {
 body.display-full-mode {
     background: #000;
 }
+/* Stream feed over a cable: a cable cannot carry transparency, so a solid key
+   colour stands in for it (OBS: Luma Key for black, Chroma Key for green). */
+html.has-key-bg,
+html.has-key-bg body,
+html.has-key-bg body.lower-third-only-mode,
+html.has-key-bg body.display-full-mode {
+    background: var(--key-bg) !important;
+}
 #name-role-overlay {
     transform: translate(var(--name-role-offset-x, 0vw), var(--name-role-offset-y, 0vh));
 }
@@ -184,6 +192,23 @@ body.display-full-mode {
 .style-band#name-role-overlay {
     justify-content: center;
     padding: 0 0 7vh;
+}
+
+/* Right title bar: the left title bar mirrored, so every theme's accents and
+   every motion flip with it; the text and logo are flipped back to read normally. */
+.style-right#name-role-overlay {
+    scale: -1 1;
+    transform: translate(calc(var(--name-role-offset-x, 0vw) * -1), var(--name-role-offset-y, 0vh));
+}
+
+.style-right#name-role-overlay .name-role-overlay-copy,
+.style-right#name-role-overlay .name-role-overlay-logo {
+    scale: -1 1;
+}
+
+.style-right#name-role-overlay .name-role-overlay-copy {
+    align-items: flex-end;
+    text-align: right;
 }
 
 .name-role-overlay-card {
@@ -1265,3 +1290,7 @@ body.display-full-mode {
     backface-visibility: hidden;
     perspective: 1000px;
 }
+#name-role-overlay.logo-off .name-role-overlay-logo { display: none; }
+
+/* Settles the card in its hidden pose before it animates in */
+#name-role-overlay.is-resetting, #name-role-overlay.is-resetting * { transition: none !important; animation: none !important; }

@@ -6,10 +6,12 @@ const fs = require('fs');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const { createRelayAccessToken, verifyRelayUpgrade } = require('./relay-security');
+const { createBibleSearch } = require('./bible-search');
 const { listBundledBibleFiles, readBundledBibleFile, readBundledChurchLogo } = require('./bundled-bibles');
 
 let mainWindow = null;
 let outputWindow = null;
+let feedWindow = null;
 let outputClosedCallbacks = new Set();
 let httpServer = null;
 let relayServer = null;
@@ -213,13 +215,15 @@ function createMainWindow() {
     if (outputWindow && !outputWindow.isDestroyed()) {
       outputWindow.close();
     }
+    closeFeedWindow({ silent: true });
   });
 }
 
 function getDisplayBounds(displayId) {
   const displays = screen.getAllDisplays();
   if (displayId) {
-    const match = displays.find((entry) => entry.id === displayId);
+    // The panel sends ids as strings; Electron's are numbers.
+    const match = displays.find((entry) => String(entry.id) === String(displayId));
     if (match) return match.bounds;
   }
   const external = displays.find((entry) => !entry.internal) || screen.getPrimaryDisplay();
@@ -281,6 +285,68 @@ function createOutputWindow(options = {}) {
   return outputWindow;
 }
 
+// Stream feed: a second, opaque output for a cable into another computer's
+// capture card (e.g. an OBS laptop). A cable cannot carry transparency, so the
+// page is filled with a key colour that OBS removes with Luma Key (black) or
+// Chroma Key (green). 'none' keeps the window transparent like the main output.
+const FEED_KEY_COLORS = { none: '#00000000', black: '#000000', green: '#00B140' };
+
+function notifyMainWindow(channel) {
+  if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
+    mainWindow.webContents.send(channel);
+  }
+}
+
+function closeFeedWindow(options = {}) {
+  if (!feedWindow || feedWindow.isDestroyed()) {
+    feedWindow = null;
+    return;
+  }
+  const win = feedWindow;
+  feedWindow = null;
+  win.silentClose = !!options.silent;
+  win.close();
+}
+
+function createFeedWindow(options = {}) {
+  closeFeedWindow({ silent: true });
+  const bounds = getDisplayBounds(options.displayId);
+  const keyBackground = FEED_KEY_COLORS[options.keyBackground] ? options.keyBackground : 'none';
+  const transparent = keyBackground === 'none';
+  const win = new BrowserWindow({
+    x: bounds.x,
+    y: bounds.y,
+    width: bounds.width,
+    height: bounds.height,
+    frame: false,
+    show: true,
+    backgroundColor: FEED_KEY_COLORS[keyBackground],
+    transparent,
+    autoHideMenuBar: true,
+    fullscreen: true,
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false
+    }
+  });
+  feedWindow = win;
+  win.loadFile(resolveAppFile(path.join('UI', 'scripture-pod-display.html')), {
+    query: {
+      standalone: '1',
+      hostMode: 'standalone',
+      feed: '1',
+      ...(transparent ? {} : { keyBg: keyBackground })
+    }
+  });
+  win.on('closed', () => {
+    if (feedWindow === win) feedWindow = null;
+    if (!win.silentClose) notifyMainWindow('bsp:feed-closed');
+  });
+  return win;
+}
+
 function getSystemStats() {
   return {
     platform: process.platform,
@@ -331,15 +397,36 @@ app.whenReady().then(() => {
     return !!(outputWindow && !outputWindow.isDestroyed());
   });
 
-  ipcMain.handle('bsp:send-output-message', (_event, message) => {
-    if (!outputWindow || outputWindow.isDestroyed()) return { ok: false };
-    outputWindow.webContents.send('bsp:output-message', message);
+  ipcMain.handle('bsp:open-feed', (_event, options = {}) => {
+    createFeedWindow(options);
     return { ok: true };
+  });
+
+  ipcMain.handle('bsp:close-feed', () => {
+    closeFeedWindow({ silent: true });
+    return { ok: true };
+  });
+
+  ipcMain.handle('bsp:is-feed-open', () => {
+    return !!(feedWindow && !feedWindow.isDestroyed());
+  });
+
+  ipcMain.handle('bsp:send-output-message', (_event, message) => {
+    const targets = [outputWindow, feedWindow].filter((win) => win && !win.isDestroyed());
+    targets.forEach((win) => win.webContents.send('bsp:output-message', message));
+    return { ok: targets.length > 0 };
   });
   ipcMain.handle('bsp:send-websocket-output-message', (_event, message) => {
     broadcastRelayMessage(message);
     return { ok: true };
   });
+  // Bible search lives in SQLite on disk, behind a worker thread
+  let bibleSearch = null;
+  ipcMain.handle('bsp:bible-search', (_event, request = {}) => {
+    if (!bibleSearch) bibleSearch = createBibleSearch(path.join(app.getPath('userData'), 'bible-search.sqlite'));
+    return bibleSearch.call(String(request.method || ''), request.payload);
+  });
+  app.on('will-quit', () => { if (bibleSearch) bibleSearch.close(); });
   ipcMain.handle('bsp:get-local-server-info', () => getLocalServerInfo());
   ipcMain.handle('bsp:list-bundled-bible-files', () => listBundledBibleFiles(path.join(__dirname, '..')));
   ipcMain.handle('bsp:read-bundled-bible-file', (_event, asset) => readBundledBibleFile(path.join(__dirname, '..'), asset));
@@ -410,10 +497,10 @@ app.whenReady().then(() => {
   });
 
   ipcMain.on('bsp:output-ready', (event) => {
-    if (!outputWindow || outputWindow.isDestroyed() || event.sender !== outputWindow.webContents) return;
-    if (mainWindow && !mainWindow.isDestroyed() && !mainWindow.webContents.isDestroyed()) {
-      mainWindow.webContents.send('bsp:output-ready');
-    }
+    const isOutput = [outputWindow, feedWindow].some((win) =>
+      win && !win.isDestroyed() && event.sender === win.webContents);
+    if (!isOutput) return;
+    notifyMainWindow('bsp:output-ready');
   });
 
   startHttpServer();

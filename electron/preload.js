@@ -13,6 +13,15 @@ const BSPDesktop = {
   async isOutputOpen() {
     return ipcRenderer.invoke('bsp:is-output-open');
   },
+  async openFeed(options = {}) {
+    return ipcRenderer.invoke('bsp:open-feed', options);
+  },
+  async closeFeed() {
+    return ipcRenderer.invoke('bsp:close-feed');
+  },
+  async isFeedOpen() {
+    return ipcRenderer.invoke('bsp:is-feed-open');
+  },
   async sendOutputMessage(message) {
     return ipcRenderer.invoke('bsp:send-output-message', message);
   },
@@ -24,6 +33,9 @@ const BSPDesktop = {
   },
   async getLocalServerInfo() {
     return ipcRenderer.invoke('bsp:get-local-server-info');
+  },
+  async bibleSearch(method, payload) {
+    return ipcRenderer.invoke('bsp:bible-search', { method, payload });
   },
   async listBundledBibleFiles() {
     return ipcRenderer.invoke('bsp:list-bundled-bible-files');
@@ -59,6 +71,10 @@ const BSPDesktop = {
   onOutputReady(callback) {
     ipcRenderer.removeAllListeners('bsp:output-ready');
     ipcRenderer.on('bsp:output-ready', () => callback());
+  },
+  onFeedClosed(callback) {
+    ipcRenderer.removeAllListeners('bsp:feed-closed');
+    ipcRenderer.on('bsp:feed-closed', () => callback());
   }
 };
 
