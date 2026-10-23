@@ -1,12 +1,12 @@
 # Scripture Pod
 
-This repository contains the control Panel and Display for Scripture Pod (a Bible / lyrics projection tool). It can be run in-browser or as an Electron desktop app.
+This repository contains the control Panel and Display for Scripture Pod (a Bible / lyrics projection tool). It can be run in-browser or as a Tauri desktop app.
 
 ## Requirements
 
 - Node.js (v18+ recommended)
 - npm (bundled with Node)
-- Optional: Electron build tools if packaging an app (`electron-builder`)
+- Rust (https://rustup.rs) for the desktop app, and `cargo install tauri-cli --version "^2"` to package it
 
 ## Quick start (development)
 
@@ -17,7 +17,7 @@ cd "$(dirname "$0")"
 npm install
 ```
 
-2. Run the Electron desktop app (launches the panel and display in windows):
+2. Run the desktop app (launches the panel; the display opens from the panel):
 
 ```bash
 npm start
@@ -32,12 +32,12 @@ You can open the following files directly in a modern browser for quick testing 
 
 Notes:
 
-- For full functionality (Electron APIs, local filesystem access, packaging), run via `npm start`.
-- When using browser-only mode, some features (native menus, file dialogs, electron-specific modules) will be unavailable.
+- For full functionality (native dialogs, output windows, packaging), run via `npm start`.
+- When using browser-only mode, some features (native file dialogs, output windows on other screens, the display server) will be unavailable.
 
 ## Display on another computer
 
-The Electron app can serve the display over the local network. Both computers must be on the same reachable network, and the control computer must remain running.
+The desktop app can serve the display over the local network. Both computers must be on the same reachable network, and the control computer must remain running.
 
 1. Start the desktop app with `npm start` or open the installed app.
 2. In the control panel, open **Settings → Host Mode** and select **WebSocket Relay**. This relays panel updates to a remote display, such as an OBS Browser Source on the streaming computer.
@@ -52,14 +52,12 @@ This is a browser-based network display, not an NDI output stream. Both computer
 
 ## Building installers (macOS/Windows/Linux)
 
-Install dev dependencies (already in `package.json`) and run the appropriate script. Example (mac):
-
 ```bash
 npm install
-npm run dist:mac
+npm run tauri:build
 ```
 
-The `build` section in `package.json` is configured for `electron-builder`.
+Bundles are written to `src-tauri/target/release/bundle/`. The bundle settings are in `src-tauri/tauri.conf.json`. Build each OS on that OS. See `src-tauri/README.md` for what has been verified.
 
 ## Android and iOS
 
@@ -161,8 +159,6 @@ Notes:
 
 ```
 src/
-  main/          Electron main process: main.js, preload.js, relay-security.js,
-                 bundled-bibles.js, bible-search.js (+ worker, SQLite search index)
   renderer/
     panel/       The control panel
       panel.html
@@ -179,9 +175,10 @@ src/
   shared/        Code used by both pages: lower-third-extra.js (name designs and animations),
                  social-overlay.js (the social engagement lower third)
 assets/          bibles/ (bundled Bible XML), logo/, bg/
-build/           App icons and the logo used by the panel (electron-builder buildResources)
-scripts/         Build and maintenance scripts (mobile build, icon render)
-test/            Node test runner tests (`npm test`)
+build/           App icon source and the logo used by the panel
+scripts/         Build scripts (mobile build)
+src-tauri/       The desktop app (Rust): servers, relay, Bible search, windows. Tests: `cargo test`
+test/            Node test runner tests (`npm test` runs these and the Rust tests)
 android/ ios/    Capacitor native projects
 ```
 
@@ -193,7 +190,7 @@ to run a second copy beside a running one.
 ## Troubleshooting
 
 - If `npm install` fails, ensure Node version is compatible and your environment can compile native modules.
-- If Electron windows do not appear when running `npm start`, check the terminal for errors and ensure no other instance is locking required ports.
+- If the app window does not appear when running `npm start`, check the terminal for errors and ensure no other instance is locking required ports.
 - If the remote display does not load, confirm both computers are on the same network, refresh the LAN URL, and allow TCP ports `5510` and `5511` through the host firewall.
 
 ## Contributing

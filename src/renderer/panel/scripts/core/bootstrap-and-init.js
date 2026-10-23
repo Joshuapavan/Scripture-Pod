@@ -4011,7 +4011,7 @@
         workspaceHandle.addEventListener('pointermove', onWPointerMove);
         workspaceHandle.addEventListener('pointerup', onWPointerUp);
         workspaceHandle.addEventListener('pointercancel', onWPointerCancel);
-        // Also listen on document for move/up in case pointer capture fails (Electron iframe bug)
+        // Also listen on document for move/up in case pointer capture fails (iframe pointer-capture bug)
         document.addEventListener('pointermove', onWPointerMove);
         document.addEventListener('pointerup', onWPointerUp);
       }

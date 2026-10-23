@@ -1,0 +1,31 @@
+[package]
+name = "scripture-pod-tauri"
+version = "0.1.0"
+edition = "2021"
+description = "Feasibility spike: Scripture Pod on Tauri"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["macos-private-api"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-opener = "2"
+tiny_http = "0.12"
+tungstenite = "0.24"
+serde_json = "1"
+base64 = "0.22"
+rand = "0.8"
+if-addrs = "0.13"
+rusqlite = { version = "0.32", features = ["bundled"] }
+unicode-normalization = "0.1"
+
+[features]
+harness = []
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+strip = true

@@ -104,9 +104,7 @@
     function updateEmbeddedProgramDisplayScale() {
       const shell = document.getElementById('program-display-shell');
       const frame = document.getElementById('program-display-frame');
-      const compositor = document.getElementById('source-compositor');
-      const overlay = document.getElementById('transform-overlay');
-      if (!shell || !frame || !compositor || !overlay) return;
+      if (!shell || !frame) return;
       const shellW = shell.clientWidth || 0;
       const shellH = shell.clientHeight || 0;
       if (!shellW || !shellH) return;
@@ -120,7 +118,7 @@
       const scaledH = baseH * scale;
       const offsetX = Math.round((shellW - scaledW) / 2);
       const offsetY = Math.round((shellH - scaledH) / 2);
-      [compositor, overlay, frame].forEach((el) => {
+      [frame].forEach((el) => {
         el.style.position = 'absolute';
         el.style.left = '0';
         el.style.top = '0';

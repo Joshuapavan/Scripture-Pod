@@ -2,84 +2,26 @@
   "name": "scripture-pod-desktop",
   "version": "2.0.5",
   "description": "Scripture Pod desktop presentation control application",
-  "main": "src/main/main.js",
   "author": "Joshua Pavan",
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "start": "electron .",
-    "test": "node --test",
-    "pack:mac": "electron-builder --mac dir",
-    "dist:mac": "electron-builder --mac",
-    "pack:win": "electron-builder --x64 --win nsis portable",
-    "dist:win": "electron-builder --x64 --win",
-    "dist:linux": "electron-builder --linux",
+    "test": "node --test && cd src-tauri && cargo test",
     "mobile:build": "node scripts/build-mobile.js",
     "mobile:sync": "npm run mobile:build && cap sync",
     "mobile:android": "npm run mobile:sync && cap open android",
-    "mobile:ios": "npm run mobile:sync && cap open ios"
-  },
-  "build": {
-    "appId": "com.scripturepodpro.desktop",
-    "productName": "Scripture Pod",
-    "files": [
-      "src/**/*",
-      "assets/bibles/**/*",
-      "assets/bg/bg.mov",
-      "assets/logo/ACI_Logo.png",
-      "build/Logo.svg",
-      "package.json",
-      "README.md"
-    ],
-    "directories": {
-      "buildResources": "build",
-      "output": "dist"
-    },
-    "electronLanguages": [
-      "en-US"
-    ],
-    "mac": {
-      "category": "public.app-category.productivity",
-      "icon": "build/scripture-pod.png",
-      "target": [
-        "zip"
-      ],
-      "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
-    },
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "artifactName": "${productName} Setup-${version}-win-${arch}.${ext}"
-    },
-    "portable": {
-      "artifactName": "${productName} Portable-${version}-win-${arch}.${ext}"
-    },
-    "linux": {
-      "target": [
-        "AppImage",
-        "zip"
-      ],
-      "icon": "build/scripture-pod.png",
-      "category": "Utility",
-      "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
-    }
+    "mobile:ios": "npm run mobile:sync && cap open ios",
+    "tauri:dev": "cd src-tauri && cargo run",
+    "tauri:build": "cd src-tauri && cargo tauri build",
+    "start": "cd src-tauri && cargo run"
   },
   "dependencies": {
-    "qrcode-generator": "^2.0.4",
-    "ws": "^8.18.0"
+    "qrcode-generator": "^2.0.4"
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.3",
     "@capacitor/cli": "^8.4.3",
     "@capacitor/core": "^8.5.3",
-    "@capacitor/ios": "^8.5.3",
-    "electron": "^42.4.0",
-    "electron-builder": "^26.5.0"
+    "@capacitor/ios": "^8.5.3"
   }
 }
