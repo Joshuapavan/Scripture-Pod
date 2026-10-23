@@ -261,9 +261,10 @@
       return postMessageToPreviewMonitor({ type: 'PREVIEW_CLEAR', sceneLayers: getOutputSceneLayers() });
     }
 
-    function sendProgramPreview(payload) {
+    function sendProgramPreview(payload, opts = {}) {
       if (!payload) return false;
-      if (typeof applyBibleVersionGap === 'function') payload = applyBibleVersionGap(payload);
+      // A mirrored live payload already carries the version gap
+      if (!opts.mirror && typeof applyBibleVersionGap === 'function') payload = applyBibleVersionGap(payload);
       const viewport = getEmbeddedDisplayViewport();
       const previewPayload = {
         ...payload,

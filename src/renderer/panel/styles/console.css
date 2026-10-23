@@ -2343,3 +2343,25 @@ body[data-sidebar-tab="songs"] #look-card #look-ref-row { display: none !importa
 .new-song-lyrics-hint { color: var(--sp-subtle); font-size: 12px; }
 #newSongModal .modal-content { width: min(640px, 92vw); }
 #newSongModal .new-song-live-btn { background: var(--sp-live) !important; border-color: var(--sp-live) !important; color: #fff !important; font-weight: 600; }
+
+/* Program is the same 16:9 box as Preview, so a slide is the same size in both
+   (it used to be capped in height, which narrowed the picture with black bars) */
+#program-display-shell:not([data-aspect="9:16"]) {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 9 !important;
+  border: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Test and Show on air stay in view at the bottom of the Overlays settings while the rest scrolls */
+.overlays-settings .ov-footer {
+  position: sticky;
+  bottom: -16px;
+  z-index: 6;
+  margin: auto -16px -16px;
+  padding: 12px 16px 16px;
+  background: #0e1013;
+  border-top: 1px solid var(--sp-line);
+}
