@@ -147,8 +147,7 @@
           editorMode
         },
         host: {
-          mode: getHostMode(),
-          vmix: getVmixSettings()
+          mode: getHostMode()
         }
       };
     }
@@ -4546,6 +4545,10 @@
         if (results.some(Boolean)) refreshAfterBibleLoad();
       });
       setInterval(unloadIdleBibles, 60000);
+      applyDisplayLookDefaults();
+      updateFullAlignButtons();
+      const refFontSelect = document.getElementById('ref-font-family');
+      if (refFontSelect) refFontSelect.value = refFontFamily;
       setTimeout(syncBibleSearchDb, 3000);
       updateFirstRunSetupVisibility();
       if (typeof refreshLocalServerInfo === 'function') {

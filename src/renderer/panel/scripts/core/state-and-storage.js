@@ -578,7 +578,8 @@
         bgY: document.getElementById('bg-y')?.value,
         bgToggle: document.getElementById('bg-toggle')?.checked,
         animateBgTransitions: document.getElementById('animate-bg-transitions')?.checked,
-        bgGradientAngle: document.getElementById('bg-gradient-angle')?.value || 135
+        bgGradientAngle: document.getElementById('bg-gradient-angle')?.value || 135,
+        bgGradientShape: document.getElementById('bg-gradient-shape')?.value || 'radial'
       };
       return snapshot;
     }
@@ -816,6 +817,7 @@
       'bgToggle',
       'animateBgTransitions',
       'bgGradientAngle',
+      'bgGradientShape',
       'ltRefFontSize',
       'linesPerPage',
       'activeRatio',
@@ -1183,6 +1185,7 @@
       if (next.bgToggle != null && document.getElementById('bg-toggle')) document.getElementById('bg-toggle').checked = !!next.bgToggle;
       if (next.animateBgTransitions != null && document.getElementById('animate-bg-transitions')) document.getElementById('animate-bg-transitions').checked = !!next.animateBgTransitions;
       if (next.bgGradientAngle != null && document.getElementById('bg-gradient-angle')) document.getElementById('bg-gradient-angle').value = next.bgGradientAngle;
+      if (next.bgGradientShape != null && document.getElementById('bg-gradient-shape')) document.getElementById('bg-gradient-shape').value = next.bgGradientShape;
       if (document.getElementById('bg-upload-hint')) {
         document.getElementById('bg-upload-hint').innerText = bgUploadDataUrl ? t('settings_image_selected') : t('settings_no_image_selected');
       }
@@ -1327,6 +1330,7 @@
         bgOpacityLT,
         bgY: document.getElementById('bg-y').value,
         bgGradientAngle: document.getElementById('bg-gradient-angle')?.value || 135,
+        bgGradientShape: document.getElementById('bg-gradient-shape')?.value || 'radial',
         textX: document.getElementById('text-x')?.value ?? 0,
         textY: document.getElementById('text-y')?.value ?? 860,
         padLR: document.getElementById('pad-lr-lt')?.value ?? 5,

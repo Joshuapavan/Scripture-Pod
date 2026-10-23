@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../fonts/fonts.css">
   <link rel="stylesheet" href="./display.css">
 </head>
 <body>
@@ -1383,6 +1384,13 @@
       overlay.classList.toggle('is-visible', enabled);
     }
 
+    // Background gradient: a soft spotlight (highlight at the upper left fading to the
+    // shadow colour at the edges) or the classic two-colour linear gradient
+    function buildBackgroundGradient(shape, angle, shadow, highlight) {
+      if (shape === 'linear') return `linear-gradient(${angle}deg, ${shadow} 0%, ${highlight} 100%)`;
+      return `radial-gradient(ellipse 90% 130% at 30% 28%, ${highlight} 0%, ${shadow} 100%)`;
+    }
+
     function handleUpdate(d) {
       if (IS_STANDALONE_MONITOR && !d.lowerThirdOnly && !d.restorePrevious) {
         d = { ...d, mode: 'full' };
@@ -2614,7 +2622,7 @@
                 const gradEnd = d.bgGradientHighlight || d.bgColor || 'black';
                 if (d.bgMode === 'gradient') {
                   const angle = typeof d.bgGradientAngle !== 'undefined' ? d.bgGradientAngle : 90;
-                  elements.ltInner.style.backgroundImage = `linear-gradient(${angle}deg, ${gradStart} 0%, ${gradEnd} 100%)`;
+                  elements.ltInner.style.backgroundImage = buildBackgroundGradient(d.bgGradientShape, angle, gradStart, gradEnd);
                   elements.ltInner.style.backgroundColor = gradStart;
                 } else {
                   elements.ltInner.style.backgroundImage = 'none';
@@ -2764,7 +2772,7 @@
               const gradEnd = d.bgGradientHighlight || d.bgColor || 'black';
               if (d.bgMode === 'gradient') {
                 const angle = typeof d.bgGradientAngle !== 'undefined' ? d.bgGradientAngle : 90;
-                setCachedBgImage(elements.bg, `linear-gradient(${angle}deg, ${gradStart} 0%, ${gradEnd} 100%)`);
+                setCachedBgImage(elements.bg, buildBackgroundGradient(d.bgGradientShape, angle, gradStart, gradEnd));
                 elements.bg.style.backgroundColor = gradStart;
               } else {
                 setCachedBgImage(elements.bg, 'none');

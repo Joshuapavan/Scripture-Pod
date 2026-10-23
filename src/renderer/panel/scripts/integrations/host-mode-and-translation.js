@@ -1,5 +1,4 @@
     function getHostMode() {
-      if (hostMode === 'vmix') return HOST_MODE_WEBSOCKET;
       return [HOST_MODE_OBS, HOST_MODE_WEBSOCKET, HOST_MODE_STANDALONE].includes(hostMode) ? hostMode : HOST_MODE_OBS;
     }
 
@@ -15,54 +14,6 @@
       return getHostMode() === HOST_MODE_STANDALONE;
     }
 
-    function getVmixSettings() {
-      return { ...vmixState };
-    }
-
-    function isVmixAdvancedMode() {
-      return vmixState.outputMode !== VMIX_OUTPUT_MODE_DEDICATED ||
-        !!vmixState.autoShowOnProject ||
-        !!vmixState.autoHideOnClear;
-    }
-
-    function updateVmixStatusUi() {
-      const panel = document.getElementById('vmix-status-panel');
-      const bodyEl = document.getElementById('vmix-status-body');
-      const summaryEl = document.getElementById('vmix-status-summary');
-      const connectionEl = document.getElementById('vmix-connection-label');
-      const outputEl = document.getElementById('vmix-output-label');
-      const modeEl = document.getElementById('vmix-mode-label');
-      const showBtn = document.getElementById('btn-vmix-show');
-      const hideBtn = document.getElementById('btn-vmix-hide');
-      const urlEl = document.getElementById('vmix-display-url');
-      const toggleEl = document.getElementById('btn-vmix-panel-toggle');
-      if (panel) panel.style.display = isVmixMode() ? '' : 'none';
-      if (bodyEl) bodyEl.style.display = panel?.classList.contains('is-collapsed') ? 'none' : 'flex';
-      if (toggleEl) toggleEl.textContent = panel?.classList.contains('is-collapsed') ? '>' : 'v';
-      if (connectionEl) {
-        if (!vmixState.enabled) connectionEl.textContent = 'vMix integration disabled';
-        else if (vmixConnectionState === 'connected') connectionEl.textContent = 'vMix connected';
-        else if (vmixConnectionState === 'connecting') connectionEl.textContent = 'Connecting to vMix...';
-        else if (vmixConnectionState === 'error') connectionEl.textContent = `vMix error: ${vmixLastError || 'Unknown error'}`;
-        else connectionEl.textContent = 'vMix disconnected';
-      }
-      if (summaryEl) summaryEl.textContent = connectionEl ? connectionEl.textContent : 'vMix disconnected';
-      if (outputEl) {
-        outputEl.textContent = vmixResolvedInput?.title
-          ? `Output: ${vmixResolvedInput.title}`
-          : `Output not found: ${vmixState.outputInputName || 'Not configured'}`;
-      }
-      if (modeEl) {
-        modeEl.textContent = isVmixAdvancedMode() ? 'Advanced routing' : 'Basic routing';
-      }
-      if (urlEl) {
-        urlEl.value = getVmixDisplayUrl();
-      }
-      if (showBtn) showBtn.style.display = isVmixAdvancedMode() ? '' : 'none';
-      if (hideBtn) hideBtn.style.display = isVmixAdvancedMode() ? '' : 'none';
-    }
-
-
     async function refreshLocalServerInfo() {
       if (!(window.BSPDesktop && typeof window.BSPDesktop.getLocalServerInfo === 'function')) return null;
       try {
@@ -76,7 +27,6 @@
       if (programDisplayUrlEl) programDisplayUrlEl.value = localServerInfo?.displayUrl || '';
       const monitorDisplayUrlEl = document.getElementById('monitor-display-link');
       if (monitorDisplayUrlEl) monitorDisplayUrlEl.value = getLocalMonitorUrl(localServerInfo);
-      updateVmixStatusUi();
       return localServerInfo;
     }
 
@@ -141,36 +91,6 @@
       }
     }
 
-    function getVmixDisplayUrl() {
-      const displayPath = localServerInfo?.displayPath || '/src/renderer/display/display.html';
-      if (localServerInfo) {
-        const selectedHost = String(vmixState.displayHost || '').trim() || localServerInfo.preferredHost || '127.0.0.1';
-        return `http://${selectedHost}:${localServerInfo.httpPort}${displayPath}?hostMode=vmix&relay=ws://${selectedHost}:${localServerInfo.relayPort}`;
-      }
-      const relayHost = String(vmixState.displayHost || '').trim() || resolveRelayHost() || '127.0.0.1';
-      const relayPort = getRelayPort();
-      const httpPort = getHttpPort();
-      return `http://${relayHost}:${httpPort}${displayPath}?hostMode=vmix&relay=ws://${relayHost}:${relayPort}`;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     function applyHostModeUi() {
       document.body.classList.toggle('obs-isolated', isObsMode());
       document.body.classList.toggle('websocket-mode', isWebSocketMode());
@@ -178,12 +98,10 @@
     }
 
     function setHostMode(mode, opts = {}) {
-      const normalizedMode = mode === 'vmix' ? HOST_MODE_WEBSOCKET : mode;
-      hostMode = [HOST_MODE_OBS, HOST_MODE_WEBSOCKET, HOST_MODE_STANDALONE].includes(normalizedMode) ? normalizedMode : HOST_MODE_OBS;
+      hostMode = [HOST_MODE_OBS, HOST_MODE_WEBSOCKET, HOST_MODE_STANDALONE].includes(mode) ? mode : HOST_MODE_OBS;
       applyHostModeUi();
       if (!opts.silent) saveToStorageDebounced();
     }
-
 
 
     function bindHostModeInput() {

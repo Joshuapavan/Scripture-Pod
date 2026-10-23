@@ -263,6 +263,7 @@
 
     function sendProgramPreview(payload) {
       if (!payload) return false;
+      if (typeof applyBibleVersionGap === 'function') payload = applyBibleVersionGap(payload);
       const viewport = getEmbeddedDisplayViewport();
       const previewPayload = {
         ...payload,
@@ -476,6 +477,9 @@
       }
     }
 
+    // Absolute, so the embedded and standalone output pages find the bundled fonts
+    const BUNDLED_FONTS_CSS_URL = new URL('../fonts/fonts.css', window.location.href).href;
+
     function buildStandaloneDisplayHtml(opts = {}) {
       const channelLiteral = JSON.stringify(CHANNEL_NAME);
       const isPreviewLiteral = opts.preview ? 'true' : 'false';
@@ -485,6 +489,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <title>Scripture Pod - ${opts.preview ? 'Program Preview' : 'Standalone Output'}</title>
+  <link rel="stylesheet" href="${BUNDLED_FONTS_CSS_URL}">
   <style>
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
@@ -628,7 +633,8 @@
     .jo-ref-line { margin-bottom: 8px; font-weight: 800; letter-spacing: 0.03em; display: inline-block; }
     .jo-body { font-weight: 700; }
     .dual-primary-block { margin-bottom: 20px; }
-    .dual-secondary-wrapper { margin-top: 12px; opacity: 0.96; }
+    .dual-secondary-wrapper, .triple-tertiary-wrapper { margin-top: var(--bible-version-gap, 14px); width: 100%; }
+    .dual-secondary-wrapper { opacity: 0.96; }
     #hud { position: fixed; right: 10px; top: 10px; z-index: 9; font-size: 11px; color: rgba(255,255,255,0.65); background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.15); border-radius: 7px; padding: 4px 8px; }
     ${(typeof window !== 'undefined' && window.SP_LT_EXTRA && window.SP_LT_EXTRA.css) || ''}
   </style>
@@ -1140,7 +1146,9 @@
         const shadow = data.bgGradientShadow || '#111111';
         const highlight = data.bgGradientHighlight || '#000000';
         if (mode === 'gradient') {
-          bg.style.backgroundImage = 'linear-gradient(' + angle + 'deg, ' + shadow + ', ' + highlight + ')';
+          bg.style.backgroundImage = data.bgGradientShape === 'linear'
+            ? 'linear-gradient(' + angle + 'deg, ' + shadow + ', ' + highlight + ')'
+            : 'radial-gradient(ellipse 90% 130% at 30% 28%, ' + highlight + ' 0%, ' + shadow + ' 100%)';
         } else {
           bg.style.backgroundImage = 'none';
           bg.style.backgroundColor = data.bgColor || '#000000';

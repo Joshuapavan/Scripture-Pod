@@ -3,7 +3,6 @@
     const HOST_MODE_OBS = 'obs';
     const HOST_MODE_WEBSOCKET = 'websocket';
     const HOST_MODE_STANDALONE = 'standalone';
-    const VMIX_OUTPUT_MODE_DEDICATED = 'dedicated-input';
     const DB_NAME = 'scripture-pod-pro';
     const DB_VERSION = 1;
     const STORE_SONGS = 'songs';
@@ -23,7 +22,7 @@
       'bgVideoLoop', 'bgVideoSpeed', 'bgMode', 'bgColor',
       'bgGradientShadow', 'bgGradientHighlight', 'bgBlur', 'bgEdgeFix',
       'bgOpacity', 'bgOpacityFull', 'bgOpacityLT', 'bgY', 'bgToggle',
-      'animateBgTransitions', 'bgGradientAngle'
+      'animateBgTransitions', 'bgGradientAngle', 'bgGradientShape'
     ];
     const ANIMATION_SETTINGS_KEYS = [
       'songTransitionType',
@@ -148,24 +147,6 @@
     let settingsTargetTab = 'follow';
     let setlistSettings = { ...DEFAULT_SETLIST_SETTINGS };
     let hostMode = HOST_MODE_WEBSOCKET;
-    let vmixState = {
-      enabled: false,
-      host: '127.0.0.1',
-      port: '8088',
-      password: '',
-      displayHost: '',
-      outputInputName: 'Scripture Pod Output',
-      outputInputKey: '',
-      outputMode: VMIX_OUTPUT_MODE_DEDICATED,
-      overlayChannel: '1',
-      autoShowOnProject: false,
-      autoHideOnClear: false,
-      transition: 'Cut',
-      reconnectOnStartup: true
-    };
-    let vmixConnectionState = 'disconnected';
-    let vmixLastError = '';
-    let vmixResolvedInput = null;
     let localServerInfo = null;
     let stateReady = false;
     let isRestoringBackup = false;
@@ -234,7 +215,7 @@
     const DEFAULT_BIBLE_FULL_FONT = 55;
     const SINGLE_BIBLE_FULL_MAX_FONT = 60;
     const SINGLE_BIBLE_LT_MAX_FONT = 30;
-    const DUAL_BIBLE_FULL_MAX_FONT = 36;
+    const DUAL_BIBLE_FULL_MAX_FONT = 60;
     const DUAL_BIBLE_LT_MAX_FONT = 23;
     const DEFAULT_SONG_FULL_LINE_HEIGHT = 1.2;
     const DEFAULT_BIBLE_FULL_LINE_HEIGHT = 1.1;
@@ -349,6 +330,9 @@
     let lyricsMonitorOutputOpen = false;
     const loadedFontNames = new Set();
     const baseFontOptions = [
+      { label: 'Source Serif 4 (serif)', value: "'Source Serif 4','Noto Sans Kannada','Noto Sans Tamil',serif" },
+      { label: 'Geist', value: "'Geist','Noto Sans Kannada','Noto Sans Tamil',sans-serif" },
+      { label: 'Geist Mono', value: "'Geist Mono','Noto Sans Kannada','Noto Sans Tamil',monospace" },
       { label: 'Montserrat', value: "'Montserrat',sans-serif" },
       { label: 'Segoe UI', value: "'Segoe UI',sans-serif" },
       { label: 'CMGSans', value: "'CMGSans',sans-serif" },

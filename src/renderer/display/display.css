@@ -934,8 +934,6 @@ html.has-key-bg body.display-full-mode {
 
 .dual-secondary-wrapper {
     margin-top: var(--bible-version-gap, 14px);
-    padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
     width: 100%;
     display: flex;
     flex-direction: column;
@@ -948,8 +946,6 @@ html.has-key-bg body.display-full-mode {
 }
 .triple-tertiary-wrapper {
     margin-top: var(--bible-version-gap, 14px);
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
     width: 100%;
     display: flex;
     flex-direction: column;

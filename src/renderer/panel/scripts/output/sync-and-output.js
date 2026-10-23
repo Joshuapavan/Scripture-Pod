@@ -1832,6 +1832,7 @@
         bgGradientShadow,
         bgGradientHighlight,
         bgGradientAngle: liveBgState.bgGradientAngle || 135,
+        bgGradientShape: liveBgState.bgGradientShape || 'radial',
         bgImage,
         bgVideo,
         bgVideoLoop,

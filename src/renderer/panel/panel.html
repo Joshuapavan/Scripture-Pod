@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scripture Pod - Control Panel</title>
+  <link rel="stylesheet" href="../fonts/fonts.css">
   <link rel="stylesheet" href="./styles/base.css">
   <link rel="stylesheet" href="./styles/modern.css">
   <link rel="stylesheet" href="./styles/console.css">
@@ -581,6 +582,14 @@
             <button class="seg-btn" id="line-6" onclick="setLines(6)">6</button>
           </div>
           </div>
+          <div id="look-ref-row">
+            <span>Reference</span>
+            <div class="segmented-picker" id="look-ref-align" role="group" aria-label="Reference position">
+              <button class="seg-btn" id="look-ref-left" type="button" aria-pressed="false" onclick="setFullRefHAlign('left')">Left</button>
+              <button class="seg-btn" id="look-ref-center" type="button" aria-pressed="false" onclick="setFullRefHAlign('center')">Middle</button>
+              <button class="seg-btn" id="look-ref-right" type="button" aria-pressed="false" onclick="setFullRefHAlign('right')">Right</button>
+            </div>
+          </div>
           <div id="panel-inline-style-37">
             <span id="panel-inline-style-38">Mode</span>
             <div class="segmented-picker" id="ratio-picker" >
@@ -618,7 +627,7 @@
         </div>
         <div id="look-version-gap-row">
             <span>Gap</span>
-            <input type="range" id="dual-version-gap" min="0" max="48" step="1" value="14" class="settings-slider" oninput="updateSliderValue(this,'px');saveDualVersionGap();onAnyControlChange()">
+            <input type="range" id="dual-version-gap" min="0" max="120" step="1" value="14" class="settings-slider" oninput="updateSliderValue(this,'px');saveDualVersionGap();onAnyControlChange()">
             <span class="slider-value" id="dual-version-gap-value">14px</span>
           </div>
         <div id="lyrics-output-types" aria-label="Lyrics output types">
@@ -1671,6 +1680,9 @@
                 <label class="settings-label" data-i18n="settings_font_family">Font Family</label>
                 <div id="panel-inline-style-107">
                   <select id="font-family" class="settings-select" onchange="onAnyControlChange()">
+                    <option value="'Source Serif 4','Noto Sans Kannada','Noto Sans Tamil',serif">Source Serif 4 (serif)</option>
+                    <option value="'Geist','Noto Sans Kannada','Noto Sans Tamil',sans-serif">Geist</option>
+                    <option value="'Geist Mono','Noto Sans Kannada','Noto Sans Tamil',monospace">Geist Mono</option>
                     <option value="'Montserrat',sans-serif">Montserrat</option>
                     <option value="'Segoe UI',sans-serif">Segoe UI</option>
                     <option value="'CMGSans',sans-serif">CMGSans</option>
@@ -1701,6 +1713,16 @@
                   </select>
                   <button class="btn" id="panel-inline-style-108" onclick="detectFontForCurrentBible()" data-i18n="settings_auto_detect">Auto-detect</button>
                 </div>
+              </div>
+              <div class="settings-field">
+                <label class="settings-label" for="ref-font-family">Reference font</label>
+                <select id="ref-font-family" class="settings-select" onchange="handleRefFontChange()">
+                  <option value="'Geist Mono',ui-monospace,monospace" selected>Geist Mono</option>
+                  <option value="inherit">Same as verses</option>
+                  <option value="'Geist',sans-serif">Geist</option>
+                  <option value="'Source Serif 4',serif">Source Serif 4</option>
+                  <option value="'Montserrat',sans-serif">Montserrat</option>
+                </select>
               </div>
               <div class="settings-field">
                 <label class="settings-label" data-i18n="settings_font_weight">Font Weight</label>
@@ -1873,6 +1895,14 @@
                 <span class="slider-value" id="bg-y-value">0</span>
               </div>
               <input type="range" id="bg-y" min="-50" max="50" value="0" class="settings-slider" oninput="updateSliderValue(this);onAnyControlChange()">
+            </div>
+
+            <div class="settings-field">
+              <label class="settings-label" for="bg-gradient-shape">Gradient shape</label>
+              <select id="bg-gradient-shape" class="settings-select" onchange="onAnyControlChange()">
+                <option value="radial" selected>Spotlight (soft glow from the upper left)</option>
+                <option value="linear">Linear (uses the angle below)</option>
+              </select>
             </div>
 
             <div class="slider-container" id="panel-inline-style-120">
@@ -3310,7 +3340,7 @@
   <script src="./scripts/library/bible-search-db.js"></script>
   <script src="./scripts/core/panel-app-core.js"></script>
   <script src="./scripts/core/reference-localization-theme.js"></script>
-  <script src="./scripts/integrations/vmix-and-translation.js"></script>
+  <script src="./scripts/integrations/host-mode-and-translation.js"></script>
   <script src="./scripts/library/songs-and-bible.js"></script>
   <script src="./scripts/library/render-and-selection.js"></script>
   <script src="./scripts/sources/media-and-background.js"></script>
@@ -3337,18 +3367,18 @@
       window.saveDualVersionGap = () => {
         try { localStorage.setItem('bible_dual_version_gap', String(gapInput?.value || 14)); } catch (_) {}
       };
+      // The space between versions, added to the verse HTML for the live output and the Preview
+      window.applyBibleVersionGap = (payload) => {
+        const gap = Math.max(0, Math.min(120, Number(document.getElementById('dual-version-gap')?.value || 14)));
+        if (!payload || typeof payload.text !== 'string') return payload;
+        const style = ` style="--bible-version-gap:${gap}px"`;
+        return { ...payload, text: payload.text
+          .replace('class="dual-secondary-wrapper"', `class="dual-secondary-wrapper"${style}`)
+          .replace('class="triple-tertiary-wrapper"', `class="triple-tertiary-wrapper"${style}`) };
+      };
       const originalPostUpdate = window.postUpdate;
       if (typeof originalPostUpdate === 'function') {
-        window.postUpdate = (payload) => {
-          const gap = Math.max(0, Math.min(48, Number(document.getElementById('dual-version-gap')?.value || 14)));
-          if (payload && typeof payload.text === 'string') {
-            const style = ` style="--bible-version-gap:${gap}px"`;
-            payload = { ...payload, text: payload.text
-              .replace('class="dual-secondary-wrapper"', `class="dual-secondary-wrapper"${style}`)
-              .replace('class="triple-tertiary-wrapper"', `class="triple-tertiary-wrapper"${style}`) };
-          }
-          return originalPostUpdate(payload);
-        };
+        window.postUpdate = (payload) => originalPostUpdate(window.applyBibleVersionGap(payload));
       }
       const originalInsertIntoSchedule = window.insertIntoSchedule;
       if (typeof originalInsertIntoSchedule === 'function') {
