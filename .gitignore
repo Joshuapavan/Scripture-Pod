@@ -9,7 +9,7 @@ dist/
 *.log
 *.tmp
 
-electron/resources/win-iconset/
+build/win-iconset/
 Thumbs.db
 
 # Android generated output and local configuration

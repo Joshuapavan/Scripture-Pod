@@ -5,14 +5,14 @@ const path = require('node:path');
 
 const root = path.join(__dirname, '..');
 const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
-const extra = require('../js/shared/lower-third-extra.js');
+const extra = require('../src/shared/lower-third-extra.js');
 
 const consumers = {
-  display: read('UI/scripture-pod-display.html'),
-  output: read('js/panel/output-and-streaming.js'),
-  bootstrap: read('js/panel/bootstrap-and-init.js')
+  display: read('src/renderer/display/display.html'),
+  output: read('src/renderer/panel/scripts/output/output-and-streaming.js'),
+  bootstrap: read('src/renderer/panel/scripts/core/bootstrap-and-init.js')
 };
-const panelHtml = read('UI/scripture-pod-panel.html');
+const panelHtml = read('src/renderer/panel/panel.html');
 
 test('extra lower-third CSS is safe to inline in a template literal', () => {
   assert.ok(extra.css.length > 1000);

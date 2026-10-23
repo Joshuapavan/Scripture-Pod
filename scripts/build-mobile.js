@@ -7,11 +7,11 @@ const webRoot = path.join(projectRoot, 'mobile', 'www');
 fs.rmSync(webRoot, { recursive: true, force: true });
 fs.mkdirSync(webRoot, { recursive: true });
 
-for (const directory of ['UI', 'js', 'app_assets/bg']) {
+for (const directory of ['src/renderer', 'src/shared', 'assets/bg']) {
   fs.cpSync(path.join(projectRoot, directory), path.join(webRoot, directory), { recursive: true });
 }
 
-const bibleAssetDirectories = ['app_assets/bibles', 'assets/bibles'];
+const bibleAssetDirectories = ['assets/bibles'];
 const bundledBibleFiles = [];
 bibleAssetDirectories.forEach((directory) => {
   const sourceDirectory = path.join(projectRoot, directory);
@@ -24,9 +24,9 @@ bibleAssetDirectories.forEach((directory) => {
 });
 fs.writeFileSync(path.join(webRoot, 'bundled-bibles.json'), JSON.stringify(bundledBibleFiles, null, 2), 'utf8');
 
-const bundledLogoSource = path.join(projectRoot, 'app_assets/logo/ACI_Logo.png');
+const bundledLogoSource = path.join(projectRoot, 'assets/logo/ACI_Logo.png');
 if (fs.existsSync(bundledLogoSource)) {
-  const bundledLogoDirectory = path.join(webRoot, 'app_assets/logo');
+  const bundledLogoDirectory = path.join(webRoot, 'assets/logo');
   fs.mkdirSync(bundledLogoDirectory, { recursive: true });
   fs.copyFileSync(bundledLogoSource, path.join(bundledLogoDirectory, 'ACI_Logo.png'));
 }
@@ -38,10 +38,10 @@ fs.copyFileSync(
   path.join(qrCodeBuildDirectory, 'qrcode.js')
 );
 
-const logoDirectory = path.join(webRoot, 'electron', 'resources');
+const logoDirectory = path.join(webRoot, 'build');
 fs.mkdirSync(logoDirectory, { recursive: true });
 fs.copyFileSync(
-  path.join(projectRoot, 'electron', 'resources', 'Logo.svg'),
+  path.join(projectRoot, 'build', 'Logo.svg'),
   path.join(logoDirectory, 'Logo.svg')
 );
 
@@ -54,7 +54,7 @@ fs.writeFileSync(path.join(webRoot, 'index.html'), `<!doctype html>
   <title>Scripture Pod</title>
 </head>
 <body>
-  <script>location.replace('UI/scripture-pod-panel.html' + location.search + location.hash);</script>
+  <script>location.replace('src/renderer/panel/panel.html' + location.search + location.hash);</script>
 </body>
 </html>
 `, 'utf8');

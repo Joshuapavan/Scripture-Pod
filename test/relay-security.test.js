@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { once } = require('node:events');
 const { WebSocket, WebSocketServer } = require('ws');
-const { createRelayAccessToken, isRelayRequestAuthorized, verifyRelayUpgrade } = require('../electron/relay-security');
+const { createRelayAccessToken, isRelayRequestAuthorized, verifyRelayUpgrade } = require('../src/main/relay-security');
 
 test('relay access tokens are random, URL-safe secrets', () => {
   const first = createRelayAccessToken();

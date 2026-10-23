@@ -7,7 +7,7 @@ const path = require('path');
 let createBibleSearch = null;
 try {
   require('node:sqlite');
-  ({ createBibleSearch } = require('../electron/bible-search'));
+  ({ createBibleSearch } = require('../src/main/bible-search'));
 } catch (error) { /* node:sqlite needs Node 22.5+ */ }
 
 const chapters = [
