@@ -3,29 +3,28 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
-const { listBundledBibleFiles, readBundledBibleFile, readBundledChurchLogo } = require('../electron/bundled-bibles');
+const { listBundledBibleFiles, readBundledBibleFile, readBundledChurchLogo } = require('../src/main/bundled-bibles');
 
-test('lists and reads XML files from supported Bible asset folders', async (t) => {
+test('lists and reads XML files from the Bible asset folder', async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'scripture-pod-bibles-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  await fs.mkdir(path.join(root, 'app_assets/bibles'), { recursive: true });
   await fs.mkdir(path.join(root, 'assets/bibles'), { recursive: true });
-  await fs.writeFile(path.join(root, 'app_assets/bibles/Tamil.xml'), '<XMLBIBLE/>');
+  await fs.writeFile(path.join(root, 'assets/bibles/Tamil.xml'), '<XMLBIBLE/>');
   await fs.writeFile(path.join(root, 'assets/bibles/English.XML'), '<XMLBIBLE/>');
   await fs.writeFile(path.join(root, 'assets/bibles/readme.txt'), 'ignored');
 
   const files = await listBundledBibleFiles(root);
   assert.deepEqual(files, [
-    { directory: 'app_assets/bibles', name: 'Tamil.xml' },
-    { directory: 'assets/bibles', name: 'English.XML' }
+    { directory: 'assets/bibles', name: 'English.XML' },
+    { directory: 'assets/bibles', name: 'Tamil.xml' }
   ]);
-  assert.deepEqual(await readBundledBibleFile(root, files[0]), { name: 'Tamil.xml', contents: '<XMLBIBLE/>' });
+  assert.deepEqual(await readBundledBibleFile(root, files[1]), { name: 'Tamil.xml', contents: '<XMLBIBLE/>' });
 });
 
 test('reads the bundled ACI logo as base64 image data', async (t) => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'scripture-pod-logo-'));
   t.after(() => fs.rm(root, { recursive: true, force: true }));
-  const logoPath = path.join(root, 'app_assets/logo/ACI_Logo.png');
+  const logoPath = path.join(root, 'assets/logo/ACI_Logo.png');
   const pngBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
   await fs.mkdir(path.dirname(logoPath), { recursive: true });
   await fs.writeFile(logoPath, pngBytes);

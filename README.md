@@ -27,8 +27,8 @@ npm start
 
 You can open the following files directly in a modern browser for quick testing (not packaged):
 
-- `UI/scripture-pod-panel.html` — control panel UI
-- `UI/scripture-pod-display.html` — output/display window
+- `src/renderer/panel/panel.html` — control panel UI
+- `src/renderer/display/display.html` — output/display window
 
 Notes:
 
@@ -157,13 +157,36 @@ Notes:
 - AppImage is the easiest option for most Linux users.
 - If the system blocks execution, enable the app to run as a program or install the package from your distro's software center if you created a package format.
 
-## Project layout (important files)
+## Project layout
 
-- `UI/scripture-pod-panel.html` — main control panel
-- `UI/scripture-pod-display.html` — renderer/display
-- `js/` — application JavaScript modules used by the panel
-- `electron/` — Electron bootstrap (main, preload, helpers)
-- `electron/resources/` — app icon assets for macOS, Windows, and Linux
+```
+src/
+  main/          Electron main process: main.js, preload.js, relay-security.js,
+                 bundled-bibles.js, bible-search.js (+ worker, SQLite search index)
+  renderer/
+    panel/       The control panel
+      panel.html
+      styles/    base.css, modern.css, console.css (loaded in that order) and fonts/
+      scripts/   Classic scripts, loaded in order by panel.html, grouped by role:
+        core/          state and storage, app core, settings, i18n and theme, startup
+        library/       Bible and lyrics library, chapter grid, Bible search
+        ui/            workspace, sidebar, shortcuts, command palette
+        output/        live output, sync, program display, recording and streaming
+        sources/       scenes, sources, FX, media and backgrounds
+        integrations/  vMix, translation, remote display tools
+    display/     The output page (display.html, display.css)
+  shared/        Code used by both pages (lower-third-extra.js)
+assets/          bibles/ (bundled Bible XML), logo/, bg/
+build/           App icons and the logo used by the panel (electron-builder buildResources)
+scripts/         Build and maintenance scripts (mobile build, icon render)
+test/            Node test runner tests (`npm test`)
+android/ ios/    Capacitor native projects
+```
+
+The display page is served at `/src/renderer/display/display.html`. The old
+`/UI/scripture-pod-display.html` address redirects there, so saved OBS browser
+sources keep working. Set `SCRIPTURE_POD_HTTP_PORT` and `SCRIPTURE_POD_RELAY_PORT`
+to run a second copy beside a running one.
 
 ## Troubleshooting
 

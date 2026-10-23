@@ -2,7 +2,7 @@
   "name": "scripture-pod-desktop",
   "version": "2.0.5",
   "description": "Scripture Pod desktop presentation control application",
-  "main": "electron/main.js",
+  "main": "src/main/main.js",
   "author": "Joshua Pavan",
   "license": "UNLICENSED",
   "private": true,
@@ -23,23 +23,16 @@
     "appId": "com.scripturepodpro.desktop",
     "productName": "Scripture Pod",
     "files": [
-      "UI/**/*",
-      "app_assets/bibles/**/*",
-      "app_assets/bg/bg.mov",
-      "app_assets/logo/ACI_Logo.png",
-      "js/**/*",
-      "electron/main.js",
-      "electron/bundled-bibles.js",
-      "electron/bible-search.js",
-      "electron/bible-search-worker.js",
-      "electron/relay-security.js",
-      "electron/preload.js",
-      "electron/resources/Logo.svg",
+      "src/**/*",
+      "assets/bibles/**/*",
+      "assets/bg/bg.mov",
+      "assets/logo/ACI_Logo.png",
+      "build/Logo.svg",
       "package.json",
       "README.md"
     ],
     "directories": {
-      "buildResources": "electron/resources",
+      "buildResources": "build",
       "output": "dist"
     },
     "electronLanguages": [
@@ -47,7 +40,7 @@
     ],
     "mac": {
       "category": "public.app-category.productivity",
-      "icon": "electron/resources/scripture-pod.png",
+      "icon": "build/scripture-pod.png",
       "target": [
         "zip"
       ],
@@ -72,7 +65,7 @@
         "AppImage",
         "zip"
       ],
-      "icon": "electron/resources/scripture-pod.png",
+      "icon": "build/scripture-pod.png",
       "category": "Utility",
       "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
     }
