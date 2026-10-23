@@ -6,7 +6,7 @@
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "test": "node --test && cd src-tauri && cargo test",
+    "test": "node --test && cd src-tauri && cargo test -p sp-core",
     "tauri:dev": "cd src-tauri && cargo run",
     "tauri:build": "cd src-tauri && cargo tauri build",
     "start": "cd src-tauri && cargo run"

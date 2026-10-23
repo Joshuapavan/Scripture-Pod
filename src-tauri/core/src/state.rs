@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn serves_only_allowed_folders_and_blocks_escapes() {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf();
+        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().parent().unwrap().to_path_buf();
         assert!(resolve_app_file(&root, "src/renderer/display/display.html").is_some());
         assert!(resolve_app_file(&root, "package.json").is_none());
         assert!(resolve_app_file(&root, "src/../package.json").is_none());
