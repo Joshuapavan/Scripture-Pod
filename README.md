@@ -40,7 +40,7 @@ Notes:
 The Electron app can serve the display over the local network. Both computers must be on the same reachable network, and the control computer must remain running.
 
 1. Start the desktop app with `npm start` or open the installed app.
-2. In the control panel, open **Settings → Host Mode** and select **vMix**. This enables panel updates to be relayed to a remote display; the vMix integration itself does not need to be enabled.
+2. In the control panel, open **Settings → Host Mode** and select **WebSocket Relay**. This relays panel updates to a remote display, such as an OBS Browser Source on the streaming computer.
 3. In the same settings section, use **LAN Display URL**. Click **Refresh** after changing networks, then **Copy**.
 4. Open the copied URL in a browser on the other computer.
 
@@ -166,16 +166,18 @@ src/
   renderer/
     panel/       The control panel
       panel.html
-      styles/    base.css, modern.css, console.css (loaded in that order) and fonts/
+      styles/    base.css, modern.css, console.css (loaded in that order)
       scripts/   Classic scripts, loaded in order by panel.html, grouped by role:
         core/          state and storage, app core, settings, i18n and theme, startup
         library/       Bible and lyrics library, chapter grid, Bible search
         ui/            workspace, sidebar, shortcuts, command palette
         output/        live output, sync, program display, recording and streaming
         sources/       scenes, sources, FX, media and backgrounds
-        integrations/  vMix, translation, remote display tools
+        integrations/  host mode, translation, remote display tools
     display/     The output page (display.html, display.css)
-  shared/        Code used by both pages (lower-third-extra.js)
+    fonts/       Bundled fonts (Geist, Geist Mono, Source Serif 4) shared by both pages
+  shared/        Code used by both pages: lower-third-extra.js (name designs and animations),
+                 social-overlay.js (the social engagement lower third)
 assets/          bibles/ (bundled Bible XML), logo/, bg/
 build/           App icons and the logo used by the panel (electron-builder buildResources)
 scripts/         Build and maintenance scripts (mobile build, icon render)

@@ -453,6 +453,46 @@
       if (!opts.silent) onAnyControlChange();
     }
 
+    // The default look: a deep navy spotlight background, verses in Source Serif 4, and
+    // the reference above each verse as a small muted Geist Mono label, left aligned.
+    // Applied once per computer so existing settings are not overwritten again.
+    const LOOK_DEFAULTS_KEY = 'scripturePod.lookDefaults.v5';
+
+    function applyDisplayLookDefaults() {
+      try { if (localStorage.getItem(LOOK_DEFAULTS_KEY) === 'done') return; } catch (error) { /* apply anyway */ }
+      const $ = (id) => document.getElementById(id);
+      const verseFont = "'Source Serif 4','Noto Sans Kannada','Noto Sans Tamil',serif";
+      if (typeof renderFontFamilyOptions === 'function') renderFontFamilyOptions(verseFont);
+      if ($('font-family')) $('font-family').value = verseFont;
+      if ($('font-weight')) $('font-weight').value = '600';
+      if ($('font-size-val')) $('font-size-val').value = '44';
+      if ($('ref-font-size-val')) $('ref-font-size-val').value = '24';
+      if ($('text-color')) { $('text-color').value = '#ffffff'; if (typeof syncTextColorFromPicker === 'function') syncTextColorFromPicker(); }
+      if ($('ref-color')) { $('ref-color').value = '#9fb0d0'; if (typeof syncRefColorFromPicker === 'function') syncRefColorFromPicker(); }
+      if ($('full-ref-text-transform')) { $('full-ref-text-transform').value = 'none'; if (typeof handleReferenceTextTransformChange === 'function') handleReferenceTextTransformChange('full'); }
+      if ($('full-text-transform')) { $('full-text-transform').value = 'none'; if (typeof handleFullTextTransformChange === 'function') handleFullTextTransformChange(); }
+      setRefBgEnabled(false, { silent: true });
+      fullRefHAlign = 'left';
+      fullHAlign = 'left';
+      fullVAlign = 'middle';
+      if ($('pad-lr-full')) { $('pad-lr-full').value = '7'; if (typeof updateSliderValue === 'function') updateSliderValue($('pad-lr-full'), '%'); }
+      if ($('dual-version-gap')) { $('dual-version-gap').value = '72'; if (typeof updateSliderValue === 'function') updateSliderValue($('dual-version-gap'), 'px'); if (typeof saveDualVersionGap === 'function') saveDualVersionGap(); }
+      // Background: spotlight gradient, customisable in Look and Settings > Background
+      bgGradientShadow = '#070b14';
+      bgGradientHighlight = '#22365c';
+      if ($('bg-color-shadow')) $('bg-color-shadow').value = bgGradientShadow;
+      if ($('bg-color-highlight')) $('bg-color-highlight').value = bgGradientHighlight;
+      if ($('bg-gradient-shape')) $('bg-gradient-shape').value = 'radial';
+      if ($('bg-toggle')) $('bg-toggle').checked = true;
+      if ($('bg-type')) { $('bg-type').value = 'color'; if (typeof handleBgTypeChange === 'function') handleBgTypeChange(); }
+      setBgMode('gradient', { silent: true });
+      if (typeof updateBgModePicker === 'function') updateBgModePicker();
+      updateFullAlignButtons();
+      try { localStorage.setItem(LOOK_DEFAULTS_KEY, 'done'); } catch (error) { /* storage unavailable */ }
+      onAnyControlChange();
+      if (typeof saveToStorageDebounced === 'function') saveToStorageDebounced();
+    }
+
     // Settings > Bible Options > "Hide lower-third options for verses" (on by
     // default): verses always show full screen and the Mode choice is hidden.
     const VERSE_LT_HIDDEN_KEY = 'scripturePod.hideVerseLowerThird.v1';
@@ -609,6 +649,14 @@
     function capitalize(s) { return String(s || '').charAt(0).toUpperCase() + String(s || '').slice(1); }
 
     function updateFullAlignButtons() {
+      // Look card: where the reference sits (left, middle, right)
+      ['left', 'center', 'right'].forEach((key) => {
+        const el = document.getElementById(`look-ref-${key}`);
+        if (el) {
+          el.classList.toggle('active', fullRefHAlign === key);
+          el.setAttribute('aria-pressed', fullRefHAlign === key ? 'true' : 'false');
+        }
+      });
       const refMap = { left: 'full-ref-h-left', center: 'full-ref-h-center', right: 'full-ref-h-right', justify: 'full-ref-h-justify' };
       Object.entries(refMap).forEach(([key, id]) => {
         const el = document.getElementById(id);
@@ -1279,10 +1327,25 @@
     }
 
 
+    // Reference font (Settings > Typography). 'inherit' follows the verse font.
+    const REF_FONT_KEY = 'scripturePod.refFontFamily.v1';
+    const DEFAULT_REF_FONT = "'Geist Mono',ui-monospace,monospace";
+    let refFontFamily = (() => {
+      try { return localStorage.getItem(REF_FONT_KEY) || DEFAULT_REF_FONT; } catch (error) { return DEFAULT_REF_FONT; }
+    })();
+
+    function handleRefFontChange() {
+      const select = document.getElementById('ref-font-family');
+      refFontFamily = (select && select.value) || DEFAULT_REF_FONT;
+      try { localStorage.setItem(REF_FONT_KEY, refFontFamily); } catch (error) { /* storage unavailable */ }
+      onAnyControlChange();
+    }
+
     function buildReferenceBadgeSpan(text, fontSizePt, foregroundColor, backgroundColor, opts = {}) {
       const styles = [
         `color:${foregroundColor}`,
-        'font-weight:800',
+        `font-weight:${refBgEnabled ? 800 : 600}`,
+        ...(refFontFamily && refFontFamily !== 'inherit' ? [`font-family:${refFontFamily}`] : []),
         `font-size:${fontSizePt}pt`,
         'display:inline-block',
         `border-radius:${opts.borderRadius || '12px'}`,
@@ -1303,7 +1366,8 @@
         styles.push('box-shadow:none;');
         styles.push(referenceShadowEnabled ? 'text-shadow:0 10px 24px rgba(0,0,0,0.65);' : 'text-shadow:none;');
       }
-      return `<span style="${styles.join(';')}">${text}</span>`;
+      const keepFont = (refFontFamily && refFontFamily !== 'inherit') ? ' data-keep-font="1"' : '';
+      return `<span${keepFont} style="${styles.join(';')}">${text}</span>`;
     }
 
     function buildFullBibleSegment({ referenceLabel, verseHtml, refSize, refColor, refBgColor, verseAlign, refAlign, verseShadowStyle, refPosition, refTextTransform }) {
@@ -1673,6 +1737,8 @@
       const keepInputs = !!opts.keepInputs;
       newSongFetchedLyrics = '';
       newSongFetchedLookupKey = '';
+      const lyricsBox = document.getElementById('new-song-lyrics');
+      if (lyricsBox && !keepInputs) lyricsBox.value = '';
       clearNewSongLookupResults();
       setNewSongLookupBusy(false);
       updateNewSongFetchStatus(t('new_song_no_lyrics_fetched'), 'muted');
@@ -1795,6 +1861,8 @@
       if (titleInput && pickedTitle) titleInput.value = pickedTitle;
       if (artistInput && pickedArtist) artistInput.value = pickedArtist;
       newSongFetchedLyrics = lyrics;
+      const lyricsBox = document.getElementById('new-song-lyrics');
+      if (lyricsBox) lyricsBox.value = lyrics;
       newSongFetchedLookupKey = getNewSongLookupKey(titleInput?.value || '', artistInput?.value || '');
       updateNewSongFetchStatus(t('new_song_lyrics_ready_selected'), 'success');
       showToast(t('new_song_lyrics_selected'));

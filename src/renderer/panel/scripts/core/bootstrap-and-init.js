@@ -147,8 +147,7 @@
           editorMode
         },
         host: {
-          mode: getHostMode(),
-          vmix: getVmixSettings()
+          mode: getHostMode()
         }
       };
     }
@@ -776,7 +775,7 @@
       }
       if (overlayDesignInput && overlayAnimationInput) {
         const savedOverlayStyle = String(ui.nameRoleOverlayStyle || 'classic-gms-rise');
-        const currentStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const currentStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment|sapphire|crimson|forest|graphite|rose|ocean|amber|violet|outline|halo|chapel)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const previousStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const layoutOnly = ['classic', 'right', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : '';
         const design = currentStyle ? `${currentStyle[1]}-${currentStyle[2]}` : `${previousStyle?.[1] || layoutOnly || 'classic'}-gms`;
@@ -792,7 +791,7 @@
         legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF',
         modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF',
         glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF',
-        aurora: '#90D5FF', sunrise: '#90D5FF', royal: '#90D5FF', minimal: '#90D5FF', pill: '#90D5FF', holo: '#90D5FF', frost: '#90D5FF', cinema: '#90D5FF', sharp: '#90D5FF', emerald: '#90D5FF', pulse: '#90D5FF', parchment: '#90D5FF'
+        aurora: '#90D5FF', sunrise: '#90D5FF', royal: '#90D5FF', minimal: '#90D5FF', pill: '#90D5FF', holo: '#90D5FF', frost: '#90D5FF', cinema: '#90D5FF', sharp: '#90D5FF', emerald: '#90D5FF', pulse: '#90D5FF', parchment: '#90D5FF', sapphire: '#90D5FF', crimson: '#90D5FF', forest: '#90D5FF', graphite: '#90D5FF', rose: '#90D5FF', ocean: '#90D5FF', amber: '#90D5FF', violet: '#90D5FF', outline: '#90D5FF', halo: '#90D5FF', chapel: '#90D5FF'
       };
       if (overlayPrimaryInput) {
         const savedPrimary = ui.nameRoleOverlayPrimaryColor;
@@ -830,6 +829,7 @@
       if (socialOffsetXInput) socialOffsetXInput.value = String(Math.max(-40, Math.min(40, Number(ui.socialEngagementOverlayOffsetX) || 0)));
       if (socialOffsetYInput) socialOffsetYInput.value = String(Math.max(-40, Math.min(40, Number(ui.socialEngagementOverlayOffsetY) || 0)));
       document.getElementById('social-engagement-offset-x-value').textContent = `${socialOffsetXInput?.value || 0}%`;
+      restoreSocialEngagementConfig(ui.socialEngagementConfig);
       document.getElementById('social-engagement-offset-y-value').textContent = `${socialOffsetYInput?.value || 0}%`;
       if (socialEnabledButton) {
         const socialEnabled = ui.socialEngagementOverlayEnabled === true;
@@ -4546,6 +4546,10 @@
         if (results.some(Boolean)) refreshAfterBibleLoad();
       });
       setInterval(unloadIdleBibles, 60000);
+      applyDisplayLookDefaults();
+      updateFullAlignButtons();
+      const refFontSelect = document.getElementById('ref-font-family');
+      if (refFontSelect) refFontSelect.value = refFontFamily;
       setTimeout(syncBibleSearchDb, 3000);
       updateFirstRunSetupVisibility();
       if (typeof refreshLocalServerInfo === 'function') {

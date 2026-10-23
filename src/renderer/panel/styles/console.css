@@ -7,58 +7,6 @@
    two never rely on hue alone. Light theme modes keep the modern layer's tokens.
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* Bundled fonts (SIL Open Font License; see ./fonts/LICENSE-*.txt), so the
-   design's type works offline. Latin and Latin Extended only: Kannada, Tamil
-   and other scripts fall through to the system fonts in each stack. */
-@font-face {
-  font-family: "Geist";
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url("./fonts/geist-latin-wght-normal.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: "Geist";
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url("./fonts/geist-latin-ext-wght-normal.woff2") format("woff2");
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: "Geist Mono";
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url("./fonts/geist-mono-latin-wght-normal.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: "Geist Mono";
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url("./fonts/geist-mono-latin-ext-wght-normal.woff2") format("woff2");
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-@font-face {
-  font-family: "Source Serif 4";
-  font-style: normal;
-  font-weight: 200 900;
-  font-display: swap;
-  src: url("./fonts/source-serif-4-latin-wght-normal.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
-}
-@font-face {
-  font-family: "Source Serif 4";
-  font-style: normal;
-  font-weight: 200 900;
-  font-display: swap;
-  src: url("./fonts/source-serif-4-latin-ext-wght-normal.woff2") format("woff2");
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
-}
-
 :root {
   --sp-live: #E5372A;
   --sp-live-ink: #FFFFFF;
@@ -2380,3 +2328,40 @@ body[data-hide-verse-lt="1"][data-sidebar-tab="bible"] #look-card #ratio-picker,
 body[data-hide-verse-lt="1"][data-sidebar-tab="bible"] #look-card #ratio-picker + *:empty { display: none !important; }
 body[data-hide-verse-lt="1"][data-sidebar-tab="bible"] #look-card .main-panel-stacks > div:has(#ratio-picker) > span:first-child { display: none; }
 body[data-hide-verse-lt="1"] .overlay-list-item[data-overlay="scripture"] { display: none; }
+
+/* Look: where the reference sits. Verses only (lyrics have no reference). */
+body[data-sidebar-tab="songs"] #look-card #look-ref-row { display: none !important; }
+
+/* New song: a name and lyrics are enough */
+.new-song-lyrics-field { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.new-song-lyrics-field label { color: var(--sp-muted); font-size: 12px; }
+#new-song-lyrics {
+  min-height: 190px; resize: vertical; padding: 12px; border-radius: 10px;
+  background: var(--sp-inset) !important; border: 1px solid var(--sp-line-2) !important; color: var(--sp-text) !important;
+  font: inherit; font-size: 14px; line-height: 1.5;
+}
+.new-song-lyrics-hint { color: var(--sp-subtle); font-size: 12px; }
+#newSongModal .modal-content { width: min(640px, 92vw); }
+#newSongModal .new-song-live-btn { background: var(--sp-live) !important; border-color: var(--sp-live) !important; color: #fff !important; font-weight: 600; }
+
+/* Program is the same 16:9 box as Preview, so a slide is the same size in both
+   (it used to be capped in height, which narrowed the picture with black bars) */
+#program-display-shell:not([data-aspect="9:16"]) {
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  aspect-ratio: 16 / 9 !important;
+  border: 0 !important;
+  box-sizing: border-box;
+}
+
+/* Test and Show on air stay in view at the bottom of the Overlays settings while the rest scrolls */
+.overlays-settings .ov-footer {
+  position: sticky;
+  bottom: -16px;
+  z-index: 6;
+  margin: auto -16px -16px;
+  padding: 12px 16px 16px;
+  background: #0e1013;
+  border-top: 1px solid var(--sp-line);
+}

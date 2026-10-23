@@ -913,7 +913,8 @@
         bgVideoSpeed: Math.max(0.25, Math.min(2.5, parseFloat(document.getElementById('bg-video-speed')?.value || '1') || 1)),
         bgBlur: Math.max(0, Math.min(40, parseInt(document.getElementById('bg-blur')?.value || '0', 10) || 0)),
         bgEdgeFix: (document.getElementById('bg-edge-fix')?.value || 'off') === 'on',
-        bgGradientAngle: document.getElementById('bg-gradient-angle')?.value || 135
+        bgGradientAngle: document.getElementById('bg-gradient-angle')?.value || 135,
+        bgGradientShape: document.getElementById('bg-gradient-shape')?.value || 'radial'
       };
     }
 
@@ -956,7 +957,8 @@
             bgVideoSpeed: Math.max(0.25, Math.min(2.5, parseFloat(profile.bgVideoSpeed != null ? profile.bgVideoSpeed : (document.getElementById('bg-video-speed')?.value || '1')) || 1)),
             bgBlur: Math.max(0, Math.min(40, parseInt(profile.bgBlur != null ? profile.bgBlur : (document.getElementById('bg-blur')?.value || '0'), 10) || 0)),
             bgEdgeFix: profile.bgEdgeFix != null ? !!profile.bgEdgeFix : ((document.getElementById('bg-edge-fix')?.value || 'off') === 'on'),
-            bgGradientAngle: profile.bgGradientAngle != null ? profile.bgGradientAngle : (document.getElementById('bg-gradient-angle')?.value || 135)
+            bgGradientAngle: profile.bgGradientAngle != null ? profile.bgGradientAngle : (document.getElementById('bg-gradient-angle')?.value || 135),
+            bgGradientShape: profile.bgGradientShape != null ? profile.bgGradientShape : (document.getElementById('bg-gradient-shape')?.value || 'radial')
           };
         }
       }
@@ -1300,8 +1302,25 @@
       }, 0);
     }
 
+    // What is on the output right now: a verse or lyric, or a lower third
+    function getOnAirPayload() {
+      if (!lastLiveState || lastLiveState.kind !== 'update' || !lastLiveState.payload) return null;
+      const payload = lastLiveState.payload;
+      const overlayOnAir = payload.lowerThirdOnly &&
+        (payload.nameRoleOverlay?.enabled || payload.socialEngagementOverlay?.enabled);
+      return (isLive || overlayOnAir) ? payload : null;
+    }
+
     function refreshPreviewMonitor() {
       if (isPreviewOnlyMode()) return;
+      // Preview only is off: Preview and Program show the same thing, what is on air
+      const onAirPayload = getOnAirPayload();
+      if (onAirPayload) {
+        sendProgramPreview(onAirPayload, { mirror: true });
+        setPreviewMonitorCaption('On air');
+        setPreviewMonitorRef(document.getElementById('program-monitor-ref')?.textContent || '');
+        return;
+      }
       if (!currentItem) {
         clearPreviewMonitor();
         setPreviewMonitorCaption('Nothing selected');

@@ -96,15 +96,33 @@
       }
     }
 
-    function createNewItem() {
+    // Ctrl or Cmd + Enter in the lyrics box creates the song and shows it live
+    function handleNewSongLyricsKey(event) {
+      if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        createNewItem({ live: true });
+      }
+    }
+
+    // A song needs a name and lyrics; the lyrics can be pasted from the web.
+    // opts.live also shows the first slide on the live output.
+    function createNewItem(opts = {}) {
       const input = document.getElementById('new-song-title');
       const artistInput = document.getElementById('new-song-artist');
-      const title = (input.value || '').trim();
+      const lyricsInput = document.getElementById('new-song-lyrics');
       const artist = (artistInput?.value || '').trim();
-      if (!title) return;
+      const pastedLyrics = (lyricsInput?.value || '').trim();
+      let title = (input.value || '').trim();
       const lookupKey = getNewSongLookupKey(title, artist);
       const fetchedLyrics = (lookupKey === newSongFetchedLookupKey) ? newSongFetchedLyrics : '';
-      const initialContent = fetchedLyrics || '';
+      // Pasted lyrics are sliced into sections the same way fetched ones are
+      const initialContent = pastedLyrics ? inferSectionedLyricsFromText(pastedLyrics) : (fetchedLyrics || '');
+      if (!title && initialContent) {
+        // No name typed: the first line of the lyrics names the song
+        const firstLine = initialContent.split('\n').map(line => line.trim()).find(line => line && !/^\[[^\]]*\]$/.test(line)) || '';
+        title = firstLine.replace(/[,;:.!?\s]+$/, '').slice(0, 48);
+      }
+      if (!title) { showToast('Enter a song name and its lyrics'); input.focus(); return; }
       const newSong = {
         id: createId('song', title),
         title,
@@ -127,18 +145,27 @@
       const searchInput = document.getElementById('song-search');
       if (searchInput) searchInput.value = '';
       setSearchValueForTab('songs', '');
+      buttonContextTab = 'songs';
       selectItem(songs.length - 1);
-      setEditorMode('text');
-      document.getElementById('lyric-editor').focus();
+      // With lyrics the song opens as slides, ready to project; without, as text to type into
+      if (initialContent) {
+        setEditorMode('btn');
+        if (opts.live) projectLive(true);
+      } else {
+        setEditorMode('text');
+        document.getElementById('lyric-editor').focus();
+      }
       requestAnimationFrame(() => {
         focusActiveSongInSidebar();
       });
       input.value = "";
       if (artistInput) artistInput.value = "";
+      if (lyricsInput) lyricsInput.value = "";
+      resetNewSongLookupState({ keepInputs: true });
       closeModal('newSongModal');
       saveState();
       saveToStorageDebounced();
-      showToast(fetchedLyrics ? t('song_created_with_fetched_lyrics') : t('song_created'));
+      showToast(opts.live && initialContent ? 'Song created and live' : (fetchedLyrics && !pastedLyrics ? t('song_created_with_fetched_lyrics') : t('song_created')));
     }
 
     // Something Escape should close first: a dialog, popover, picker or menu.
