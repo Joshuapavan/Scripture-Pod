@@ -1450,6 +1450,7 @@ ${getLtThumbCss()}
     }
 
     function pushLiveUpdate(opts = {}) {
+      if (typeof normalizeDualVersionIds === 'function') normalizeDualVersionIds();
       const previewOnly = opts.previewOnly === true;
       const missingVersions = getMissingBibleVersionsInUse();
       if (missingVersions.length) {

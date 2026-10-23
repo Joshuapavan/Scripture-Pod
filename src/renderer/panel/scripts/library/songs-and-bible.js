@@ -587,6 +587,17 @@
       if (container) container.scrollTop = 0;
     }
 
+    // A click selects what is already under the pointer, so the list must not move. Only
+    // keyboard navigation brings an off-screen card into view, and it does so without animating.
+    let lastInputWasPointer = false;
+    document.addEventListener('pointerdown', () => { lastInputWasPointer = true; }, true);
+    document.addEventListener('keydown', () => { lastInputWasPointer = false; }, true);
+
+    function revealActiveButton(button) {
+      if (lastInputWasPointer) return;
+      button.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+    }
+
     function isButtonInView(container, button) {
       if (!container || !button) return true;
       const cRect = container.getBoundingClientRect();
@@ -1075,9 +1086,10 @@
       });
       const activeBtn = container.querySelector('.lyric-btn.active');
       if (activeBtn && !isButtonInView(container, activeBtn)) {
-        activeBtn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        revealActiveButton(activeBtn);
       }
       refreshProjectLiveButtonState();
+      if (typeof refreshArrangementChips === 'function') refreshArrangementChips();
     }
 
     function updateButtonView(opts = {}) {
@@ -1111,7 +1123,13 @@
 
         const btn = document.createElement('button');
         btn.className = `lyric-btn ${idx === lineCursor ? 'active' : ''}`;
-        btn.innerHTML = p.text;
+        if (isBible) {
+          btn.innerHTML = p.text;
+        } else {
+          // Song slides are cards: number and section on top, the lyrics below
+          btn.innerHTML = `<span class="lyric-head"><span class="lyric-no">${String(idx + 1).padStart(2, '0')}</span><span class="lyric-sec">${esc(String(p.tag || ''))}</span></span><span class="lyric-text">${p.text}</span>`;
+          btn.dataset.section = String(p.tag || '');
+        }
         btn.dataset.pageIndex = String(idx);
 
         const isCurrentlyLive = isLive && livePointer &&
@@ -1162,9 +1180,10 @@
       }
       const activeBtn = container.querySelector('.lyric-btn.active');
       if (!skipAutoScroll && activeBtn && !isButtonInView(container, activeBtn)) {
-        activeBtn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        revealActiveButton(activeBtn);
       }
       refreshProjectLiveButtonState();
+      if (typeof refreshArrangementChips === 'function') refreshArrangementChips();
       updateCustomModeAvailability();
       updateTextEditorModeAvailability();
       if (typeof updateFocusedEditorBanner === 'function') updateFocusedEditorBanner();

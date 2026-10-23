@@ -41,9 +41,10 @@ macOS apps are unsigned (no Apple Developer ID), so macOS shows an "unidentified
 warning on first open: right-click the app and choose Open. On Windows, SmartScreen may warn:
 choose More info, then Run anyway.
 
-CI builds on every push to `main` and uploads the installers to the run (Actions, open the run,
-Artifacts, kept 14 days). A release is published only when you push a `v*` tag, for example
-`git tag v2.0.6 && git push origin v2.0.6`.
+CI builds on every push to `main` and publishes a pre-release with the installers
+(`v<version>-build.<run number>`); pushing a `v*` tag publishes a normal release. The installers
+are also kept as run artifacts for 14 days. One limit: GitHub will not let the workflow token tag a
+commit that edits a file in `.github/workflows`, so such a push builds but publishes nothing.
 
 ## Output and OBS
 

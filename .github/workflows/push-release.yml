@@ -91,9 +91,11 @@ jobs:
           retention-days: 14
 
   release:
-    # Builds from main only upload downloadable files to the run. A release is published only
-    # when you push a v* tag (git tag v2.0.6 && git push origin v2.0.6).
-    if: ${{ github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v') }}
+    # Every push to main publishes a pre-release with the installers (v<version>-build.<run number>);
+    # pushing a v* tag publishes a normal release for that tag.
+    # Note: GitHub refuses to let the workflow token create a tag on a commit that changes a file in
+    # .github/workflows (HTTP 403), so a push that edits a workflow builds but publishes nothing.
+    if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) }}
     needs: [test, build]
     runs-on: ubuntu-latest
     steps:
@@ -103,12 +105,19 @@ jobs:
           pattern: packaged-*
           path: release-assets
           merge-multiple: true
-      - name: Publish GitHub release for the tag
+      - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          tag="$GITHUB_REF_NAME"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            tag="$GITHUB_REF_NAME"
+            target_flags=(--verify-tag)
+          else
+            version=$(node -p "require('./package.json').version")
+            tag="v${version}-build.${GITHUB_RUN_NUMBER}"
+            target_flags=(--target "$GITHUB_SHA")
+          fi
           release_flags=()
           if [[ "$tag" == *-* ]]; then
             release_flags+=(--prerelease)
@@ -125,8 +134,8 @@ jobs:
           else
             gh release create "$tag" "${release_assets[@]}" \
               --repo "$GITHUB_REPOSITORY" \
-              --verify-tag \
+              "${target_flags[@]}" \
               --title "Scripture Pod $tag" \
-              --notes "Automated release from tag $tag." \
+              --notes "Automated release from commit $GITHUB_SHA." \
               "${release_flags[@]}"
           fi

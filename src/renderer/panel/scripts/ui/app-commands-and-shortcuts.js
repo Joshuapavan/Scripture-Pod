@@ -327,10 +327,18 @@
           switchBottomNavSidebarTab(next);
           return;
         }
-        if (e.key === 'ArrowRight') { e.preventDefault(); nextSlide(); }
-        if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
-        if (e.key === 'ArrowDown') { e.preventDefault(); navigateSidebar(1); }
-        if (e.key === 'ArrowUp') { e.preventDefault(); navigateSidebar(-1); }
+        if (sidebarTab === 'bible') {
+          // Bible: up and down move through the verses, left and right through the chapters
+          if (e.key === 'ArrowDown') { e.preventDefault(); nextSlide(); }
+          if (e.key === 'ArrowUp') { e.preventDefault(); prevSlide(); }
+          if (e.key === 'ArrowRight') { e.preventDefault(); navigateSidebar(1); }
+          if (e.key === 'ArrowLeft') { e.preventDefault(); navigateSidebar(-1); }
+        } else {
+          if (e.key === 'ArrowRight') { e.preventDefault(); nextSlide(); }
+          if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+          if (e.key === 'ArrowDown') { e.preventDefault(); navigateSidebar(1); }
+          if (e.key === 'ArrowUp') { e.preventDefault(); navigateSidebar(-1); }
+        }
         if (e.key === 'Enter') { e.preventDefault(); projectLive(true); }
         // Number keys 1-6: set lines in main panel
         const num = parseInt(e.key, 10);

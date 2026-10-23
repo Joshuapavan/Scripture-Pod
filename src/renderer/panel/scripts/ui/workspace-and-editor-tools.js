@@ -1534,9 +1534,10 @@
       if (!currentItem) return;
       if (lineCursor > 0) {
         lineCursor--;
+        // The live pointer moves first so the cards redraw with LIVE on the verse now on air
+        if (isLive && livePointer) liveLineCursor = lineCursor;
         updateButtonView();
         if (isLive && livePointer) {
-          liveLineCursor = lineCursor;
           if (!pushLiveUpdate()) {
             projectLive(true);
           }
@@ -1550,9 +1551,10 @@
       const pages = getPagesFromItem(currentItem, getIsBibleItem(currentItem));
       if (lineCursor < pages.length - 1) {
         lineCursor++;
+        // The live pointer moves first so the cards redraw with LIVE on the verse now on air
+        if (isLive && livePointer) liveLineCursor = lineCursor;
         updateButtonView();
         if (isLive && livePointer) {
-          liveLineCursor = lineCursor;
           if (!pushLiveUpdate()) {
             projectLive(true);
           }
@@ -1600,6 +1602,10 @@
         setLanguage(currentLanguage, { silent: true });
         if (typeof setSettingsTargetTab === 'function') {
           setSettingsTargetTab('follow', { silent: true });
+        }
+        if (typeof initSettingsPreview === 'function') {
+          initSettingsPreview();
+          setTimeout(() => { scalePreviewDisplay('settings-preview-shell', 'settings-preview-frame'); syncPreviewMonitor(); }, 120);
         }
       } else if (id === 'newSongModal') {
         resetNewSongLookupState({ keepInputs: false });
@@ -2465,9 +2471,11 @@
         sectionNavEl.innerHTML = list.map((item) => {
           const safeLabel = esc(String(item.label || 'Section'));
           const safeTag = esc(String(item.tag || ''));
-          return `<button type="button" class="focused-section-chip" data-section-tag="${safeTag}" onclick="jumpToFocusedSongSection(this.dataset.sectionTag)">${safeLabel}</button>`;
-        }).join('');
+          const short = esc(sectionShortCode(item.label));
+          return `<button type="button" class="focused-section-chip" data-section-tag="${safeTag}" onclick="jumpToFocusedSongSection(this.dataset.sectionTag)"><span class="chip-code">${short}</span>${safeLabel}</button>`;
+        }).join('') + `<button type="button" class="focused-section-add" aria-label="Add a section" title="Add a section" onclick="addSongSection()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg></button>`;
         sectionNavEl.classList.add('has-items');
+        if (typeof refreshArrangementChips === 'function') refreshArrangementChips();
       };
       if (!isFocusedWorkspaceMode()) {
         setEyebrow('');
@@ -2534,19 +2542,76 @@
       renderSectionNav([]);
     }
 
+    // How song slides are laid out: grouped under each section, large cards, or a compact grid
+    const LYRIC_VIEW_KEY = 'scripturePod.lyricView.v1';
+    function setLyricView(view) {
+      const v = ['grouped', 'cards', 'grid'].includes(view) ? view : 'cards';
+      document.body.dataset.lyricView = v;
+      document.querySelectorAll('#lyric-view-switch [data-lyric-view]').forEach((b) => {
+        const on = b.dataset.lyricView === v;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      try { localStorage.setItem(LYRIC_VIEW_KEY, v); } catch (e) { /* storage unavailable */ }
+    }
+    function initLyricView() {
+      let v = 'cards';
+      try { v = localStorage.getItem(LYRIC_VIEW_KEY) || 'cards'; } catch (e) { /* storage unavailable */ }
+      setLyricView(v);
+    }
+
+    // V1, C, B2 ... : the short code shown on each Arrangement chip
+    function sectionShortCode(label) {
+      const m = String(label || '').match(/^(verse|chorus|bridge|refrain|pre[-\s]?chorus|intro|outro|tag|hook)\s*(\d+)?/i);
+      if (!m) return String(label || '').slice(0, 2).toUpperCase();
+      const base = m[1].toLowerCase().replace(/[-\s]/g, '');
+      const letter = { verse: 'V', chorus: 'C', bridge: 'B', refrain: 'R', prechorus: 'PC', intro: 'I', outro: 'O', tag: 'T', hook: 'H' }[base] || m[1][0].toUpperCase();
+      return letter + (m[2] || '');
+    }
+
+    // Chips follow the cards: red for the section on air, blue for the one in Preview
+    function refreshArrangementChips() {
+      const nav = document.getElementById('focused-editor-section-nav');
+      const container = document.getElementById('lyric-buttons');
+      if (!nav || !container) return;
+      const liveTag = container.querySelector('.lyric-btn .live-indicator') ? container.querySelector('.lyric-btn:has(.live-indicator)').dataset.section : null;
+      const cueTag = container.querySelector('.lyric-btn.active')?.dataset.section || null;
+      nav.querySelectorAll('.focused-section-chip').forEach((chip) => {
+        const tag = chip.dataset.sectionTag;
+        chip.classList.toggle('is-live', liveTag != null && tag === liveTag);
+        chip.classList.toggle('is-cue', cueTag != null && tag === cueTag && tag !== liveTag);
+      });
+    }
+
+    // + on the Arrangement row: start the next verse at the end of the lyrics, ready to type
+    function addSongSection() {
+      if (sidebarTab !== 'songs' || !currentItem || getIsBibleItem(currentItem)) return;
+      const editor = document.getElementById('lyric-editor');
+      if (!editor) return;
+      const verses = (String(currentItem.content || editor.value || '').match(/^\[\s*verse\b/gim) || []).length;
+      const name = `Verse ${verses + 1}`;
+      const text = String(editor.value || '').replace(/\s+$/, '');
+      editor.value = `${text}${text ? '\n\n' : ''}[${name}]\n`;
+      if (typeof saveCurrentItem === 'function') saveCurrentItem();
+      setEditorMode('text');
+      editor.focus();
+      editor.setSelectionRange(editor.value.length, editor.value.length);
+      editor.scrollTop = editor.scrollHeight;
+    }
+
     function jumpToFocusedSongSection(tag) {
       if (sidebarTab !== 'songs' || !currentItem || getIsBibleItem(currentItem)) return;
       const targetTag = String(tag || '').trim();
       if (!targetTag) return;
       const container = document.getElementById('lyric-buttons');
       if (!container) return;
-      const blocks = Array.from(container.querySelectorAll('.section-block'));
-      const block = blocks.find((el) => {
-        const label = el.querySelector('.section-label');
-        return String(label?.textContent || '').trim() === targetTag;
-      });
-      if (!block) return;
-      block.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      // Like the design: a section chip cues that section's first slide in Preview
+      const first = Array.from(container.querySelectorAll('.lyric-btn')).find((b) => String(b.dataset.section || '').trim() === targetTag);
+      if (!first) return;
+      lineCursor = Number(first.dataset.pageIndex) || 0;
+      if (typeof updateActiveButtonInPlace === 'function') updateActiveButtonInPlace(lineCursor, false, -1);
+      if (typeof schedulePreviewMonitorRefresh === 'function') schedulePreviewMonitorRefresh();
+      first.scrollIntoView({ block: 'nearest', behavior: 'auto' });
     }
 
     function setupFocusedMainPanelEvents() {

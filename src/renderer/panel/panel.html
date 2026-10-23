@@ -111,6 +111,11 @@
           <button type="button" class="t-btn active" id="bible-view-verses" aria-pressed="true" onclick="setBibleReaderView(false)">Verses</button>
           <button type="button" class="t-btn" id="bible-view-reader" aria-pressed="false" onclick="setBibleReaderView(true)">Reader</button>
         </div>
+        <div class="toolbar-mode-switch" id="lyric-view-switch" role="group" aria-label="Slide layout">
+          <button class="t-btn" type="button" data-lyric-view="grouped" aria-pressed="false" onclick="setLyricView('grouped')" title="Slides grouped under each section">Grouped</button>
+          <button class="t-btn" type="button" data-lyric-view="cards" aria-pressed="true" onclick="setLyricView('cards')" title="One large card per slide">Cards</button>
+          <button class="t-btn" type="button" data-lyric-view="grid" aria-pressed="false" onclick="setLyricView('grid')" title="Compact grid">Grid</button>
+        </div>
         <div class="toolbar-mode-switch" id="editor-mode-switch">
           <button class="t-btn" id="mode-text" onclick="setEditorMode('text')"><span data-i18n="ui_mode_text">Text</span></button>
           <button class="t-btn active" id="mode-btn" onclick="setEditorMode('btn')"><span data-i18n="ui_mode_buttons">Buttons</span></button>
@@ -923,19 +928,19 @@
         <div class="sm-sidebar">
           <div class="sm-sidebar-item active" data-sm-tab="fullscreen" onclick="switchSettingsTab('fullscreen')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-            <span data-i18n="settings_full_screen_mode">Full Screen Mode (FS)</span>
+            <span data-i18n="settings_full_screen_mode">Full screen</span>
           </div>
           <div class="sm-sidebar-item" data-sm-tab="lowerthird" onclick="switchSettingsTab('lowerthird')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
-            <span data-i18n="settings_lower_third_mode">Lowerthird Mode (LT)</span>
+            <span data-i18n="settings_lower_third_mode">Lower third</span>
           </div>
           <div class="sm-sidebar-item" data-sm-tab="customstyle" onclick="switchSettingsTab('customstyle')" id="panel-inline-style-68">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-            <span data-i18n="settings_custom_mode_style">Custom Mode Style</span>
+            <span data-i18n="settings_custom_mode_style">Custom style</span>
           </div>
           <div class="sm-sidebar-item" data-sm-tab="typography" onclick="switchSettingsTab('typography')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-            <span data-i18n="settings_typography_colors">Typography & Colors</span>
+            <span data-i18n="settings_typography_colors">Typography and colour</span>
           </div>
           <div class="sm-sidebar-item" data-sm-tab="background" onclick="switchSettingsTab('background')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
@@ -943,11 +948,11 @@
           </div>
           <div class="sm-sidebar-item" data-sm-tab="song" onclick="switchSettingsTab('song')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
-            <span data-i18n="settings_song_options">Song Options</span>
+            <span data-i18n="settings_song_options">Lyrics</span>
           </div>
           <div class="sm-sidebar-item" data-sm-tab="bible" onclick="switchSettingsTab('bible')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            <span data-i18n="settings_bible_options">Bible Options</span>
+            <span data-i18n="settings_bible_options">Bible</span>
           </div>
           <div class="sm-sidebar-item" data-sm-tab="setlist" onclick="switchSettingsTab('setlist')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg>
@@ -955,7 +960,7 @@
           </div>
           <div class="sm-sidebar-item" data-sm-tab="presets" onclick="switchSettingsTab('presets')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-            <span data-i18n="settings_presets">Plugin Settings</span>
+            <span data-i18n="settings_presets">General</span>
           </div>
           <div class="sm-sidebar-item" data-sm-tab="feedback" onclick="switchSettingsTab('feedback')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>
@@ -1805,20 +1810,6 @@
               <label class="settings-label" data-i18n="settings_language">Language</label>
               <select id="language-select" class="settings-select" onchange="handleLanguageChange()"></select>
             </div>
-            <div class="settings-field" id="panel-inline-style-148">
-              <label class="settings-label" data-i18n="settings_layout">Layout</label>
-              <select id="sidebar-layout-select" class="settings-select" onchange="handleSidebarLayoutChange()">
-                <option value="layout1" data-i18n="settings_layout_1">Layout 1</option>
-                <option value="layout2" data-i18n="settings_layout_2">Layout 2</option>
-              </select>
-            </div>
-            <div class="settings-field" id="panel-inline-style-149">
-              <label class="settings-label">Workspace Layout</label>
-              <select id="workspace-layout-mode-select" class="settings-select" onchange="handleWorkspaceLayoutModeChange()">
-                <option value="classic">Classic</option>
-                <option value="focused" selected>Focused</option>
-              </select>
-            </div>
             <div class="settings-field" id="panel-inline-style-150">
               <label class="settings-label">Host Mode</label>
               <select id="host-mode-select" class="settings-select">
@@ -1872,6 +1863,11 @@
           </div>
         </div>
         </div><!-- /sm-content -->
+        <aside id="settings-preview" class="settings-preview" aria-label="Preview">
+          <div class="settings-preview-head"><span class="sp-monitor-tag is-preview">Preview</span><span class="sp-monitor-ref" id="settings-preview-ref"></span></div>
+          <div id="settings-preview-shell" class="settings-preview-shell"><iframe id="settings-preview-frame" title="Settings preview" tabindex="-1" allowtransparency="true"></iframe></div>
+          <p class="settings-preview-note">The preview redraws as you change a setting. Settings that belong to one workspace follow the tab you pick under Apply to; Follow uses whichever workspace is open.</p>
+        </aside>
       </div><!-- /sm-body -->
     </div>
   </div>

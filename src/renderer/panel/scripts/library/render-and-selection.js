@@ -61,6 +61,14 @@
     }
 
     // Versions shown on screen, in order: primary, then the multi-version picks.
+    // The second and third versions must be different Bibles from each other and from the first;
+    // a stale duplicate would draw the same Bible twice on the display
+    function normalizeDualVersionIds() {
+      if (dualVersionSecondaryId && dualVersionSecondaryId === activeBibleVersion) dualVersionSecondaryId = null;
+      if (dualVersionTertiaryId && (dualVersionTertiaryId === activeBibleVersion || dualVersionTertiaryId === dualVersionSecondaryId)) dualVersionTertiaryId = null;
+      if (!dualVersionSecondaryId && dualVersionTertiaryId) { dualVersionSecondaryId = dualVersionTertiaryId; dualVersionTertiaryId = null; }
+    }
+
     function getOnScreenVersionIds() {
       const ids = [activeBibleVersion];
       if (dualVersionModeEnabled) ids.push(dualVersionSecondaryId, dualVersionTertiaryId);
@@ -2321,5 +2329,6 @@
       if (!list) return;
       const active = list.querySelector('.song-item.active');
       if (!active) return;
-      active.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      if (typeof lastInputWasPointer !== 'undefined' && lastInputWasPointer) return;
+      active.scrollIntoView({ block: 'nearest', behavior: 'auto' });
     }

@@ -3576,6 +3576,7 @@
       setupSidebarQuickActions();
       setupSidebarResizePersistence();
       setupFocusedMainPanelEvents();
+      initLyricView();
       setupCollapsibleSettings();
       setupExplicitTooltips();
       bindSearchEnter();

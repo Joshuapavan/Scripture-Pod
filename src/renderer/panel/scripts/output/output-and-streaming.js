@@ -146,7 +146,9 @@
     const PREVIEW_DISPLAYS = [
       { shell: 'preview-display-shell', frame: 'preview-display-frame' },
       // Built the first time the Overlays tab opens, not at startup
-      { shell: 'overlay-preview-shell', frame: 'overlay-preview-frame', lazy: true }
+      { shell: 'overlay-preview-shell', frame: 'overlay-preview-frame', lazy: true },
+      // Built the first time Settings opens
+      { shell: 'settings-preview-shell', frame: 'settings-preview-frame', lazy: 'settings' }
     ];
     const previewDisplaysReady = new Set();
     let previewMonitorState = { kind: 'clear' };
@@ -197,7 +199,13 @@
     }
 
     function initOverlayPreview() {
-      PREVIEW_DISPLAYS.filter(display => display.lazy).forEach(initPreviewDisplay);
+      PREVIEW_DISPLAYS.filter(display => display.lazy === true).forEach(initPreviewDisplay);
+    }
+
+    function initSettingsPreview() {
+      PREVIEW_DISPLAYS.filter(display => display.lazy === 'settings').forEach(initPreviewDisplay);
+      const frame = document.getElementById('settings-preview-frame');
+      if (frame) scalePreviewDisplay('settings-preview-shell', 'settings-preview-frame');
     }
 
     function initPreviewDisplay({ shell: shellId, frame: frameId }) {

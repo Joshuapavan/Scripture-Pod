@@ -1652,45 +1652,62 @@ body.overlays-workspace-active #page-projection #program-display-panel#program-d
 body.overlays-workspace-active #page-projection #program-width-handle { display: none !important; }
 /* The design picker lives under the large preview; its old box goes */
 
-/* ── Lyrics: numbered slide grid, arrangement chips, Send lyrics to ──────── */
-body[data-sidebar-tab="songs"] #lyric-buttons { counter-reset: slide; }
-body[data-sidebar-tab="songs"] #lyric-buttons .section-block {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 10px !important;
-  margin-bottom: 18px !important;
-}
-body[data-sidebar-tab="songs"] #lyric-buttons .section-label { grid-column: 1 / -1; margin: 4px 0 -2px !important; }
-body[data-sidebar-tab="songs"] #lyric-buttons .lyric-row { margin: 0 !important; }
+/* ── Lyrics: slide cards (number, section, status badge, text), three layouts ─── */
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-row { margin: 0 !important; min-width: 0; }
 body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn {
-  counter-increment: slide;
-  display: flex !important;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  height: 100%;
-  min-height: 112px;
-  padding: 12px 14px !important;
-  font-family: var(--ui-font) !important;
-  font-size: 16px !important;
-  line-height: 1.5 !important;
-  white-space: pre-line;
+  display: flex !important; flex-direction: column; align-items: flex-start; gap: 10px;
+  position: relative; width: 100%; height: 100%; min-height: 112px;
+  padding: 12px 14px !important; font-family: var(--ui-font) !important; font-size: 16px !important; line-height: 1.5 !important; text-align: left;
 }
-body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn::before {
-  content: counter(slide, decimal-leading-zero);
-  padding: 2px 7px;
-  border-radius: 5px;
-  background: var(--sp-line-2);
-  color: var(--sp-muted);
-  font-family: var(--sp-mono);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.4;
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-head { display: flex; align-items: center; gap: 8px; width: 100%; }
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-no {
+  padding: 2px 7px; border-radius: 5px; background: var(--sp-line-2); color: var(--sp-muted);
+  font-family: var(--sp-mono); font-size: 11px; font-weight: 600; line-height: 1.4;
 }
-body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn.active::before { background: var(--sp-cue); color: var(--sp-cue-ink); }
-body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn:has(.live-indicator)::before { background: var(--sp-live); color: var(--sp-live-ink); }
-body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn:has(.live-indicator) { padding-right: 14px !important; }
-body[data-sidebar-tab="songs"] #lyric-buttons .live-indicator { top: 12px !important; right: 12px !important; }
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-sec { font-size: 12px; color: var(--sp-muted); }
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-text { white-space: pre-line; }
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn.active .lyric-no { background: var(--sp-cue); color: var(--sp-cue-ink); }
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn:has(.live-indicator) .lyric-no { background: var(--sp-live); color: var(--sp-live-ink); }
+/* Status badge top right: LIVE (already drawn) or PREVIEW for the cued card */
+body[data-sidebar-tab="songs"] #lyric-buttons .live-indicator { position: absolute !important; top: 12px !important; right: 12px !important; }
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn.active:not(:has(.live-indicator))::after {
+  content: "PREVIEW"; position: absolute; top: 12px; right: 12px; padding: 3px 8px; border-radius: 999px;
+  background: var(--sp-cue); color: var(--sp-cue-ink); font-size: 11px; font-weight: 700; letter-spacing: .06em;
+}
+
+/* Cards (default) and Grid: one flat grid, the section name sits inside each card */
+body[data-sidebar-tab="songs"] #lyric-buttons {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--lyric-card-min, 280px), 1fr)); gap: 10px; align-content: start;
+}
+body[data-sidebar-tab="songs"] #lyric-buttons .section-block { display: contents !important; }
+body[data-sidebar-tab="songs"] #lyric-buttons .section-label { display: none !important; }
+body[data-sidebar-tab="songs"][data-lyric-view="grid"] #lyric-buttons { --lyric-card-min: 170px; gap: 8px; }
+body[data-sidebar-tab="songs"][data-lyric-view="grid"] #lyric-buttons .lyric-btn { min-height: 84px; padding: 9px 11px !important; font-size: 13px !important; gap: 6px; }
+body[data-sidebar-tab="songs"][data-lyric-view="grid"] #lyric-buttons .lyric-btn.active:not(:has(.live-indicator))::after { content: ""; width: 8px; height: 8px; padding: 0; top: 12px; right: 12px; }
+body[data-sidebar-tab="songs"][data-lyric-view="grid"] #lyric-buttons .live-indicator { font-size: 0 !important; width: 8px; height: 8px; padding: 0 !important; border-radius: 999px; }
+
+/* Grouped: the earlier layout, a labelled block per section */
+body[data-sidebar-tab="songs"][data-lyric-view="grouped"] #lyric-buttons { display: block; }
+body[data-sidebar-tab="songs"][data-lyric-view="grouped"] #lyric-buttons .section-block {
+  display: grid !important; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px !important; margin-bottom: 18px !important;
+}
+body[data-sidebar-tab="songs"][data-lyric-view="grouped"] #lyric-buttons .section-label { display: block !important; grid-column: 1 / -1; margin: 4px 0 -2px !important; }
+body[data-sidebar-tab="songs"][data-lyric-view="grouped"] #lyric-buttons .lyric-sec { display: none; }
+
+/* The layout switch belongs to the Lyrics workspace and its Slides view */
+#lyric-view-switch { display: none; }
+body[data-sidebar-tab="songs"] #lyric-view-switch { display: inline-flex; }
+
+/* Arrangement chips: code + name, red for the live section, blue for the cued one, dashed + to add */
+.focused-section-chip { display: inline-flex !important; align-items: center; gap: 6px; }
+.focused-section-chip .chip-code { font-family: var(--sp-mono); font-size: 11px; color: var(--sp-muted); }
+.focused-section-chip.is-cue { border-color: var(--sp-cue) !important; background: color-mix(in srgb, var(--sp-cue) 12%, var(--sp-card)) !important; }
+.focused-section-chip.is-live { border-color: var(--sp-live) !important; background: color-mix(in srgb, var(--sp-live) 14%, var(--sp-card)) !important; }
+.focused-section-add {
+  display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0;
+  border-radius: 8px; border: 1px dashed var(--sp-line-3); background: transparent; color: var(--sp-muted); cursor: pointer;
+}
+.focused-section-add:hover { color: var(--sp-text); border-color: var(--sp-text); }
 
 /* Song sections as the design's Arrangement row */
 #focused-editor-banner:has(#focused-editor-section-nav.has-items) {
@@ -2375,7 +2392,7 @@ body[data-sidebar-tab="songs"] #look-card #look-ref-row { display: none !importa
 /* Overlays: the preview stays in view while the design picker scrolls beneath it */
 .overlay-sticky {
   position: sticky; top: 0; z-index: 6; display: flex; flex-direction: column; gap: 12px;
-  margin: -18px -24px 0; padding: 18px 24px 14px; background: var(--sp-ground); box-shadow: 0 1px 0 var(--sp-line);
+  margin: 0 -24px; padding: 18px 24px 14px; background: var(--sp-ground); box-shadow: 0 1px 0 var(--sp-line);
 }
 .overlay-sticky #overlay-preview-shell { max-width: 480px; }
 @media (max-height: 720px) { .overlay-sticky { position: static; box-shadow: none; } }
@@ -2404,3 +2421,81 @@ body[data-sidebar-tab="songs"] #look-card #look-ref-row { display: none !importa
 #settingsModal .sm-sidebar > :not(.sm-sidebar-item) { margin-left: auto; font-size: 11px; color: var(--sp-subtle) !important; }
 #settingsModal .sm-content { flex: 1 1 auto; min-height: 0; padding: 10px 20px 18px; }
 #settingsModal .sm-panel-title { display: none !important; }
+
+/* The sticky preview owns the top padding, so nothing scrolls into view above it */
+.overlays-stage { padding-top: 0 !important; }
+
+/* Lyrics header carries the layout switch too: let it wrap instead of squeezing the title */
+body[data-sidebar-tab="songs"] .header-toolbar { flex-wrap: wrap; row-gap: 8px; }
+body[data-sidebar-tab="songs"] #focused-editor-banner-title { min-width: 200px; }
+
+/* ── Settings redesign: a titled card per section, one row per setting ───────── */
+#settingsModal .sm-tab-panel .settings-category-content {
+  display: flex; flex-direction: column; gap: 0;
+  padding: 2px 18px !important; margin: 0 0 14px !important;
+  background: var(--sp-card) !important; border: 1px solid var(--sp-line) !important; border-radius: 14px !important;
+}
+#settingsModal .sm-tab-panel .settings-category-content::before {
+  content: attr(data-card-title); display: block; padding: 14px 0 4px; font-size: 13px; font-weight: 600; color: var(--sp-text);
+}
+#settingsModal .settings-field {
+  display: grid !important; grid-template-columns: minmax(150px, 34%) minmax(0, 1fr); align-items: center; gap: 6px 18px;
+  margin: 0 !important; padding: 14px 0 !important; border-bottom: 1px solid var(--sp-line);
+}
+#settingsModal .settings-category-content > .settings-field:last-child,
+#settingsModal .settings-category-content > *:last-child { border-bottom: 0; }
+#settingsModal .settings-field > * { grid-column: 2; min-width: 0; }
+#settingsModal .settings-field > .settings-label:first-child { grid-column: 1; grid-row: 1; align-self: center; }
+#settingsModal .settings-field:not(:has(> .settings-label)) > * { grid-column: 1 / -1; }
+#settingsModal .settings-field .settings-select,
+#settingsModal .settings-field input[type="text"],
+#settingsModal .settings-field input[type="password"],
+#settingsModal .settings-field .settings-input { width: 100% !important; max-width: none !important; }
+#settingsModal .settings-row { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 0 22px; border-bottom: 1px solid var(--sp-line); }
+#settingsModal .settings-row .settings-field { grid-template-columns: 1fr; border-bottom: 0; padding: 14px 0 12px !important; }
+#settingsModal .settings-row .settings-field > * { grid-column: 1; }
+#settingsModal .settings-row .settings-field > .settings-label:first-child { grid-row: auto; }
+#settingsModal .segmented-picker { width: 100%; }
+#settingsModal .settings-field button.btn { justify-self: start; }
+#settingsModal .sm-content { padding: 14px 22px 22px !important; }
+#settingsModal .modal-content { width: min(980px, 94vw) !important; }
+
+/* ── Settings as designed: header with Apply to, pill tabs, cards, sticky preview ─ */
+#settingsModal .modal-content { width: min(1240px, 96vw) !important; height: min(860px, 92vh) !important; max-height: none !important; display: flex; flex-direction: column; }
+#settingsModal .settings-modal-title {
+  align-items: flex-end !important; gap: 16px !important; padding: 20px 28px 14px !important; flex-wrap: wrap; flex: 0 0 auto;
+  font-family: 'Source Serif 4', Georgia, serif !important; font-size: 28px !important; font-weight: 600 !important; letter-spacing: -0.01em !important;
+}
+#settingsModal .settings-modal-title > .cat-icon { display: none; }
+#settingsModal .settings-modal-title > span[data-i18n="settings_display_settings"]::before {
+  content: "CONTROL PANEL"; display: block; margin-bottom: 2px;
+  font: 600 11px/1.2 var(--ui-font, 'Geist', sans-serif); letter-spacing: 0.08em; color: var(--sp-subtle);
+}
+#settingsModal #settings-target-switch { margin-left: auto; width: auto; align-items: center; }
+#settingsModal #settings-target-switch::before { content: "Apply to"; align-self: center; margin: 0 10px 0 6px; font: 400 12px var(--ui-font, 'Geist', sans-serif); color: var(--sp-muted); }
+#settingsModal .sm-body { display: grid !important; grid-template-columns: minmax(0, 1fr) 400px; grid-template-rows: auto minmax(0, 1fr); flex: 1 1 auto; min-height: 0; }
+#settingsModal .sm-sidebar { grid-column: 1 / -1; grid-row: 1; }
+#settingsModal .sm-content { grid-column: 1; grid-row: 2; overflow-y: auto; min-height: 0; }
+#settingsModal .settings-preview {
+  grid-column: 2; grid-row: 2; display: flex; flex-direction: column; gap: 14px; padding: 20px; overflow-y: auto;
+  border-left: 1px solid var(--sp-line); background: #0E1013;
+}
+#settingsModal .settings-preview-head { display: flex; align-items: center; gap: 8px; }
+#settingsModal .settings-preview-shell {
+  position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; isolation: isolate; border-radius: 8px;
+  background: #000; box-shadow: 0 0 0 1px var(--sp-cue);
+}
+#settingsModal .settings-preview-shell iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: top left; pointer-events: none; }
+#settingsModal .settings-preview-note { margin: 0; font-size: 12px; line-height: 1.5; color: var(--sp-subtle); }
+@media (max-width: 1000px) {
+  #settingsModal .sm-body { grid-template-columns: minmax(0, 1fr); }
+  #settingsModal .settings-preview { display: none; }
+}
+
+/* Every setting is one row (label left, control right), including the ones that sat side by side */
+#settingsModal .settings-row { display: contents !important; }
+#settingsModal .settings-row .settings-field {
+  grid-template-columns: minmax(150px, 34%) minmax(0, 1fr) !important; border-bottom: 1px solid var(--sp-line) !important; padding: 14px 0 !important;
+}
+#settingsModal .settings-row .settings-field > * { grid-column: 2 !important; }
+#settingsModal .settings-row .settings-field > .settings-label:first-child { grid-column: 1 !important; grid-row: 1 !important; }
