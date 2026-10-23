@@ -58,7 +58,27 @@
       }, 3000);
     }
 
+    // Top bar button: red when something is on air, blue when only the Preview holds something
+    function updateAirIndicator() {
+      const el = document.getElementById('air-indicator');
+      if (!el) return;
+      const onAir = typeof getOnAirPayload === 'function' && !!getOnAirPayload();
+      const cued = typeof previewMonitorState !== 'undefined' && previewMonitorState.kind === 'update';
+      const state = onAir ? 'live' : (cued ? 'preview' : 'idle');
+      if (el.dataset.state === state) return;
+      el.dataset.state = state;
+      el.querySelector('.air-indicator-text').textContent = state === 'live' ? 'Live' : (state === 'preview' ? 'Preview' : 'Idle');
+      el.title = state === 'live' ? 'Something is going out live' : (state === 'preview' ? 'Something is in Preview, not live' : 'Nothing live or in preview');
+    }
+
+    function onAirIndicatorClick() {
+      const state = document.getElementById('air-indicator')?.dataset.state;
+      showToast(state === 'live' ? 'On air. Esc clears the output.' : (state === 'preview' ? 'In Preview only. Go live (Space) to send it out.' : 'Nothing is live or in Preview.'));
+    }
+    setInterval(updateAirIndicator, 400);
+
     function updateProgramDisplayStatus() {
+      updateAirIndicator();
       const dot = document.getElementById('program-display-status-dot');
       const outputState = document.getElementById('program-display-output-state');
       const routeLabel = document.getElementById('program-display-route-label');
@@ -172,6 +192,15 @@
         const el = document.getElementById('social-engagement-' + name);
         if (el && config.select && config.select[name] && [...el.options].some(o => o.value === config.select[name])) el.value = config.select[name];
       });
+      // The social lower third now hides itself by default; carry earlier "stays until hidden" saves over once
+      try {
+        const MIGRATED_KEY = 'scripturePod.socialAutoHide.v1';
+        const hide = document.getElementById('social-engagement-autohide');
+        if (hide && !localStorage.getItem(MIGRATED_KEY)) {
+          if (hide.value === '0') hide.value = '15';
+          localStorage.setItem(MIGRATED_KEY, '1');
+        }
+      } catch (error) { /* storage unavailable */ }
     }
 
     function socialEngagementHasContent(overlay) {
@@ -388,70 +417,116 @@
 
     // Colors for the little design previews: bar, accent edge, name and role
     // text, role background. Only used to draw the picker thumbnails.
-    const LT_THUMB_THEMES = {
-      legacy: ['#12395F', '#90D5FF', '#FFFFFF', '#90D5FF', '#0B0D10'],
-      gms: ['#0F1B33', '#C6F432', '#FFFFFF', '#C6F432', '#0B0D10'],
-      noir: ['#1B1D22', '#D5B56D', '#F4EBD6', '#2A2C33', '#D5B56D'],
-      broadcast: ['#1559A7', '#90D5FF', '#FFFFFF', '#0E3E78', '#FFFFFF'],
-      modern: ['#90D5FF', '#0B0D10', '#0B0D10', '#0B0D10', '#FFFFFF'],
-      news: ['#B3261E', '#FFFFFF', '#FFFFFF', '#101216', '#FFFFFF'],
-      spotlight: ['#F4F6F8', '#E5372A', '#101216', '#101216', '#FFFFFF'],
-      clean: ['#FFFFFF', '#90D5FF', '#101216', '#E7EEF4', '#101216'],
-      glass: ['#2A3647', '#90D5FF', '#FFFFFF', '#1B2431', '#C9D6E6'],
-      copper: ['#8A4B22', '#E8A26B', '#FFF1E4', '#5A2E12', '#FFD9B8'],
-      editorial: ['#101216', '#FFFFFF', '#FFFFFF', '#F4F4F2', '#101216'],
-      neon: ['#0B0D10', '#39F5C8', '#39F5C8', '#0B0D10', '#9BFFE6'],
-      ribbon: ['#7B1FA2', '#F3C4FF', '#FFFFFF', '#4A148C', '#F3C4FF'],
-      aurora: ['#1F6F8B', '#99F6E4', '#FFFFFF', '#17496B', '#CFFAF0'],
-      sunrise: ['#F59E0B', '#FDE68A', '#2B1700', '#B45309', '#FFF7E0'],
-      royal: ['#1E1B4B', '#E8B04B', '#FDE9B8', '#2E2A6B', '#E8B04B'],
-      minimal: ['#00000000', '#FFFFFF', '#FFFFFF', '#00000000', '#D5D9DE'],
-      pill: ['#101216', '#90D5FF', '#FFFFFF', '#90D5FF', '#0B0D10'],
-      holo: ['#1B2A4A', '#7DD3FC', '#FFFFFF', '#243B6B', '#BAE6FD'],
-      frost: ['#DDE9F3', '#FFFFFF', '#101216', '#FFFFFF', '#33414F'],
-      cinema: ['#0B0D10', '#C8102E', '#FFFFFF', '#0B0D10', '#D5D9DE'],
-      sharp: ['#101216', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#101216'],
-      emerald: ['#065F46', '#6EE7B7', '#FFFFFF', '#044535', '#A7F3D0'],
-      pulse: ['#B91C1C', '#FCA5A5', '#FFFFFF', '#7F1212', '#FECACA'],
-      parchment: ['#F1E6C8', '#8B5E34', '#3B2A16', '#E3D3A8', '#3B2A16'],
-      sapphire: ['#12327A', '#7FB2FF', '#FFFFFF', '#0D2358', '#CFE2FF'],
-      crimson: ['#7A1020', '#FF8A8A', '#FFFFFF', '#560A16', '#FFD3D3'],
-      forest: ['#0F4A2E', '#8FE3A8', '#FFFFFF', '#0A3320', '#CDF5DA'],
-      graphite: ['#23262D', '#9AA4B2', '#F2F4F7', '#181B20', '#B7C0CC'],
-      rose: ['#F8D9E0', '#E0457B', '#3A1220', '#FFFFFF', '#8A2A4A'],
-      ocean: ['#0E5A73', '#6FE0F0', '#FFFFFF', '#0A4357', '#C9F4FA'],
-      amber: ['#F2B134', '#7A4A00', '#2B1A00', '#FFE3A3', '#5A3600'],
-      violet: ['#4B2A8F', '#C7A8FF', '#FFFFFF', '#341C66', '#E3D4FF'],
-      outline: ['#00000000', '#FFFFFF', '#FFFFFF', '#00000000', '#E2E8F0'],
-      halo: ['#0C0F1A', '#7AF0FF', '#FFFFFF', '#0C0F1A', '#9BEFFF'],
-      chapel: ['#F4EDE0', '#9C7B3C', '#2E2314', '#E9DFC8', '#6A5426']
-    };
+    // Design thumbnails render the real lower third: the same CSS the Preview page uses,
+    // in a 1920x1080 frame scaled down, with the current colours and name.
+    let ltThumbCssCache = '';
+    let ltDesignQuery = '';
 
-    // A miniature lower third in the design's colors and layout family
+    function getLtThumbCss() {
+      if (ltThumbCssCache) return ltThumbCssCache;
+      const page = buildStandaloneDisplayHtml({ preview: true });
+      const styles = Array.from(page.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)).map(m => m[1]).join('\n')
+        .replace(/\/\*[\s\S]*?\*\//g, '');
+      const rules = styles.match(/[^{}]*name-role-overlay[^{}]*\{[^{}]*\}/g) || [];
+      ltThumbCssCache = rules.join('\n') + '\n' + ((window.SP_LT_EXTRA && window.SP_LT_EXTRA.css) || '');
+      return ltThumbCssCache;
+    }
+
+    function buildLtThumbDoc() {
+      return `<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="${BUNDLED_FONTS_CSS_URL}"><style>
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:linear-gradient(160deg,#33445f,#10151d)}
+body{font-family:'Montserrat','Geist',sans-serif}
+*{transition:none!important;animation:none!important}
+${getLtThumbCss()}
+#name-role-overlay{opacity:1!important;visibility:visible!important}
+</style></head><body><div id="name-role-overlay" class="is-visible"><div class="name-role-overlay-card"><span class="name-role-overlay-accent"></span><div class="name-role-overlay-stack"><div class="name-role-overlay-copy-panel"><div class="name-role-overlay-copy"><strong class="name-role-overlay-name"></strong><span class="name-role-overlay-role"></span></div></div></div></div></div></body></html>`;
+    }
+
+    function readLtThumbSample() {
+      const hex = (id, fallback) => { const v = document.getElementById(id)?.value || ''; return /^#[0-9a-f]{6}$/i.test(v) ? v : fallback; };
+      return {
+        name: document.getElementById('name-role-overlay-name')?.value.trim() || 'Pastor John',
+        role: document.getElementById('name-role-overlay-role')?.value.trim() || 'Senior Pastor',
+        primary: hex('name-role-overlay-primary', '#90D5FF'),
+        accent: hex('name-role-overlay-accent', '#90D5FF')
+      };
+    }
+
+    // The same legibility rule the output page uses for light backgrounds
+    function ltThumbIsLight(color) {
+      const rgb = color.slice(1).match(/.{2}/g).map(p => parseInt(p, 16) / 255)
+        .map(c => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+      return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2] >= 0.72;
+    }
+
+    function paintLtThumb(frame, value, sample) {
+      const doc = frame.contentDocument;
+      const overlay = doc && doc.getElementById('name-role-overlay');
+      if (!overlay) return;
+      const [layout, theme] = String(value).split('-');
+      const light = ltThumbIsLight(sample.primary);
+      overlay.className = `is-visible style-${layout} theme-${theme} motion-rise${light ? ' is-light-background' : ''}`;
+      overlay.style.setProperty('--name-role-primary', sample.primary);
+      overlay.style.setProperty('--name-role-accent', sample.accent);
+      overlay.style.setProperty('--name-role-foreground', light ? '#101216' : '#ffffff');
+      overlay.style.setProperty('--name-role-name-size', '56px');
+      overlay.style.setProperty('--name-role-role-size', '24px');
+      overlay.querySelector('.name-role-overlay-name').textContent = sample.name;
+      overlay.querySelector('.name-role-overlay-role').textContent = sample.role;
+      frame.dataset.painted = '1';
+    }
+
+    // Crop the 1920x1080 frame to the corner the design sits in, scaled to the tile
+    function fitLtThumb(thumb) {
+      const frame = thumb.querySelector('iframe');
+      const width = thumb.clientWidth;
+      if (!frame || !width) return;
+      const view = 1100;
+      const scale = width / view;
+      const layout = thumb.dataset.layout;
+      const x = layout === 'right' ? 1920 - view : (layout === 'classic' ? 0 : (1920 - view) / 2);
+      const y = 1080 - thumb.clientHeight / scale;
+      frame.style.transform = `scale(${scale}) translate(${-x}px, ${-y}px)`;
+    }
+
     function buildLtDesignThumb(value) {
-      const [family, theme] = String(value).split('-');
-      const [bar, accent, nameFg, roleBg, roleFg] = LT_THUMB_THEMES[theme] || LT_THUMB_THEMES.gms;
+      const [layout] = String(value).split('-');
       const thumb = document.createElement('span');
-      thumb.className = `lt-design-thumb is-${family}`;
-      const stack = document.createElement('span');
-      stack.className = 'lt-thumb-stack';
-      const name = document.createElement('span');
-      name.className = 'lt-thumb-name';
-      name.textContent = 'Name Surname';
-      name.style.cssText = `background:${bar};color:${nameFg};`;
-      const edge = document.createElement('span');
-      edge.className = 'lt-thumb-edge';
-      edge.style.background = accent;
-      const row = document.createElement('span');
-      row.className = 'lt-thumb-row';
-      row.append(edge, name);
-      const role = document.createElement('span');
-      role.className = 'lt-thumb-role';
-      role.textContent = 'Role';
-      role.style.cssText = `background:${roleBg};color:${roleFg};`;
-      stack.append(row, role);
-      thumb.appendChild(stack);
+      thumb.className = `lt-design-thumb is-${layout}`;
+      thumb.dataset.layout = layout;
+      const frame = document.createElement('iframe');
+      frame.tabIndex = -1;
+      frame.setAttribute('aria-hidden', 'true');
+      frame.title = '';
+      frame.srcdoc = buildLtThumbDoc();
+      frame.addEventListener('load', () => { paintLtThumb(frame, value, readLtThumbSample()); fitLtThumb(thumb); });
+      thumb.appendChild(frame);
+      thumb.dataset.value = value;
+      if (typeof ResizeObserver === 'function') new ResizeObserver(() => fitLtThumb(thumb)).observe(thumb);
       return thumb;
+    }
+
+    function refreshLtThumbs() {
+      const sample = readLtThumbSample();
+      document.querySelectorAll('#lt-design-picker .lt-design-thumb').forEach((thumb) => {
+        const frame = thumb.querySelector('iframe');
+        if (frame && frame.dataset.painted) paintLtThumb(frame, thumb.dataset.value, sample);
+      });
+    }
+
+    function ltDesignOptions(groups) {
+      const query = ltDesignQuery.trim().toLowerCase();
+      if (!query) {
+        const group = groups.find(g => g.label === ltDesignPickerFamily);
+        return Array.from(group ? group.children : []).map(o => ({ value: o.value, label: o.textContent }));
+      }
+      const terms = query.split(/\s+/);
+      const out = [];
+      groups.forEach(g => Array.from(g.children).forEach((o) => {
+        const hay = `${o.textContent} ${g.label} ${o.value}`.toLowerCase();
+        if (terms.every(t => hay.includes(t))) out.push({ value: o.value, label: `${o.textContent} · ${g.label}` });
+      }));
+      return out;
     }
 
     function renderLtDesignPicker() {
@@ -464,46 +539,85 @@
       const currentGroup = groups.find(g => Array.from(g.children).some(o => o.value === current)) || groups[0];
       if (!groups.some(g => g.label === ltDesignPickerFamily)) ltDesignPickerFamily = currentGroup.label;
 
-      const families = document.createElement('div');
-      families.className = 'lt-design-families';
-      families.setAttribute('role', 'group');
-      families.setAttribute('aria-label', 'Design family');
-      groups.forEach((group) => {
-        const tab = document.createElement('button');
-        tab.type = 'button';
-        tab.className = 'lt-design-family';
-        tab.textContent = group.label;
-        tab.setAttribute('aria-pressed', group.label === ltDesignPickerFamily ? 'true' : 'false');
-        tab.onclick = () => {
-          ltDesignPickerFamily = group.label;
-          renderLtDesignPicker();
-        };
-        families.appendChild(tab);
+      // Toolbar (search, family tabs, count) is built once so the search box keeps focus
+      let toolbar = host.querySelector('.lt-design-toolbar');
+      let grid = host.querySelector('.lt-design-grid');
+      if (!toolbar) {
+        toolbar = document.createElement('div');
+        toolbar.className = 'lt-design-toolbar';
+        const search = document.createElement('input');
+        search.type = 'search';
+        search.id = 'lt-design-search';
+        search.className = 'lt-design-search';
+        search.placeholder = 'Search designs';
+        search.setAttribute('aria-label', 'Search lower third designs');
+        search.autocomplete = 'off';
+        search.addEventListener('input', () => { ltDesignQuery = search.value; renderLtDesignPicker(); });
+        const families = document.createElement('div');
+        families.className = 'lt-design-families';
+        families.setAttribute('role', 'group');
+        families.setAttribute('aria-label', 'Design family');
+        const count = document.createElement('span');
+        count.className = 'lt-design-count';
+        toolbar.append(search, families, count);
+        grid = document.createElement('div');
+        grid.className = 'lt-design-grid';
+        grid.setAttribute('role', 'group');
+        host.replaceChildren(toolbar, grid);
+      }
+      const searching = !!ltDesignQuery.trim();
+      const familiesEl = toolbar.querySelector('.lt-design-families');
+      familiesEl.hidden = searching;
+      if (!familiesEl.children.length) {
+        groups.forEach((group) => {
+          const tab = document.createElement('button');
+          tab.type = 'button';
+          tab.className = 'lt-design-family';
+          tab.textContent = group.label;
+          tab.dataset.family = group.label;
+          tab.onclick = () => { ltDesignPickerFamily = group.label; renderLtDesignPicker(); };
+          familiesEl.appendChild(tab);
+        });
+      }
+      familiesEl.querySelectorAll('.lt-design-family').forEach(tab => {
+        tab.setAttribute('aria-pressed', tab.dataset.family === ltDesignPickerFamily ? 'true' : 'false');
       });
-
       const total = groups.reduce((n, g) => n + g.children.length, 0);
-      const count = document.createElement('span');
-      count.className = 'lt-design-count';
-      count.textContent = `${total} designs in ${groups.length} families`;
+      const options = ltDesignOptions(groups);
+      toolbar.querySelector('.lt-design-count').textContent = searching
+        ? `${options.length} of ${total} designs`
+        : `${total} designs in ${groups.length} families`;
+      grid.setAttribute('aria-label', searching ? 'Matching designs' : `${ltDesignPickerFamily} designs`);
 
-      const grid = document.createElement('div');
-      grid.className = 'lt-design-grid';
-      grid.setAttribute('role', 'group');
-      grid.setAttribute('aria-label', `${ltDesignPickerFamily} designs`);
-      const group = groups.find(g => g.label === ltDesignPickerFamily);
-      Array.from(group ? group.children : []).forEach((option) => {
-        const tile = document.createElement('button');
-        tile.type = 'button';
-        tile.className = 'lt-design-tile';
-        const label = document.createElement('span');
-        label.className = 'lt-design-label';
-        label.textContent = option.textContent;
-        tile.append(buildLtDesignThumb(option.value), label);
-        tile.setAttribute('aria-pressed', option.value === current ? 'true' : 'false');
-        tile.onclick = () => pickLtDesign(option.value);
-        grid.appendChild(tile);
+      // Rebuild the tiles only when the set shown changes; otherwise just refresh them
+      const key = options.map(o => o.value).join('|');
+      if (grid.dataset.key !== key) {
+        grid.dataset.key = key;
+        if (!options.length) {
+          const none = document.createElement('p');
+          none.className = 'lt-design-none';
+          none.textContent = 'No designs match.';
+          grid.replaceChildren(none);
+        } else {
+          grid.replaceChildren(...options.map((option) => {
+            const tile = document.createElement('button');
+            tile.type = 'button';
+            tile.className = 'lt-design-tile';
+            tile.dataset.value = option.value;
+            const label = document.createElement('span');
+            label.className = 'lt-design-label';
+            label.textContent = option.label;
+            tile.append(buildLtDesignThumb(option.value), label);
+            tile.onclick = () => pickLtDesign(option.value);
+            return tile;
+          }));
+        }
+      } else {
+        refreshLtThumbs();
+      }
+      grid.querySelectorAll('.lt-design-tile').forEach(tile => {
+        tile.setAttribute('aria-pressed', tile.dataset.value === current ? 'true' : 'false');
       });
-      host.replaceChildren(families, count, grid);
     }
 
     // Saved names: people shown before, one click refills Name and Role
@@ -519,7 +633,7 @@
     }
 
     function writeSavedNames(list) {
-      try { localStorage.setItem(SAVED_NAMES_KEY, JSON.stringify(list.slice(0, 12))); } catch (error) { /* storage unavailable */ }
+      try { localStorage.setItem(SAVED_NAMES_KEY, JSON.stringify(list.slice(0, 200))); } catch (error) { /* storage unavailable */ }
     }
 
     function rememberSavedName(name, role) {
@@ -531,12 +645,32 @@
       renderSavedNames();
     }
 
+    let savedNamesQuery = '';
+
+    function setSavedNamesQuery(value) {
+      savedNamesQuery = String(value || '');
+      renderSavedNames();
+    }
+
     function renderSavedNames() {
       const host = document.getElementById('saved-names-list');
       if (!host) return;
-      const list = readSavedNames();
+      const all = readSavedNames();
+      const searchBox = document.getElementById('saved-names-search');
+      if (searchBox) searchBox.hidden = all.length < 4 && !savedNamesQuery;
+      const terms = savedNamesQuery.trim().toLowerCase().split(/\s+/).filter(Boolean);
+      const list = terms.length
+        ? all.filter(p => terms.every(t => `${p.name} ${p.role || ''}`.toLowerCase().includes(t)))
+        : all;
       const nameInput = document.getElementById('name-role-overlay-name');
       const roleInput = document.getElementById('name-role-overlay-role');
+      if (all.length && !list.length) {
+        const none = document.createElement('p');
+        none.className = 'saved-names-empty';
+        none.textContent = 'No saved names match.';
+        host.replaceChildren(none);
+        return;
+      }
       if (!list.length) {
         const empty = document.createElement('p');
         empty.className = 'saved-names-empty';
@@ -893,8 +1027,11 @@
     }
 
     function sendSyncState(opts = {}) {
-      const state = (lastLiveState && lastLiveState.kind === 'update')
-        ? { kind: 'update', payload: { ...lastLiveState.payload } }
+      // Only what is on air goes out: a verse left over from an earlier session (or from
+      // before the versions on screen changed) must not appear when a display connects
+      const onAir = typeof getOnAirPayload === 'function' ? getOnAirPayload() : (lastLiveState && lastLiveState.kind === 'update' ? lastLiveState.payload : null);
+      const state = onAir
+        ? { kind: 'update', payload: { ...onAir } }
         : { kind: 'clear' };
       const payload = state.payload;
       const activeMedia = payload?.bgEnabled && Number(payload.bgOpacity ?? 1) > 0
@@ -1150,6 +1287,11 @@
         window.BSPDesktop.sendWebSocketOutputMessage(relayMessage).catch(() => {});
       }
       mirrorSyncMessage(outputMessage);
+      // The app's own output windows get live messages directly
+      if (outputMessage && (outputMessage.type === 'UPDATE' || outputMessage.type === 'CLEAR' || outputMessage.type === 'SYNC_STATE') &&
+          window.BSPDesktop && typeof window.BSPDesktop.sendOutputMessage === 'function') {
+        window.BSPDesktop.sendOutputMessage(outputMessage).catch(() => {});
+      }
     }
 
     function pingDisplays() {
@@ -1213,10 +1355,11 @@
         }
       } catch (_) {}
       embeddedProgramDisplayState = { kind: 'update', payload: outputMessage };
-      syncEmbeddedProgramDisplay();
-      syncStandaloneOutputDirect();
+      // Record what is on air first: the standalone output sync below only shows on-air content
       lastLiveState = { kind: 'update', payload: msg };
       if (appState && appState.live) appState.live.lastLiveState = lastLiveState;
+      syncEmbeddedProgramDisplay();
+      syncStandaloneOutputDirect();
       schedulePersistAppState();
       setProgramMonitorOnAir(true);
       schedulePreviewMonitorRefresh();

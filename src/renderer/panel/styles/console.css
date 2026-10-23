@@ -147,6 +147,20 @@
 #app-topbar #status-bar.connected { color: var(--sp-text) !important; }
 #app-topbar #status-bar.connected #status-dot { background: var(--sp-ok) !important; }
 
+/* On air indicator: live (red, filled), in Preview (blue), or idle (plain outline) */
+#app-topbar .air-indicator {
+  display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid var(--sp-line); background: transparent; color: var(--sp-muted);
+  font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background-color .2s, border-color .2s, color .2s;
+}
+#app-topbar .air-indicator .air-indicator-dot { width: 8px; height: 8px; border-radius: 999px; border: 1.5px solid currentColor; background: transparent; }
+#app-topbar .air-indicator[data-state="preview"] { background: #2F6FED; border-color: #2F6FED; color: #fff; }
+#app-topbar .air-indicator[data-state="preview"] .air-indicator-dot { background: #fff; border-color: #fff; }
+#app-topbar .air-indicator[data-state="live"] { background: var(--sp-live, #D94536); border-color: var(--sp-live, #D94536); color: #fff; }
+#app-topbar .air-indicator[data-state="live"] .air-indicator-dot { background: #fff; border-color: #fff; animation: air-pulse 1.6s ease-in-out infinite; }
+@keyframes air-pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { #app-topbar .air-indicator[data-state="live"] .air-indicator-dot { animation: none; } }
+
 /* ── Library (sidebar) ────────────────────────────────────────────────────── */
 #sidebar { background: var(--sp-panel) !important; border-right: 1px solid var(--sp-line) !important; }
 #sidebar .search-container { padding: 16px 16px 8px !important; }
@@ -484,6 +498,10 @@ body.sp-program-on-air .sp-monitor-tag.is-program::before {
 
 /* Program keeps its 16:9 height; the cards below it scroll instead */
 #program-display-stage { flex: 0 0 auto !important; padding-top: 0 !important; background: transparent !important; }
+/* WebKit does not clip a scaled iframe to rounded corners with overflow alone */
+#program-display-shell, #preview-display-shell, #overlay-preview-shell {
+  isolation: isolate; overflow: hidden; -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
 #program-display-shell {
   border-radius: 8px !important;
   box-shadow: 0 0 0 2px var(--sp-line-2) !important;
@@ -746,10 +764,18 @@ body.overlays-workspace-active #workspace-height-handle { display: none !importa
 }
 
 /* ── Column order: Preview · Program (+ zoom) · Look · Outputs ─────────────── */
-#program-display-panel > #preview-monitor { order: 1; }
-#program-display-panel > #program-monitor-head { order: 2; }
-#program-display-panel > #program-scale-controls { order: 3; }
-#program-display-panel > #program-display-stage { order: 4; }
+/* Preview and Program stay in view while the cards below scroll */
+#program-display-panel > #monitor-stack {
+  order: 1; position: sticky; top: 0; z-index: 6; flex: 0 0 auto;
+  display: flex; flex-direction: column; padding-bottom: 4px;
+  background: var(--sp-ground); box-shadow: 0 1px 0 var(--sp-line);
+}
+/* On a short window the monitors would leave no room to scroll */
+@media (max-height: 720px) { #program-display-panel > #monitor-stack { position: static; } }
+#monitor-stack > #preview-monitor { order: 1; }
+#monitor-stack > #program-monitor-head { order: 2; }
+#monitor-stack > #program-scale-controls { order: 3; }
+#monitor-stack > #program-display-stage { order: 4; }
 #program-display-panel > #look-card { order: 5; }
 #program-display-panel > #outputs-card { order: 6; }
 #program-display-panel > .program-display-footer { order: 7; }
@@ -2179,19 +2205,16 @@ body:has(#social-engagement-overlay-show-btn[aria-pressed="true"]) .overlay-list
 .lt-design-tile[aria-pressed="true"] { border-color: var(--sp-text); box-shadow: 0 0 0 1px var(--sp-text); font-weight: 500; }
 .lt-design-label { padding: 0 2px; font-size: 12px; font-weight: 500; }
 .lt-design-thumb {
-  position: relative; display: block; width: 100%; height: 64px; border-radius: 6px; overflow: hidden; background: #1B2C55;
+  position: relative; display: block; width: 100%; height: 72px; border-radius: 6px; overflow: hidden; background: #10151d;
 }
-.lt-thumb-stack { position: absolute; left: 10px; right: auto; bottom: 12px; display: flex; flex-direction: column; align-items: flex-start; }
-.lt-design-thumb.is-right .lt-thumb-stack { left: auto; right: 10px; align-items: flex-end; }
-.lt-design-thumb.is-centered .lt-thumb-stack { left: 10px; right: 10px; align-items: center; }
-.lt-design-thumb.is-band .lt-thumb-stack { left: 0; right: 0; bottom: 8px; align-items: stretch; }
-.lt-thumb-row { display: flex; align-items: stretch; }
-.lt-design-thumb.is-right .lt-thumb-row { flex-direction: row-reverse; }
-.lt-thumb-edge { width: 3px; }
-.lt-thumb-name { padding: 3px 8px; font-size: 10px; font-weight: 700; white-space: nowrap; }
-.lt-thumb-role { padding: 2px 8px; font-size: 8px; }
-.lt-design-thumb.is-band .lt-thumb-name { flex: 1 1 auto; }
-.lt-design-thumb.is-band .lt-thumb-role { align-self: flex-start; }
+.lt-design-thumb iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; pointer-events: none; }
+.lt-design-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 100%; }
+.lt-design-search, .saved-names-search {
+  height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-text); font-size: 13px;
+}
+.lt-design-search { width: 180px; }
+.saved-names-search { width: 100%; margin-bottom: 8px; }
+.lt-design-none { grid-column: 1 / -1; margin: 8px 0; color: var(--sp-subtle); font-size: 13px; }
 
 /* Right: Text and Style cards, then Test and the on-air button */
 .overlays-settings { display: flex; flex-direction: column; background: #0E1013; padding: 16px; gap: 16px; }
@@ -2225,10 +2248,24 @@ body[data-overlay="social"] #overlays-workspace #name-role-overlay-panel { displ
 .ov-text-btn { height: 38px; padding: 0 10px; border-radius: 8px; background: var(--sp-raised); border: 1px solid var(--sp-line-2); color: var(--sp-text); font: inherit; font-size: 12px; cursor: pointer; }
 #name-role-overlay-logo-preview { width: 28px; height: 28px; object-fit: contain; border-radius: 6px; background: var(--sp-inset); }
 #name-role-overlay-logo-remove { width: 22px; height: 22px; border: 0; border-radius: 6px; background: transparent; color: var(--sp-subtle); cursor: pointer; }
-.ov-colors { gap: 14px; }
+.ov-colors { gap: 10px; align-items: center; }
 .ov-colors label { display: flex; align-items: center; gap: 8px; color: var(--sp-muted); font-size: 12px; }
+/* Colour swatches: a fixed, even box with the picker filling it */
+.ov-colors .name-role-overlay-accent-picker {
+  position: relative; flex: 0 0 auto; width: 44px; height: 36px; padding: 0; overflow: hidden;
+  border-radius: 8px; border: 1px solid var(--sp-line-2); background: var(--sp-inset);
+}
+.ov-colors .name-role-overlay-accent-picker input[type="color"] {
+  position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0 !important; margin: 0; padding: 5px !important;
+  border: 0; background: transparent !important; cursor: pointer; -webkit-appearance: none; appearance: none;
+}
+.ov-colors input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.ov-colors input[type="color"]::-webkit-color-swatch { border: 1px solid rgba(255,255,255,.18); border-radius: 5px; }
+.ov-colors input[type="color"]::-moz-color-swatch { border: 1px solid rgba(255,255,255,.18); border-radius: 5px; }
 .ov-sizes { grid-column: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
 .ov-sizes.ov-sizes-one { grid-template-columns: minmax(0, 1fr); }
+.ov-sizes.ov-sizes-one label { flex-direction: row; align-items: center; gap: 10px; }
+.ov-sizes.ov-sizes-one .ov-number { flex: 1 1 auto; }
 .ov-sizes label { display: flex; flex-direction: column; gap: 4px; color: var(--sp-subtle); font-size: 11px; }
 .ov-number { display: flex; align-items: center; height: 36px; padding: 0 8px; border-radius: 8px; background: var(--sp-inset); border: 1px solid var(--sp-line-2); }
 #overlays-workspace .ov-number input[type="number"] {
@@ -2334,3 +2371,36 @@ body[data-sidebar-tab="songs"] #look-card #look-ref-row { display: none !importa
   background: #0e1013;
   border-top: 1px solid var(--sp-line);
 }
+
+/* Overlays: the preview stays in view while the design picker scrolls beneath it */
+.overlay-sticky {
+  position: sticky; top: 0; z-index: 6; display: flex; flex-direction: column; gap: 12px;
+  margin: -18px -24px 0; padding: 18px 24px 14px; background: var(--sp-ground); box-shadow: 0 1px 0 var(--sp-line);
+}
+.overlay-sticky #overlay-preview-shell { max-width: 480px; }
+@media (max-height: 720px) { .overlay-sticky { position: static; box-shadow: none; } }
+
+/* ── Settings: each section is a horizontal tab, like the rest of the app ───── */
+#settingsModal .sm-body { flex-direction: column !important; }
+#settingsModal .sm-sidebar {
+  width: auto !important; min-width: 0 !important; flex: 0 0 auto;
+  flex-direction: row !important; flex-wrap: wrap; align-items: center; gap: 6px;
+  padding: 10px 16px !important; overflow: visible !important;
+  border-right: 0 !important; border-bottom: 1px solid var(--sp-line) !important;
+  background: var(--sp-chrome) !important;
+}
+#settingsModal .sm-sidebar-item {
+  flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 34px !important; padding: 0 14px !important; margin: 0 !important; white-space: nowrap;
+  border: 1px solid var(--sp-line) !important; border-radius: 999px !important;
+  background: transparent !important; color: var(--sp-muted) !important; font-size: 13px !important; font-weight: 500 !important;
+}
+#settingsModal .sm-sidebar-item .cat-icon { width: 15px; height: 15px; flex: 0 0 auto; opacity: .85; }
+#settingsModal .sm-sidebar-item:hover { background: var(--sp-raised) !important; color: var(--sp-text) !important; }
+#settingsModal .sm-sidebar-item.active {
+  background: var(--sp-text) !important; border-color: var(--sp-text) !important; color: var(--sp-ground) !important;
+}
+#settingsModal .sm-sidebar-item.active .cat-icon { opacity: 1; }
+#settingsModal .sm-sidebar > :not(.sm-sidebar-item) { margin-left: auto; font-size: 11px; color: var(--sp-subtle) !important; }
+#settingsModal .sm-content { flex: 1 1 auto; min-height: 0; padding: 10px 20px 18px; }
+#settingsModal .sm-panel-title { display: none !important; }

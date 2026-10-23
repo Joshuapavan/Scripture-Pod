@@ -1302,6 +1302,21 @@
       }, 0);
     }
 
+    // A Look change re-renders Preview: the cued page in Preview only, else what is on air
+    let previewLookTimer = 0;
+    function schedulePreviewLookRefresh() {
+      if (previewLookTimer || !hasPreviewMonitor()) return;
+      previewLookTimer = setTimeout(() => {
+        previewLookTimer = 0;
+        if (renderingPreviewMonitor) return;
+        if (isPreviewOnlyMode()) {
+          if (currentItem) renderSelectionToPreview(lineCursor, { silent: true });
+        } else {
+          refreshPreviewMonitor();
+        }
+      }, 60);
+    }
+
     // What is on the output right now: a verse or lyric, or a lower third
     function getOnAirPayload() {
       if (!lastLiveState || lastLiveState.kind !== 'update' || !lastLiveState.payload) return null;

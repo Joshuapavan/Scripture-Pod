@@ -781,6 +781,7 @@
         scheduleLiveUpdate();
       }
       updateButtonView();
+      if (typeof schedulePreviewLookRefresh === 'function') schedulePreviewLookRefresh();
       // Immediately notify displays about background video loop/speed changes
       try {
         const bgLoopEl = document.getElementById('bg-video-loop');

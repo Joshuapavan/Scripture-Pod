@@ -1,201 +1,147 @@
 # Scripture Pod
 
-This repository contains the control Panel and Display for Scripture Pod (a Bible / lyrics projection tool). It can be run in-browser or as an Electron desktop app.
+Scripture Pod is a Bible and lyrics projection tool for churches. A control panel
+sends verses, lyrics and lower thirds to an output window or to OBS. It is a
+desktop app built with [Tauri](https://tauri.app) (Rust plus the system web view).
+macOS, Windows and Linux are supported; the app is not built for Android or iOS.
 
 ## Requirements
 
-- Node.js (v18+ recommended)
-- npm (bundled with Node)
-- Optional: Electron build tools if packaging an app (`electron-builder`)
+- [Rust](https://rustup.rs) (stable)
+- Node.js 18 or newer and npm
+- To package installers: the Tauri CLI, `cargo install tauri-cli --version "^2" --locked`
+- Linux only: `libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev`
 
-## Quick start (development)
-
-1. Install dependencies:
+## Run it
 
 ```bash
-cd "$(dirname "$0")"
 npm install
-```
-
-2. Run the Electron desktop app (launches the panel and display in windows):
-
-```bash
 npm start
 ```
 
-## Run in a browser (panel + display)
+`npm start` runs the app from the project folder, so edits to `src/` show after a reload.
 
-You can open the following files directly in a modern browser for quick testing (not packaged):
+On first launch, choose the bundled Bibles in the setup dialog (English NKJV, Kannada and
+Tamil BSI). They are imported once and stored on the computer.
 
-- `src/renderer/panel/panel.html` — control panel UI
-- `src/renderer/display/display.html` — output/display window
+You can also open `src/renderer/panel/panel.html` in a browser for quick UI work. Native
+features (output windows, file dialogs, the display server) are unavailable there.
 
-Notes:
-
-- For full functionality (Electron APIs, local filesystem access, packaging), run via `npm start`.
-- When using browser-only mode, some features (native menus, file dialogs, electron-specific modules) will be unavailable.
-
-## Display on another computer
-
-The Electron app can serve the display over the local network. Both computers must be on the same reachable network, and the control computer must remain running.
-
-1. Start the desktop app with `npm start` or open the installed app.
-2. In the control panel, open **Settings → Host Mode** and select **WebSocket Relay**. This relays panel updates to a remote display, such as an OBS Browser Source on the streaming computer.
-3. In the same settings section, use **LAN Display URL**. Click **Refresh** after changing networks, then **Copy**.
-4. Open the copied URL in a browser on the other computer.
-
-The app also prints the current display URL to the terminal after its local HTTP and WebSocket servers start. The URL uses the control computer's current LAN IP, so it can change when that computer joins another network. Allow inbound TCP ports `5510` (display page) and `5511` (update relay) through the control computer's firewall. Do not expose these ports directly to the public internet.
-
-Generated display and RemoteShow links contain a per-launch relay access token. Treat them like passwords: share them only with intended displays, and refresh copied links after restarting the desktop app. RemoteShow QR codes are generated locally and do not send the link to an external QR service.
-
-This is a browser-based network display, not an NDI output stream. Both computers need browser access to the host computer; an NDI receiver will not discover this URL as an NDI source.
-
-## Building installers (macOS/Windows/Linux)
-
-Install dev dependencies (already in `package.json`) and run the appropriate script. Example (mac):
+## Build an installer
 
 ```bash
-npm install
-npm run dist:mac
+npm run tauri:build
 ```
 
-The `build` section in `package.json` is configured for `electron-builder`.
+Installers are written to `src-tauri/target/release/bundle/` (`.app` and `.dmg` on macOS,
+`.exe` on Windows, `.deb` and `.AppImage` on Linux). Build each system on that system.
+The same builds run in GitHub Actions (`.github/workflows/push-release.yml`) and are attached
+to a release.
 
-## Android and iOS
+macOS apps are only ad-hoc signed unless you add an Apple Developer ID. Set these repository
+secrets and the release build signs and notarizes: `APPLE_CERTIFICATE` (base64 .p12),
+`APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`
+(app-specific password) and `APPLE_TEAM_ID`. Without them macOS shows an "unidentified
+developer" warning: right-click the app and choose Open. On Windows, SmartScreen may warn:
+choose More info, then Run anyway.
 
-The Capacitor mobile apps reuse the control panel and connect to a desktop host over the local WebSocket relay. Keep the phone/tablet and desktop on the same trusted Wi-Fi network; do not expose the relay ports to the public internet. Desktop-only features such as selecting a separate physical output display remain available only in the desktop app.
+## Output and OBS
 
-Build and open the Android project with Android Studio:
+- **Output window:** Outputs, then pick a screen. It is a transparent, frameless window
+  that you capture in OBS with Window Capture or Display Capture.
+- **Stream feed:** a second, opaque output for a capture card, filled with a key colour
+  (black for Luma Key, green for Chroma Key).
+- **Browser source:** the app serves the display page on your network. In OBS add a Browser
+  Source with the URL from **Settings, Host Mode, LAN Display URL**.
 
-```bash
-npm install
-npm run mobile:android
-```
+### Display on another computer
 
-Build and open the iOS project with Xcode on macOS:
+1. In **Settings, Host Mode**, choose **WebSocket Relay**.
+2. Copy the **LAN Display URL** and open it on the other computer, or paste it into an OBS
+   Browser Source.
 
-```bash
-npm install
-npm run mobile:ios
-```
+The app prints the URL at startup. It uses this computer's LAN address, so it changes when you
+join another network. Allow TCP ports `5510` (display page) and `5511` (relay) through the
+firewall, and never expose them to the internet. If a port is busy the app uses the next free
+one (set `SCRIPTURE_POD_HTTP_PORT` and `SCRIPTURE_POD_RELAY_PORT` to choose your own).
 
-Each command stages the shared panel assets and synchronizes the native project before opening the IDE. Android builds require Android Studio and its SDK; iOS builds require the full Xcode installation and signing configuration.
+Links contain a per-launch access token. Treat them like passwords and re-copy them after a
+restart. RemoteShow QR codes are generated on the computer and never sent to a QR service.
+This is a browser display, not an NDI stream.
 
-On macOS, choose the target architecture explicitly when needed:
+## Backup and restore
 
-```bash
-npm run dist:mac -- --arm64
-npm run dist:mac -- --x64
-```
+Use **Export Backup** and **Import Backup** in Settings (Import Backup is also on the
+first-run screen). One JSON file holds:
 
-Build Windows installers with:
+- all songs, with translations
+- every imported Bible version (the bundled ones too)
+- the schedule and presets
+- every setting: Look defaults, fonts, backgrounds (including uploaded images and videos), lower
+  third styles and colours, host and output settings
+- saved names, pinned and recent references, panel sizes, language and theme
 
-```bash
-npm run dist:win
-```
+Restoring replaces what is on this computer, asks first, and restarts the panel so everything
+loads from the restored data. The Bible search index is rebuilt on the next start.
 
-The default Windows package targets x64 so builds made on Apple Silicon or Linux
-are usable on standard 64-bit Windows PCs.
+To move to a new computer or a fresh install: export on the old one, install, then choose
+Import Backup on the first-run screen. The backup is verified end to end on a clean install
+(songs, all three Bibles, schedule, presets, settings, saved names and layout come back
+identical, and Bible search works again after the rebuild).
 
-Build Linux packages with:
-
-```bash
-npm run dist:linux
-```
-
-For reliable releases, build each target on its corresponding operating system.
-macOS release builds use an available Developer ID signing identity; without
-signing and notarization credentials, downloaded apps may be blocked by
-Gatekeeper.
-
-## Installation instructions
-
-### Windows
-
-1. Build the installer from a Windows machine:
-
-```powershell
-npm install
-npm run dist:win
-```
-
-2. Open the generated file in the `dist/` folder.
-3. Install the app using the `.exe` installer or run the portable `.exe` version if you do not want a full install.
-4. If Windows Defender or SmartScreen shows a warning, click **More info** and then **Run anyway**.
-5. Launch the app normally from the Start menu or desktop shortcut.
-
-Notes:
-
-- The NSIS installer creates a standard Windows app install.
-- The portable build can be copied to another machine without a formal installation.
-
-### Linux
-
-1. Build the package on Linux:
-
-```bash
-npm install
-npm run dist:linux
-```
-
-2. Open the generated files in the `dist/` folder.
-3. For an AppImage:
-   - Mark it executable if needed:
-
-```bash
-chmod +x "dist/Scripture Pod-*.AppImage"
-```
-
-- Run the AppImage directly.
-
-4. If using the Linux zip archive:
-   - Extract the archive.
-   - Run the contained executable from the extracted folder, or move it into your applications directory.
-
-Notes:
-
-- AppImage is the easiest option for most Linux users.
-- If the system blocks execution, enable the app to run as a program or install the package from your distro's software center if you created a package format.
+Not in the backup: the live display address and access token (new each launch), the
+pairing code (regenerated), and window positions.
 
 ## Project layout
 
 ```
 src/
-  main/          Electron main process: main.js, preload.js, relay-security.js,
-                 bundled-bibles.js, bible-search.js (+ worker, SQLite search index)
   renderer/
     panel/       The control panel
       panel.html
       styles/    base.css, modern.css, console.css (loaded in that order)
-      scripts/   Classic scripts, loaded in order by panel.html, grouped by role:
+      scripts/   Classic scripts loaded in order by panel.html, grouped by role:
         core/          state and storage, app core, settings, i18n and theme, startup
         library/       Bible and lyrics library, chapter grid, Bible search
-        ui/            workspace, sidebar, shortcuts, command palette
-        output/        live output, sync, program display, recording and streaming
-        sources/       scenes, sources, FX, media and backgrounds
+        ui/            workspace, sidebar, shortcuts, command palette, app chrome
+        output/        live output, sync, embedded Program/Preview displays
+        sources/       media and backgrounds
         integrations/  host mode, translation, remote display tools
-    display/     The output page (display.html, display.css)
-    fonts/       Bundled fonts (Geist, Geist Mono, Source Serif 4) shared by both pages
-  shared/        Code used by both pages: lower-third-extra.js (name designs and animations),
-                 social-overlay.js (the social engagement lower third)
+    display/     The output page (display.html, display.css), used by every output
+    fonts/       Bundled fonts (Geist, Geist Mono, Source Serif 4)
+  shared/        Code used by both pages: lower-third-extra.js (name designs),
+                 social-overlay.js (social engagement lower third)
+src-tauri/       The desktop app (Rust): servers, relay, Bible search, windows
 assets/          bibles/ (bundled Bible XML), logo/, bg/
-build/           App icons and the logo used by the panel (electron-builder buildResources)
-scripts/         Build and maintenance scripts (mobile build, icon render)
-test/            Node test runner tests (`npm test`)
-android/ ios/    Capacitor native projects
+build/           App icon source and logo
+test/            Node tests (`npm test` also runs the Rust tests)
+.github/         CI: tests, installers, releases
 ```
 
+See `src-tauri/README.md` for how the Rust side maps to the pages and what has been verified.
+
 The display page is served at `/src/renderer/display/display.html`. The old
-`/UI/scripture-pod-display.html` address redirects there, so saved OBS browser
-sources keep working. Set `SCRIPTURE_POD_HTTP_PORT` and `SCRIPTURE_POD_RELAY_PORT`
-to run a second copy beside a running one.
+`/UI/scripture-pod-display.html` address redirects there, so saved OBS browser sources keep working.
+
+## Tests
+
+```bash
+npm test
+```
+
+Runs the Node tests (lower-third designs, social overlay) and the Rust tests (relay token,
+file serving rules, Bible search).
 
 ## Troubleshooting
 
-- If `npm install` fails, ensure Node version is compatible and your environment can compile native modules.
-- If Electron windows do not appear when running `npm start`, check the terminal for errors and ensure no other instance is locking required ports.
-- If the remote display does not load, confirm both computers are on the same network, refresh the LAN URL, and allow TCP ports `5510` and `5511` through the host firewall.
+- `cargo: command not found`: run `source "$HOME/.cargo/env"` or open a new terminal.
+- The app window does not appear: run `npm start` and read the terminal for errors.
+- Another copy holds the ports: the app moves to the next free ports, so the OBS URL changes.
+  Quit the other copy to keep the same URL.
+- The remote display does not load: both computers must be on the same network; re-copy the
+  LAN URL and allow TCP `5510` and `5511` through the firewall.
 
 ## Contributing
 
-Fork, make changes, and submit a pull request. Keep changes focused and include short tests or manual verification steps.
+Fork, make changes, and open a pull request. Keep changes focused and include short tests or
+manual verification steps.

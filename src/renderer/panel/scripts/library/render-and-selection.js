@@ -1431,6 +1431,33 @@
       };
     }
 
+    // Everything this app keeps in localStorage (the origin holds nothing else)
+    function readLocalStorageForBackup() {
+      const out = {};
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          const value = localStorage.getItem(key);
+          if (key && typeof value === 'string') out[key] = value;
+        }
+      } catch (e) { /* storage unavailable */ }
+      return out;
+    }
+
+    function restoreLocalStorageFromBackup(entries) {
+      if (!entries || typeof entries !== 'object' || Array.isArray(entries)) return false;
+      try {
+        localStorage.clear();
+        Object.keys(entries).forEach((key) => {
+          if (typeof entries[key] === 'string') localStorage.setItem(key, entries[key]);
+        });
+        return true;
+      } catch (e) {
+        console.warn('Backup restore: localStorage could not be written', e);
+        return false;
+      }
+    }
+
     async function exportBackup() {
       try {
         const filename = formatBackupFilename(new Date());
@@ -1490,7 +1517,9 @@
               backgroundUploads: {
                 bgUploadDataUrl: bgUploadDataUrl || '',
                 bgVideoUploadDataUrl: bgVideoUploadDataUrl || ''
-              }
+              },
+              // Saved names, look defaults, layout sizes, language and theme live in localStorage
+              localStorage: readLocalStorageForBackup()
             }
           }
         };
@@ -1732,6 +1761,8 @@
           tx.onabort = () => reject(tx.error || new Error('Backup restore was interrupted'));
         });
         appStateUpdatedAt = updatedAt;
+        // The search index follows the restored Bibles: drop it so startup rebuilds it
+        if (hasBibleRecords && typeof clearBibleSearchDb === 'function') clearBibleSearchDb();
         ltStyles = {};
         customFonts = [];
         loadedFontNames.clear();
@@ -1762,6 +1793,10 @@
         queueRelayStatePush({ includeSongs: hasSongRecords, includeBibles: hasBibleRecords });
         sendSyncState();
         showToast(t('backup_imported_successfully'));
+        // Layout, saved names and look defaults are read at startup, so start again from the restored data
+        if (restoreLocalStorageFromBackup(data.extra && data.extra.localStorage)) {
+          setTimeout(() => location.reload(), 900);
+        }
       } catch (e) {
         stateReady = true;
         console.error('Backup import restore failed', e);
