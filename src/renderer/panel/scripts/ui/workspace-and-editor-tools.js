@@ -44,7 +44,7 @@
       if (!saved) return;
       if (saved === 'song' || saved === 'songs') { setDockSceneTab('song'); return; }
       if (saved === 'bible') { setDockSceneTab('bible'); return; }
-      if (saved === 'schedule') { setSidebarTab('schedule'); updateActivityBarUi('schedule'); return; }
+      if (saved === 'schedule') { setSidebarTab('schedule'); return; }
       setDockSceneTab('bible');
     }
 

@@ -11,24 +11,6 @@
         live: { isLive: false, liveKind: null, livePointer: null, liveLineCursor: 0, lastLiveState: { kind: 'clear' } },
         schedule: [],
         presets: [],
-        scenes: [],
-        activeSceneId: null,
-        sceneIdCounter: 0,
-        sourceIdCounter: 0,
-        audioMixer: {
-          monitorMuted: true,
-          monitorVolume: 1,
-          monitorMode: 'monitor-off',
-          mediaAvSyncMs: 0,
-          ullEnabled: false,
-          ullBuffer: '128',
-          ullSampleRate: 'auto',
-          ullBypassFx: true,
-          ullUnderruns: 0,
-          masterFx: [],
-          masterVolume: 1,
-          buses: []
-        },
         currentAppPage: 'projection',
         ui: {
           language: 'en',
@@ -86,8 +68,6 @@
       const isBible = getIsBibleItem(currentItem);
       const selectedSongId = (!isBible && currentItem) ? (currentItem.id || null) : null;
       const settings = getUiSnapshot();
-      // Sync source order from DOM before persisting
-      saveCurrentSourceOrder();
       appState = {
         ...appState,
         version: 1,
@@ -112,30 +92,6 @@
         },
         schedule: Array.isArray(schedule) ? schedule : [],
         presets: Array.isArray(presets) ? presets : [],
-        scenes: _serializeScenes(),
-        activeSceneId: _activeSceneId,
-        sceneIdCounter: _sceneIdCounter,
-        sourceIdCounter: _sourceIdCounter,
-        audioMixer: {
-          monitorMuted: !!_pgmMutedMonitor,
-          monitorVolume: Math.max(0, Math.min(1, Number(_pgmMonitorVolume) || 1)),
-          monitorMode: _pgmGetNormalizedMonitoringMode(_pgmMonitoringMode),
-          mediaAvSyncMs: Math.max(-200, Math.min(400, Math.round(Number(_pgmMediaLocalAvSyncMs) || 0))),
-          ullEnabled: !!_pgmUltraLowLatencyEnabled,
-          ullBuffer: _pgmNormalizeUllBuffer(_pgmUltraLowLatencyBuffer),
-          ullSampleRate: _pgmNormalizeUllSampleRate(_pgmUltraLowLatencySampleRate),
-          ullBypassFx: !!_pgmUltraLowLatencyBypassFx,
-          ullUnderruns: Math.max(0, Math.round(Number(_pgmUltraLowLatencyUnderruns) || 0)),
-          masterFx: _promixMasterFx,
-          masterVolume: _promixMasterVolume,
-          buses: _promixBuses.map(b => ({
-            id: b.id,
-            name: b.name,
-            fxChain: b.fxChain || [],
-            volume: b.volume ?? 1,
-            muted: !!b.muted
-          }))
-        },
         currentAppPage: currentAppPage || 'projection',
         ui: {
           language: currentLanguage,
@@ -1418,11 +1374,6 @@
         songs: JSON.parse(JSON.stringify(songs)),
         bibles: JSON.parse(JSON.stringify(bibles)),
         schedule: JSON.parse(JSON.stringify(schedule)),
-        /* Scene / source state (guarded for early calls before scene system inits) */
-        scenes: (typeof _serializeScenes === 'function' && typeof _scenes !== 'undefined') ? _serializeScenes() : null,
-        activeSceneId: (typeof _activeSceneId !== 'undefined') ? _activeSceneId : null,
-        sceneIdCounter: (typeof _sceneIdCounter !== 'undefined') ? _sceneIdCounter : 0,
-        sourceIdCounter: (typeof _sourceIdCounter !== 'undefined') ? _sourceIdCounter : 0,
       };
       if (historyIndex < historyStates.length - 1) {
         historyStates = historyStates.slice(0, historyIndex + 1);
@@ -1436,46 +1387,7 @@
       }
     }
 
-    function _undoRestoreScenes(state) {
-      if (!state.scenes || typeof _restoreScenes !== 'function') return;
-      try { _restoreScenes(state.scenes, state.activeSceneId, state.sceneIdCounter, state.sourceIdCounter); } catch (e) { console.warn('[Undo] scene restore error:', e); }
-    }
 
-    function undoAction() {
-      if (historyIndex > 0) {
-        historyIndex--;
-        const state = historyStates[historyIndex];
-        songs = JSON.parse(JSON.stringify(state.songs));
-        bibles = JSON.parse(JSON.stringify(state.bibles));
-        schedule = JSON.parse(JSON.stringify(state.schedule));
-        _undoRestoreScenes(state);
-        renderSongs();
-        updateButtonView();
-        saveToStorageDebounced();
-        const msg = state.label ? t('common_undo_named').replace('{label}', state.label) : t('common_undo_successful');
-        showToast(msg);
-      } else {
-        showToast(t('common_nothing_to_undo'));
-      }
-    }
-
-    function redoAction() {
-      if (historyIndex < historyStates.length - 1) {
-        historyIndex++;
-        const state = historyStates[historyIndex];
-        songs = JSON.parse(JSON.stringify(state.songs));
-        bibles = JSON.parse(JSON.stringify(state.bibles));
-        schedule = JSON.parse(JSON.stringify(state.schedule));
-        _undoRestoreScenes(state);
-        renderSongs();
-        updateButtonView();
-        saveToStorageDebounced();
-        const msg = state.label ? t('common_redo_named').replace('{label}', state.label) : t('common_redo_successful');
-        showToast(msg);
-      } else {
-        showToast(t('common_nothing_to_redo'));
-      }
-    }
 
     function initializeDefaultStyles() {
       ltStyles['custom'] = {
@@ -3660,7 +3572,6 @@
       setupUrlPasteShortcuts();
       setupPresetPopoverDismiss();
       setupFooterBibleVersionPopover();
-      setupSceneLayerContextMenu();
       setupScrollPersistence();
       setupSidebarQuickActions();
       setupSidebarResizePersistence();
@@ -4132,15 +4043,6 @@
       else if (typeof mq.addListener === 'function') mq.addListener(handleMqChange);
     }
 
-    /* ── Audio Buffer Size Setting ── */
-    function _getAudioFxBufferCandidates(desired) {
-      const allowed = [32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384];
-      const n = Number(desired);
-      const target = Number.isFinite(n) ? n : 128;
-      const up = allowed.filter(v => v >= target);
-      const down = allowed.filter(v => v < target).reverse();
-      return [...up, ...down, 0];
-    }
 
     function _getAudioFxBufferSize() {
       try {
@@ -4154,14 +4056,6 @@
       if (sel) sel.value = String(_getAudioFxBufferSize());
     }
 
-    function _createFxScriptProcessorSafe(ctx, desiredSize, inChannels = 2, outChannels = 2) {
-      const candidates = _getAudioFxBufferCandidates(desiredSize);
-      for (const size of candidates) {
-        try { return ctx.createScriptProcessor(size, inChannels, outChannels); }
-        catch (_) {}
-      }
-      return ctx.createScriptProcessor(0, inChannels, outChannels);
-    }
 
 
     function switchSettingsTab(tabId) {
@@ -4373,38 +4267,6 @@
         liveRatio = appState.live.liveRatio || liveRatio;
         liveTextTransformState = appState.live.liveTextTransformState || null;
       }
-      if (appState.audioMixer) {
-        const rawVol = Number(appState.audioMixer.monitorVolume);
-        _pgmMonitorVolume = Number.isFinite(rawVol) ? Math.max(0, Math.min(1, rawVol)) : _pgmMonitorVolume;
-        _pgmMutedMonitor = appState.audioMixer.monitorMuted !== false;
-        _pgmMonitoringMode = _pgmGetNormalizedMonitoringMode(appState.audioMixer.monitorMode);
-        const rawSync = Number(appState.audioMixer.mediaAvSyncMs);
-        _pgmMediaLocalAvSyncMs = Number.isFinite(rawSync) ? Math.max(-200, Math.min(400, Math.round(rawSync))) : _pgmMediaLocalAvSyncMs;
-        _pgmUltraLowLatencyEnabled = appState.audioMixer.ullEnabled === true;
-        _pgmUltraLowLatencyBuffer = _pgmNormalizeUllBuffer(appState.audioMixer.ullBuffer);
-        _pgmUltraLowLatencySampleRate = _pgmNormalizeUllSampleRate(appState.audioMixer.ullSampleRate);
-        _pgmUltraLowLatencyBypassFx = appState.audioMixer.ullBypassFx !== false;
-        _pgmUltraLowLatencyUnderruns = Math.max(0, Math.round(Number(appState.audioMixer.ullUnderruns) || 0));
-        _pgmUltraLowLatencyState = _pgmUltraLowLatencyEnabled ? 'active' : 'inactive';
-        // Restore master FX chain + volume
-        if (Array.isArray(appState.audioMixer.masterFx)) {
-          _promixMasterFx = appState.audioMixer.masterFx;
-        }
-        if (typeof appState.audioMixer.masterVolume === 'number') {
-          _promixMasterVolume = Math.max(0, Math.min(1.5, appState.audioMixer.masterVolume));
-        }
-        // Restore bus definitions
-        if (Array.isArray(appState.audioMixer.buses) && appState.audioMixer.buses.length) {
-          _promixBuses = appState.audioMixer.buses.map(b => ({
-            id: b.id || ('bus_' + Math.random().toString(36).slice(2, 8)),
-            name: b.name || 'Bus',
-            fxChain: Array.isArray(b.fxChain) ? b.fxChain : [],
-            volume: typeof b.volume === 'number' ? b.volume : 1,
-            muted: !!b.muted
-          }));
-        }
-      }
-
       activeBibleVersion = appState.selectedBibleId || (appState.bibleNav ? appState.bibleNav.versionId : null);
       if (!activeBibleVersion || !bibles[activeBibleVersion]) {
         const versions = Object.keys(bibles);
@@ -4472,25 +4334,6 @@
       if (isLive && livePointer && lastLiveState && lastLiveState.kind === 'update') {
         pushLiveUpdate();
         updateButtonView();
-      }
-
-      // Restore scenes & sources from persistence
-      _restoreScenes(
-        appState.scenes || [],
-        appState.activeSceneId || null,
-        appState.sceneIdCounter || 0,
-        appState.sourceIdCounter || 0
-      );
-      _scenesInitialized = true;
-      _pgmApplyMonitorGain();
-      _pgmUpdateStreamVolLabel();
-      _pgmSyncMonitoringModeUi();
-      _pgmSyncMediaLocalAvSyncUi();
-      _pgmUpdateUllStatusUi();
-      const monitorBtn = document.getElementById('pgm-mute-monitor');
-      if (monitorBtn) {
-        monitorBtn.classList.toggle('muted', _pgmMutedMonitor);
-        monitorBtn.title = _pgmMutedMonitor ? 'Unmute monitor output' : 'Mute monitor output';
       }
 
       // Restore app page (Projection, Livestreaming, etc.)
@@ -4628,7 +4471,6 @@
         applyObsCompatibilityUi();
         applyHostModeUi();
         refreshLocalServerInfo().catch(() => {});
-        setTimeout(() => prewarmSourceDeviceCaches(), 50);
         await bootApp();
         applyObsCompatibilityUi();
       } catch (error) {

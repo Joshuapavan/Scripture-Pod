@@ -75,21 +75,17 @@
       activeWorkspaceTab = tabId;
       saveWorkspaceTabPreference(tabId);
       if (tabId === 'song') {
-        updateDockSceneTabUi('song');
         setSidebarTab('songs');
         return;
       }
       if (tabId === 'bible') {
-        updateDockSceneTabUi('bible');
         setSidebarTab('bible');
         return;
       }
       if (tabId === 'schedule') {
         setSidebarTab('schedule');
-        updateActivityBarUi('schedule');
         return;
       }
-      updateDockSceneTabUi('bible');
       setSidebarTab('bible');
     }
 
@@ -104,10 +100,7 @@
       activeWorkspaceTab = (tab === 'songs') ? 'song' : ((tab === 'schedule') ? 'schedule' : 'bible');
       saveWorkspaceTabPreference(activeWorkspaceTab);
       document.body.dataset.sidebarTab = tab;
-      if (tab === 'songs') updateDockSceneTabUi('song');
-      if (tab === 'bible') updateDockSceneTabUi('bible');
-      if (tab === 'schedule') updateActivityBarUi('schedule');
-      if (prevTab === 'bible') {
+      if (tab === 'songs')      if (tab === 'bible')      if (tab === 'schedule')      if (prevTab === 'bible') {
         lastBibleWorkspaceSelection = captureCurrentBibleSelection();
       } else if (prevTab === 'songs') {
         lastSongWorkspaceSelection = captureCurrentSongSelection();

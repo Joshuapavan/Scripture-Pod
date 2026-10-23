@@ -1131,6 +1131,8 @@
       saveToStorageDebounced();
       if (importedAnyBible) {
         try { await flushAppState(); } catch (_) {}
+        // The imported versions are saved; keep only the ones on screen in memory
+        setTimeout(() => unloadIdleBibles(true), 2500);
       }
       if (skippedUnsupported > 0) {
         showToast(t('import_skipped_unsupported').replace('{count}', String(skippedUnsupported)));

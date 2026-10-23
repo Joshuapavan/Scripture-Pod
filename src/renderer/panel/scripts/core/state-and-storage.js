@@ -152,12 +152,13 @@
       return getBibleVersionsInUse().filter(ver => !isBibleLoaded(ver) && !bibleLoadFailed.has(ver));
     }
 
-    function unloadIdleBibles() {
+    // force: free every version that is not on screen now, however recently it was used
+    function unloadIdleBibles(force = false) {
       const keep = new Set(getBibleVersionsInUse());
       const now = Date.now();
       Object.keys(bibles).forEach((ver) => {
         if (!isBibleLoaded(ver) || keep.has(ver)) return;
-        if (now - (bibleLastUsed.get(ver) || 0) < BIBLE_IDLE_UNLOAD_MS) return;
+        if (force !== true && now - (bibleLastUsed.get(ver) || 0) < BIBLE_IDLE_UNLOAD_MS) return;
         bibles[ver] = UNLOADED_BIBLE;
         clearBibleSearchCache(ver);
       });

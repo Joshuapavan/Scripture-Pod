@@ -5,17 +5,11 @@
       shell.dataset.aspect = normalized;
       document.getElementById('program-aspect-16x9')?.classList.toggle('active', normalized === '16:9');
       document.getElementById('program-aspect-9x16')?.classList.toggle('active', normalized === '9:16');
-      lsSyncProjectionLayoutFromProgramDisplay();
       requestAnimationFrame(() => {
         updateEmbeddedProgramDisplayScale();
-        updateLsProjectionPreviewScale();
         syncEmbeddedProgramDisplay();
         syncStandaloneOutputDirect();
-        syncLsProjectionPreview();
       });
-      // Ensure projection preview iframe receives the refreshed payload after layout settles.
-      setTimeout(() => syncLsProjectionPreview(), 120);
-      setTimeout(() => syncLsProjectionPreview(), 320);
     }
 
     function clampProgramPreviewZoom(value) {
@@ -29,7 +23,6 @@
       const slider = document.getElementById('program-scale-slider');
       if (slider && opts.fromSlider !== true) slider.value = programPreviewZoom.toFixed(2);
       updateEmbeddedProgramDisplayScale();
-      updateLsProjectionPreviewScale();
     }
 
     function updateProgramScaleUi(scale, baseW, baseH) {
@@ -177,11 +170,10 @@
 
     function syncPreviewMonitor() {
       if (!previewDisplaysReady.size) return;
-      postMessageToPreviewMonitor({ type: 'SET_STREAM_OUTPUT_MODE', enabled: !!_pgmStreamState.running });
       if (previewMonitorState.kind === 'update' && previewMonitorState.payload) {
         postMessageToPreviewMonitor({ type: 'PREVIEW_UPDATE', payload: previewMonitorState.payload });
       } else {
-        postMessageToPreviewMonitor({ type: 'PREVIEW_CLEAR', sceneLayers: getOutputSceneLayers() });
+        postMessageToPreviewMonitor({ type: 'PREVIEW_CLEAR' });
       }
     }
 
@@ -258,7 +250,7 @@
 
     function clearPreviewMonitor() {
       previewMonitorState = { kind: 'clear' };
-      return postMessageToPreviewMonitor({ type: 'PREVIEW_CLEAR', sceneLayers: getOutputSceneLayers() });
+      return postMessageToPreviewMonitor({ type: 'PREVIEW_CLEAR' });
     }
 
     function sendProgramPreview(payload, opts = {}) {
@@ -269,7 +261,6 @@
       const previewPayload = {
         ...payload,
         seq: nextSeq(),
-        sceneLayers: getOutputSceneLayers(),
         displayViewportWidth: viewport.width,
         displayViewportHeight: viewport.height
       };
@@ -283,10 +274,6 @@
         pendingProgramPreviewPayload = previewPayload;
         return true;
       }
-      postMessageToEmbeddedProgramDisplay({
-        type: 'SET_STREAM_OUTPUT_MODE',
-        enabled: !!_pgmStreamState.running
-      });
       pendingProgramPreviewPayload = null;
       return postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_UPDATE', payload: previewPayload });
     }
@@ -326,26 +313,18 @@
 
     function syncStandaloneOutputDirect(burstSeq) {
       const viewport = getEmbeddedDisplayViewport();
-      const sceneLayers = getOutputSceneLayers();
       const seq = burstSeq || nextSeq();
       if (currentProgramDisplaySource === 'lyrics' && embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload) {
-        // Full content sync — includes text, background, mode, AND scene layers
+        // Full content sync — text, background and mode
         postMessageToStandaloneOutput({
           type: 'PREVIEW_UPDATE',
           payload: {
             ...embeddedProgramDisplayState.payload,
             mode: 'full',
             seq,
-            sceneLayers,
             displayViewportWidth: viewport.width,
             displayViewportHeight: viewport.height
           }
-        });
-      } else {
-        // Scene-only sync — update layers without touching text/background/mode
-        postMessageToStandaloneOutput({
-          type: 'SCENE_LAYERS_UPDATE',
-          sceneLayers
         });
       }
     }
@@ -354,68 +333,28 @@
       standaloneSyncTimers.forEach(tid => clearTimeout(tid));
       standaloneSyncTimers = [];
       const burstSeq = nextSeq();
-      // During active streaming, use fewer burst retries to reduce rendering
-      // load — the offscreen capture window needs steady GPU/CPU time.
-      const isStreaming = (typeof _lsState !== 'undefined') && _lsState.streaming;
-      const delays = isStreaming ? [0, 300, 800] : [0, 120, 320, 700, 1200];
+      const delays = [0, 120, 320, 700, 1200];
       delays.forEach((delay) => {
         const tid = setTimeout(() => syncStandaloneOutputDirect(burstSeq), delay);
         standaloneSyncTimers.push(tid);
       });
     }
 
-    let _pgmMediaClockSyncLastTs = 0;
-    function _postSceneLayersToLsProjectionPreview(sceneLayers) {
-      // No-op — preview is now driven by backend capturePage thumbnails.
-      // Scene layers are rendered by the actual Program Display window,
-      // so the captured frames already include them.
-    }
-
-    function _pgmSyncMediaClockToOutputs(force = false) {
-      const { src, vid } = _pgmGetPrimaryMediaVideo();
-      if (!force) {
-        if (!src || !vid || src.visible === false) return;
-        if (_pgmMediaCtrlState.stopped || vid.paused || vid.ended) return;
-      }
-      const now = Date.now();
-      // During streaming, widen the throttle window to reduce cross‐window
-      // postMessage traffic that competes with the offscreen capture pipeline.
-      const minInterval = (_lsState && _lsState.streaming) ? 400 : 220;
-      if (!force && (now - _pgmMediaClockSyncLastTs) < minInterval) return;
-      _pgmMediaClockSyncLastTs = now;
-      const sceneLayersRaw = getOutputSceneLayers();
-      const sceneLayers = Array.isArray(sceneLayersRaw) ? sceneLayersRaw : [];
-      postMessageToStandaloneOutput({ type: 'SCENE_LAYERS_UPDATE', sceneLayers });
-      if (currentProgramDisplaySource === 'lyrics') {
-        postMessageToEmbeddedProgramDisplay({ type: 'SCENE_LAYERS_UPDATE', sceneLayers });
-      }
-      _postSceneLayersToLsProjectionPreview(sceneLayers);
-    }
-
     function syncEmbeddedProgramDisplay() {
       if (currentProgramDisplaySource !== 'lyrics') return;
       if (!embeddedProgramDisplayReady) return;
-      postMessageToEmbeddedProgramDisplay({
-        type: 'SET_STREAM_OUTPUT_MODE',
-        enabled: !!_pgmStreamState.running
-      });
       const viewport = getEmbeddedDisplayViewport();
-      const sceneLayers = getOutputSceneLayers();
       if (embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload) {
         postMessageToEmbeddedProgramDisplay({
           type: 'PREVIEW_UPDATE',
           payload: {
             ...embeddedProgramDisplayState.payload,
-            sceneLayers,
             displayViewportWidth: viewport.width,
             displayViewportHeight: viewport.height
           }
         });
       } else {
-        postMessageToEmbeddedProgramDisplay({
-          type: 'PREVIEW_CLEAR',
-          sceneLayers
-        });
+        postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_CLEAR' });
       }
     }
 
@@ -449,10 +388,6 @@
         updateEmbeddedProgramDisplayScale();
         layoutProgramScaleControls();
         if (pendingProgramPreviewPayload) {
-          postMessageToEmbeddedProgramDisplay({
-            type: 'SET_STREAM_OUTPUT_MODE',
-            enabled: !!_pgmStreamState.running
-          });
           postMessageToEmbeddedProgramDisplay({ type: 'PREVIEW_UPDATE', payload: pendingProgramPreviewPayload });
           pendingProgramPreviewPayload = null;
         } else {
@@ -500,13 +435,6 @@
     #bg { position: fixed; inset: 0; z-index: 2; background: #000 center / cover no-repeat; transition: filter 220ms ease, opacity 220ms ease; }
     #bg-video { position: fixed; inset: 0; z-index: 2; width: 100%; height: 100%; object-fit: cover; display: none; }
     #bg-page { position: fixed; inset: 0; z-index: 2; width: 100%; height: 100%; border: 0; display: none; pointer-events: none; }
-    #scene-compositor { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-    #scene-compositor .src-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; }
-    #scene-compositor .src-layer video { width: 100%; height: 100%; object-fit: contain; display: block; }
-    #scene-compositor .src-layer.media-source-layer video { object-fit: contain; }
-    #scene-compositor .src-layer img { width: 100%; height: 100%; object-fit: contain; display: block; }
-    #scene-compositor .src-layer .src-text-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 3vw; padding: 2vw; text-align: center; text-shadow: 0 0 12px rgba(0,0,0,0.7); }
-    #scene-compositor .src-layer .src-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); font-size: 12px; font-weight: 600; }
     #stage { position: fixed; inset: 0; z-index: 3; color: #fff; text-rendering: geometricPrecision; -webkit-font-smoothing: antialiased; display: flex; pointer-events: none; }
     #text-layer { width: 100%; word-break: break-word; }
     #name-role-overlay { position: fixed; inset: 0; z-index: 8; display: flex; align-items: flex-end; justify-content: flex-start; padding: 0 7vw 8vh; transform: translate(var(--name-role-offset-x,0vw),var(--name-role-offset-y,0vh)); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 700ms ease, visibility 0s linear 700ms; }
@@ -629,7 +557,6 @@
   <div id="bg"></div>
   <video id="bg-video" muted autoplay playsinline></video>
   <iframe id="bg-page" title="Background web page" allow="autoplay; fullscreen" referrerpolicy="no-referrer"></iframe>
-  <div id="scene-compositor"></div>
   <div id="stage" class="mode-full">
     <div id="lt-wrap">
       <div id="text-layer"></div>
@@ -696,7 +623,6 @@
           } catch (e) { console.debug('[DISPLAY] bgVideo ended handler error', e); }
         });
       } catch (e) { console.debug('[DISPLAY] could not bind bgVideo ended handler', e); }
-      const sceneCompositor = document.getElementById('scene-compositor');
       const stage = document.getElementById('stage');
       const ltWrap = document.getElementById('lt-wrap');
       const ltText = document.getElementById('text-layer');
@@ -704,313 +630,8 @@
       const hud = document.getElementById('hud');
       let lastSeq = 0;
       let lowerThirdOnlyMode = false;
-      let streamOutputActive = false;
       let lastNormalUpdate = null;
-      const outputStreams = Object.create(null);
       if (IS_PREVIEW && hud) hud.style.display = 'none';
-
-      function stopOutputStream(id) {
-        const existing = outputStreams[id];
-        if (existing && existing.stream) {
-          try { existing.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
-        }
-        delete outputStreams[id];
-      }
-
-      function stopMissingOutputStreams(visibleIds) {
-        Object.keys(outputStreams).forEach(function (id) {
-          if (!visibleIds.has(id)) stopOutputStream(id);
-        });
-      }
-
-      function applyLayerTransform(el, tf) {
-        const x = Number(tf && tf.x != null ? tf.x : 0);
-        const y = Number(tf && tf.y != null ? tf.y : 0);
-        const w = Number(tf && tf.w != null ? tf.w : 100);
-        const h = Number(tf && tf.h != null ? tf.h : 100);
-        const rotation = Number(tf && tf.rotation != null ? tf.rotation : 0);
-        const cT = Number(tf && tf.cropTop != null ? tf.cropTop : 0);
-        const cR = Number(tf && tf.cropRight != null ? tf.cropRight : 0);
-        const cB = Number(tf && tf.cropBottom != null ? tf.cropBottom : 0);
-        const cL = Number(tf && tf.cropLeft != null ? tf.cropLeft : 0);
-        el.style.left = x + '%';
-        el.style.top = y + '%';
-        el.style.width = w + '%';
-        el.style.height = h + '%';
-        el.style.transformOrigin = '50% 50%';
-        var transforms = [];
-        if (rotation) transforms.push('rotate(' + rotation + 'deg)');
-        var flipH = tf && tf.flipH ? -1 : 1;
-        var flipV = tf && tf.flipV ? -1 : 1;
-        if (flipH === -1 || flipV === -1) transforms.push('scale(' + flipH + ', ' + flipV + ')');
-        el.style.transform = transforms.length ? transforms.join(' ') : '';
-        el.style.clipPath = (cT || cR || cB || cL) ? ('inset(' + cT + '% ' + cR + '% ' + cB + '% ' + cL + '%)') : '';
-      }
-
-      function normalizeFitMode(mode, fallback) {
-        var key = String(mode || '').trim().toLowerCase();
-        if (key === 'contain' || key === 'cover' || key === 'stretch' || key === 'pixel-1:1') return key;
-        if (key === 'fill') return 'stretch';
-        if (key === 'none') return 'pixel-1:1';
-        var fb = String(fallback || 'contain').trim().toLowerCase();
-        if (fb === 'cover' || fb === 'stretch' || fb === 'pixel-1:1') return fb;
-        return 'contain';
-      }
-
-      function applyVisualFitMode(el, mode, opts) {
-        if (!el) return;
-        var cfg = opts || {};
-        var normalized = normalizeFitMode(mode, 'contain');
-        var mirror = !!cfg.mirror;
-        el.style.position = 'absolute';
-        el.style.display = 'block';
-        el.style.transformOrigin = '50% 50%';
-        el.style.maxWidth = 'none';
-        el.style.maxHeight = 'none';
-        if (normalized === 'pixel-1:1') {
-          el.style.left = '50%';
-          el.style.top = '50%';
-          el.style.right = '';
-          el.style.bottom = '';
-          el.style.width = 'auto';
-          el.style.height = 'auto';
-          el.style.objectFit = 'none';
-          el.style.transform = mirror ? 'translate(-50%, -50%) scaleX(-1)' : 'translate(-50%, -50%)';
-        } else {
-          el.style.left = '0';
-          el.style.top = '0';
-          el.style.right = '';
-          el.style.bottom = '';
-          el.style.width = '100%';
-          el.style.height = '100%';
-          el.style.objectFit = normalized === 'stretch' ? 'fill' : normalized;
-          el.style.transform = mirror ? 'scaleX(-1)' : '';
-        }
-      }
-
-      function bindVisualFit(videoEl, mode, opts) {
-        if (!videoEl) return;
-        var apply = function () { applyVisualFitMode(videoEl, mode, opts); };
-        apply();
-        if (videoEl.dataset.fitBound === '1') return;
-        videoEl.dataset.fitBound = '1';
-        videoEl.addEventListener('loadedmetadata', apply);
-        videoEl.addEventListener('resize', apply);
-      }
-
-      function attachCameraStream(layerId, videoEl, deviceId) {
-        const wantedDevice = String(deviceId || '');
-        const existing = outputStreams[layerId];
-        if (existing && existing.stream && existing.deviceId === wantedDevice) {
-          videoEl.srcObject = existing.stream;
-          videoEl.play().catch(function () {});
-          return;
-        }
-        stopOutputStream(layerId);
-        const constraints = wantedDevice
-          ? { video: { deviceId: { exact: wantedDevice } }, audio: false }
-          : { video: true, audio: false };
-        navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-          outputStreams[layerId] = { stream: stream, deviceId: wantedDevice };
-          videoEl.srcObject = stream;
-          videoEl.play().catch(function () {});
-        }).catch(function () {});
-      }
-
-      /* ---- media-source video caching & smooth sync ---- */
-      var _sceneMediaEls = Object.create(null);   // layerId -> cached <video>
-      var _lastSceneLayersSig = '';
-
-      function _sceneLayersSig(layers) {
-        if (!Array.isArray(layers)) return '';
-        return layers.map(function (l) {
-          if (!l) return '';
-          var t = l.transform || {};
-          var c = l.config || {};
-          var dk = c.dataUrl ? String(c.dataUrl).slice(0, 64) : '';
-          return [l.id||'', l.type||'', l.zIndex||0,
-                  t.x||0, t.y||0, t.w||100, t.h||100, t.rotation||0,
-                  t.cropTop||0, t.cropRight||0, t.cropBottom||0, t.cropLeft||0,
-                  c.deviceId||'', c.text||'', dk, c.videoFilter||'', c.fitMode||'', c.fit||''].join('|');
-        }).join('||');
-      }
-
-      function _syncMediaEl(vid, cfg) {
-        if (!vid) return;
-        var nextUrl = String(cfg.dataUrl || '');
-        if (nextUrl && String(vid.dataset.mediaUrl || '') !== nextUrl) {
-          vid.dataset.mediaUrl = nextUrl;
-          vid.src = nextUrl;
-        }
-        vid.autoplay = true;
-        vid.playsInline = true;
-        vid.loop = cfg.mediaLoop !== false;
-        var baseRate = Number(cfg.mediaPlaybackRate);
-        var normalRate = (baseRate === baseRate && baseRate > 0) ? Math.max(0.25, Math.min(4, baseRate)) : 1;
-        var vol = Number(cfg.mediaVolume);
-        vid.volume = (vol === vol) ? Math.max(0, Math.min(1, vol)) : 1;
-        vid.muted = !!cfg.mediaMuted;
-        var target = Number(cfg.mediaCurrentTime);
-        if (target === target && target >= 0) {
-          vid.dataset.targetTime = String(target);
-          var cur = Number(vid.currentTime || 0);
-          var drift = cur - target;
-          var absDrift = Math.abs(drift);
-          if (absDrift > 1.0) {
-            // Large drift (user seek / restart): hard seek
-            try { vid.currentTime = Math.max(0, target); } catch (_) {}
-            vid.playbackRate = normalRate;
-          } else if (absDrift > 0.15) {
-            // Medium drift: adjust playback rate to smoothly catch up / slow down
-            vid.playbackRate = normalRate * (drift > 0 ? 0.95 : 1.05);
-          } else {
-            // Within tolerance: restore normal rate
-            vid.playbackRate = normalRate;
-          }
-        } else {
-          vid.playbackRate = normalRate;
-        }
-        var stopped = !!cfg.mediaStopped;
-        var paused = cfg.mediaPaused === true;
-        if (stopped || paused) {
-          try { vid.pause(); } catch (_) {}
-        } else {
-          vid.play().catch(function () {});
-        }
-      }
-
-      function _syncMediaStates(layers) {
-        if (!Array.isArray(layers)) return;
-        layers.forEach(function (ld) {
-          if (!ld || ld.type !== 'media-source' || !ld.id) return;
-          var lid = String(ld.id);
-          var cfg = ld.config || {};
-          var layerEl = sceneCompositor && sceneCompositor.querySelector('.src-layer[data-src-id="' + lid + '"]');
-          if (layerEl) layerEl.style.visibility = cfg.mediaStopped ? 'hidden' : '';
-          var vid = _sceneMediaEls[lid];
-          if (vid) _syncMediaEl(vid, cfg);
-        });
-      }
-
-      function _pruneMediaEls(visibleIds) {
-        Object.keys(_sceneMediaEls).forEach(function (id) {
-          if (visibleIds[id]) return;
-          var v = _sceneMediaEls[id];
-          try { v.pause(); } catch (_) {}
-          try { v.removeAttribute('src'); v.load(); } catch (_) {}
-          delete _sceneMediaEls[id];
-        });
-      }
-
-      function renderSceneLayers(layers) {
-        if (!sceneCompositor || !Array.isArray(layers)) return;
-
-        /* Fast path: if only media state changed, sync without DOM rebuild */
-        var sig = _sceneLayersSig(layers);
-        if (sig && sig === _lastSceneLayersSig) {
-          _syncMediaStates(layers);
-          return;
-        }
-        _lastSceneLayersSig = sig;
-
-        var visibleIds = new Set();
-        sceneCompositor.innerHTML = '';
-        layers.forEach(function (layerData) {
-          if (!layerData || !layerData.id) return;
-          var lid = String(layerData.id);
-          visibleIds.add(lid);
-          var layer = document.createElement('div');
-          layer.className = 'src-layer';
-          layer.dataset.srcId = lid;
-          if (layerData.type === 'media-source') layer.classList.add('media-source-layer');
-          layer.style.zIndex = String(Number(layerData.zIndex || 1));
-          applyLayerTransform(layer, layerData.transform || {});
-          var cfg = layerData.config || {};
-          if (layerData.type === 'camera') {
-            var vid = document.createElement('video');
-            vid.autoplay = true;
-            vid.muted = true;
-            vid.playsInline = true;
-            bindVisualFit(vid, cfg.fitMode || cfg.fit || 'contain', { mirror: !!cfg.mirror });
-            layer.appendChild(vid);
-            attachCameraStream(lid, vid, cfg.deviceId || '');
-          } else if (layerData.type === 'ndi') {
-            // NDI video feed via virtual camera device
-            var ndiVid = document.createElement('video');
-            ndiVid.autoplay = true;
-            ndiVid.muted = true;
-            ndiVid.playsInline = true;
-            bindVisualFit(ndiVid, cfg.fitMode || cfg.fit || 'cover', { mirror: false });
-            layer.appendChild(ndiVid);
-            attachCameraStream(lid, ndiVid, cfg.cameraDeviceId || cfg.deviceId || '');
-          } else if (layerData.type === 'image') {
-            if (cfg.dataUrl) {
-              var img = document.createElement('img');
-              img.src = cfg.dataUrl;
-              img.alt = layerData.name || '';
-              applyVisualFitMode(img, cfg.fitMode || cfg.fit || 'contain', { mirror: false });
-              if (cfg.opacity != null && cfg.opacity < 100) img.style.opacity = (cfg.opacity / 100).toFixed(2);
-              layer.appendChild(img);
-            }
-          } else if (layerData.type === 'media-source') {
-            var mvid = _sceneMediaEls[lid];
-            if (!mvid) {
-              mvid = document.createElement('video');
-              applyVisualFitMode(mvid, cfg.fitMode || cfg.fit || 'contain', { mirror: false });
-              mvid.addEventListener('loadedmetadata', function () {
-                var t = Number(mvid.dataset.targetTime || '');
-                if (t === t && t >= 0 && Math.abs((Number(mvid.currentTime)||0) - t) > 0.18) {
-                  try { mvid.currentTime = Math.max(0, t); } catch (_) {}
-                }
-              });
-              _sceneMediaEls[lid] = mvid;
-            }
-            if (cfg.dataUrl) {
-              applyVisualFitMode(mvid, cfg.fitMode || cfg.fit || 'contain', { mirror: false });
-              _syncMediaEl(mvid, cfg);
-              layer.style.visibility = cfg.mediaStopped ? 'hidden' : '';
-              layer.appendChild(mvid);
-            }
-          } else if (layerData.type === 'text') {
-            var txt = document.createElement('div');
-            txt.className = 'src-text-overlay';
-            txt.textContent = cfg.text || layerData.name || '';
-            if (cfg.fontFamily) txt.style.fontFamily = cfg.fontFamily;
-            if (cfg.fontSize) txt.style.fontSize = cfg.fontSize + 'px';
-            if (cfg.color) txt.style.color = cfg.color;
-            if (cfg.align) txt.style.textAlign = cfg.align;
-            if (cfg.wordWrap === false) txt.style.whiteSpace = 'nowrap';
-            if (cfg.showBg) {
-              txt.style.backgroundColor = cfg.bgColor || '#000';
-              txt.style.padding = '0.2em 0.5em';
-              txt.style.borderRadius = '6px';
-            }
-            layer.appendChild(txt);
-          } else if (layerData.type === 'window-capture') {
-            var wcPh = document.createElement('div');
-            wcPh.className = 'src-placeholder';
-            wcPh.textContent = cfg.windowName || 'Window Capture';
-            layer.appendChild(wcPh);
-          } else if (layerData.type === 'scene') {
-            var scPh = document.createElement('div');
-            scPh.className = 'src-placeholder';
-            scPh.textContent = cfg.sceneName ? ('Scene: ' + cfg.sceneName) : 'Scene Source';
-            layer.appendChild(scPh);
-          }
-          // Create SVG sharpen filters if needed (same DOM as control panel)
-          if (cfg.sharpenDefs && cfg.sharpenDefs.length) {
-            cfg.sharpenDefs.forEach(function(d) { _ensureSharpenFilter(d.filterId, d.amount, d.radius); });
-          }
-          // Apply pre-computed video FX CSS filter
-          if (cfg.videoFilter) layer.style.filter = cfg.videoFilter;
-          if (cfg.videoVignette) layer.style.boxShadow = cfg.videoVignette;
-          sceneCompositor.appendChild(layer);
-        });
-        var visObj = {};
-        visibleIds.forEach(function (id) { visObj[id] = true; });
-        _pruneMediaEls(visObj);
-        stopMissingOutputStreams(visibleIds);
-      }
 
       function safeAlign(value, fallback) {
         const v = String(value || '').toLowerCase();
@@ -1176,7 +797,7 @@
         if (!data || typeof data !== 'object') return;
         const sourceData = data;
         if (!data.lowerThirdOnly) {
-          const outputMode = IS_PREVIEW ? (streamOutputActive ? 'lt' : null) : 'full';
+          const outputMode = IS_PREVIEW ? null : 'full';
           if (outputMode) data = { ...data, mode: outputMode };
         }
         if (data.seq && data.seq <= lastSeq) return;
@@ -1205,7 +826,6 @@
             updateSocialEngagementOverlay(null);
             fullText.innerHTML = '';
             ltText.innerHTML = '';
-            renderSceneLayers([]);
             setBackground({ bgEnabled: false });
             document.body.classList.remove('lyrics-lt-mode', 'display-full-mode', 'display-custom-mode');
           }
@@ -1219,7 +839,6 @@
           if (entering) {
             fullText.innerHTML = '';
             ltText.innerHTML = '';
-            renderSceneLayers([]);
             setBackground({ bgEnabled: false });
           }
           updateNameRoleOverlay(data.nameRoleOverlay);
@@ -1236,7 +855,6 @@
         document.body.classList.toggle('display-full-mode', displayMode === 'full');
         document.body.classList.toggle('display-custom-mode', displayMode === 'custom');
         document.body.classList.toggle('lyrics-lt-mode', displayMode === 'lt');
-        renderSceneLayers(data.sceneLayers);
         updateNameRoleOverlay(data.nameRoleOverlay);
         updateSocialEngagementOverlay(data.socialEngagementOverlay);
         setBackground(data);
@@ -1337,7 +955,6 @@
         document.body.classList.remove('lower-third-only-mode', 'lyrics-lt-mode', 'display-full-mode', 'display-custom-mode');
         fullText.innerHTML = '';
         ltText.innerHTML = '';
-        renderSceneLayers([]);
         setBackground({ bgEnabled: false });
         updateNameRoleOverlay(null);
         updateSocialEngagementOverlay(null);
@@ -1358,7 +975,6 @@
           if (type === 'SYNC_STATE') {
             if (data.state && data.state.kind === 'update' && data.state.payload) applyUpdate(data.state.payload);
             if (data.state && data.state.kind === 'clear') {
-              if (Array.isArray(data.state.sceneLayers)) renderSceneLayers(data.state.sceneLayers);
               clearOutput();
             }
             return;
@@ -1368,26 +984,13 @@
             return;
           }
           if (type === 'CLEAR') {
-            if (Array.isArray(data.sceneLayers)) renderSceneLayers(data.sceneLayers);
             clearOutput();
-          }
-          if (type === 'SCENE_LAYERS_UPDATE') {
-            if (Array.isArray(data.sceneLayers)) renderSceneLayers(data.sceneLayers);
           }
         };
       }
 
       window.addEventListener('message', function (event) {
         const data = event.data || {};
-        if (data && data.type === 'SET_STREAM_OUTPUT_MODE' && IS_PREVIEW) {
-          const enabled = !!data.enabled;
-          if (streamOutputActive !== enabled) {
-            streamOutputActive = enabled;
-            lastSeq = 0;
-            if (lastNormalUpdate) applyUpdate(lastNormalUpdate);
-          }
-          return;
-        }
         if (data && data.type === 'REQUEST_FULLSCREEN') {
           document.documentElement.requestFullscreen().catch(function () {});
           return;
@@ -1400,14 +1003,9 @@
           clearOutput();
           return;
         }
-        if (data && data.type === 'SCENE_LAYERS_UPDATE') {
-          renderSceneLayers(data.sceneLayers);
-          return;
-        }
       });
 
       window.addEventListener('beforeunload', function () {
-        stopMissingOutputStreams(new Set());
         if (channel) {
           try { channel.close(); } catch (e) {}
         }
@@ -1496,18 +1094,11 @@
 
     function syncLyricsOutputTypeButtons() {
       const monitorBtn = document.getElementById('lyrics-output-monitor-btn');
-      const streamBtn = document.getElementById('lyrics-output-stream-btn');
       if (standaloneDisplayWindow && standaloneDisplayWindow.closed) lyricsMonitorOutputOpen = false;
       const monitorActive = lyricsMonitorOutputOpen || outputLiveActive;
-      const streamActive = !!(_pgmStreamState && (_pgmStreamState.running || _pgmStreamState.starting));
       if (monitorBtn) {
         monitorBtn.classList.toggle('active', monitorActive);
         monitorBtn.setAttribute('aria-pressed', monitorActive ? 'true' : 'false');
-      }
-      if (streamBtn) {
-        streamBtn.classList.toggle('active', streamActive);
-        streamBtn.setAttribute('aria-pressed', streamActive ? 'true' : 'false');
-        streamBtn.disabled = !!_pgmStreamState?.starting;
       }
     }
 
@@ -1517,10 +1108,6 @@
         return;
       }
       await openStandaloneOutputFromUi();
-    }
-
-    function toggleLyricsStreamOutput() {
-      pgmStreamToggle();
     }
 
     function getWindowFeaturesForOutput(bounds) {
@@ -1772,8 +1359,7 @@
           sender: 'control',
           ts: Date.now(),
           seq: nextSeq(),
-          sceneLayers: getOutputSceneLayers(),
-          displayViewportWidth: viewport.width,
+            displayViewportWidth: viewport.width,
           displayViewportHeight: viewport.height
         });
       } else {
@@ -1957,455 +1543,6 @@
       }
     }
 
-    const _PGM_STREAM_CONFIG_KEY = 'projection_stream_config_v1';
-    const _PGM_STREAM_PLATFORM_DEFAULTS = {
-      youtube: {
-        name: 'YouTube',
-        url: 'rtmps://a.rtmp.youtube.com/live2',
-        help: 'In YouTube Studio: Go Live -> Stream -> copy Stream URL and Stream Key.'
-      },
-      facebook: {
-        name: 'Facebook',
-        url: 'rtmps://live-api-s.facebook.com:443/rtmp/',
-        help: 'In Facebook Live Producer: choose Stream key -> copy Server URL and Stream Key.'
-      },
-      twitch: {
-        name: 'Twitch',
-        url: 'rtmp://live.twitch.tv/app/',
-        help: 'In Twitch Dashboard: Settings -> Stream -> copy your Primary Stream Key.'
-      },
-      kick: {
-        name: 'Kick',
-        url: 'rtmp://fa723fc1b171.global-contribute.live-video.net/app/',
-        help: 'In Kick Dashboard: Settings -> Stream -> copy Stream URL and Stream Key.'
-      },
-      instagram: {
-        name: 'Instagram',
-        url: 'rtmps://live-upload.instagram.com:443/rtmp/',
-        help: 'In Instagram Live (Streaming software): copy Stream URL and Stream Key.'
-      },
-      custom: {
-        name: 'Custom RTMP',
-        url: '',
-        help: 'Use the exact ingest URL and stream key provided by your platform.'
-      }
-    };
-    const _pgmStreamState = {
-      running: false,
-      status: 'idle',
-      starting: false,
-      lastError: '',
-      encoderReady: false,
-      encoderPath: '',
-	      config: {
-	        platform: 'youtube',
-	        url: 'rtmps://a.rtmp.youtube.com/live2',
-	        key: '',
-	        canvasResolution: '1920x1080',
-	        resolution: '1920x1080',
-	        fps: 30,
-	        bitrateKbps: 4500
-	      }
-	    };
-	    let _pgmStreamAudioCtx = null;
-	    let _pgmStreamAudioSource = null;
-	    let _pgmStreamAudioProcessor = null;
-	    let _pgmStreamAudioSink = null;
-	    let _pgmStreamAudioNullDest = null;
-
-    function pgmStreamInferProtocol(url, fallback = 'rtmps') {
-      const raw = String(url || '').trim().toLowerCase();
-      if (raw.startsWith('srt://')) return 'srt';
-      if (raw.startsWith('rtmps://')) return 'rtmps';
-      if (raw.startsWith('rtmp://')) return 'rtmp';
-      if (raw.startsWith('https://') || raw.startsWith('http://')) return 'whip';
-      return fallback;
-    }
-
-	    function pgmStreamNormalizeUrl(platform, rawUrl) {
-	      const value = String(rawUrl || '').trim();
-	      if (!value) return '';
-	      if (platform === 'youtube' && /^rtmp:\/\/a\.rtmp\.youtube\.com\/live2\/?$/i.test(value)) {
-	        return 'rtmps://a.rtmp.youtube.com/live2';
-	      }
-	      return value;
-	    }
-
-	    function _pgmStreamPackS16leStereo(left, right) {
-	      const frames = Math.min(left.length, right.length);
-	      const out = new Uint8Array(frames * 4);
-	      let o = 0;
-	      for (let i = 0; i < frames; i++) {
-	        const l = Math.max(-1, Math.min(1, Number(left[i]) || 0));
-	        const r = Math.max(-1, Math.min(1, Number(right[i]) || 0));
-	        const li = l < 0 ? Math.round(l * 0x8000) : Math.round(l * 0x7fff);
-	        const ri = r < 0 ? Math.round(r * 0x8000) : Math.round(r * 0x7fff);
-	        out[o++] = li & 0xff;
-	        out[o++] = (li >> 8) & 0xff;
-	        out[o++] = ri & 0xff;
-	        out[o++] = (ri >> 8) & 0xff;
-	      }
-	      return out;
-	    }
-
-	    async function pgmStreamStartAudioPump() {
-	      if (!(window.BSPDesktop && typeof window.BSPDesktop.pushStreamAudioChunk === 'function')) return false;
-	      if (_pgmStreamAudioCtx) return true;
-	      _pgmEnsureGraph();
-	      _pgmApplyMonitoringModeRouting();
-	      _pgmSyncSources();
-	      const pgmStream = getPgmOutputStream();
-	      if (!(pgmStream && typeof pgmStream.getAudioTracks === 'function' && pgmStream.getAudioTracks().length)) {
-	        _pgmStreamState.lastError = 'Program mix audio unavailable.';
-	        pgmStreamRenderState();
-	        return false;
-	      }
-	      const Ctor = window.AudioContext || window.webkitAudioContext;
-	      if (!Ctor) return false;
-	      try {
-	        _pgmStreamAudioCtx = new Ctor({ latencyHint: 'interactive', sampleRate: 48000 });
-	      } catch (_) {
-	        _pgmStreamAudioCtx = new Ctor();
-	      }
-	      try {
-	        if (_pgmStreamAudioCtx.state === 'suspended') await _pgmStreamAudioCtx.resume();
-	      } catch (_) {}
-
-	      _pgmStreamAudioSource = _pgmStreamAudioCtx.createMediaStreamSource(pgmStream);
-	      // 2048-sample buffer (~42ms @ 48kHz) balances stream latency against
-	      // main-thread callback pressure. Lower than 4096 for tighter A/V sync.
-	      _pgmStreamAudioProcessor = _pgmStreamAudioCtx.createScriptProcessor(2048, 2, 2);
-	      _pgmStreamAudioSink = _pgmStreamAudioCtx.createGain();
-	      _pgmStreamAudioSink.gain.value = 0;
-	      _pgmStreamAudioNullDest = _pgmStreamAudioCtx.createMediaStreamDestination();
-	      _pgmStreamAudioProcessor.onaudioprocess = (evt) => {
-	        if (!(_pgmStreamState.running || _pgmStreamState.starting)) return;
-	        const input = evt.inputBuffer;
-	        if (!input) return;
-	        const left = input.numberOfChannels > 0 ? input.getChannelData(0) : null;
-	        const right = input.numberOfChannels > 1 ? input.getChannelData(1) : left;
-	        if (!left || !right) return;
-	        const pcm = _pgmStreamPackS16leStereo(left, right);
-	        try { window.BSPDesktop.pushStreamAudioChunk(pcm); } catch (_) {}
-	      };
-	      _pgmStreamAudioSource.connect(_pgmStreamAudioProcessor);
-	      _pgmStreamAudioProcessor.connect(_pgmStreamAudioSink);
-	      // Keep the processor graph alive without routing to speakers.
-	      _pgmStreamAudioSink.connect(_pgmStreamAudioNullDest);
-	      return true;
-	    }
-
-	    function pgmStreamStopAudioPump() {
-	      try {
-	        if (window.BSPDesktop && typeof window.BSPDesktop.endStreamAudio === 'function') {
-	          window.BSPDesktop.endStreamAudio();
-	        }
-	      } catch (_) {}
-	      if (_pgmStreamAudioProcessor) {
-	        try { _pgmStreamAudioProcessor.disconnect(); } catch (_) {}
-	        _pgmStreamAudioProcessor.onaudioprocess = null;
-	      }
-	      if (_pgmStreamAudioSource) {
-	        try { _pgmStreamAudioSource.disconnect(); } catch (_) {}
-	      }
-	      if (_pgmStreamAudioSink) {
-	        try { _pgmStreamAudioSink.disconnect(); } catch (_) {}
-	      }
-	      if (_pgmStreamAudioNullDest) {
-	        try { _pgmStreamAudioNullDest.disconnect(); } catch (_) {}
-	      }
-	      if (_pgmStreamAudioCtx) {
-	        try { _pgmStreamAudioCtx.close(); } catch (_) {}
-	      }
-	      _pgmStreamAudioCtx = null;
-	      _pgmStreamAudioSource = null;
-	      _pgmStreamAudioProcessor = null;
-	      _pgmStreamAudioSink = null;
-	      _pgmStreamAudioNullDest = null;
-	    }
-
-    function pgmStreamPersistConfig() {
-      try {
-        localStorage.setItem(_PGM_STREAM_CONFIG_KEY, JSON.stringify(_pgmStreamState.config));
-      } catch (e) {}
-    }
-
-    function pgmStreamLoadConfig() {
-      try {
-        const raw = localStorage.getItem(_PGM_STREAM_CONFIG_KEY);
-        if (!raw) return;
-        const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== 'object') return;
-        _pgmStreamState.config.platform = String(parsed.platform || _pgmStreamState.config.platform);
-        _pgmStreamState.config.url = String(parsed.url || _pgmStreamState.config.url);
-        _pgmStreamState.config.key = String(parsed.key || '');
-	        _pgmStreamState.config.canvasResolution = String(parsed.canvasResolution || _pgmStreamState.config.canvasResolution);
-	        _pgmStreamState.config.resolution = String(parsed.resolution || _pgmStreamState.config.resolution);
-	        _pgmStreamState.config.fps = Math.max(15, Math.min(60, Number(parsed.fps) || _pgmStreamState.config.fps));
-	        _pgmStreamState.config.bitrateKbps = Math.max(500, Math.min(20000, Number(parsed.bitrateKbps) || _pgmStreamState.config.bitrateKbps));
-	      } catch (e) {}
-      _pgmStreamState.config.url = pgmStreamNormalizeUrl(_pgmStreamState.config.platform, _pgmStreamState.config.url);
-    }
-
-    function pgmStreamRenderState() {
-      const cfg = _pgmStreamState.config;
-      const platform = _PGM_STREAM_PLATFORM_DEFAULTS[cfg.platform] || _PGM_STREAM_PLATFORM_DEFAULTS.custom;
-      const pill = document.getElementById('pgm-stream-pill');
-      const toggleBtn = document.getElementById('pgm-stream-toggle-btn');
-      const settingsBtn = document.getElementById('pgm-stream-settings-btn');
-      const platformEl = document.getElementById('pgm-stream-platform');
-      const destinationEl = document.getElementById('pgm-stream-destination');
-      const canvasInfoEl = document.getElementById('pgm-stream-canvas-info');
-      const outputInfoEl = document.getElementById('pgm-stream-output-info');
-      const audioInfoEl = document.getElementById('pgm-stream-audio-info');
-      const encoderEl = document.getElementById('pgm-stream-encoder');
-      const errEl = document.getElementById('pgm-stream-error');
-
-      if (platformEl) platformEl.textContent = platform.name;
-      if (destinationEl) destinationEl.textContent = cfg.url || 'No server URL';
-	      if (canvasInfoEl) canvasInfoEl.textContent = (cfg.canvasResolution || '1920x1080').replace('x', '×');
-	      if (outputInfoEl) outputInfoEl.textContent = (cfg.resolution || '1920x1080').replace('x', '×');
-	      if (audioInfoEl) {
-	        audioInfoEl.textContent = 'Program Mix';
-	      }
-      if (encoderEl) {
-        if (_pgmStreamState.encoderReady) encoderEl.textContent = _pgmStreamState.encoderPath || 'Ready';
-        else encoderEl.textContent = 'Unavailable';
-      }
-      if (errEl) errEl.textContent = _pgmStreamState.lastError || 'None';
-
-      const live = _pgmStreamState.running;
-      const topbarStream = document.getElementById('topbar-stream-status');
-      const topbarStreamState = document.getElementById('topbar-stream-state');
-      if (topbarStream) {
-        topbarStream.classList.toggle('is-live', live);
-        topbarStream.classList.toggle('is-starting', !!_pgmStreamState.starting);
-      }
-      if (topbarStreamState) {
-        topbarStreamState.textContent = _pgmStreamState.starting ? 'Starting' : (live ? 'Live' : 'Offline');
-      }
-      if (pill) {
-        pill.classList.toggle('live', live);
-        if (_pgmStreamState.starting) pill.textContent = 'STARTING';
-        else pill.textContent = live ? 'LIVE' : 'OFFLINE';
-      }
-      if (toggleBtn) {
-        toggleBtn.disabled = _pgmStreamState.starting || !_pgmStreamState.encoderReady;
-        toggleBtn.classList.toggle('live', live);
-        toggleBtn.textContent = _pgmStreamState.starting ? 'Starting...' : (live ? 'Stop Streaming' : 'Start Streaming');
-      }
-      if (settingsBtn) {
-        settingsBtn.disabled = _pgmStreamState.starting || live;
-      }
-      syncLyricsOutputTypeButtons();
-    }
-
-    function pgmStreamHandlePlatformChange() {
-      const platformSelect = document.getElementById('pgm-stream-platform-select');
-      const urlInput = document.getElementById('pgm-stream-url-input');
-      const help = document.getElementById('pgm-stream-help');
-      const platform = String(platformSelect?.value || 'custom');
-      const defaults = _PGM_STREAM_PLATFORM_DEFAULTS[platform] || _PGM_STREAM_PLATFORM_DEFAULTS.custom;
-      if (help) help.textContent = defaults.help || '';
-      if (urlInput && !String(urlInput.value || '').trim() && defaults.url) {
-        urlInput.value = defaults.url;
-      }
-    }
-
-
-    function pgmStreamCloseSettings() {
-      const overlay = document.getElementById('pgm-stream-settings-overlay');
-      if (overlay) overlay.classList.remove('open');
-    }
-
-    function pgmStreamSaveSettings() {
-      const platformSelect = document.getElementById('pgm-stream-platform-select');
-      const urlInput = document.getElementById('pgm-stream-url-input');
-	      const keyInput = document.getElementById('pgm-stream-key-input');
-	      const canvasSelect = document.getElementById('pgm-stream-canvas-select');
-	      const resolutionSelect = document.getElementById('pgm-stream-resolution-select');
-	      const fpsSelect = document.getElementById('pgm-stream-fps-select');
-	      const bitrateInput = document.getElementById('pgm-stream-bitrate-input');
-      const platform = String(platformSelect?.value || 'custom');
-      const rawUrl = String(urlInput?.value || '').trim();
-      const url = pgmStreamNormalizeUrl(platform, rawUrl);
-      const key = String(keyInput?.value || '').trim();
-      const protocol = pgmStreamInferProtocol(url, 'rtmps');
-      if (!url) {
-        showToast(t('stream_url_required'));
-        return;
-      }
-      if (protocol !== 'srt' && !key) {
-        showToast(t('stream_key_required'));
-        return;
-      }
-      _pgmStreamState.config = {
-        platform,
-        url,
-        key,
-	        canvasResolution: String(canvasSelect?.value || '1920x1080'),
-	        resolution: String(resolutionSelect?.value || '1920x1080'),
-	        fps: Math.max(15, Math.min(60, Number(fpsSelect?.value || 30))),
-	        bitrateKbps: Math.max(500, Math.min(20000, Number(bitrateInput?.value || 4500)))
-	      };
-      pgmStreamPersistConfig();
-      pgmStreamRenderState();
-      pgmStreamCloseSettings();
-      showToast(t('stream_settings_saved'));
-    }
-
-    async function pgmStreamCheckReadiness() {
-      if (!(window.BSPDesktop && typeof window.BSPDesktop.getStreamReadiness === 'function')) {
-        _pgmStreamState.encoderReady = false;
-        _pgmStreamState.encoderPath = '';
-        pgmStreamRenderState();
-        return false;
-      }
-      try {
-        const ready = await window.BSPDesktop.getStreamReadiness();
-        const ok = !!(ready && ready.ok !== false && ready.available !== false && ready.platformSupported !== false);
-        _pgmStreamState.encoderReady = ok;
-        _pgmStreamState.encoderPath = String(ready?.path || '');
-        pgmStreamRenderState();
-        return ok;
-      } catch (e) {
-        _pgmStreamState.encoderReady = false;
-        _pgmStreamState.encoderPath = '';
-        pgmStreamRenderState();
-        return false;
-      }
-    }
-
-    async function pgmStreamToggle() {
-      if (_pgmStreamState.starting) return;
-      if (!(window.BSPDesktop && typeof window.BSPDesktop.startStream === 'function')) {
-        showToast(t('stream_backend_unavailable'));
-        return;
-      }
-
-	      if (_pgmStreamState.running) {
-	        _pgmStreamState.starting = true;
-	        pgmStreamRenderState();
-	        pgmStreamStopAudioPump();
-	        await window.BSPDesktop.stopStream().catch(() => {});
-	        _pgmStreamState.starting = false;
-	        _pgmStreamState.running = false;
-	        _pgmStreamState.status = 'idle';
-          syncEmbeddedProgramDisplay();
-	        pgmStreamRenderState();
-        showToast(t('stream_projection_stopped'));
-        return;
-      }
-
-      const ready = await pgmStreamCheckReadiness();
-      if (!ready) {
-        showToast(t('stream_encoder_not_ready'));
-        return;
-      }
-      const cfg = _pgmStreamState.config;
-      const url = pgmStreamNormalizeUrl(cfg.platform, cfg.url);
-      const protocol = pgmStreamInferProtocol(url, 'rtmps');
-      if (!url) {
-        showToast(t('stream_configure_url'));
-        return;
-      }
-      if (protocol !== 'srt' && !cfg.key) {
-        showToast(t('stream_configure_key'));
-        return;
-      }
-	      _pgmStreamState.starting = true;
-	      _pgmStreamState.lastError = '';
-	      pgmStreamRenderState();
-	      const audioPumpOk = await pgmStreamStartAudioPump();
-	      if (!audioPumpOk) {
-	        _pgmStreamState.starting = false;
-	        _pgmStreamState.running = false;
-	        _pgmStreamState.status = 'error';
-	        if (!_pgmStreamState.lastError) _pgmStreamState.lastError = 'Program mix audio not available.';
-	        pgmStreamRenderState();
-	        showToast(_pgmStreamState.lastError);
-	        return;
-	      }
-	      try { syncStandaloneOutputDirect(); } catch (e) {}
-	      try { queueStandaloneSyncBurst(); } catch (e) {}
-
-      const payload = {
-        sourceMode: 'projection',
-        streamOwner: 'projection-extras',
-        canvasResolution: cfg.canvasResolution || '1920x1080',
-	        resolution: cfg.resolution || '1920x1080',
-	        fps: Number(cfg.fps || 30),
-	        bitrateKbps: Number(cfg.bitrateKbps || 4500),
-	        audioFromRenderer: true,
-	        streamProtocol: protocol,
-	        targets: [{
-          url,
-          key: cfg.key || '',
-          name: (_PGM_STREAM_PLATFORM_DEFAULTS[cfg.platform]?.name || 'Projection Stream'),
-          protocol
-        }]
-      };
-
-	      const resp = await window.BSPDesktop.startStream(payload).catch(() => ({ ok: false, error: 'Failed to start stream backend' }));
-	      _pgmStreamState.starting = false;
-	      if (!resp || !resp.ok) {
-	        pgmStreamStopAudioPump();
-	        _pgmStreamState.running = false;
-	        _pgmStreamState.status = 'error';
-	        _pgmStreamState.lastError = String(resp?.error || 'Failed to start stream');
-        pgmStreamRenderState();
-        showToast(`Streaming failed: ${_pgmStreamState.lastError}`);
-        return;
-      }
-      _pgmStreamState.running = true;
-      _pgmStreamState.status = 'starting';
-      syncEmbeddedProgramDisplay();
-      pgmStreamRenderState();
-      showToast(t('stream_starting_projection'));
-    }
-
-    function pgmStreamHandleStatusEvent(status) {
-      const st = status || {};
-      const wasRunning = _pgmStreamState.running;
-      _pgmStreamState.running = !!st.running && (st.status === 'starting' || st.status === 'live' || st.status === 'stopping');
-      if (wasRunning !== _pgmStreamState.running) syncEmbeddedProgramDisplay();
-      _pgmStreamState.status = String(st.status || (_pgmStreamState.running ? 'live' : 'idle'));
-      if (st.ffmpegPath) {
-        _pgmStreamState.encoderReady = true;
-        _pgmStreamState.encoderPath = String(st.ffmpegPath || '');
-      }
-      if (st.ffmpegAvailable === false || st.platformSupported === false) {
-        _pgmStreamState.encoderReady = false;
-      }
-      if (st.status === 'error' && st.lastError) {
-        _pgmStreamState.lastError = String(st.lastError);
-      } else if (st.status === 'idle') {
-        _pgmStreamState.lastError = '';
-      }
-	      if (st.status !== 'starting') {
-	        _pgmStreamState.starting = false;
-	      }
-	      if (!_pgmStreamState.running && st.status !== 'starting') {
-	        pgmStreamStopAudioPump();
-	      }
-	      pgmStreamRenderState();
-	    }
-
-    async function initProjectionStreamingExtras() {
-      pgmStreamLoadConfig();
-      pgmStreamRenderState();
-      await pgmStreamCheckReadiness();
-      if (window.BSPDesktop && typeof window.BSPDesktop.onStreamStatus === 'function') {
-        window.BSPDesktop.onStreamStatus((st) => {
-          pgmStreamHandleStatusEvent(st);
-        });
-      }
-      if (window.BSPDesktop && typeof window.BSPDesktop.getStreamStatus === 'function') {
-        const st = await window.BSPDesktop.getStreamStatus().catch(() => null);
-        if (st && st.ok) pgmStreamHandleStatusEvent(st);
-      }
-    }
-
 
     function requestStandaloneOutputFullscreen() {
       if (hasDesktopOutputBridge()) {
@@ -2422,25 +1559,6 @@
       } catch (e) {}
     }
 
-    async function refreshCameraDevices() {
-      const select = document.getElementById('camera-select');
-      if (!select) return;
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const cameras = devices.filter(d => d.kind === 'videoinput');
-        if (!cameras.length) {
-          select.innerHTML = '<option value="">No camera detected</option>';
-          return;
-        }
-        const prev = select.value;
-        select.innerHTML = cameras.map((cam, idx) =>
-          `<option value="${cam.deviceId}">${esc(_sanitizeSourceDisplayLabel(cam.label, `Camera ${idx + 1}`))}</option>`
-        ).join('');
-        if (cameras.some(cam => cam.deviceId === prev)) select.value = prev;
-      } catch (err) {
-        select.innerHTML = '<option value="">Camera access unavailable</option>';
-      }
-    }
 
 
     function stopCameraPreview() {
@@ -2460,23 +1578,13 @@
 
     function initStandaloneTools() {
       initEmbeddedProgramDisplay();
-      initProjectionStreamingExtras().catch(() => {});
       syncLyricsOutputTypeButtons();
       initStreamFeedControls();
       refreshOutputScreenList().catch(() => {});
-      refreshPgmOutputDevices().catch(() => {});
       if (hasDesktopOutputBridge() && typeof window.BSPDesktop.onOutputClosed === 'function') {
         window.BSPDesktop.onOutputClosed(() => {
           lyricsMonitorOutputOpen = false;
           setOutputLiveState(false);
-        });
-      }
-      refreshCameraDevices().catch(() => {});
-      if (navigator.mediaDevices && typeof navigator.mediaDevices.addEventListener === 'function') {
-        navigator.mediaDevices.addEventListener('devicechange', () => {
-          refreshCameraDevices().catch(() => {});
-          refreshPgmOutputDevices().catch(() => {});
-          refreshOutputScreenList().catch(() => {});
         });
       }
       window.addEventListener('message', (event) => {
