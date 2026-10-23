@@ -221,6 +221,14 @@
       previewDisplaysReady.delete(frameId);
       frame.addEventListener('load', () => {
         previewDisplaysReady.add(frameId);
+        // The Overlays preview sits over a program feed, so the page itself is see-through
+        if (frameId === 'overlay-preview-frame') {
+          try {
+            const doc = frame.contentDocument;
+            doc.documentElement.style.background = 'transparent';
+            doc.body.style.background = 'transparent';
+          } catch (error) { /* cross-origin: keep the default */ }
+        }
         scalePreviewDisplay(shellId, frameId);
         syncPreviewMonitor();
       });
@@ -578,6 +586,7 @@
     .name-role-overlay-logo { display: block; width: var(--name-role-logo-size,128px); height: var(--name-role-logo-size,128px); max-width: min(24vw,320px); max-height: min(28vh,320px); object-fit: contain; flex: 0 0 auto; }
     #name-role-overlay .name-role-overlay-logo { filter: brightness(0) invert(1); }
     #name-role-overlay.logo-black .name-role-overlay-logo { filter: brightness(0); }
+    #name-role-overlay.logo-off .name-role-overlay-logo { display: none; }
     .name-role-overlay-logo[hidden] { display: none; }
     .name-role-overlay-content { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; }
     .name-role-overlay-copy { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 0.08em; }
@@ -1283,7 +1292,7 @@
         const lightBackground = primaryLuminance >= 0.72;
         const foregroundColor = lightBackground ? '#101216' : '#ffffff';
         const logo = typeof (data && data.logo) === 'string' && data.logo.startsWith('data:image/') ? data.logo : '';
-        const logoColor = data && data.logoColor === 'black' ? 'black' : 'white';
+        const logoColor = data && data.logoColor === 'black' ? 'black' : (data && data.logoColor === 'off' ? 'off' : 'white');
         const nameSize = Math.max(24, Math.min(160, Number(data && data.nameSize) || 56));
         const roleSize = Math.max(12, Math.min(72, Number(data && data.roleSize) || 24));
         const logoSize = Math.max(24, Math.min(320, Number(data && data.logoSize) || 128));
@@ -1305,6 +1314,7 @@
         overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
         overlay.classList.add('style-' + layout, 'theme-' + theme, 'motion-' + animation);
         overlay.classList.toggle('logo-black', logoColor === 'black');
+        overlay.classList.toggle('logo-off', logoColor === 'off');
         overlay.classList.toggle('is-light-background', lightBackground);
         overlay.style.setProperty('--name-role-primary', primaryColor);
         overlay.style.setProperty('--name-role-accent', accentColor);

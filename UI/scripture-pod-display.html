@@ -1272,7 +1272,7 @@
       const lightBackground = primaryLuminance >= 0.72;
       const foregroundColor = lightBackground ? '#101216' : '#ffffff';
       const logo = typeof data?.logo === 'string' && data.logo.startsWith('data:image/') ? data.logo : '';
-      const logoColor = data?.logoColor === 'black' ? 'black' : 'white';
+      const logoColor = data?.logoColor === 'black' ? 'black' : (data?.logoColor === 'off' ? 'off' : 'white');
       const nameSize = Math.max(24, Math.min(160, Number(data?.nameSize) || 56));
       const roleSize = Math.max(12, Math.min(72, Number(data?.roleSize) || 24));
       const logoSize = Math.max(24, Math.min(320, Number(data?.logoSize) || 128));
@@ -1294,6 +1294,7 @@
       overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
       overlay.classList.add(`style-${layout}`, `theme-${theme}`, `motion-${animation}`);
       overlay.classList.toggle('logo-black', logoColor === 'black');
+      overlay.classList.toggle('logo-off', logoColor === 'off');
       overlay.classList.toggle('is-light-background', lightBackground);
       overlay.style.setProperty('--name-role-primary', primaryColor);
       overlay.style.setProperty('--name-role-accent', accentColor);

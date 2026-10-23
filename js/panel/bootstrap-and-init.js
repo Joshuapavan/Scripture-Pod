@@ -766,7 +766,7 @@
       setLowerThirdSettingsPanelCollapsed('social-engagement-overlay-panel', ui.socialEngagementOverlayCollapsed === true, { persist: false });
       if (overlayEnabledButton) {
         overlayEnabledButton.setAttribute('aria-pressed', overlayEnabled ? 'true' : 'false');
-        overlayEnabledButton.textContent = overlayEnabled ? 'Hide Lower Third' : 'Show Lower Third';
+        overlayEnabledButton.textContent = overlayEnabled ? 'Hide from air' : 'Show on air';
         overlayEnabledButton.classList.toggle('active', overlayEnabled);
       }
       if (overlayDesignInput && overlayAnimationInput) {
@@ -778,6 +778,8 @@
         overlayDesignInput.value = Array.from(overlayDesignInput.options).some((option) => option.value === design) ? design : 'classic-gms';
         overlayAnimationInput.value = currentStyle?.[3] || previousStyle?.[2] || 'rise';
         renderLtDesignPicker();
+      renderSavedNames();
+      syncNameRoleOverlayLogoButtons();
       }
       const overlayTheme = String(overlayDesignInput?.value || 'classic-gms').split('-')[1] || 'gms';
       const defaultPrimaryColors = {
@@ -806,7 +808,7 @@
       if (overlayLike) overlayLike.checked = ui.nameRoleOverlayLike !== false;
       if (overlayShare) overlayShare.checked = ui.nameRoleOverlayShare !== false;
       if (overlaySubscribe) overlaySubscribe.checked = ui.nameRoleOverlaySubscribe !== false;
-      if (overlayLogoColorInput) overlayLogoColorInput.value = ui.nameRoleOverlayLogoColor === 'black' ? 'black' : 'white';
+      if (overlayLogoColorInput) overlayLogoColorInput.value = ['black', 'off'].includes(ui.nameRoleOverlayLogoColor) ? ui.nameRoleOverlayLogoColor : 'white';
       if (socialAccentInput && /^#[0-9a-f]{6}$/i.test(ui.socialEngagementOverlayAccentColor || '')) {
         socialAccentInput.value = ui.socialEngagementOverlayAccentColor;
       }
@@ -826,7 +828,7 @@
       if (socialEnabledButton) {
         const socialEnabled = ui.socialEngagementOverlayEnabled === true;
         socialEnabledButton.setAttribute('aria-pressed', socialEnabled ? 'true' : 'false');
-        socialEnabledButton.textContent = socialEnabled ? 'Hide Lower Third' : 'Show Lower Third';
+        socialEnabledButton.textContent = socialEnabled ? 'Hide from air' : 'Show on air';
         socialEnabledButton.classList.toggle('active', socialEnabled);
       }
       if (overlayLogoPreview) {
@@ -4792,6 +4794,7 @@
         if (results.some(Boolean)) refreshAfterBibleLoad();
       });
       setInterval(unloadIdleBibles, 60000);
+      setTimeout(syncBibleSearchDb, 3000);
       updateFirstRunSetupVisibility();
       if (typeof refreshLocalServerInfo === 'function') {
         refreshLocalServerInfo().then(() => {

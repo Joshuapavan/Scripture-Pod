@@ -52,6 +52,12 @@
     // Overlays tab: the list picks which overlay's settings and preview show.
     const OVERLAY_TITLES = { 'name-role': 'Name & Role', social: 'Social engagement' };
 
+    // "Scripture lower third" follows the Bible workspace: open it in Lower third mode
+    function openScriptureLowerThird() {
+      setSidebarTab('bible');
+      if (typeof setRatio === 'function') setRatio('16-9');
+    }
+
     function selectOverlayPanel(which) {
       const overlay = OVERLAY_TITLES[which] ? which : 'name-role';
       document.body.dataset.overlay = overlay;

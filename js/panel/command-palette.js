@@ -2,6 +2,7 @@
     // and common actions. Enter opens the result (a passage is cued, not sent
     // live — Space does that); arrows move; Esc closes.
     let commandPaletteItems = [];
+    let paletteKeywordCache = { key: '', hits: null };
     let commandPaletteIndex = 0;
 
     function isCommandPaletteOpen() {
@@ -34,6 +35,15 @@
     function openPassageFromPalette(query) {
       if (sidebarTab !== 'bible') setSidebarTab('bible');
       if (!activeBibleVersion || !bibles[activeBibleVersion]) return;
+      // The passage opens in its own book; leftover sidebar search text would
+      // keep the library showing search results instead
+      const sidebarSearch = document.getElementById('song-search');
+      if (sidebarSearch && sidebarSearch.value) {
+        sidebarSearch.value = '';
+        const mirror = document.getElementById('nav-mirror-search');
+        if (mirror) mirror.value = '';
+        setSearchValueForTab('bible', '');
+      }
       let q = normalizeSearchText(query).trim();
       const spaceVerse = q.match(/^([\p{L}1-3 ]+\s+\d+)\s+(\d+)$/u);
       if (spaceVerse) q = `${spaceVerse[1]}:${spaceVerse[2]}`;
@@ -74,6 +84,24 @@
       ];
     }
 
+    // Passage hits for the typed words. With the SQLite index they arrive a
+    // moment later and the list is redrawn; otherwise they are found at once.
+    function getPaletteKeywordHits(q, raw) {
+      const key = `${activeBibleVersion}\n${q}`;
+      if (!bibleSearchDbAvailable() || !bibleSearchDbReady.has(activeBibleVersion)) {
+        return scanBibleSearchIndex(activeBibleVersion, searchText => searchText.includes(q), 6);
+      }
+      if (paletteKeywordCache.key === key && paletteKeywordCache.hits) return paletteKeywordCache.hits;
+      paletteKeywordCache = { key, hits: null };
+      findBibleKeywordMatchesInDb(q, { versionId: activeBibleVersion, maxResults: 6 }).then((hits) => {
+        const input = document.getElementById('command-palette-input');
+        if (!input || normalizeSearchText(input.value).trim() !== q || paletteKeywordCache.key !== key) return;
+        paletteKeywordCache = { key, hits: hits || scanBibleSearchIndex(activeBibleVersion, searchText => searchText.includes(q), 6) };
+        renderCommandPaletteResults();
+      });
+      return [];
+    }
+
     function buildCommandPaletteGroups(raw) {
       const q = normalizeSearchText(raw).trim();
       const versionCode = activeBibleVersion ? getVersionCode(activeBibleVersion) : '';
@@ -101,9 +129,7 @@
         passages.push({ label: `Go to ${raw.trim()}`, meta: versionCode, run: () => openPassageFromPalette(raw) });
       }
       if (activeBibleVersion && q.length >= 3) {
-        getBibleSearchIndex(activeBibleVersion)
-          .filter(entry => entry.searchText.includes(q))
-          .slice(0, 6)
+        getPaletteKeywordHits(q, raw)
           .forEach((entry) => {
             const ref = `${entry.book} ${entry.chapter}:${entry.verse}`;
             passages.push({ label: ref, detail: entry.text, meta: versionCode, run: () => openPassageFromPalette(ref) });
@@ -219,6 +245,8 @@
       if (!input || input.dataset.bound) return;
       input.dataset.bound = '1';
       input.addEventListener('input', renderCommandPaletteResults);
+      // "psalms 23" + Space becomes "psalms 23:", as in the library search
+      input.addEventListener('keydown', e => handleBibleSpaceToColon(e, renderCommandPaletteResults, true));
       input.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowDown') { e.preventDefault(); setCommandPaletteIndex(commandPaletteIndex + 1); }
         else if (e.key === 'ArrowUp') { e.preventDefault(); setCommandPaletteIndex(commandPaletteIndex - 1); }

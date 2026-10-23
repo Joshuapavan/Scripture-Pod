@@ -162,8 +162,7 @@
       if (typeof isCommandPaletteOpen === 'function' && isCommandPaletteOpen()) return true;
       if (typeof presetPopoverOpen !== 'undefined' && presetPopoverOpen) return true;
       if (typeof outputPopoverOpen !== 'undefined' && outputPopoverOpen) return true;
-      if (typeof annotateMode !== 'undefined' && annotateMode) return true;
-      if (document.querySelector('#dual-version-panel.open, .sl-context-menu[aria-hidden="false"]')) return true;
+      if (document.querySelector('#imports-popover:not([hidden]), .sl-context-menu[aria-hidden="false"]')) return true;
       return [
         ...document.querySelectorAll('.modal-overlay, .sp-overlay, #first-run-setup'),
         document.getElementById('search-autocomplete'),
@@ -298,28 +297,9 @@
           toggleSidebar();
           return;
         }
-        if (!isMod && !e.altKey && !e.shiftKey && keyLower === 'a') {
-          e.preventDefault();
-          if (typeof setAnnotateMode === 'function') {
-            const nextAnnotateState = !(typeof annotateMode !== 'undefined' && annotateMode);
-            setAnnotateMode(nextAnnotateState);
-            if (nextAnnotateState && typeof positionAnnotateToolbar === 'function') positionAnnotateToolbar();
-          }
-          return;
-        }
-        if (!isMod && !e.altKey && !e.shiftKey && keyLower === 'd') {
-          e.preventDefault();
-          const panel = document.getElementById('dual-version-panel');
-          if (panel) {
-            const willOpen = !panel.classList.contains('open');
-            panel.classList.toggle('open', willOpen);
-            if (willOpen && typeof positionDualVersionPanel === 'function') positionDualVersionPanel();
-          }
-          return;
-        }
         if (!isMod && !e.altKey && !e.shiftKey && keyLower === 'i') {
           e.preventDefault();
-          if (typeof triggerImport === 'function') triggerImport();
+          if (typeof toggleImportsPopover === 'function') toggleImportsPopover();
           return;
         }
         if (e.key === 'Tab' && !e.ctrlKey && !e.metaKey && !e.altKey) {

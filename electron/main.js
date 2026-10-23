@@ -6,6 +6,7 @@ const fs = require('fs');
 const http = require('http');
 const { WebSocketServer } = require('ws');
 const { createRelayAccessToken, verifyRelayUpgrade } = require('./relay-security');
+const { createBibleSearch } = require('./bible-search');
 const { listBundledBibleFiles, readBundledBibleFile, readBundledChurchLogo } = require('./bundled-bibles');
 
 let mainWindow = null;
@@ -419,6 +420,13 @@ app.whenReady().then(() => {
     broadcastRelayMessage(message);
     return { ok: true };
   });
+  // Bible search lives in SQLite on disk, behind a worker thread
+  let bibleSearch = null;
+  ipcMain.handle('bsp:bible-search', (_event, request = {}) => {
+    if (!bibleSearch) bibleSearch = createBibleSearch(path.join(app.getPath('userData'), 'bible-search.sqlite'));
+    return bibleSearch.call(String(request.method || ''), request.payload);
+  });
+  app.on('will-quit', () => { if (bibleSearch) bibleSearch.close(); });
   ipcMain.handle('bsp:get-local-server-info', () => getLocalServerInfo());
   ipcMain.handle('bsp:list-bundled-bible-files', () => listBundledBibleFiles(path.join(__dirname, '..')));
   ipcMain.handle('bsp:read-bundled-bible-file', (_event, asset) => readBundledBibleFile(path.join(__dirname, '..'), asset));

@@ -34,6 +34,9 @@ const BSPDesktop = {
   async getLocalServerInfo() {
     return ipcRenderer.invoke('bsp:get-local-server-info');
   },
+  async bibleSearch(method, payload) {
+    return ipcRenderer.invoke('bsp:bible-search', { method, payload });
+  },
   async listBundledBibleFiles() {
     return ipcRenderer.invoke('bsp:list-bundled-bible-files');
   },

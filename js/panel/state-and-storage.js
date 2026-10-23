@@ -46,7 +46,7 @@
       // Never write a placeholder for a Bible that is not loaded
       if (storeName === STORE_BIBLES && value && value.unloaded) return Promise.resolve(false);
       if (storeName === STORE_SONGS) queueRelayStatePush({ includeSongs: true });
-      if (storeName === STORE_BIBLES) queueRelayStatePush({ includeBibles: true });
+      if (storeName === STORE_BIBLES) { queueRelayStatePush({ includeBibles: true }); queueBibleSearchDbIndex(value); }
       return openDb().then(db => new Promise((resolve, reject) => {
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
@@ -58,6 +58,7 @@
     }
 
     function idbDelete(storeName, key) {
+      if (storeName === STORE_BIBLES) removeBibleFromSearchDb(key);
       return openDb().then(db => new Promise((resolve, reject) => {
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
@@ -77,7 +78,7 @@
         .filter(item => !(storeName === STORE_BIBLES && item && item.unloaded));
       if (!items.length) return Promise.resolve(true);
       if (storeName === STORE_SONGS) queueRelayStatePush({ includeSongs: true });
-      if (storeName === STORE_BIBLES) queueRelayStatePush({ includeBibles: true });
+      if (storeName === STORE_BIBLES) { queueRelayStatePush({ includeBibles: true }); items.forEach(queueBibleSearchDbIndex); }
       return openDb().then(db => new Promise((resolve, reject) => {
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
@@ -205,7 +206,7 @@
 
     function dbClearStore(storeName) {
       if (storeName === STORE_SONGS) queueRelayStatePush({ includeSongs: true });
-      if (storeName === STORE_BIBLES) queueRelayStatePush({ includeBibles: true });
+      if (storeName === STORE_BIBLES) { queueRelayStatePush({ includeBibles: true }); clearBibleSearchDb(); }
       return openDb().then(db => new Promise((resolve, reject) => {
         const tx = db.transaction(storeName, 'readwrite');
         const store = tx.objectStore(storeName);
@@ -239,6 +240,12 @@
       return idbPut(STORE_STATE, payload).catch(() => false);
     }
 
+    // The Highlight tool is gone. Text saved with its [hl=#rrggbb] tags still
+    // shows as plain text; the name is kept for the callers that format output.
+    function convertHighlightsToHtml(text) {
+      return String(text || '').replace(/\[hl=#[0-9a-fA-F]{6}\]|\[\/hl\]/g, '');
+    }
+
     // ===== UTILITIES / SEARCH =====
     function normalizeSearchText(value) {
       return String(value || '')
@@ -267,34 +274,67 @@
       else bibleSearchCache.clear();
     }
 
+    // Compact index: one normalized string per verse plus where it came from.
+    // Verse text, book and chapter are read back from the chapter only for the
+    // few rows a search actually returns, so the index holds no second copy
+    // of the text. It is dropped a while after the last search.
+    const BIBLE_INDEX_IDLE_MS = 30000;
+    let bibleIndexReleaseTimer = null;
+
     function buildBibleSearchIndex(versionId) {
       const list = (versionId && bibles[versionId]) ? bibles[versionId] : [];
-      const entries = [];
+      const texts = [];
+      const chapters = [];
+      const lines = [];
       list.forEach((item, chapterIndex) => {
         const extracted = extractBookAndChapter(item);
         const book = item?.book || extracted.book || '';
         const chap = item?.chapter || extracted.chap || '';
-        const lines = String(item?.content || '').split('\n');
-        lines.forEach((line) => {
+        String(item?.content || '').split('\n').forEach((line, lineIndex) => {
           const match = line.match(/^(\d+)\s+(.+)/);
           if (!match) return;
-          const verse = match[1];
-          const text = match[2];
-          const searchText = normalizeSearchText(`${book} ${chap}:${verse} ${text}`);
-          entries.push({ chapterIndex, book, chapter: chap, verse, text, searchText });
+          texts.push(normalizeSearchText(`${book} ${chap}:${match[1]} ${match[2]}`));
+          chapters.push(chapterIndex);
+          lines.push(lineIndex);
         });
       });
-      return { entries, size: list.length };
+      return { texts, chapters: Int32Array.from(chapters), lines: Int32Array.from(lines), size: list.length };
+    }
+
+    function materializeBibleSearchEntry(versionId, index, i) {
+      const item = bibles[versionId][index.chapters[i]];
+      const extracted = extractBookAndChapter(item);
+      const match = String(item?.content || '').split('\n')[index.lines[i]].match(/^(\d+)\s+(.+)/);
+      return {
+        chapterIndex: index.chapters[i],
+        book: item?.book || extracted.book || '',
+        chapter: item?.chapter || extracted.chap || '',
+        verse: match[1],
+        text: match[2],
+        searchText: index.texts[i]
+      };
     }
 
     function getBibleSearchIndex(versionId) {
       const list = (versionId && bibles[versionId]) ? bibles[versionId] : [];
       const cached = bibleSearchCache.get(versionId);
-      if (cached && cached.size === list.length) return cached.entries;
+      clearTimeout(bibleIndexReleaseTimer);
+      bibleIndexReleaseTimer = setTimeout(() => clearBibleSearchCache(), BIBLE_INDEX_IDLE_MS);
+      if (cached && cached.size === list.length) return cached;
       const built = buildBibleSearchIndex(versionId);
       bibleSearchCache.clear();
       bibleSearchCache.set(versionId, built);
-      return built.entries;
+      return built;
+    }
+
+    // First `max` verses whose row passes `accept(searchText, chapterIndex)`.
+    function scanBibleSearchIndex(versionId, accept, max) {
+      const index = getBibleSearchIndex(versionId);
+      const out = [];
+      for (let i = 0; i < index.texts.length && out.length < max; i++) {
+        if (accept(index.texts[i], index.chapters[i])) out.push(materializeBibleSearchEntry(versionId, index, i));
+      }
+      return out;
     }
 
     function parseBibleReferenceQuery(raw) {
@@ -398,15 +438,17 @@
       if (!versionId || !bibles[versionId]) return [];
       const selectedBook = opts.book || '';
       const bookKey = normalizeBookName(selectedBook);
-      const entries = getBibleSearchIndex(versionId);
-      const results = [];
-      for (const entry of entries) {
-        if (bookKey && normalizeBookName(entry.book) !== bookKey) continue;
-        if (!tokens.every(t => entry.searchText.includes(t))) continue;
-        results.push(entry);
-        if (results.length >= maxResults) break;
-      }
-      return results;
+      // Book filter: decide once per chapter, not once per verse
+      const bookOk = new Map();
+      const chapterInBook = (chapterIndex) => {
+        if (!bookOk.has(chapterIndex)) {
+          const item = bibles[versionId][chapterIndex];
+          bookOk.set(chapterIndex, normalizeBookName(item?.book || extractBookAndChapter(item).book || '') === bookKey);
+        }
+        return bookOk.get(chapterIndex);
+      };
+      return scanBibleSearchIndex(versionId, (searchText, chapterIndex) =>
+        (!bookKey || chapterInBook(chapterIndex)) && tokens.every(t => searchText.includes(t)), maxResults);
     }
 
     function slugify(value) {

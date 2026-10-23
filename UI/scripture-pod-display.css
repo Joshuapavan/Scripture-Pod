@@ -1290,3 +1290,4 @@ html.has-key-bg body.display-full-mode {
     backface-visibility: hidden;
     perspective: 1000px;
 }
+#name-role-overlay.logo-off .name-role-overlay-logo { display: none; }

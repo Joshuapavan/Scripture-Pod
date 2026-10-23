@@ -29,7 +29,7 @@
       <span class="topbar-pill-state" id="topbar-stream-state">Offline</span>
     </div>
     <button type="button" class="topbar-btn" id="btn-topbar-outputs" onclick="showOutputsCard()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg><span>Outputs</span></button>
-    <button class="topbar-btn topbar-icon-btn" aria-label="Settings" id="btn-settings" onclick="openModal('settingsModal')" title="Settings" data-i18n-title="common_settings"><svg width="16" height="16" viewBox="1 1 22 22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="panel-inline-style-16"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
+    <button class="topbar-btn topbar-icon-btn" aria-label="Settings" id="btn-settings" onclick="openModal('settingsModal')" title="Settings" data-i18n-title="common_settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></svg></button>
   </div>
 
 
@@ -66,7 +66,7 @@
       <div class="library-label" id="library-label-search">Go to passage</div>
       <div class="search-container">
         <input type="text" id="song-search" placeholder="Search lyrics..." data-i18n-placeholder="ui_search_songs" oninput="handleSearch();_updateAutocomplete()" autocomplete="off">
-        <button type="button" id="bible-ref-pin-current" class="bible-search-tool-btn" title="Pin current reference" data-i18n-title="ui_pin_current_reference" aria-label="Pin current reference" data-i18n-aria-label="ui_pin_current_reference"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+        <button type="button" id="bible-ref-pin-current" class="bible-search-tool-btn" title="Pin current reference" data-i18n-title="ui_pin_current_reference" aria-label="Pin current reference" data-i18n-aria-label="ui_pin_current_reference"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg></button>
         <button type="button" id="bible-ref-history-btn" class="bible-search-tool-btn" title="Pinned and recent references" data-i18n-title="ui_pinned_recent_references" aria-label="Pinned and recent references" data-i18n-aria-label="ui_pinned_recent_references"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></button>
         <button type="button" class="search-palette-hint" onclick="openCommandPalette()" title="Search everything (⌘K / Ctrl+K)">⌘K</button>
         <div id="search-autocomplete"></div>
@@ -77,6 +77,7 @@
         <select id="bible-book-select" class="nav-input" onchange="handleBookSelect()">
           <option value="" data-i18n="ui_select_book">Select Book...</option>
         </select>
+        <span id="bible-chapter-count" class="bible-chapter-count"></span>
         <select id="bible-chap-select" class="nav-input"  onchange="handleChapterSelect()">
           <option value="" data-i18n="ui_chapter_short">Ch...</option>
         </select>
@@ -113,25 +114,20 @@
           <button class="t-btn" id="mode-text" onclick="setEditorMode('text')"><span data-i18n="ui_mode_text">Text</span></button>
           <button class="t-btn active" id="mode-btn" onclick="setEditorMode('btn')"><span data-i18n="ui_mode_buttons">Buttons</span></button>
         </div>
-        <button class="btn toolbar-icon-btn" id="btn-import" onclick="triggerImport()" title="Import" data-i18n-title="common_import"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="panel-inline-style-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
-        <button class="btn toolbar-icon-btn" id="btn-preset"  onclick="togglePresetPopover()" title="Animation" data-i18n-title="ui_animation"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2L12 3Z"/><path d="m19 14 1.1 3.1L23 18l-2.9 1-1.1 3-1-3-3-1 3-1 1-3Z"/></svg></button>
-        <div class="annotate-wrap">
-          <button class="btn toolbar-icon-btn" id="btn-annotate" title="Annotate" data-i18n-title="ui_annotate">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="panel-inline-style-3">
-              <path d="M12 20h9"/>
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
-            </svg><span class="toolbar-btn-label">Highlight</span>
+        
+        
+        <div class="imports-wrap">
+          <button class="btn toolbar-icon-btn" id="btn-imports" type="button" aria-haspopup="true" aria-expanded="false" onclick="toggleImportsPopover(event)" title="Import" data-i18n-title="common_import">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="toolbar-btn-label">Imports</span>
           </button>
-          <div class="bible-tool-wrap">
-          <button class="btn toolbar-icon-btn" id="btn-bible-tool" title="Multi Bible version" data-i18n-title="ui_dual_bible_versions" onclick="toggleBibleToolPanel(event)">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="panel-inline-style-4">
-                <path d="M12 7v14"/>
-                <path d="M3 5.5A2.5 2.5 0 0 1 5.5 3H12v18H5.5A2.5 2.5 0 0 1 3 18.5z"/>
-                <path d="M21 5.5A2.5 2.5 0 0 0 18.5 3H12v18h6.5a2.5 2.5 0 0 0 2.5-2.5z"/>
-                <path d="M6 7h3M6 11h3M15 7h3M15 11h3"/>
-              </svg>
-            </button>
-            <div id="dual-version-panel" class="bible-tool-panel">
+          <div id="imports-popover" class="imports-popover" role="menu" hidden>
+            <button type="button" role="menuitem" onclick="runImportAction('files')"><strong>Bibles &amp; lyrics</strong><span>Files from your computer (XML, JSON, text)</span></button>
+            <button type="button" role="menuitem" onclick="runImportAction('bundled')"><strong>Bundled Bibles</strong><span>Add the Bibles that ship with the app</span></button>
+            <button type="button" role="menuitem" onclick="runImportAction('style')"><strong>Style template</strong><span>Look presets (.fstemplate, .json)</span></button>
+            <button type="button" role="menuitem" onclick="runImportAction('backup')"><strong>Backup</strong><span>Restore everything from a backup file</span></button>
+          </div>
+        </div>
+        <div id="dual-version-panel" class="bible-tool-panel" hidden aria-hidden="true">
               <label class="mini-toggle">
                 <input type="checkbox" id="dual-version-mode-toggle" onchange="handleDualVersionModeToggle()">
                 <span data-i18n="ui_dual_bible_versions">Bible Versions (up to 3)</span>
@@ -162,65 +158,10 @@
                   </div>
                 </div>
               </div>
-              <div class="settings-field" id="panel-inline-style-8">
-                <div class="slider-header">
-                  <label class="settings-label" id="panel-inline-style-9">Spacing Between Versions</label>
-                  <span class="slider-value" id="dual-version-gap-value">14px</span>
-                </div>
-                <input type="range" id="dual-version-gap" min="0" max="48" step="1" value="14" class="settings-slider" oninput="updateSliderValue(this,'px');saveDualVersionGap();onAnyControlChange()">
-              </div>
+              
             </div>
-          </div>
-          <div id="annotate-toolbar">
-            <div id="annotate-workspace-label" class="workspace-state-chip">Bible</div>
-            <div id="annotate-color-picker" class="annotate-color-picker" title="Custom Color" data-i18n-title="common_custom_color" draggable="false">
-              <span class="picker-ring"></span>
-              <span class="picker-fill" id="annotate-picker-fill"></span>
-            </div>
-            <input type="color" id="annotate-color-input">
-            <input type="text" id="annotate-color-hex" class="annotate-hex-input" placeholder="#RRGGBB" maxlength="7">
-            <div class="annotate-swatch annotate-placeholder" data-color=""></div>
-            <div class="annotate-swatch annotate-placeholder" data-color=""></div>
-            <div class="annotate-swatch annotate-color" data-color="#9a6b00" id="panel-inline-style-10"></div>
-            <div class="annotate-swatch annotate-color" data-color="#b74141" id="panel-inline-style-11"></div>
-            <div class="annotate-swatch annotate-color" data-color="#1f7a8c" id="panel-inline-style-12"></div>
-            <div class="annotate-swatch annotate-color" data-color="#b5ead7" id="panel-inline-style-13"></div>
-            <div class="annotate-swatch annotate-color" data-color="#caffbf" id="panel-inline-style-14"></div>
-            <div class="annotate-swatch annotate-color" data-color="#ffd6a5" id="panel-inline-style-15"></div>
-            <button id="annotate-clear-current" class="btn annotate-clear-btn" title="Clear verse highlight" data-i18n-title="annotate_clear_current" aria-label="Clear verse highlight" data-i18n-aria-label="annotate_clear_current">✕</button>
-            <button id="annotate-clear-all" class="btn annotate-clear-btn" title="Clear all highlights" data-i18n-title="annotate_clear_all" aria-label="Clear all highlights" data-i18n-aria-label="annotate_clear_all">✖︎✖︎</button>
-          </div>
-        </div>
-        
-        <script src="../js/panel/annotate-tools.js"></script>
       </div>
-      <div id="preset-popover" class="preset-popover">
-        <div id="panel-inline-style-17">
-          <div id="animation-workspace-label" class="workspace-state-chip">Bible</div>
-        </div>
-        <div class="settings-field">
-          <label class="settings-label" id="panel-inline-style-18" data-i18n="common_transition">Transition</label>
-          <select id="song-transition-type" class="settings-select" onchange="onAnyControlChange()">
-            <option value="fade" selected data-i18n="transition_fade_easy_ease">Fade (Easy Ease)</option>
-            <option value="zoom" data-i18n="transition_zoom_easy_ease">Zoom (Easy Ease)</option>
-            <option value="type" data-i18n="transition_type_on_easy_ease">Type-On (Easy Ease)</option>
-            <option value="zoom-type" data-i18n="transition_zoom_type_on_easy_ease">Zoom + Type-On (Easy Ease)</option>
-          </select>
-        </div>
-        <div class="slider-container">
-          <div class="slider-header">
-            <label class="settings-label" data-i18n="common_duration">Duration</label>
-            <span class="slider-value" id="song-transition-duration-value">1.0s</span>
-          </div>
-          <input type="range" id="song-transition-duration" min="0.2" max="5" step="0.1" value="0.8" class="settings-slider" oninput="updateSliderValue(this,'s');onAnyControlChange()">
-        </div>
-        <div id="panel-inline-style-19">
-          <label class="mini-toggle" id="panel-inline-style-20">
-            <span data-i18n="ui_animate_background">Animate Background</span>
-            <input type="checkbox" id="animate-bg-transitions" onchange="onAnyControlChange()">
-          </label>
-        </div>
-      </div>
+      
       <div id="output-popover" class="preset-popover output-popover">
         <h4 data-i18n="output_screens">Output Screens</h4>
         <div id="output-screen-list-popover" class="output-screen-list-popover">
@@ -240,53 +181,125 @@
       <div id="main-workspace">
         <div id="focused-main-panel" aria-hidden="true"></div>
         <section id="overlays-workspace" aria-labelledby="overlays-workspace-title">
-          <nav class="overlays-list" aria-label="Overlays">
-            <div class="library-label">Overlays</div>
-            <button type="button" class="overlay-list-item" data-overlay="name-role" aria-pressed="true" onclick="selectOverlayPanel('name-role')">
-              <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
-              <span class="overlay-list-copy"><span class="overlay-list-name">Name &amp; Role</span><span class="overlay-list-state"><span class="is-ready">Ready</span><span class="is-on-air">On air</span></span></span>
-            </button>
-            <button type="button" class="overlay-list-item" data-overlay="social" aria-pressed="false" onclick="selectOverlayPanel('social')">
-              <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 10l5-8c1.5 0 2.5 1.4 2 2.8L13 9h6a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 18 20H7"/></svg></span>
-              <span class="overlay-list-copy"><span class="overlay-list-name">Social engagement</span><span class="overlay-list-state"><span class="is-ready">Like · Share · Subscribe</span><span class="is-on-air">On air</span></span></span>
-            </button>
-          </nav>
-          <div class="overlays-stage">
-            <div class="overlays-stage-head">
-              <div class="overlays-workspace-head">
-                <span class="overlays-workspace-eyebrow">Overlay</span>
-                <h1 id="overlays-workspace-title">Name &amp; Role</h1>
-              </div>
-              <span class="overlays-stage-tag is-preview">Preview</span>
-              <span class="overlays-stage-tag is-on-air">On air</span>
-            </div>
-            <div id="overlay-preview-shell" class="sp-monitor-shell">
-              <iframe id="overlay-preview-frame" title="Overlay preview" tabindex="-1" allowtransparency="true"></iframe>
-            </div>
-            <section class="overlays-design" aria-labelledby="overlays-design-title">
-              <h2 id="overlays-design-title">Design</h2>
-              <div id="lt-design-picker" class="lt-design-picker"></div>
-            </section>
+      <nav class="overlays-list" aria-label="Overlays">
+        <div class="library-label">Overlays</div>
+        <button type="button" class="overlay-list-item" data-overlay="name-role" aria-pressed="true" onclick="selectOverlayPanel('name-role')">
+          <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+          <span class="overlay-list-copy"><span class="overlay-list-name">Name &amp; Role</span><span class="overlay-list-state"><span class="is-ready">Ready</span><span class="is-on-air">On air</span></span></span>
+          <span class="overlay-list-dot" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="overlay-list-item" data-overlay="social" aria-pressed="false" onclick="selectOverlayPanel('social')">
+          <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 10l5-8c1.5 0 2.5 1.4 2 2.8L13 9h6a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 18 20H7"/></svg></span>
+          <span class="overlay-list-copy"><span class="overlay-list-name">Social engagement</span><span class="overlay-list-state"><span class="is-ready">Like · Share · Subscribe</span><span class="is-on-air">On air</span></span></span>
+          <span class="overlay-list-dot" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="overlay-list-item" data-overlay="scripture" aria-pressed="false" onclick="openScriptureLowerThird()">
+          <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg></span>
+          <span class="overlay-list-copy"><span class="overlay-list-name">Scripture lower third</span><span class="overlay-list-state"><span class="is-ready">Follows the Bible workspace</span></span></span>
+        </button>
+        <div class="library-label overlays-saved-label">Saved names</div>
+        <div id="saved-names-list" class="saved-names-list"></div>
+      </nav>
+      <div class="overlays-stage">
+        <div class="overlays-stage-head">
+          <div class="overlays-workspace-head">
+            <span class="overlays-workspace-eyebrow">Overlay</span>
+            <h1 id="overlays-workspace-title">Name &amp; Role</h1>
           </div>
-          <div class="overlays-settings">
-            <div id="name-role-overlay-panel" class="name-role-overlay-panel">
-              <div class="name-role-overlay-heading">
-                <strong>Name &amp; Role</strong>
-                <div class="name-role-overlay-actions">
-                  <button type="button" class="name-role-overlay-example-btn" onclick="previewNameRoleLowerThirdExample()">Preview Example</button>
-                  <button type="button" class="name-role-overlay-show-btn" id="name-role-overlay-show-btn" aria-pressed="false" onclick="toggleNameRoleOverlay()">Show Lower Third</button>
-                  <button type="button" class="name-role-overlay-collapse-btn" aria-label="Collapse Name &amp; Role settings" aria-expanded="true" aria-controls="name-role-overlay-body" onclick="toggleLowerThirdSettingsPanel('name-role-overlay-panel')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-                </div>
+          <span class="overlays-stage-tag is-preview">Preview</span>
+          <span class="overlays-stage-tag is-on-air">On air</span>
+        </div>
+        <div id="overlay-preview-shell" class="sp-monitor-shell">
+          <span class="overlay-preview-feed">Over program feed</span>
+          <iframe id="overlay-preview-frame" title="Overlay preview" tabindex="-1" allowtransparency="true"></iframe>
+        </div>
+        <section class="overlays-design" aria-labelledby="overlays-design-title">
+          <h2 id="overlays-design-title">Design</h2>
+          <div id="lt-design-picker" class="lt-design-picker"></div>
+        </section>
+      </div>
+      <div class="overlays-settings">
+        <div id="name-role-overlay-panel" class="name-role-overlay-panel">
+          <section class="ov-card" aria-labelledby="ov-text-title">
+            <h2 id="ov-text-title">Text</h2>
+            <div class="ov-field">
+              <label for="name-role-overlay-name">Name</label>
+              <input type="text" id="name-role-overlay-name" maxlength="48" placeholder="Name" onchange="handleNameRoleOverlayChange()">
+            </div>
+            <div class="ov-field">
+              <label for="name-role-overlay-role">Role <span>(optional)</span></label>
+              <input type="text" id="name-role-overlay-role" maxlength="40" placeholder="e.g. Senior Pastor" onchange="handleNameRoleOverlayChange()">
+            </div>
+          </section>
+          <section class="ov-card ov-style" aria-labelledby="ov-style-title">
+            <h2 id="ov-style-title">Style</h2>
+            <label for="name-role-overlay-animation" class="ov-label">Animation</label>
+            <div class="ov-control">
+              <select class="ov-select" id="name-role-overlay-animation" aria-label="Lower third animation" onchange="handleNameRoleOverlayChange()">
+                  <option value="rise">Rise</option>
+                  <option value="slide">Slide</option>
+                  <option value="sweep">Sweep</option>
+                  <option value="zoom">Zoom</option>
+                  <option value="shutter">Shutter</option>
+                  <option value="spring">Spring</option>
+                  <option value="glide">Glide</option>
+                  <option value="blur">Blur</option>
+                  <option value="flip">Flip</option>
+                  <option value="wipe">Wipe</option>
+                  <option value="float">Float</option>
+                  <option value="glow">Glow</option>
+                  <option value="reveal">Reveal</option>
+                  <option value="drop">Drop</option>
+                  <option value="curtain">Curtain</option>
+                  <option value="pop">Pop</option>
+                  <option value="expand">Expand</option>
+                  <option value="bounce">Bounce</option>
+                  <option value="elastic">Elastic</option>
+                  <option value="iris">Iris</option>
+                  <option value="slice">Slice</option>
+                  <option value="swing">Swing</option>
+                  <option value="turn">Turn</option>
+                  <option value="cascade">Cascade</option>
+                  <option value="typewriter">Typewriter</option>
+                  <option value="glitch">Glitch</option>
+                  <option value="flicker">Flicker</option>
+                </select>
+              <button type="button" class="ov-icon-btn" aria-label="Replay animation" title="Replay animation" onclick="previewNameRoleLowerThirdExample()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+            </div>
+            <span class="ov-label">Logo</span>
+            <div class="ov-control">
+              <div class="ov-segmented" role="group" aria-label="Logo color">
+                <button type="button" data-logo-color="white" aria-pressed="true" onclick="setNameRoleOverlayLogoColor('white')">White</button>
+                <button type="button" data-logo-color="black" aria-pressed="false" onclick="setNameRoleOverlayLogoColor('black')">Black</button>
+                <button type="button" data-logo-color="off" aria-pressed="false" onclick="setNameRoleOverlayLogoColor('off')">Off</button>
               </div>
-              <div class="name-role-overlay-body" id="name-role-overlay-body">
-              <div class="name-role-overlay-fields">
-                <input type="text" id="name-role-overlay-name" maxlength="48" placeholder="Name" aria-label="Overlay name" onchange="handleNameRoleOverlayChange()">
-                <input type="text" id="name-role-overlay-role" maxlength="40" placeholder="Role (optional)" aria-label="Overlay role (optional)" onchange="handleNameRoleOverlayChange()">
-              </div>
-              <div class="name-role-overlay-style-row">
-              <section class="name-role-overlay-extra-section">
-                <div class="name-role-overlay-subheading"><strong>LT design</strong></div>
-                <select id="name-role-overlay-design" aria-label="Lower third design" onchange="handleNameRoleOverlayChange()">
+              <button type="button" class="ov-text-btn name-role-overlay-logo-btn" onclick="document.getElementById('name-role-overlay-logo-file').click()" title="Choose church logo" aria-label="Choose church logo">Choose…</button>
+              <input type="file" id="name-role-overlay-logo-file" accept="image/png,image/jpeg,image/webp" hidden onchange="handleNameRoleOverlayLogoChange(this)">
+              <img id="name-role-overlay-logo-preview" alt="Church logo preview" hidden>
+              <button type="button" id="name-role-overlay-logo-remove" onclick="removeNameRoleOverlayLogo()" title="Remove church logo" aria-label="Remove church logo" hidden>×</button>
+            </div>
+            <select id="name-role-overlay-logo-color" aria-label="Logo color" hidden onchange="handleNameRoleOverlayChange()">
+              <option value="white" selected>White logo</option>
+              <option value="black">Black logo</option>
+              <option value="off">No logo</option>
+            </select>
+            <span class="ov-label">Colors</span>
+            <div class="ov-control ov-colors">
+              <label><span class="name-role-overlay-accent-picker" title="Primary color"><input type="color" id="name-role-overlay-primary" value="#90D5FF" aria-label="Primary color" onchange="handleNameRoleOverlayChange()"></span>Primary</label>
+              <label><span class="name-role-overlay-accent-picker" title="Secondary color"><input type="color" id="name-role-overlay-accent" value="#90D5FF" aria-label="Secondary color" onchange="handleNameRoleOverlayChange()"></span>Secondary</label>
+            </div>
+            <span class="ov-label">Size</span>
+            <div class="ov-sizes">
+              <label>Name <span class="ov-number"><input type="number" id="name-role-overlay-name-size" aria-label="Name text size in pixels" min="24" max="160" step="1" value="56" onchange="handleNameRoleOverlayChange()"></span></label>
+              <label>Role <span class="ov-number"><input type="number" id="name-role-overlay-role-size" aria-label="Role text size in pixels" min="12" max="72" step="1" value="24" onchange="handleNameRoleOverlayChange()"></span></label>
+              <label>Logo <span class="ov-number"><input type="number" id="name-role-overlay-logo-size" aria-label="Logo size in pixels" min="24" max="320" step="1" value="128" onchange="handleNameRoleOverlayChange()"></span></label>
+            </div>
+            <label for="name-role-overlay-offset-x" class="ov-label">Horizontal</label>
+            <div class="ov-slider"><input type="range" id="name-role-overlay-offset-x" min="-40" max="40" step="1" value="0" oninput="handleNameRoleOverlayChange(false, true)"><output id="name-role-overlay-offset-x-value">0%</output></div>
+            <label for="name-role-overlay-offset-y" class="ov-label">Vertical</label>
+            <div class="ov-slider"><input type="range" id="name-role-overlay-offset-y" min="-40" max="40" step="1" value="0" oninput="handleNameRoleOverlayChange(false, true)"><output id="name-role-overlay-offset-y-value">0%</output></div>
+          </section>
+          <div hidden><select id="name-role-overlay-design" aria-label="Lower third design" onchange="handleNameRoleOverlayChange()">
                   <optgroup label="Left Title Bar">
                     <option value="classic-legacy">Legacy LT</option>
                     <option value="classic-gms">GMS Lime</option>
@@ -393,83 +406,17 @@
                     <option value="band-pulse">Pulse Bar Band</option>
                     <option value="band-parchment">Parchment Band</option>
                   </optgroup>
-                </select>
-              </section>
-              <section class="name-role-overlay-extra-section">
-                <div class="name-role-overlay-subheading"><strong>Animation</strong></div>
-                <select id="name-role-overlay-animation" aria-label="Lower third animation" onchange="handleNameRoleOverlayChange()">
-                  <option value="rise">Rise</option>
-                  <option value="slide">Slide</option>
-                  <option value="sweep">Sweep</option>
-                  <option value="zoom">Zoom</option>
-                  <option value="shutter">Shutter</option>
-                  <option value="spring">Spring</option>
-                  <option value="glide">Glide</option>
-                  <option value="blur">Blur</option>
-                  <option value="flip">Flip</option>
-                  <option value="wipe">Wipe</option>
-                  <option value="float">Float</option>
-                  <option value="glow">Glow</option>
-                  <option value="reveal">Reveal</option>
-                  <option value="drop">Drop</option>
-                  <option value="curtain">Curtain</option>
-                  <option value="pop">Pop</option>
-                  <option value="expand">Expand</option>
-                  <option value="bounce">Bounce</option>
-                  <option value="elastic">Elastic</option>
-                  <option value="iris">Iris</option>
-                  <option value="slice">Slice</option>
-                  <option value="swing">Swing</option>
-                  <option value="turn">Turn</option>
-                  <option value="cascade">Cascade</option>
-                  <option value="typewriter">Typewriter</option>
-                  <option value="glitch">Glitch</option>
-                  <option value="flicker">Flicker</option>
-                </select>
-              </section>
-              </div>
-              <div class="name-role-overlay-customize">
-                <select id="name-role-overlay-logo-color" aria-label="Logo color" title="Logo color" onchange="handleNameRoleOverlayChange()">
-                  <option value="white" selected>White logo</option>
-                  <option value="black">Black logo</option>
-                </select>
-                <button type="button" class="name-role-overlay-logo-btn" onclick="document.getElementById('name-role-overlay-logo-file').click()" title="Choose church logo" aria-label="Choose church logo">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-                  <span>Logo</span>
-                </button>
-                <input type="file" id="name-role-overlay-logo-file" accept="image/png,image/jpeg,image/webp" hidden onchange="handleNameRoleOverlayLogoChange(this)">
-                <img id="name-role-overlay-logo-preview" alt="Church logo preview" hidden>
-                <button type="button" id="name-role-overlay-logo-remove" onclick="removeNameRoleOverlayLogo()" title="Remove church logo" aria-label="Remove church logo" hidden>×</button>
-              </div>
-              <div class="name-role-overlay-colors">
-                <label><span>Primary</span><span class="name-role-overlay-accent-picker" title="Primary color"><input type="color" id="name-role-overlay-primary" value="#90D5FF" aria-label="Name and role primary color" onchange="handleNameRoleOverlayChange()"></span></label>
-                <label><span>Secondary</span><span class="name-role-overlay-accent-picker" title="Secondary color"><input type="color" id="name-role-overlay-accent" value="#90D5FF" aria-label="Name and role secondary color" onchange="handleNameRoleOverlayChange()"></span></label>
-              </div>
-              <div class="name-role-overlay-sizes">
-                <label>Name <span class="name-role-overlay-pixel-input"><input type="number" id="name-role-overlay-name-size" aria-label="Name text size in pixels" min="24" max="160" step="1" value="56" onchange="handleNameRoleOverlayChange()"><span>px</span></span></label>
-                <label>Role <span class="name-role-overlay-pixel-input"><input type="number" id="name-role-overlay-role-size" aria-label="Role text size in pixels" min="12" max="72" step="1" value="24" onchange="handleNameRoleOverlayChange()"><span>px</span></span></label>
-                <label>Logo <span class="name-role-overlay-pixel-input"><input type="number" id="name-role-overlay-logo-size" aria-label="Logo size in pixels" min="24" max="320" step="1" value="128" onchange="handleNameRoleOverlayChange()"><span>px</span></span></label>
-              </div>
-              <div class="lt-position-controls">
-                <label>Horizontal <input type="range" id="name-role-overlay-offset-x" min="-40" max="40" step="1" value="0" oninput="handleNameRoleOverlayChange(false, true)"><output id="name-role-overlay-offset-x-value">0%</output></label>
-                <label>Vertical <input type="range" id="name-role-overlay-offset-y" min="-40" max="40" step="1" value="0" oninput="handleNameRoleOverlayChange(false, true)"><output id="name-role-overlay-offset-y-value">0%</output></label>
-              </div>
-              </div>
-            </div>
-            <div id="social-engagement-overlay-panel" class="name-role-overlay-panel social-engagement-overlay-panel">
-              <div class="name-role-overlay-heading">
-                <strong>Social Engagement</strong>
-                <div class="name-role-overlay-actions">
-                  <button type="button" class="name-role-overlay-example-btn" onclick="previewSocialEngagementLowerThirdExample()">Preview Example</button>
-                  <button type="button" class="name-role-overlay-show-btn" id="social-engagement-overlay-show-btn" aria-pressed="false" onclick="toggleSocialEngagementOverlay()">Show Lower Third</button>
-                  <button type="button" class="name-role-overlay-collapse-btn" aria-label="Collapse Social Engagement settings" aria-expanded="true" aria-controls="social-engagement-overlay-body" onclick="toggleLowerThirdSettingsPanel('social-engagement-overlay-panel')"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-                </div>
-              </div>
-              <div class="name-role-overlay-body" id="social-engagement-overlay-body">
-              <section class="name-role-overlay-extra-section">
-                <div class="name-role-overlay-subheading">
-                  <strong>Church socials</strong>
-                </div>
+                </select></div>
+          <div class="ov-footer">
+            <button type="button" class="ov-test-btn name-role-overlay-example-btn" onclick="previewNameRoleLowerThirdExample()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>Test</button>
+            <button type="button" class="ov-air-btn name-role-overlay-show-btn" id="name-role-overlay-show-btn" aria-pressed="false" onclick="toggleNameRoleOverlay()">Show on air</button>
+          </div>
+        </div>
+        <div id="social-engagement-overlay-panel" class="name-role-overlay-panel social-engagement-overlay-panel">
+          <section class="ov-card" aria-labelledby="ov-social-title">
+            <h2 id="ov-social-title">Church socials</h2>
+            <div class="ov-socials">
+                
                 <label class="name-role-social-input">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg>
                   <input type="text" id="social-engagement-instagram" maxlength="64" placeholder="@church" aria-label="Church Instagram" onchange="handleSocialEngagementOverlayChange()">
@@ -482,32 +429,40 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
                   <input type="text" id="social-engagement-website" maxlength="100" placeholder="church.org" aria-label="Church website" onchange="handleSocialEngagementOverlayChange()">
                 </label>
-              </section>
-              <div class="social-engagement-overlay-customize">
-                <label class="name-role-overlay-accent-picker" title="Social primary color" aria-label="Social primary color">
-                  <input type="color" id="social-engagement-primary" value="#90D5FF" aria-label="Social primary color" onchange="handleSocialEngagementOverlayChange()">
-                </label>
-                <label class="name-role-overlay-accent-picker" title="Social secondary color" aria-label="Social secondary color">
-                  <input type="color" id="social-engagement-accent" value="#90D5FF" aria-label="Social secondary color" onchange="handleSocialEngagementOverlayChange()">
-                </label>
-                <label>Text &amp; icon size <span class="name-role-overlay-pixel-input"><input type="number" id="social-engagement-size" aria-label="Social text and icon size in pixels" min="10" max="40" step="1" value="32" onchange="handleSocialEngagementOverlayChange()"><span>px</span></span></label>
               </div>
-              <div class="lt-position-controls">
-                <label>Horizontal <input type="range" id="social-engagement-offset-x" min="-40" max="40" step="1" value="0" oninput="handleSocialEngagementOverlayChange(false, true)"><output id="social-engagement-offset-x-value">0%</output></label>
-                <label>Vertical <input type="range" id="social-engagement-offset-y" min="-40" max="40" step="1" value="0" oninput="handleSocialEngagementOverlayChange(false, true)"><output id="social-engagement-offset-y-value">0%</output></label>
-              </div>
-              <section class="name-role-overlay-extra-section name-role-overlay-engagement">
-                <div class="name-role-overlay-subheading"><strong>Engagement</strong><span>Animated actions</span></div>
-                <div class="name-role-overlay-action-toggles">
+          </section>
+          <section class="ov-card ov-style" aria-labelledby="ov-social-style-title">
+            <h2 id="ov-social-style-title">Style</h2>
+            <span class="ov-label">Colors</span>
+            <div class="ov-control ov-colors social-engagement-overlay-customize">
+              <label class="name-role-overlay-accent-picker" title="Primary color"><input type="color" id="social-engagement-primary" value="#90D5FF" aria-label="Social primary color" onchange="handleSocialEngagementOverlayChange()"></label>
+              <label class="name-role-overlay-accent-picker" title="Secondary color"><input type="color" id="social-engagement-accent" value="#90D5FF" aria-label="Social secondary color" onchange="handleSocialEngagementOverlayChange()"></label>
+            </div>
+            <label for="social-engagement-size" class="ov-label">Size</label>
+            <div class="ov-sizes ov-sizes-one">
+              <label>Text &amp; icon <span class="ov-number"><input type="number" id="social-engagement-size" aria-label="Social text and icon size in pixels" min="10" max="40" step="1" value="32" onchange="handleSocialEngagementOverlayChange()"></span></label>
+            </div>
+            <label for="social-engagement-offset-x" class="ov-label">Horizontal</label>
+            <div class="ov-slider"><input type="range" id="social-engagement-offset-x" min="-40" max="40" step="1" value="0" oninput="handleSocialEngagementOverlayChange(false, true)"><output id="social-engagement-offset-x-value">0%</output></div>
+            <label for="social-engagement-offset-y" class="ov-label">Vertical</label>
+            <div class="ov-slider"><input type="range" id="social-engagement-offset-y" min="-40" max="40" step="1" value="0" oninput="handleSocialEngagementOverlayChange(false, true)"><output id="social-engagement-offset-y-value">0%</output></div>
+          </section>
+          <section class="ov-card" aria-labelledby="ov-engage-title">
+            <h2 id="ov-engage-title">Engagement <span class="ov-hint">Animated actions</span></h2>
+            <div class="name-role-overlay-action-toggles">
                   <label><input type="checkbox" id="social-engagement-like" checked onchange="handleSocialEngagementOverlayChange()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 10l5-8c1.5 0 2.5 1.4 2 2.8L13 9h6a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 18 20H7"/></svg><span>Like</span></label>
                   <label><input type="checkbox" id="social-engagement-share" checked onchange="handleSocialEngagementOverlayChange()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3M7 8l5-5 5 5M5 13v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg><span>Share</span></label>
                   <label><input type="checkbox" id="social-engagement-subscribe" checked onchange="handleSocialEngagementOverlayChange()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>Subscribe</span></label>
                 </div>
-              </section>
-              </div>
-            </div>
+              
+          </section>
+          <div class="ov-footer">
+            <button type="button" class="ov-test-btn name-role-overlay-example-btn" onclick="previewSocialEngagementLowerThirdExample()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>Test</button>
+            <button type="button" class="ov-air-btn name-role-overlay-show-btn" id="social-engagement-overlay-show-btn" aria-pressed="false" onclick="toggleSocialEngagementOverlay()">Show on air</button>
           </div>
-        </section>
+        </div>
+      </div>
+    </section>
         <div id="editor-container">
           <div id="focused-editor-banner">
             <div id="focused-editor-section-nav"></div>
@@ -547,7 +502,7 @@
           </div>
           <div id="nav-mirror-search-wrap">
             <input type="text" id="nav-mirror-search" placeholder="Search..." data-i18n-placeholder="ui_search_generic" autocomplete="off" >
-            <button type="button" id="nav-mirror-ref-pin-current" class="nav-mirror-search-tool" title="Pin current reference" data-i18n-title="ui_pin_current_reference" aria-label="Pin current reference" data-i18n-aria-label="ui_pin_current_reference"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
+            <button type="button" id="nav-mirror-ref-pin-current" class="nav-mirror-search-tool" title="Pin current reference" data-i18n-title="ui_pin_current_reference" aria-label="Pin current reference" data-i18n-aria-label="ui_pin_current_reference"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"/></svg></button>
             <button type="button" id="nav-mirror-ref-history-btn" class="nav-mirror-search-tool" title="Pinned and recent references" data-i18n-title="ui_pinned_recent_references" aria-label="Pinned and recent references" data-i18n-aria-label="ui_pinned_recent_references"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></button>
             <div id="nav-mirror-bible-ref-picker"></div>
             <div id="nav-mirror-results"></div>
@@ -660,6 +615,11 @@
             </div>
           </div>
         </div>
+        <div id="look-version-gap-row">
+            <span>Gap</span>
+            <input type="range" id="dual-version-gap" min="0" max="48" step="1" value="14" class="settings-slider" oninput="updateSliderValue(this,'px');saveDualVersionGap();onAnyControlChange()">
+            <span class="slider-value" id="dual-version-gap-value">14px</span>
+          </div>
         <div id="lyrics-output-types" aria-label="Lyrics output types">
           <strong>Send lyrics to</strong>
           <div class="lyrics-output-type-buttons">
@@ -671,6 +631,29 @@
               <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
               <span>Stream</span>
             </button>
+          </div>
+        </div>
+      </section>
+      <section id="fx-card" aria-labelledby="fx-card-title">
+        <h2 id="fx-card-title">FX <span id="animation-workspace-label" class="workspace-state-chip">Bible</span></h2>
+        <div class="main-panel-stacks">
+          <div>
+            <span data-i18n="common_transition">Transition</span>
+            <select id="song-transition-type" class="settings-select" onchange="onAnyControlChange()">
+              <option value="fade" selected data-i18n="transition_fade_easy_ease">Fade (Easy Ease)</option>
+              <option value="zoom" data-i18n="transition_zoom_easy_ease">Zoom (Easy Ease)</option>
+              <option value="type" data-i18n="transition_type_on_easy_ease">Type-On (Easy Ease)</option>
+              <option value="zoom-type" data-i18n="transition_zoom_type_on_easy_ease">Zoom + Type-On (Easy Ease)</option>
+            </select>
+          </div>
+          <div>
+            <span data-i18n="common_duration">Duration</span>
+            <input type="range" id="song-transition-duration" min="0.2" max="5" step="0.1" value="0.8" class="settings-slider" oninput="updateSliderValue(this,'s');onAnyControlChange()">
+            <span class="slider-value" id="song-transition-duration-value">1.0s</span>
+          </div>
+          <div>
+            <span data-i18n="ui_animate_background">Animate BG</span>
+            <label class="mini-toggle"><input type="checkbox" id="animate-bg-transitions" onchange="onAnyControlChange()"></label>
           </div>
         </div>
       </section>
@@ -3319,6 +3302,7 @@
   <script src="../node_modules/qrcode-generator/dist/qrcode.js"></script>
   <script src="../js/shared/lower-third-extra.js"></script>
   <script src="../js/panel/state-and-storage.js"></script>
+  <script src="../js/panel/bible-search-db.js"></script>
   <script src="../js/panel/panel-app-core.js"></script>
   <script src="../js/panel/reference-localization-theme.js"></script>
   <script src="../js/panel/vmix-and-translation.js"></script>

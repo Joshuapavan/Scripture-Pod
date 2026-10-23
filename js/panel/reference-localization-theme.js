@@ -198,15 +198,10 @@
         activeBibleVersion = entry.versionId;
         renderVersionBar();
       }
-      const input = document.getElementById('song-search');
-      if (input) input.value = entry.query;
-      const mirror = document.getElementById('nav-mirror-search');
-      if (mirror) mirror.value = entry.query;
-      setSearchValueForTab('bible', entry.query);
       setBibleReferencePickerOpen(false);
       setMirrorBibleReferencePickerOpen(false);
-      handleSearchImmediate(entry.query, 'bible');
-      addBibleRecentReference(entry);
+      // Open the passage in its book (cued, not live), as the ⌘K palette does
+      openPassageFromPalette(entry.query);
     }
 
     // Library "Pinned & recent": the first few references, always visible

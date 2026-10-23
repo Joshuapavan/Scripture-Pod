@@ -1129,7 +1129,6 @@
         }
 
         btn.onclick = () => {
-          if (annotateMode) return;
           lineCursor = idx;
           if (isBible && linesPerPage === 1) {
             const verseNum = getFirstVerseNumber(p.raw);

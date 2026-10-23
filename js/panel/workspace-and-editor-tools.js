@@ -1539,6 +1539,37 @@
       }
     }
 
+    // Header "Imports" menu: one place for everything the app can bring in
+    function closeImportsPopover() {
+      const pop = document.getElementById('imports-popover');
+      if (pop) pop.hidden = true;
+      document.getElementById('btn-imports')?.setAttribute('aria-expanded', 'false');
+    }
+
+    function toggleImportsPopover(event) {
+      if (event) event.stopPropagation();
+      const pop = document.getElementById('imports-popover');
+      if (!pop) return;
+      pop.hidden = !pop.hidden;
+      document.getElementById('btn-imports')?.setAttribute('aria-expanded', String(!pop.hidden));
+    }
+
+    function runImportAction(kind) {
+      closeImportsPopover();
+      if (kind === 'files') triggerImport();
+      else if (kind === 'bundled') importBundledBibles();
+      else if (kind === 'style') document.getElementById('import-style-file')?.click();
+      else if (kind === 'backup') document.getElementById('backup-import-file')?.click();
+    }
+
+    document.addEventListener('click', (event) => {
+      const pop = document.getElementById('imports-popover');
+      if (pop && !pop.hidden && !event.target.closest('.imports-wrap')) closeImportsPopover();
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeImportsPopover();
+    });
+
     function openModal(id) {
       const modal = document.getElementById(id);
       if (!modal) return;
@@ -2384,10 +2415,8 @@
     function updateFocusedWorkspaceToolbar() {
       const addBtn = document.querySelector('.header-toolbar > .add-btn');
       const modeSwitch = document.getElementById('editor-mode-switch');
-      const importBtn = document.getElementById('btn-import');
-      const bibleToolWrap = document.querySelector('.bible-tool-wrap');
-      const annotateWrap = document.querySelector('.annotate-wrap');
-      const presetBtn = document.getElementById('btn-preset');
+      const importsWrap = document.querySelector('.imports-wrap');
+      const fxCard = document.getElementById('fx-card');
       const focused = isFocusedWorkspaceMode();
       const isSongsTab = sidebarTab === 'songs';
       const isBibleTab = sidebarTab === 'bible';
@@ -2395,10 +2424,8 @@
 
       if (addBtn) addBtn.style.display = (!focused || isSongsTab) ? '' : 'none';
       if (modeSwitch) modeSwitch.style.display = (!focused || !isScheduleTab) ? '' : 'none';
-      if (importBtn) importBtn.style.display = (!focused || isSongsTab) ? '' : 'none';
-      if (bibleToolWrap) bibleToolWrap.style.display = (!focused || isBibleTab) ? '' : 'none';
-      if (annotateWrap) annotateWrap.style.display = (!focused || isSongsTab || isBibleTab) ? '' : 'none';
-      if (presetBtn) presetBtn.style.display = (!focused || !isScheduleTab) ? '' : 'none';
+      if (importsWrap) importsWrap.style.display = (!focused || isSongsTab || isBibleTab) ? '' : 'none';
+      if (fxCard) fxCard.style.display = (!focused || !isScheduleTab) ? '' : 'none';
     }
 
     function updateFocusedEditorBanner() {
