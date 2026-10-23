@@ -198,7 +198,7 @@
     let isLive = false, linesPerPage = 1, activeRatio = 'full', sidebarTab = 'bible';
     let activeWorkspaceTab = 'bible';
     let currentProgramDisplaySource = 'lyrics';
-    let programPreviewZoom = 0.82;
+    let programPreviewZoom = 1;
     let singleLineFontSizeSnapshot = null;
     let preDualFontSize = null;
     let currentSearchPos = null;

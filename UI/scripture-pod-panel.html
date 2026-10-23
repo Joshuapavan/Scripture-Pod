@@ -14,10 +14,10 @@
       <img id="app-topbar-logo" src="../electron/resources/Logo.svg" alt="Scripture Pod">
     </div>
     <nav class="sidebar-tabs" aria-label="Workspaces">
-      <button type="button" class="tab active" id="tab-bible" onclick="setSidebarTab('bible')" data-i18n="ui_tab_bible">Bible</button>
-      <button type="button" class="tab" id="tab-songs" onclick="setSidebarTab('songs')" data-i18n="ui_tab_songs">Lyrics</button>
-      <button type="button" class="tab" id="tab-schedule" onclick="setSidebarTab('schedule')" data-i18n="ui_tab_setlist">Setlist</button>
-      <button type="button" class="tab" id="tab-overlays" onclick="openOverlaysWorkspace()">Overlays</button>
+      <button type="button" class="tab active" id="tab-bible" onclick="setSidebarTab('bible')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg><span data-i18n="ui_tab_bible">Bible</span></button>
+      <button type="button" class="tab" id="tab-songs" onclick="setSidebarTab('songs')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span data-i18n="ui_tab_songs">Lyrics</span></button>
+      <button type="button" class="tab" id="tab-schedule" onclick="setSidebarTab('schedule')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg><span data-i18n="ui_tab_setlist">Setlist</span></button>
+      <button type="button" class="tab" id="tab-overlays" onclick="openOverlaysWorkspace()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 15h20"/><path d="M6 18h6"/></svg><span>Overlays</span></button>
     </nav>
     <div id="status-bar">
       <div id="status-dot"></div>
@@ -68,6 +68,7 @@
         <input type="text" id="song-search" placeholder="Search lyrics..." data-i18n-placeholder="ui_search_songs" oninput="handleSearch();_updateAutocomplete()" autocomplete="off">
         <button type="button" id="bible-ref-pin-current" class="bible-search-tool-btn" title="Pin current reference" data-i18n-title="ui_pin_current_reference" aria-label="Pin current reference" data-i18n-aria-label="ui_pin_current_reference"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg></button>
         <button type="button" id="bible-ref-history-btn" class="bible-search-tool-btn" title="Pinned and recent references" data-i18n-title="ui_pinned_recent_references" aria-label="Pinned and recent references" data-i18n-aria-label="ui_pinned_recent_references"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg></button>
+        <button type="button" class="search-palette-hint" onclick="openCommandPalette()" title="Search everything (⌘K / Ctrl+K)">⌘K</button>
         <div id="search-autocomplete"></div>
         <div id="bible-ref-picker"></div>
       </div>
@@ -85,7 +86,7 @@
         <div class="library-label">Pinned &amp; recent</div>
         <div class="library-quick-refs-list"></div>
       </div>
-      <div class="library-label library-label-bible">Versions</div>
+      <div class="library-label library-label-bible">Versions on screen <span class="library-label-note">up to 3</span></div>
       <div id="version-bar"></div>
       <div id="song-list"></div>
     </div>
@@ -108,7 +109,7 @@
           <button type="button" class="t-btn active" id="bible-view-verses" aria-pressed="true" onclick="setBibleReaderView(false)">Verses</button>
           <button type="button" class="t-btn" id="bible-view-reader" aria-pressed="false" onclick="setBibleReaderView(true)">Reader</button>
         </div>
-        <div class="toolbar-mode-switch">
+        <div class="toolbar-mode-switch" id="editor-mode-switch">
           <button class="t-btn" id="mode-text" onclick="setEditorMode('text')"><span data-i18n="ui_mode_text">Text</span></button>
           <button class="t-btn active" id="mode-btn" onclick="setEditorMode('btn')"><span data-i18n="ui_mode_buttons">Buttons</span></button>
         </div>
@@ -119,7 +120,7 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="panel-inline-style-3">
               <path d="M12 20h9"/>
               <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
-            </svg>
+            </svg><span class="toolbar-btn-label">Highlight</span>
           </button>
           <div class="bible-tool-wrap">
           <button class="btn toolbar-icon-btn" id="btn-bible-tool" title="Multi Bible version" data-i18n-title="ui_dual_bible_versions" onclick="toggleBibleToolPanel(event)">
@@ -539,10 +540,10 @@
 
       <div class="live-controls">
         <div class="nav-row">
-          <button class="btn" id="panel-inline-style-32" onclick="clearOutput()"><span data-i18n="common_clear">Clear</span></button>
+          <button class="btn" id="panel-inline-style-32" onclick="clearOutput()" title="Clear the output (Esc) · Shift+Esc clears everything"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span data-i18n="common_clear">Clear</span><kbd class="btn-key">Esc</kbd></button>
           <div class="nav-live-actions">
-            <button type="button" class="btn nav-preview-btn" id="btn-preview" onclick="togglePreviewOnlyMode()" aria-pressed="false" title="Toggle preview-only mode">Preview</button>
-            <button class="btn btn-live" id="btn-project-live" onclick="projectLive(true, true)"><span data-i18n="common_project_live">Go live</span></button>
+            <button type="button" class="btn nav-preview-btn" id="btn-preview" onclick="togglePreviewOnlyMode()" aria-pressed="false" title="Preview only: selections go to Preview, not on air · Alt+Space previews the selection"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Preview only</span></button>
+            <button class="btn btn-live" id="btn-project-live" onclick="projectLive(true, true)" title="Go live (Space)"><span data-i18n="common_project_live">Go live</span><span class="go-live-ref" id="go-live-ref"></span><kbd class="go-live-key">Space</kbd></button>
           </div>
           <div id="nav-mirror-search-wrap">
             <input type="text" id="nav-mirror-search" placeholder="Search..." data-i18n-placeholder="ui_search_generic" autocomplete="off" >
@@ -551,8 +552,8 @@
             <div id="nav-mirror-bible-ref-picker"></div>
             <div id="nav-mirror-results"></div>
           </div>
-          <button class="btn" id="btn-prev"  onclick="prevSlide()">←</button>
-          <button class="btn" id="btn-next"  onclick="nextSlide()">→</button>
+          <button class="btn" id="btn-prev" onclick="prevSlide()" aria-label="Previous"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
+          <button class="btn" id="btn-next" onclick="nextSlide()" aria-label="Next"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
         </div>
       </div>
     </div>
@@ -576,8 +577,9 @@
       <section id="preview-monitor" class="sp-monitor" aria-label="Preview monitor">
         <div class="sp-monitor-head">
           <span class="sp-monitor-tag is-preview">Preview</span>
+          <span class="sp-monitor-ref" id="preview-monitor-ref"></span>
           <span class="sp-monitor-caption" id="preview-monitor-caption">Next</span>
-          <button type="button" class="btn" id="btn-clear-program-preview" onclick="clearProgramPreview()" title="Clear the preview without clearing live output">
+          <button type="button" class="btn" id="btn-clear-program-preview" onclick="clearProgramPreview()" title="Clear the preview without clearing live output (Alt+Esc)">
             <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="m19 6-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>
             <span>Clear</span>
           </button>
@@ -588,6 +590,7 @@
       </section>
       <div class="sp-monitor-head" id="program-monitor-head">
         <span class="sp-monitor-tag is-program">Program</span>
+        <span class="sp-monitor-ref" id="program-monitor-ref"></span>
         <span class="sp-monitor-caption" id="program-monitor-caption">Clear</span>
       </div>
       <div id="program-display-stage">
@@ -597,6 +600,17 @@
           <iframe id="program-display-frame" title="Program Display Preview" data-i18n-title="ui_program_display_preview" allowtransparency="true"></iframe>
         </div>
       </div>
+      <section id="setlist-next-card" aria-labelledby="setlist-next-title">
+        <div class="setlist-next-head">
+          <h2 id="setlist-next-title">Up next</h2>
+          <span class="setlist-next-number" id="setlist-next-number"></span>
+        </div>
+        <div id="setlist-next-body"></div>
+        <div class="setlist-next-notes" id="setlist-next-notes-wrap">
+          <label for="setlist-next-notes">Operator notes</label>
+          <textarea id="setlist-next-notes" rows="4" placeholder="Cues for this item, e.g. wait for the pastor to read the reference" oninput="handleSetlistNotesInput(this.value)"></textarea>
+        </div>
+      </section>
       <section id="look-card" aria-labelledby="look-card-title">
         <h2 id="look-card-title">Look</h2>
         <div class="main-panel-stacks" id="panel-inline-style-34">
@@ -647,7 +661,7 @@
           </div>
         </div>
         <div id="lyrics-output-types" aria-label="Lyrics output types">
-          <strong>Lyrics Output</strong>
+          <strong>Send lyrics to</strong>
           <div class="lyrics-output-type-buttons">
             <button type="button" class="lyrics-output-type-btn" id="lyrics-output-monitor-btn" aria-pressed="false" onclick="toggleLyricsMonitorOutput()" title="Open or close fullscreen monitor output">
               <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
@@ -3286,6 +3300,22 @@
   <!-- Hidden File Inputs -->
   <input type="file" id="import-file" hidden multiple onchange="handleImport(this)">
   <input type="file" id="import-style-file" hidden accept=".fstemplate,.json,application/json" onchange="handleStyleImport(this)">
+  <div id="command-palette" class="command-palette" hidden>
+    <div class="command-palette-backdrop" onclick="closeCommandPalette()"></div>
+    <div class="command-palette-dialog" role="dialog" aria-modal="true" aria-label="Search">
+      <div class="command-palette-input-row">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input id="command-palette-input" type="text" placeholder="Search passages, songs, setlist and actions…" autocomplete="off" spellcheck="false" aria-controls="command-palette-results">
+        <kbd>Esc</kbd>
+      </div>
+      <div id="command-palette-results" class="command-palette-results" role="listbox"></div>
+      <div class="command-palette-foot">
+        <span><kbd>↑</kbd><kbd>↓</kbd> move</span>
+        <span><kbd>Enter</kbd> open</span>
+        <span><kbd>Space</kbd> go live after opening</span>
+      </div>
+    </div>
+  </div>
   <script src="../node_modules/qrcode-generator/dist/qrcode.js"></script>
   <script src="../js/shared/lower-third-extra.js"></script>
   <script src="../js/panel/state-and-storage.js"></script>
@@ -3304,6 +3334,7 @@
   <script src="../js/panel/recording-and-livestream-tools.js"></script>
   <script src="../js/panel/workspace-and-editor-tools.js"></script>
   <script src="../js/panel/app-commands-and-shortcuts.js"></script>
+  <script src="../js/panel/command-palette.js"></script>
   <script src="../js/panel/settings-and-controls.js"></script>
   <script src="../js/panel/sidebar-and-workspace.js"></script>
   <script src="../js/panel/sync-and-output.js"></script>

@@ -49,13 +49,34 @@
     }
 
 
+    // Short code for a Bible version ("NKJV"); when two versions shorten to the
+    // same code (both "BSI"), the language's first letters tell them apart.
+    function getVersionCode(ver) {
+      if (!ver) return '';
+      const code = shortenBibleVersionName(ver) || ver;
+      const clash = Object.keys(bibles).some(other => other !== ver && (shortenBibleVersionName(other) || other) === code);
+      if (!clash) return code;
+      const prefix = String(ver).trim().slice(0, 2).toUpperCase();
+      return `${prefix}-${code}`;
+    }
+
+    // Versions shown on screen, in order: primary, then the multi-version picks.
+    function getOnScreenVersionIds() {
+      const ids = [activeBibleVersion];
+      if (dualVersionModeEnabled) ids.push(dualVersionSecondaryId, dualVersionTertiaryId);
+      return ids.filter((id, i) => id && bibles[id] && ids.indexOf(id) === i);
+    }
+
     function renderVersionBar() {
       const bar = document.getElementById('version-bar');
       if (!bar) return;
       bar.innerHTML = '';
       const verKeys = Object.keys(bibles);
-      const mid = Math.ceil(verKeys.length / 2);
-      const rows = [verKeys.slice(0, mid), verKeys.slice(mid)];
+      const onScreen = getOnScreenVersionIds();
+      // On-screen versions first, in their order (1, 2, 3), then the rest
+      const ordered = [...onScreen, ...verKeys.filter(ver => !onScreen.includes(ver))];
+      const mid = Math.ceil(ordered.length / 2);
+      const rows = [ordered.slice(0, mid), ordered.slice(mid)];
       rows.forEach(rowVers => {
         if (!rowVers.length) return;
         const row = document.createElement('div');
@@ -63,7 +84,8 @@
         rowVers.forEach(ver => {
           const i = verKeys.indexOf(ver);
           const wrapper = document.createElement('div');
-          wrapper.className = `version-wrapper ${activeBibleVersion === ver ? 'active' : ''}`;
+          const order = onScreen.indexOf(ver) + 1;
+          wrapper.className = `version-wrapper ${activeBibleVersion === ver ? 'active' : ''}${order ? ' is-on-screen' : ''}`;
           const color = VERSION_COLORS[i % VERSION_COLORS.length];
           if (activeBibleVersion !== ver) {
             wrapper.style.borderLeftColor = color;
@@ -71,7 +93,20 @@
           }
           const btn = document.createElement('button');
           btn.className = 'version-btn';
-          btn.innerText = ver;
+          const orderEl = document.createElement('span');
+          orderEl.className = 'version-order';
+          orderEl.textContent = order ? String(order) : '';
+          const textEl = document.createElement('span');
+          textEl.className = 'version-text';
+          const codeEl = document.createElement('span');
+          codeEl.className = 'version-code';
+          codeEl.textContent = getVersionCode(ver);
+          const nameEl = document.createElement('span');
+          nameEl.className = 'version-name';
+          nameEl.textContent = ver;
+          textEl.append(codeEl, nameEl);
+          btn.append(orderEl, textEl);
+          btn.title = ver;
           btn.onclick = () => changeActiveBibleVersion(ver);
           const del = document.createElement('button');
           del.className = 'version-del';
@@ -99,6 +134,7 @@
       updateDualVersionSelects();
       updateDualVersionAvailability();
       renderFooterBibleVersionPopover();
+      if (typeof updateFocusedEditorBanner === 'function') updateFocusedEditorBanner();
       if (footerBibleVersionPopoverOpen) {
         requestAnimationFrame(positionFooterBibleVersionPopover);
       }
@@ -165,6 +201,22 @@
     }
 
     function changeActiveBibleVersion(ver) {
+      if (ver && bibles[ver] && !isBibleLoaded(ver)) {
+        ensureBibleLoaded(ver).then((loaded) => { if (loaded) changeActiveBibleVersionNow(ver); });
+        return;
+      }
+      changeActiveBibleVersionNow(ver);
+    }
+
+    // Re-render after a Bible version finishes loading from storage.
+    function refreshAfterBibleLoad() {
+      updateBibleLists();
+      renderVersionBar();
+      renderSongs();
+      if (currentItem) updateButtonView({ preserveScroll: true, skipAutoScroll: true });
+    }
+
+    function changeActiveBibleVersionNow(ver) {
       const previousPrimary = activeBibleVersion;
       let targetVerse = null;
       let targetLineCursor = lineCursor;
@@ -659,6 +711,9 @@
     function renderSongs() {
       const list = document.getElementById('song-list');
       if (!list) return;
+      if (sidebarTab === 'bible' && activeBibleVersion && bibles[activeBibleVersion] && !isBibleLoaded(activeBibleVersion)) {
+        ensureBibleLoaded(activeBibleVersion).then((loaded) => { if (loaded) refreshAfterBibleLoad(); });
+      }
       const qRaw = document.getElementById('song-search').value || "";
       const q = normalizeSearchText(qRaw);
       list.replaceChildren();

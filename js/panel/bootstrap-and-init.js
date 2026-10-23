@@ -4754,16 +4754,17 @@
     // ===== INIT =====
     async function bootApp() {
       await openDb();
-      const [stateEntry, songRecords, bibleRecords, ltStylesEntry, bgSettingsEntry, animationSettingsEntry, typographySettingsEntry, modeSettingsEntry] = await Promise.all([
+      const [stateEntry, songRecords, ltStylesEntry, bgSettingsEntry, animationSettingsEntry, typographySettingsEntry, modeSettingsEntry] = await Promise.all([
         idbGet(STORE_STATE, 'appState'),
         idbGetAll(STORE_SONGS),
-        idbGetAll(STORE_BIBLES),
         idbGet(STORE_STATE, 'ltStyles'),
         idbGet(STORE_STATE, 'bgSettings'),
         idbGet(STORE_STATE, 'animationSettings'),
         idbGet(STORE_STATE, 'typographySettings'),
         idbGet(STORE_STATE, 'modeSettings')
       ]);
+      // Bibles: only the versions the saved state uses are read into memory
+      const bibleRecords = await loadBibleRecordsForBoot(stateEntry ? stateEntry.value : null);
 
       applyLoadedState(
         (stateEntry && stateEntry.value) ? stateEntry.value : null,
@@ -4786,6 +4787,11 @@
 
       appStateUpdatedAt = stateEntry ? (stateEntry.updatedAt || 0) : 0;
       stateReady = true;
+      // Anything in use that the saved state did not name gets loaded now
+      ensureBiblesLoaded(getBibleVersionsInUse()).then((results) => {
+        if (results.some(Boolean)) refreshAfterBibleLoad();
+      });
+      setInterval(unloadIdleBibles, 60000);
       updateFirstRunSetupVisibility();
       if (typeof refreshLocalServerInfo === 'function') {
         refreshLocalServerInfo().then(() => {
@@ -4857,6 +4863,7 @@
       try {
         initStandaloneTools();
         restoreBibleReaderView();
+        setupCommandPalette();
         _restoreAudioBufferSizeSetting();
         bindHostModeInput();
         applyObsCompatibilityUi();

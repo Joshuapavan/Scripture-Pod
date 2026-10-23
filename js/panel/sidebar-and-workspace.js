@@ -45,6 +45,7 @@
       document.body.classList.add('overlays-workspace-active');
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-overlays'));
       updateBottomNavSidebarButtons('overlays');
+      initOverlayPreview();
       selectOverlayPanel(document.body.dataset.overlay || 'name-role');
     }
 

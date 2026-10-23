@@ -1653,3 +1653,410 @@ body.overlays-workspace-active #page-projection #program-display-panel#program-d
 body.overlays-workspace-active #page-projection #program-width-handle { display: none !important; }
 /* The design picker lives under the large preview; its old box goes */
 #overlays-workspace .name-role-overlay-style-row > .name-role-overlay-extra-section:has(#name-role-overlay-design) { display: none !important; }
+
+/* ── Lyrics: numbered slide grid, arrangement chips, Send lyrics to ──────── */
+body[data-sidebar-tab="songs"] #lyric-buttons { counter-reset: slide; }
+body[data-sidebar-tab="songs"] #lyric-buttons .section-block {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px !important;
+  margin-bottom: 18px !important;
+}
+body[data-sidebar-tab="songs"] #lyric-buttons .section-label { grid-column: 1 / -1; margin: 4px 0 -2px !important; }
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-row { margin: 0 !important; }
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn {
+  counter-increment: slide;
+  display: flex !important;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  height: 100%;
+  min-height: 112px;
+  padding: 12px 14px !important;
+  font-family: var(--ui-font) !important;
+  font-size: 16px !important;
+  line-height: 1.5 !important;
+  white-space: pre-line;
+}
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn::before {
+  content: counter(slide, decimal-leading-zero);
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--sp-line-2);
+  color: var(--sp-muted);
+  font-family: var(--sp-mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn.active::before { background: var(--sp-cue); color: var(--sp-cue-ink); }
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn:has(.live-indicator)::before { background: var(--sp-live); color: var(--sp-live-ink); }
+body[data-sidebar-tab="songs"] #lyric-buttons .lyric-btn:has(.live-indicator) { padding-right: 14px !important; }
+body[data-sidebar-tab="songs"] #lyric-buttons .live-indicator { top: 12px !important; right: 12px !important; }
+
+/* Song sections as the design's Arrangement row */
+#focused-editor-banner:has(#focused-editor-section-nav.has-items) {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px !important;
+  background: var(--sp-ground) !important;
+  border-bottom: 1px solid var(--sp-line) !important;
+}
+#focused-editor-banner:has(#focused-editor-section-nav.has-items)::before {
+  content: "Arrangement";
+  margin-right: 4px;
+  color: var(--sp-muted);
+  font-size: 12px;
+}
+#focused-editor-section-nav.has-items { display: flex !important; flex-wrap: wrap; gap: 6px !important; }
+.focused-section-chip {
+  height: 32px !important;
+  padding: 0 12px !important;
+  border-radius: 8px !important;
+  background: var(--sp-card) !important;
+  border: 1px solid var(--sp-line-2) !important;
+  color: var(--sp-text) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  text-transform: none !important;
+  letter-spacing: 0 !important;
+}
+.focused-section-chip:hover { border-color: var(--sp-line-3) !important; }
+
+/* Send lyrics to: one row per destination with an on/off switch look */
+#look-card #lyrics-output-types { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; }
+#look-card #lyrics-output-types > strong { color: var(--sp-text) !important; font-size: 14px !important; font-weight: 600 !important; text-transform: none !important; }
+#look-card .lyrics-output-type-buttons { display: flex !important; flex-direction: column; gap: 6px !important; }
+#look-card .lyrics-output-type-btn {
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  border: 1px solid var(--sp-line) !important;
+  color: var(--sp-text) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+#look-card .lyrics-output-type-btn svg { width: 16px; height: 16px; }
+#look-card .lyrics-output-type-btn::after {
+  content: "";
+  margin-left: auto;
+  width: 36px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--sp-line-3) radial-gradient(circle at 10px 10px, #fff 7px, transparent 7.5px);
+}
+#look-card .lyrics-output-type-btn[aria-pressed="true"] { background: var(--sp-raised) !important; border-color: var(--sp-line-3) !important; }
+#look-card .lyrics-output-type-btn[aria-pressed="true"]::after { background: var(--sp-ok) radial-gradient(circle at 26px 10px, #fff 7px, transparent 7.5px); }
+
+/* ── Setlist: Up next card and operator notes (right column) ──────────────── */
+#program-display-panel > #setlist-next-card { order: 5; }
+#program-display-panel > #look-card { order: 6; }
+#program-display-panel > #outputs-card { order: 7; }
+#program-display-panel > .program-display-footer { order: 8; }
+#setlist-next-card { display: none; }
+body[data-sidebar-tab="schedule"]:not(.overlays-workspace-active) #setlist-next-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 0 0 auto;
+  margin: 12px 12px 0;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--sp-card);
+  border: 1px solid var(--sp-line);
+}
+.setlist-next-head { display: flex; align-items: center; gap: 8px; }
+.setlist-next-head h2 { margin: 0; color: var(--sp-text); font-size: 14px; font-weight: 600; }
+.setlist-next-number { margin-left: auto; color: var(--sp-muted); font-family: var(--sp-mono); font-size: 12px; }
+.setlist-next-title { color: var(--sp-text); font-family: var(--sp-serif); font-size: 20px; font-weight: 600; line-height: 1.25; }
+.setlist-next-facts { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 6px 12px; margin: 10px 0 0; font-size: 13px; }
+.setlist-next-facts dt { color: var(--sp-muted); }
+.setlist-next-facts dd { margin: 0; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sp-text); }
+.setlist-next-cue {
+  width: 100%;
+  height: 44px !important;
+  margin-top: 12px;
+  border: 0 !important;
+  border-radius: 10px !important;
+  background: var(--sp-cue) !important;
+  color: var(--sp-cue-ink) !important;
+  font-weight: 600 !important;
+}
+.setlist-next-empty { margin: 0; color: var(--sp-muted); font-size: 13px; }
+.setlist-next-notes { display: flex; flex-direction: column; gap: 6px; }
+.setlist-next-notes[hidden] { display: none; }
+.setlist-next-notes label { color: var(--sp-text); font-size: 13px; font-weight: 600; }
+.setlist-next-notes textarea {
+  resize: vertical;
+  min-height: 84px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--sp-inset);
+  border: 1px solid var(--sp-line-2);
+  color: var(--sp-text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ══ Bible screen, closer to the Main artboard ══════════════════════════════ */
+
+/* Top bar tabs carry icons */
+#app-topbar .sidebar-tabs .tab { display: inline-flex !important; align-items: center; gap: 8px; }
+#app-topbar .sidebar-tabs .tab svg { width: 16px; height: 16px; flex: 0 0 auto; }
+
+/* Header: eyebrow, then the chapter title with the on-screen version codes beside it */
+#focused-editor-banner-main {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  column-gap: 14px;
+}
+#focused-editor-banner-eyebrow { grid-column: 1 / -1; }
+#main .header-toolbar #focused-editor-banner-title { font-size: 30px !important; font-weight: 600 !important; letter-spacing: -0.01em; }
+#main .header-toolbar #focused-editor-banner-subtitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--sp-mono) !important;
+  font-size: 12px !important;
+  color: var(--sp-muted) !important;
+}
+/* Highlight carries its label, as in the design */
+#main .header-toolbar #btn-annotate {
+  width: auto !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px !important;
+}
+#btn-annotate .toolbar-btn-label { font-size: 14px; font-weight: 500; }
+
+/* Library: Versions on screen, with order badges */
+#sidebar .library-label-note { margin-left: 6px; color: var(--sp-subtle); font-weight: 500; letter-spacing: 0; text-transform: none; }
+#version-bar .version-wrapper .version-btn { display: flex !important; align-items: center; gap: 10px; min-height: 46px; padding: 6px 4px 6px 6px !important; }
+#version-bar .version-order {
+  flex: 0 0 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--sp-line-3);
+  color: var(--sp-ground);
+  font-family: var(--sp-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+#version-bar .is-on-screen .version-order { background: var(--sp-text); border-color: var(--sp-text); }
+#version-bar .version-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; text-align: left; }
+#version-bar .version-code { color: var(--sp-text); font-size: 14px; font-weight: 500; }
+#version-bar .version-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sp-muted); font-size: 12px; font-weight: 400; }
+#version-bar .version-wrapper.active .version-code { font-weight: 600; }
+#version-bar .version-wrapper.is-on-screen { background: var(--sp-raised) !important; border-color: var(--sp-line-3) !important; }
+
+/* Pinned & recent sits at the bottom of the library, under the chapters */
+#sidebar > #song-list { flex: 1 1 auto !important; min-height: 0; overflow-y: auto; }
+#sidebar > #library-quick-refs { order: 8 !important; padding-bottom: 12px; border-top: 1px solid var(--sp-line); }
+.library-quick-ref { padding: 0 10px !important; }
+.library-quick-ref::before { display: none !important; }
+.library-quick-ref-icon { flex: 0 0 14px; display: flex; color: var(--sp-subtle); }
+.library-quick-ref-icon svg { width: 14px; height: 14px; }
+.library-quick-ref.is-pinned .library-quick-ref-icon { color: #E8B04B; }
+
+/* Transport: Clear · ← → ………… Preview only · Go live [1:28] Enter */
+#main .live-controls .nav-row > #panel-inline-style-32,
+#main .live-controls #btn-preview { display: inline-flex !important; align-items: center; gap: 8px; padding: 0 14px !important; }
+#main .live-controls .nav-row svg { width: 16px; height: 16px; flex: 0 0 auto; }
+#main .live-controls #btn-prev svg,
+#main .live-controls #btn-next svg { width: 18px; height: 18px; }
+#main .live-controls #btn-prev,
+#main .live-controls #btn-next { display: inline-flex !important; align-items: center; justify-content: center; }
+#main .live-controls #btn-project-live { display: inline-flex !important; align-items: center; gap: 12px; padding: 0 18px 0 20px !important; }
+.go-live-ref {
+  padding: 3px 7px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.2);
+  font-family: var(--sp-mono);
+  font-size: 12px;
+  font-weight: 500;
+}
+.go-live-ref:empty { display: none; }
+.go-live-key { font-family: var(--sp-mono); font-size: 11px; font-weight: 500; opacity: 0.85; }
+
+/* Monitors: tag · reference ………… state, no zoom row, no inner label */
+.sp-monitor-ref {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sp-muted);
+  font-family: var(--sp-mono);
+  font-size: 12px;
+}
+.sp-monitor-head .sp-monitor-caption { margin-left: auto; color: var(--sp-subtle); }
+#preview-monitor .sp-monitor-head #btn-clear-program-preview { margin-left: 8px; }
+#program-scale-controls { display: none !important; }
+#program-display-shell::before { display: none !important; }
+#program-monitor-head { padding-top: 16px !important; }
+/* Monitor column at the artboard's width by default (the resize handle still wins) */
+@media (min-width: 1100px) {
+  #page-projection #program-display-panel#program-display-panel {
+    flex: 0 1 400px;
+    min-width: 360px;
+  }
+}
+
+/* ── Fixes from review: versions alignment, search results, header fit ────── */
+#version-bar { padding: 8px 16px 10px !important; }
+#version-bar .version-row { margin: 0 !important; padding: 0 !important; }
+#version-bar .version-row + .version-row { margin-top: 6px !important; }
+#version-bar .version-wrapper { margin: 0 !important; }
+
+#song-list .song-item:has(.search-title) {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch !important;
+  gap: 4px;
+  margin: 2px 8px !important;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  cursor: pointer;
+}
+#song-list .song-item:has(.search-title):hover { background: var(--sp-raised) !important; }
+#song-list .song-item:has(.search-title).active,
+#song-list .song-item:has(.search-title)[data-pos].active { background: var(--sp-raised) !important; border-color: var(--sp-line-3) !important; }
+#song-list .song-item:has(.search-title) > div { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+#song-list .search-title { color: var(--sp-text) !important; font-size: 14px !important; font-weight: 600 !important; }
+#song-list .search-snippet {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--sp-muted) !important;
+  font-family: var(--sp-serif);
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+}
+
+/* Header tools never get cut off: the title gives way first, then labels */
+#main { container-type: inline-size; }
+#main .header-toolbar { flex-wrap: nowrap !important; }
+#main .header-toolbar #focused-editor-banner-main { flex: 1 1 120px !important; min-width: 0 !important; }
+#main .header-toolbar #focused-editor-banner-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+@container (max-width: 740px) {
+  #btn-annotate .toolbar-btn-label { display: none; }
+  #main .header-toolbar #btn-annotate { width: 40px !important; padding: 0 !important; justify-content: center; }
+  #main .header-toolbar #focused-editor-banner-subtitle { display: none; }
+}
+@container (max-width: 620px) {
+  #main .header-toolbar #focused-editor-banner-title { font-size: 24px !important; }
+  #main .header-toolbar .t-btn { padding: 0 10px !important; font-size: 13px !important; }
+  #main .header-toolbar { gap: 6px !important; padding-left: 16px !important; padding-right: 16px !important; }
+}
+
+.btn-key { margin-left: 4px; color: var(--sp-subtle); font-family: var(--sp-mono); font-size: 11px; font-weight: 500; }
+@container (max-width: 560px) {
+  #main .header-toolbar .toolbar-icon-btn,
+  #main .header-toolbar #btn-annotate { width: 34px !important; height: 34px !important; }
+  #main .header-toolbar .t-btn { height: 30px !important; padding: 0 8px !important; }
+  #main .header-toolbar { gap: 4px !important; padding-left: 12px !important; padding-right: 12px !important; }
+}
+
+/* ── ⌘K search palette ────────────────────────────────────────────────────── */
+.command-palette { position: fixed; inset: 0; z-index: 10000; display: flex; justify-content: center; align-items: flex-start; padding-top: 12vh; }
+.command-palette[hidden] { display: none; }
+.command-palette-backdrop { position: absolute; inset: 0; background: rgb(0 0 0 / 0.55); }
+.command-palette-dialog {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(640px, calc(100vw - 32px));
+  max-height: 70vh;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--sp-panel);
+  border: 1px solid var(--sp-line-2);
+  box-shadow: 0 24px 64px rgb(0 0 0 / 0.55);
+  color: var(--sp-text);
+}
+.command-palette-input-row { display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 56px; border-bottom: 1px solid var(--sp-line); color: var(--sp-muted); }
+.command-palette-input-row svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.command-palette-input-row input { flex: 1 1 auto; min-width: 0; height: 100%; border: 0; outline: none; background: transparent; color: var(--sp-text); font: inherit; font-size: 16px; }
+.command-palette kbd {
+  padding: 2px 6px;
+  border-radius: 5px;
+  border: 1px solid var(--sp-line-3);
+  color: var(--sp-muted);
+  font-family: var(--sp-mono);
+  font-size: 11px;
+}
+.command-palette-results { flex: 1 1 auto; overflow-y: auto; padding: 6px 8px 8px; }
+.command-palette-group { padding: 10px 10px 4px; color: var(--sp-subtle); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.command-palette-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sp-text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.command-palette-item.is-active { background: var(--sp-raised); box-shadow: inset 0 0 0 1px var(--sp-line-3); }
+.command-palette-label { font-size: 14px; font-weight: 500; }
+.command-palette-detail {
+  grid-column: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sp-muted);
+  font-family: var(--sp-serif);
+  font-size: 13px;
+}
+.command-palette-meta { grid-column: 2; grid-row: 1; color: var(--sp-subtle); font-family: var(--sp-mono); font-size: 11px; }
+.command-palette-empty { padding: 20px 12px; color: var(--sp-muted); font-size: 13px; }
+.command-palette-foot { display: flex; gap: 16px; padding: 10px 16px; border-top: 1px solid var(--sp-line); color: var(--sp-subtle); font-size: 12px; }
+.command-palette-foot kbd { margin-right: 4px; }
+
+/* ⌘K hint inside the library search */
+.search-palette-hint {
+  flex: 0 0 auto;
+  height: 26px;
+  padding: 0 7px;
+  border-radius: 6px;
+  border: 1px solid var(--sp-line-3);
+  background: transparent;
+  color: var(--sp-muted);
+  font-family: var(--sp-mono);
+  font-size: 11px;
+  cursor: pointer;
+}
+#sidebar .search-container .search-palette-hint { position: absolute; top: 43px; right: 80px; transform: translateY(-50%); }
+#sidebar .search-container #song-search { padding-right: 118px !important; }
+body:not([data-sidebar-tab="bible"]) #sidebar .search-container .search-palette-hint { right: 18px; }
+body:not([data-sidebar-tab="bible"]) #sidebar .search-container #song-search { padding-right: 56px !important; }
+/* The palette's own field: no box from the general input styles */
+#command-palette-input {
+  border: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+}

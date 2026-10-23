@@ -154,7 +154,8 @@
     // the large preview on the Overlays tab ({ shell, frame } element ids).
     const PREVIEW_DISPLAYS = [
       { shell: 'preview-display-shell', frame: 'preview-display-frame' },
-      { shell: 'overlay-preview-shell', frame: 'overlay-preview-frame' }
+      // Built the first time the Overlays tab opens, not at startup
+      { shell: 'overlay-preview-shell', frame: 'overlay-preview-frame', lazy: true }
     ];
     const previewDisplaysReady = new Set();
     let previewMonitorState = { kind: 'clear' };
@@ -205,24 +206,30 @@
     }
 
     function initPreviewMonitor() {
-      PREVIEW_DISPLAYS.forEach(({ shell: shellId, frame: frameId }) => {
-        const frame = document.getElementById(frameId);
-        const shell = document.getElementById(shellId);
-        if (!frame || frame.dataset.bound) return;
-        frame.dataset.bound = '1';
-        previewDisplaysReady.delete(frameId);
-        frame.addEventListener('load', () => {
-          previewDisplaysReady.add(frameId);
-          scalePreviewDisplay(shellId, frameId);
-          syncPreviewMonitor();
-        });
-        frame.srcdoc = buildStandaloneDisplayHtml({ preview: true });
-        if (shell && typeof ResizeObserver === 'function') {
-          new ResizeObserver(() => scalePreviewDisplay(shellId, frameId)).observe(shell);
-        } else {
-          window.addEventListener('resize', () => scalePreviewDisplay(shellId, frameId));
-        }
+      PREVIEW_DISPLAYS.filter(display => !display.lazy).forEach(initPreviewDisplay);
+    }
+
+    function initOverlayPreview() {
+      PREVIEW_DISPLAYS.filter(display => display.lazy).forEach(initPreviewDisplay);
+    }
+
+    function initPreviewDisplay({ shell: shellId, frame: frameId }) {
+      const frame = document.getElementById(frameId);
+      const shell = document.getElementById(shellId);
+      if (!frame || frame.dataset.bound) return;
+      frame.dataset.bound = '1';
+      previewDisplaysReady.delete(frameId);
+      frame.addEventListener('load', () => {
+        previewDisplaysReady.add(frameId);
+        scalePreviewDisplay(shellId, frameId);
+        syncPreviewMonitor();
       });
+      frame.srcdoc = buildStandaloneDisplayHtml({ preview: true });
+      if (shell && typeof ResizeObserver === 'function') {
+        new ResizeObserver(() => scalePreviewDisplay(shellId, frameId)).observe(shell);
+      } else {
+        window.addEventListener('resize', () => scalePreviewDisplay(shellId, frameId));
+      }
     }
 
     function setPreviewMonitorCaption(text) {
@@ -234,6 +241,14 @@
       document.body.classList.toggle('sp-program-on-air', !!onAir);
       const caption = document.getElementById('program-monitor-caption');
       if (caption) caption.textContent = onAir ? 'On air' : 'Clear';
+      const ref = document.getElementById('program-monitor-ref');
+      const liveItem = onAir ? getLiveItem() : null;
+      if (ref) ref.textContent = liveItem ? getItemPageRef(liveItem, liveLineCursor) : '';
+    }
+
+    function setPreviewMonitorRef(text) {
+      const ref = document.getElementById('preview-monitor-ref');
+      if (ref) ref.textContent = text || '';
     }
 
     function clearPreviewMonitor() {

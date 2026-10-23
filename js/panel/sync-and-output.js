@@ -713,12 +713,17 @@
       if (includeSongs) {
         payload.songRecords = songs.map(song => buildSongRecord(song, { isNew: false }));
       }
-      if (includeBibles) {
-        payload.bibleRecords = Object.keys(bibles).map(name => buildBibleRecord(name, bibles[name] || [], { isNew: false }));
-      }
-      relaySend(payload);
       relayStateIncludeSongs = false;
       relayStateIncludeBibles = false;
+      if (includeBibles) {
+        // Unloaded versions are read from storage so the other panel gets the
+        // whole library, never an empty placeholder
+        getAllBibleRecordsForSync()
+          .then((records) => { payload.bibleRecords = records; relaySend(payload); })
+          .catch(() => {});
+        return true;
+      }
+      relaySend(payload);
       return true;
     }
 
@@ -1047,6 +1052,16 @@
 
     function pushLiveUpdate(opts = {}) {
       const previewOnly = opts.previewOnly === true;
+      const missingVersions = getMissingBibleVersionsInUse();
+      if (missingVersions.length) {
+        if (previewOnly) {
+          // Preview is not on air: show it now, refresh once the version is in
+          ensureBiblesLoaded(missingVersions).then(() => { refreshAfterBibleLoad(); schedulePreviewMonitorRefresh(); });
+        } else {
+          ensureBiblesLoaded(missingVersions).then(() => { refreshAfterBibleLoad(); pushLiveUpdate(opts); });
+          return true;
+        }
+      }
       if (!previewOnly && document.getElementById('btn-preview')?.getAttribute('aria-pressed') === 'true') return false;
       if ((!isLive && !previewOnly) || !livePointer) return false;
       const effectiveLiveLinesPerPage = Math.max(1, Number(liveLinesPerPage) || Number(linesPerPage) || 1);

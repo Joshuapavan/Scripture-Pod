@@ -152,6 +152,61 @@
       showToast(fetchedLyrics ? t('song_created_with_fetched_lyrics') : t('song_created'));
     }
 
+    // Something Escape should close first: a dialog, popover, picker or menu.
+    function isTransientUiOpen() {
+      const shown = (el) => {
+        if (!el || el.hidden) return false;
+        const cs = getComputedStyle(el);
+        return cs.display !== 'none' && cs.visibility !== 'hidden' && Number(cs.opacity) > 0;
+      };
+      if (typeof isCommandPaletteOpen === 'function' && isCommandPaletteOpen()) return true;
+      if (typeof presetPopoverOpen !== 'undefined' && presetPopoverOpen) return true;
+      if (typeof outputPopoverOpen !== 'undefined' && outputPopoverOpen) return true;
+      if (typeof annotateMode !== 'undefined' && annotateMode) return true;
+      if (document.querySelector('#dual-version-panel.open, .sl-context-menu[aria-hidden="false"]')) return true;
+      return [
+        ...document.querySelectorAll('.modal-overlay, .sp-overlay, #first-run-setup'),
+        document.getElementById('search-autocomplete'),
+        document.getElementById('bible-ref-picker')
+      ].some(shown);
+    }
+
+    // Clear everything on screen: output, Preview monitor and any lower thirds.
+    function clearAllOutputs() {
+      clearOutput();
+      if (document.getElementById('name-role-overlay-show-btn')?.getAttribute('aria-pressed') === 'true') toggleNameRoleOverlay();
+      if (document.getElementById('social-engagement-overlay-show-btn')?.getAttribute('aria-pressed') === 'true') toggleSocialEngagementOverlay();
+      // After the clears above have queued their Preview refresh, empty Preview too
+      setTimeout(() => {
+        clearPreviewMonitor();
+        setPreviewMonitorCaption('Cleared');
+        setPreviewMonitorRef('');
+      }, 0);
+      showToast('Cleared everything');
+    }
+
+    // Live keys: Space go live · Alt/Ctrl+Space preview · Esc clear ·
+    // Alt/Cmd/Ctrl+Esc clear preview · Shift+Esc clear all.
+    // (Cmd+Space on macOS is Spotlight's and never reaches the app.)
+    function handleLiveShortcut(e) {
+      const isSpace = e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar';
+      const isEscape = e.key === 'Escape' || e.key === 'Esc';
+      if (!isSpace && !isEscape) return false;
+      if (e.repeat) { e.preventDefault(); return true; }
+      if (isSpace) {
+        e.preventDefault();
+        if (e.altKey || e.ctrlKey || e.metaKey) previewCurrentSelection();
+        else projectLive(true);
+        return true;
+      }
+      if (isTransientUiOpen()) return false;
+      e.preventDefault();
+      if (e.shiftKey) clearAllOutputs();
+      else if (e.altKey || e.metaKey || e.ctrlKey) clearProgramPreview();
+      else clearOutput();
+      return true;
+    }
+
     function setupKeyboardShortcuts() {
       document.addEventListener('keydown', (e) => {
         const target = e.target;
@@ -237,6 +292,7 @@
           return;
         }
         if (isTypingTarget) return;
+        if (handleLiveShortcut(e)) return;
         if (!isMod && !e.altKey && !e.shiftKey && keyLower === 's') {
           e.preventDefault();
           toggleSidebar();

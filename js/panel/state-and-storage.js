@@ -43,6 +43,8 @@
     }
 
     function idbPut(storeName, value) {
+      // Never write a placeholder for a Bible that is not loaded
+      if (storeName === STORE_BIBLES && value && value.unloaded) return Promise.resolve(false);
       if (storeName === STORE_SONGS) queueRelayStatePush({ includeSongs: true });
       if (storeName === STORE_BIBLES) queueRelayStatePush({ includeBibles: true });
       return openDb().then(db => new Promise((resolve, reject) => {
@@ -71,7 +73,8 @@
     }
 
     function dbPutMany(storeName, records) {
-      const items = Array.isArray(records) ? records : [];
+      const items = (Array.isArray(records) ? records : [])
+        .filter(item => !(storeName === STORE_BIBLES && item && item.unloaded));
       if (!items.length) return Promise.resolve(true);
       if (storeName === STORE_SONGS) queueRelayStatePush({ includeSongs: true });
       if (storeName === STORE_BIBLES) queueRelayStatePush({ includeBibles: true });
@@ -83,6 +86,121 @@
         tx.onerror = () => reject(tx.error);
         tx.onabort = () => reject(tx.error);
       }));
+    }
+
+    function idbGetAllKeys(storeName) {
+      return openDb().then(db => new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).getAllKeys();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      }));
+    }
+
+    // ── Lazy Bible loading ────────────────────────────────────────────────
+    // Only the versions in use (primary, the extra on-screen versions, the live
+    // one) are kept in memory; the rest stay in IndexedDB. An unloaded version
+    // keeps its key in `bibles` with this shared placeholder, so "does this
+    // version exist" checks still work. Records built from the placeholder are
+    // flagged and never written back (see idbPut / dbPutMany).
+    const UNLOADED_BIBLE = Object.freeze([]);
+    const BIBLE_IDLE_UNLOAD_MS = 120000;
+    const bibleLoadPromises = new Map();
+    const bibleLastUsed = new Map();
+    const bibleLoadFailed = new Set();
+
+    function isBibleLoaded(ver) {
+      return !!(ver && bibles[ver] && bibles[ver] !== UNLOADED_BIBLE);
+    }
+
+    function ensureBibleLoaded(ver) {
+      if (!ver || !bibles[ver]) return Promise.resolve(false);
+      bibleLastUsed.set(ver, Date.now());
+      if (isBibleLoaded(ver)) return Promise.resolve(true);
+      if (bibleLoadFailed.has(ver)) return Promise.resolve(false);
+      if (!bibleLoadPromises.has(ver)) {
+        const loading = idbGet(STORE_BIBLES, ver)
+          .then((record) => {
+            if (bibles[ver] === UNLOADED_BIBLE && record && Array.isArray(record.parsedData)) {
+              bibles[ver] = record.parsedData;
+            }
+            if (!isBibleLoaded(ver)) bibleLoadFailed.add(ver);
+            return isBibleLoaded(ver);
+          })
+          .catch(() => { bibleLoadFailed.add(ver); return false; })
+          .finally(() => bibleLoadPromises.delete(ver));
+        bibleLoadPromises.set(ver, loading);
+      }
+      return bibleLoadPromises.get(ver);
+    }
+
+    function ensureBiblesLoaded(list) {
+      return Promise.all([...new Set(list)].filter(Boolean).map(ensureBibleLoaded));
+    }
+
+    // Versions that must stay in memory right now.
+    function getBibleVersionsInUse() {
+      const ids = [activeBibleVersion];
+      if (dualVersionModeEnabled) ids.push(dualVersionSecondaryId, dualVersionTertiaryId);
+      if (livePointer && livePointer.kind === 'bible') ids.push(livePointer.version);
+      if (currentItem && currentItem.version) ids.push(currentItem.version);
+      return [...new Set(ids.filter(id => id && bibles[id]))];
+    }
+
+    function getMissingBibleVersionsInUse() {
+      return getBibleVersionsInUse().filter(ver => !isBibleLoaded(ver) && !bibleLoadFailed.has(ver));
+    }
+
+    function unloadIdleBibles() {
+      const keep = new Set(getBibleVersionsInUse());
+      const now = Date.now();
+      Object.keys(bibles).forEach((ver) => {
+        if (!isBibleLoaded(ver) || keep.has(ver)) return;
+        if (now - (bibleLastUsed.get(ver) || 0) < BIBLE_IDLE_UNLOAD_MS) return;
+        bibles[ver] = UNLOADED_BIBLE;
+        clearBibleSearchCache(ver);
+      });
+    }
+
+    // Startup: read only the versions the saved state refers to (plus the
+    // first one as a fallback); the rest get the placeholder.
+    function collectBibleIdsFromState(stateValue, ids) {
+      const idSet = new Set(ids);
+      const found = new Set();
+      const walk = (node, depth) => {
+        if (!node || typeof node !== 'object' || depth > 7) return;
+        Object.entries(node).forEach(([key, value]) => {
+          if (/refs?$|history|pinned|recent/i.test(key)) return;
+          if (typeof value === 'string') {
+            if (idSet.has(value) && /bible|version|selected/i.test(key)) found.add(value);
+          } else if (value && typeof value === 'object') {
+            walk(value, depth + 1);
+          }
+        });
+      };
+      walk(stateValue, 0);
+      return [...found];
+    }
+
+    async function loadBibleRecordsForBoot(stateValue) {
+      const ids = await idbGetAllKeys(STORE_BIBLES);
+      const wanted = new Set(collectBibleIdsFromState(stateValue, ids));
+      if (ids.length && !ids.some(id => wanted.has(id))) wanted.add(ids[0]);
+      const records = await Promise.all(ids.map(id => (wanted.has(id)
+        ? idbGet(STORE_BIBLES, id)
+        : Promise.resolve({ id, name: id, parsedData: UNLOADED_BIBLE }))));
+      const now = Date.now();
+      wanted.forEach(id => bibleLastUsed.set(id, now));
+      return records.filter(Boolean);
+    }
+
+    // Full records for every version, reading unloaded ones from storage, for
+    // anything that must send the whole library (relay sync).
+    async function getAllBibleRecordsForSync() {
+      return Promise.all(Object.keys(bibles).map(async (name) => {
+        if (isBibleLoaded(name)) return buildBibleRecord(name, bibles[name], { isNew: false });
+        return idbGet(STORE_BIBLES, name);
+      })).then(records => records.filter(record => record && !record.unloaded));
     }
 
     function dbClearStore(storeName) {
@@ -364,7 +482,7 @@
       const id = name;
       const searchableText = normalizeSearchText(name);
       const createdAtValue = createdAt || (isNew ? now : now);
-      return {
+      const record = {
         id,
         name,
         parsedData: Array.isArray(parsedData) ? parsedData : [],
@@ -372,6 +490,8 @@
         createdAt: createdAtValue,
         updatedAt: now
       };
+      if (parsedData === UNLOADED_BIBLE) record.unloaded = true;
+      return record;
     }
 
     function persistBibleVersion(name) {

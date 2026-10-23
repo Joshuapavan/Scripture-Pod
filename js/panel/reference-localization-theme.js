@@ -190,6 +190,10 @@
 
     function applyBibleReferenceEntry(entry) {
       if (!entry || !entry.query) return;
+      if (entry.versionId && bibles[entry.versionId] && !isBibleLoaded(entry.versionId)) {
+        ensureBibleLoaded(entry.versionId).then((loaded) => { if (loaded) applyBibleReferenceEntry(entry); });
+        return;
+      }
       if (entry.versionId && bibles[entry.versionId]) {
         activeBibleVersion = entry.versionId;
         renderVersionBar();
@@ -230,8 +234,13 @@
         label.textContent = ref.title || ref.query;
         const version = document.createElement('span');
         version.className = 'library-quick-ref-version';
-        version.textContent = ref.versionId || '';
-        btn.append(label, version);
+        version.textContent = ref.versionId ? getVersionCode(ref.versionId) : '';
+        const icon = document.createElement('span');
+        icon.className = 'library-quick-ref-icon';
+        icon.innerHTML = pinned
+          ? '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M5 17h14l-2-4V5H7v8z"/></svg>'
+          : '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+        btn.append(icon, label, version);
         btn.title = pinned ? 'Pinned' : 'Recent';
         btn.onclick = () => applyBibleReferenceEntry(ref);
         return btn;

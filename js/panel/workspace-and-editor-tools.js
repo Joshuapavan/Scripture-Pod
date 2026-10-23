@@ -2236,6 +2236,62 @@
           <div class="focused-main-list">${itemsHtml}</div>
         </div>
       `;
+      renderSetlistNextCard();
+    }
+
+    // Setlist "Up next" card (right column): the item after the live one, else
+    // after the selected one, else the first. Operator notes are saved on the
+    // setlist item itself.
+    let setlistNextIndex = -1;
+
+    function getSetlistUpNextIndex() {
+      const entries = Array.isArray(schedule) ? schedule : [];
+      if (!entries.length) return -1;
+      const liveIndex = (isLive && livePointer && livePointer.source === 'schedule') ? livePointer.index : -1;
+      const selected = (buttonContextTab === 'schedule') ? currentIndex : -1;
+      const anchor = liveIndex >= 0 ? liveIndex : selected;
+      const next = anchor >= 0 ? anchor + 1 : 0;
+      return next < entries.length ? next : -1;
+    }
+
+    function renderSetlistNextCard() {
+      const body = document.getElementById('setlist-next-body');
+      const number = document.getElementById('setlist-next-number');
+      const notes = document.getElementById('setlist-next-notes');
+      const notesWrap = document.getElementById('setlist-next-notes-wrap');
+      if (!body) return;
+      const idx = getSetlistUpNextIndex();
+      const entry = idx >= 0 ? schedule[idx] : null;
+      if (number) number.textContent = entry ? String(idx + 1).padStart(2, '0') : '';
+      if (notesWrap) notesWrap.hidden = !entry;
+      if (!entry) {
+        body.innerHTML = '<p class="setlist-next-empty">Nothing after this item.</p>';
+        setlistNextIndex = -1;
+        return;
+      }
+      const isPassage = getIsBibleItem(entry);
+      const pages = getPagesFromItem(entry, isPassage);
+      const rows = [
+        ['Type', isPassage ? 'Passage' : 'Song'],
+        isPassage && entry.version ? ['Version', entry.version] : null,
+        ['Slides', String(pages.length)]
+      ].filter(Boolean);
+      body.innerHTML = `
+        <div class="setlist-next-title">${esc(entry.title || `Item ${idx + 1}`)}</div>
+        <dl class="setlist-next-facts">${rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')}</dl>
+        <button type="button" class="btn setlist-next-cue" onclick="handleFocusedSchedulePanelAction('select', ${idx})">Cue in preview</button>
+      `;
+      // Only refill the notes when the up-next item changes, so typing is never interrupted
+      if (notes && setlistNextIndex !== idx) notes.value = entry.notes || '';
+      setlistNextIndex = idx;
+    }
+
+    function handleSetlistNotesInput(value) {
+      const entry = setlistNextIndex >= 0 ? schedule[setlistNextIndex] : null;
+      if (!entry) return;
+      entry.notes = String(value || '');
+      saveState();
+      saveToStorageDebounced();
     }
 
     function handleFocusedSchedulePanelAction(action, idx) {
@@ -2327,7 +2383,7 @@
 
     function updateFocusedWorkspaceToolbar() {
       const addBtn = document.querySelector('.header-toolbar > .add-btn');
-      const modeSwitch = document.querySelector('.toolbar-mode-switch');
+      const modeSwitch = document.getElementById('editor-mode-switch');
       const importBtn = document.getElementById('btn-import');
       const bibleToolWrap = document.querySelector('.bible-tool-wrap');
       const annotateWrap = document.querySelector('.annotate-wrap');
@@ -2396,13 +2452,15 @@
           const getSectionLabel = (tag) => {
             const trimmed = String(tag || '').trim();
             if (!trimmed) return '';
-            const match = trimmed.match(/^(verse|chorus|bridge|refrain|pre[-\s]?chorus|intro|outro|tag|hook)\b/i);
+            const match = trimmed.match(/^(verse|chorus|bridge|refrain|pre[-\s]?chorus|intro|outro|tag|hook)\b\s*(\d+)?/i);
             if (!match) return trimmed;
             const base = match[1].replace(/^pre[-\s]?chorus$/i, 'Pre-Chorus');
-            return base
+            const label = base
               .split(/[\s-]+/)
               .map(part => part ? (part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()) : '')
               .join(base.includes('-') ? '-' : ' ');
+            // Keep the section number so Verse 1, Verse 2… each get a chip
+            return match[2] ? `${label} ${match[2]}` : label;
           };
           pages.forEach((page) => {
             const tag = String(page?.tag || '').trim();
@@ -2423,7 +2481,7 @@
         setEyebrow('Bible workspace');
         titleEl.textContent = hasChapter ? (currentItem.title || 'Bible') : 'Bible';
         subtitleEl.textContent = hasChapter
-          ? (currentItem.version || '')
+          ? (getOnScreenVersionIds().map(getVersionCode).join(' · ') || getVersionCode(currentItem.version))
           : 'Select a chapter or search a reference';
         renderSectionNav([]);
         return;
