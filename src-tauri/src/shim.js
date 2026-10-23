@@ -11,8 +11,9 @@
   ['getDisplays', 'openOutput', 'closeOutput', 'isOutputOpen', 'openFeed', 'closeFeed', 'isFeedOpen',
     'sendOutputMessage', 'sendWebSocketOutputMessage', 'requestOutputFullscreen', 'getLocalServerInfo',
     'listBundledBibleFiles', 'readBundledBibleFile', 'readBundledChurchLogo', 'cacheBackgroundMedia', 'copyText',
-    'saveBackup', 'openBackup'].forEach((n) => { api[n] = call(n); });
+    'openBackup'].forEach((n) => { api[n] = call(n); });
   api.bibleSearch = (method, payload) => call('bibleSearch')({ method, payload });
+  api.saveBackup = (filename, contents) => call('saveBackup')({ filename, contents });
   api.openRecordingInLocation = (payload = {}) => call('openInLocation')(payload.path);
   const handlers = {};
   api.onOutputClosed = (cb) => { handlers['output-closed'] = cb; };

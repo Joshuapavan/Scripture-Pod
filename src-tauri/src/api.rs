@@ -101,6 +101,19 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
             if let Some(p) = arg.as_str().filter(|p| !p.is_empty()) { let _ = app.opener().reveal_item_in_dir(p); }
             json!({"ok": true})
         }
+        // Development harness only: run JS in the output window (result goes to the log)
+        #[cfg(any(debug_assertions, feature = "harness"))]
+        "evalOutput" => {
+            if let Some(w) = app.get_webview_window("output") {
+                let js = arg.as_str().unwrap_or("");
+                let _ = w.eval(&format!("(async()=>{{try{{const r=await (async()=>{{{}}})();await fetch('/__bsp/log?label=out',{{method:'POST',body:JSON.stringify(JSON.stringify(r))}});}}catch(e){{await fetch('/__bsp/log?label=out',{{method:'POST',body:JSON.stringify('ERR '+e.message)}});}}}})()", js));
+            }
+            json!(true)
+        }
+        #[cfg(any(debug_assertions, feature = "harness"))]
+        "devWrite" => { let ok = fs::write(arg["path"].as_str().unwrap_or("/tmp/dev-write"), arg["contents"].as_str().unwrap_or("")).is_ok(); json!({"ok": ok}) }
+        #[cfg(any(debug_assertions, feature = "harness"))]
+        "devRead" => json!({"contents": fs::read_to_string(arg.as_str().unwrap_or("")).unwrap_or_default()}),
         "log" => { println!("[page:{}] {}", label, arg); json!(true) }
         "outputReady" => { if label == "output" || label == "feed" { windows::emit_main(app, "output-ready"); } json!(true) }
         _ => err("unknown call"),

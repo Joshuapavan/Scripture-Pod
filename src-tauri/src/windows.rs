@@ -41,7 +41,11 @@ pub fn displays(app: &AppHandle) -> Value {
 fn bounds(app: &AppHandle, display_id: Option<&str>) -> (f64, f64, f64, f64) {
     let list = app.available_monitors().unwrap_or_default();
     let pick = display_id.and_then(|id| id.parse::<usize>().ok()).and_then(|i| list.get(i))
-        .or_else(|| list.iter().find(|m| !is_internal(m)))
+        .or_else(|| { // not the primary screen (it holds the panel), else any external one
+            let primary = app.primary_monitor().ok().flatten();
+            list.iter().find(|m| !is_internal(m) && primary.as_ref().map(|p| p.position() != m.position()).unwrap_or(true))
+                .or_else(|| list.iter().find(|m| !is_internal(m) && list.len() > 1))
+        })
         .cloned().or_else(|| app.primary_monitor().ok().flatten());
     match pick {
         Some(m) => { let s = m.scale_factor(); (m.position().x as f64 / s, m.position().y as f64 / s, m.size().width as f64 / s, m.size().height as f64 / s) }

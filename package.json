@@ -7,21 +7,11 @@
   "private": true,
   "scripts": {
     "test": "node --test && cd src-tauri && cargo test",
-    "mobile:build": "node scripts/build-mobile.js",
-    "mobile:sync": "npm run mobile:build && cap sync",
-    "mobile:android": "npm run mobile:sync && cap open android",
-    "mobile:ios": "npm run mobile:sync && cap open ios",
     "tauri:dev": "cd src-tauri && cargo run",
     "tauri:build": "cd src-tauri && cargo tauri build",
     "start": "cd src-tauri && cargo run"
   },
   "dependencies": {
     "qrcode-generator": "^2.0.4"
-  },
-  "devDependencies": {
-    "@capacitor/android": "^8.5.3",
-    "@capacitor/cli": "^8.4.3",
-    "@capacitor/core": "^8.5.3",
-    "@capacitor/ios": "^8.5.3"
   }
 }

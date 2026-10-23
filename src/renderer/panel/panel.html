@@ -193,6 +193,7 @@
           <span class="overlay-list-copy"><span class="overlay-list-name">Scripture lower third</span><span class="overlay-list-state"><span class="is-ready">Follows the Bible workspace</span></span></span>
         </button>
         <div class="library-label overlays-saved-label">Saved names</div>
+        <input type="search" id="saved-names-search" class="saved-names-search" placeholder="Search names" aria-label="Search saved names" autocomplete="off" hidden oninput="setSavedNamesQuery(this.value)">
         <div id="saved-names-list" class="saved-names-list"></div>
       </nav>
       <div class="overlays-stage">

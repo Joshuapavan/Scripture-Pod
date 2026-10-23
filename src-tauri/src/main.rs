@@ -12,8 +12,10 @@ use tauri::{http::Response, Manager};
 
 fn app_root(app: &tauri::App) -> PathBuf {
     // Packaged: resources/app. Development: the project folder one level up.
-    let packaged = app.path().resource_dir().ok().map(|d| d.join("app")).filter(|d| d.join("src").is_dir());
-    packaged.unwrap_or_else(|| PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf())
+    let dev = PathBuf::from(env!("CARGO_MANIFEST_DIR")).parent().unwrap().to_path_buf();
+    // Development builds read the project folder directly so edits show without a rebuild
+    if cfg!(debug_assertions) || cfg!(feature = "harness") { return dev; }
+    app.path().resource_dir().ok().map(|d| d.join("app")).filter(|d| d.join("src").is_dir()).unwrap_or(dev)
 }
 
 fn env_port(name: &str, default: u16) -> u16 { std::env::var(name).ok().and_then(|v| v.parse().ok()).unwrap_or(default) }
@@ -31,7 +33,8 @@ fn main() {
             thread::spawn(move || {
                 let state = app.state::<Arc<AppState>>().inner().clone();
                 let reply = |status: u16, ctype: &str, data: Vec<u8>| {
-                    Response::builder().status(status).header("Content-Type", ctype).body(data).unwrap()
+                    // Local files: never serve a stale copy after an update
+                    Response::builder().status(status).header("Content-Type", ctype).header("Cache-Control", "no-store").body(data).unwrap()
                 };
                 if let Some(name) = path.strip_prefix("/__bsp/") {
                     let label = query.split('&').find_map(|kv| kv.strip_prefix("label=")).unwrap_or("");

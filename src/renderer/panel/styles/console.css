@@ -2179,19 +2179,16 @@ body:has(#social-engagement-overlay-show-btn[aria-pressed="true"]) .overlay-list
 .lt-design-tile[aria-pressed="true"] { border-color: var(--sp-text); box-shadow: 0 0 0 1px var(--sp-text); font-weight: 500; }
 .lt-design-label { padding: 0 2px; font-size: 12px; font-weight: 500; }
 .lt-design-thumb {
-  position: relative; display: block; width: 100%; height: 64px; border-radius: 6px; overflow: hidden; background: #1B2C55;
+  position: relative; display: block; width: 100%; height: 72px; border-radius: 6px; overflow: hidden; background: #10151d;
 }
-.lt-thumb-stack { position: absolute; left: 10px; right: auto; bottom: 12px; display: flex; flex-direction: column; align-items: flex-start; }
-.lt-design-thumb.is-right .lt-thumb-stack { left: auto; right: 10px; align-items: flex-end; }
-.lt-design-thumb.is-centered .lt-thumb-stack { left: 10px; right: 10px; align-items: center; }
-.lt-design-thumb.is-band .lt-thumb-stack { left: 0; right: 0; bottom: 8px; align-items: stretch; }
-.lt-thumb-row { display: flex; align-items: stretch; }
-.lt-design-thumb.is-right .lt-thumb-row { flex-direction: row-reverse; }
-.lt-thumb-edge { width: 3px; }
-.lt-thumb-name { padding: 3px 8px; font-size: 10px; font-weight: 700; white-space: nowrap; }
-.lt-thumb-role { padding: 2px 8px; font-size: 8px; }
-.lt-design-thumb.is-band .lt-thumb-name { flex: 1 1 auto; }
-.lt-design-thumb.is-band .lt-thumb-role { align-self: flex-start; }
+.lt-design-thumb iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; pointer-events: none; }
+.lt-design-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 100%; }
+.lt-design-search, .saved-names-search {
+  height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-text); font-size: 13px;
+}
+.lt-design-search { width: 180px; }
+.saved-names-search { width: 100%; margin-bottom: 8px; }
+.lt-design-none { grid-column: 1 / -1; margin: 8px 0; color: var(--sp-subtle); font-size: 13px; }
 
 /* Right: Text and Style cards, then Test and the on-air button */
 .overlays-settings { display: flex; flex-direction: column; background: #0E1013; padding: 16px; gap: 16px; }

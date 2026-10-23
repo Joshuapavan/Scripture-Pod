@@ -312,18 +312,24 @@
     function syncStandaloneOutputDirect(burstSeq) {
       const viewport = getEmbeddedDisplayViewport();
       const seq = burstSeq || nextSeq();
-      if (currentProgramDisplaySource === 'lyrics' && embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload) {
-        // Full content sync — text, background and mode
+      if (currentProgramDisplaySource !== 'lyrics') return;
+      // The output window only ever shows what is on air. A stale Program state
+      // (nothing live) must not paint a black full-screen page over a transparent output.
+      const onAir = typeof getOnAirPayload === 'function' ? getOnAirPayload() : null;
+      if (onAir && embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload) {
+        const payload = embeddedProgramDisplayState.payload;
         postMessageToStandaloneOutput({
           type: 'PREVIEW_UPDATE',
           payload: {
-            ...embeddedProgramDisplayState.payload,
-            mode: 'full',
+            ...payload,
+            mode: payload.lowerThirdOnly ? payload.mode : 'full',
             seq,
             displayViewportWidth: viewport.width,
             displayViewportHeight: viewport.height
           }
         });
+      } else {
+        postMessageToStandaloneOutput({ type: 'PREVIEW_CLEAR' });
       }
     }
 
