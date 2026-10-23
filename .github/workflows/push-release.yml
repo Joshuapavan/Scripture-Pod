@@ -5,77 +5,96 @@ on:
     branches:
       - main
   create:
-  pull_request:
-
-  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  # Fast checks: the Node tests and the Rust core crate (no windowing, so no system libraries
-  # and no Tauri compile). Runs alongside the installer builds instead of in front of them.
   test:
     if: ${{ github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
-      - run: node --test
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-      - run: cargo test -p sp-core
-        working-directory: src-tauri
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run tests
+        run: npm test
 
   build:
-    if: ${{ github.event_name != 'pull_request' && (github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v'))) }}
-    timeout-minutes: 40
+    if: ${{ github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) }}
+    needs: test
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: macos-latest
-            args: --target aarch64-apple-darwin --bundles dmg
+            command: npm run dist:mac -- --arm64 --publish never
             artifact: mac-arm64
           - os: macos-latest
-            args: --target x86_64-apple-darwin --bundles dmg
+            command: npm run dist:mac -- --x64 --publish never
             artifact: mac-x64
           - os: windows-latest
-            args: --bundles nsis
+            command: npm run dist:win -- --publish never
             artifact: windows
-          - os: ubuntu-22.04
-            args: --bundles deb,appimage
+          - os: ubuntu-latest
+            command: npm run dist:linux -- --publish never
             artifact: linux
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Linux system libraries (WebKitGTK)
-        if: matrix.os == 'ubuntu-22.04'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build release assets
+        run: ${{ matrix.command }}
+        shell: bash
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: packaged-${{ matrix.artifact }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  android:
+    if: ${{ github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) }}
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - name: Set up Java
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v4
+      - name: Install Android SDK platform
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Install dependencies
+        run: npm ci
+      - name: Build mobile web assets
+        run: npm run mobile:build
+      - name: Sync Capacitor Android project
+        run: npx cap sync android
+      - name: Build Android APK
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
-      - uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-      # Signing and notarization run only when these secrets exist.
-      # macOS: APPLE_CERTIFICATE (base64 .p12), APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
-      #        APPLE_ID, APPLE_PASSWORD (app-specific), APPLE_TEAM_ID
-      - name: Build installer
-        run: npx --yes @tauri-apps/cli@2 build ${{ matrix.args }}
-        working-directory: src-tauri
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        working-directory: android
         shell: bash
         env:
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
@@ -87,18 +106,14 @@ jobs:
       - name: Upload installers
         uses: actions/upload-artifact@v4
         with:
-          name: packaged-${{ matrix.artifact }}
-          path: |
-            src-tauri/target/**/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/nsis/*.exe
-            src-tauri/target/release/bundle/deb/*.deb
-            src-tauri/target/release/bundle/appimage/*.AppImage
+          name: packaged-android
+          path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
 
   release:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' || (github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) }}
-    needs: [test, build]
+    if: ${{ github.event_name != 'create' || (github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) }}
+    needs: [build, android]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -123,7 +138,7 @@ jobs:
             release_flags+=(--prerelease)
           fi
           mapfile -d '' release_assets < <(
-            find release-assets -type f \( -iname '*.dmg' -o -iname '*.exe' -o -iname '*.appimage' -o -iname '*.deb' \) -print0 | sort -z
+            find release-assets -type f \( -iname '*.appimage' -o -iname '*.apk' -o -iname '*.exe' -o -iname '*.zip' \) -print0 | sort -z
           )
           if (( ${#release_assets[@]} == 0 )); then
             echo 'No distributable release assets were found.' >&2
@@ -135,7 +150,9 @@ jobs:
               echo "Release $tag already has assets; refusing to overwrite them." >&2
               exit 1
             fi
-            gh release upload "$tag" "${release_assets[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+            gh release upload "$tag" "${release_assets[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
           else
             gh release create "$tag" "${release_assets[@]}" \
               --repo "$GITHUB_REPOSITORY" \
