@@ -30,8 +30,9 @@ fn handle(req: tiny_http::Request, state: &AppState) {
         return;
     }
     let rel = percent_decode(if path == "/" { DISPLAY_PAGE } else { &path });
-    match resolve_app_file(&state.root, &rel).and_then(|p| fs::read(&p).ok().map(|d| (p, d))) {
-        Some((p, data)) => { let _ = req.respond(Response::from_data(data).with_header(header("Content-Type", content_type(&p)))); }
+    match resolve_app_file(&state.root, &rel) {
+        // Browsers (WebKit above all) only play video when the server answers byte ranges
+        Some(p) => serve_file(req, &p, content_type(&p), "no-cache"),
         None => { let _ = req.respond(Response::from_string("Not found").with_status_code(404)); }
     }
 }
@@ -39,7 +40,11 @@ fn handle(req: tiny_http::Request, state: &AppState) {
 fn media(req: tiny_http::Request, state: &AppState, id: &str) {
     let entry = state.media.lock().unwrap().get(id).cloned();
     let Some((path, mime)) = entry else { let _ = req.respond(Response::from_string("Media not found").with_status_code(404)); return; };
-    let Ok(mut f) = fs::File::open(&path) else { let _ = req.respond(Response::from_string("Media unavailable").with_status_code(404)); return; };
+    serve_file(req, &path, &mime, "private, max-age=3600");
+}
+
+fn serve_file(req: tiny_http::Request, path: &std::path::Path, mime: &str, cache: &str) {
+    let Ok(mut f) = fs::File::open(path) else { let _ = req.respond(Response::from_string("Not found").with_status_code(404)); return; };
     let size = f.metadata().map(|m| m.len()).unwrap_or(0);
     let range = req.headers().iter().find(|h| h.field.equiv("Range")).map(|h| h.value.to_string());
     let (start, end, partial) = match range.as_deref().and_then(|r| r.strip_prefix("bytes=")).and_then(|r| r.split_once('-')) {
@@ -59,7 +64,7 @@ fn media(req: tiny_http::Request, state: &AppState, id: &str) {
     let _ = f.seek(SeekFrom::Start(start));
     let len = if size == 0 { 0 } else { end - start + 1 };
     let mut resp = Response::new(if partial { 206.into() } else { 200.into() },
-        vec![header("Accept-Ranges", "bytes"), header("Cache-Control", "private, max-age=3600"), header("Content-Type", &mime)],
+        vec![header("Accept-Ranges", "bytes"), header("Cache-Control", cache), header("Content-Type", mime)],
         f.take(len), Some(len as usize), None);
     if partial { resp = resp.with_header(header("Content-Range", &format!("bytes {}-{}/{}", start, end, size))); }
     let _ = req.respond(resp);

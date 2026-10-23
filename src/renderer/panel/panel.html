@@ -536,9 +536,9 @@
             </select></div>
             <label for="social-engagement-autohide" class="ov-label">Hide after</label>
             <div class="ov-control"><select id="social-engagement-autohide" class="ov-select" onchange="handleSocialEngagementOverlayChange()">
-              <option value="0" selected>Stays until hidden</option>
+              <option value="0">Stays until hidden</option>
               <option value="8">8 seconds</option>
-              <option value="15">15 seconds</option>
+              <option value="15" selected>15 seconds</option>
               <option value="30">30 seconds</option>
               <option value="60">1 minute</option>
             </select></div>
@@ -619,6 +619,7 @@
         <span class="program-display-title" data-i18n="ui_program_display">Program Display</span>
         <span class="program-preview-state">PREVIEW</span>
       </div>
+      <div id="monitor-stack">
       <div id="program-scale-controls">
         <div class="program-scale-left">
           <button type="button" class="program-scale-btn" id="program-scale-out">-</button>
@@ -652,6 +653,7 @@
         <div id="program-display-shell" data-aspect="16:9">
           <iframe id="program-display-frame" title="Program Display Preview" data-i18n-title="ui_program_display_preview" allowtransparency="true"></iframe>
         </div>
+      </div>
       </div>
       <section id="setlist-next-card" aria-labelledby="setlist-next-title">
         <div class="setlist-next-head">

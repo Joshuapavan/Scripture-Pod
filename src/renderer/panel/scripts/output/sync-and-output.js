@@ -172,6 +172,15 @@
         const el = document.getElementById('social-engagement-' + name);
         if (el && config.select && config.select[name] && [...el.options].some(o => o.value === config.select[name])) el.value = config.select[name];
       });
+      // The social lower third now hides itself by default; carry earlier "stays until hidden" saves over once
+      try {
+        const MIGRATED_KEY = 'scripturePod.socialAutoHide.v1';
+        const hide = document.getElementById('social-engagement-autohide');
+        if (hide && !localStorage.getItem(MIGRATED_KEY)) {
+          if (hide.value === '0') hide.value = '15';
+          localStorage.setItem(MIGRATED_KEY, '1');
+        }
+      } catch (error) { /* storage unavailable */ }
     }
 
     function socialEngagementHasContent(overlay) {

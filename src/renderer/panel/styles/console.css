@@ -746,10 +746,18 @@ body.overlays-workspace-active #workspace-height-handle { display: none !importa
 }
 
 /* ── Column order: Preview · Program (+ zoom) · Look · Outputs ─────────────── */
-#program-display-panel > #preview-monitor { order: 1; }
-#program-display-panel > #program-monitor-head { order: 2; }
-#program-display-panel > #program-scale-controls { order: 3; }
-#program-display-panel > #program-display-stage { order: 4; }
+/* Preview and Program stay in view while the cards below scroll */
+#program-display-panel > #monitor-stack {
+  order: 1; position: sticky; top: 0; z-index: 6; flex: 0 0 auto;
+  display: flex; flex-direction: column; padding-bottom: 4px;
+  background: var(--sp-ground); box-shadow: 0 1px 0 var(--sp-line);
+}
+/* On a short window the monitors would leave no room to scroll */
+@media (max-height: 720px) { #program-display-panel > #monitor-stack { position: static; } }
+#monitor-stack > #preview-monitor { order: 1; }
+#monitor-stack > #program-monitor-head { order: 2; }
+#monitor-stack > #program-scale-controls { order: 3; }
+#monitor-stack > #program-display-stage { order: 4; }
 #program-display-panel > #look-card { order: 5; }
 #program-display-panel > #outputs-card { order: 6; }
 #program-display-panel > .program-display-footer { order: 7; }
