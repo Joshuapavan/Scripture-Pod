@@ -1341,7 +1341,12 @@
     }
 
     function handleUpdate(d) {
-      if (IS_STANDALONE_MONITOR && !d.lowerThirdOnly && !d.restorePrevious) {
+      // A small update (background video loop or speed) carries no verse: apply it on top of
+      // the last full update so the page keeps its mode and text
+      if (d.mode === undefined && typeof d.text !== 'string' && !d.lowerThirdOnly && !d.restorePrevious && lastProjectionUpdate) {
+        d = { ...lastProjectionUpdate, ...d };
+      }
+      if (IS_STANDALONE_MONITOR && !d.lowerThirdOnly && !d.restorePrevious && !d.forceLt) {
         d = { ...d, mode: 'full' };
       }
       if (d.restorePrevious) {
@@ -2723,11 +2728,14 @@
                 const angle = typeof d.bgGradientAngle !== 'undefined' ? d.bgGradientAngle : 90;
                 setCachedBgImage(elements.bg, buildBackgroundGradient(d.bgGradientShape, angle, gradStart, gradEnd));
                 elements.bg.style.backgroundColor = gradStart;
+                elements.bg.classList.add('bg-animated');
+                return;
               } else {
                 setCachedBgImage(elements.bg, 'none');
                 elements.bg.style.backgroundColor = d.bgColor || 'black';
               }
             }
+            elements.bg.classList.remove('bg-animated');
           };
 
           const shouldFade = (bgModeChanged || bgTypeChanged) && bgCurrentlyActive && prevBgState.full && !bgVideoSrc && !bgGifSrc && !bgYoutubeSrc;

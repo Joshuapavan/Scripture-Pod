@@ -1296,7 +1296,7 @@ body.overlays-workspace-active #workspace-height-handle { display: none !importa
 }
 #focused-editor-banner-main {
   order: -1;
-  flex: 1 1 200px;
+  flex: 1 1 260px;
   display: flex;
   flex-direction: column;
   align-items: flex-start !important;
@@ -1305,7 +1305,7 @@ body.overlays-workspace-active #workspace-height-handle { display: none !importa
   margin-right: auto;
   text-align: left !important;
 }
-#main .header-toolbar { flex-wrap: nowrap !important; }
+#main .header-toolbar { flex-wrap: wrap !important; row-gap: 10px !important; }
 #main .header-toolbar > :not(#focused-editor-banner-main) { flex: 0 0 auto; }
 #focused-editor-banner-eyebrow {
   color: var(--sp-subtle);
@@ -2426,8 +2426,7 @@ body[data-sidebar-tab="songs"] #look-card #look-ref-row { display: none !importa
 .overlays-stage { padding-top: 0 !important; }
 
 /* Lyrics header carries the layout switch too: let it wrap instead of squeezing the title */
-body[data-sidebar-tab="songs"] .header-toolbar { flex-wrap: wrap; row-gap: 8px; }
-body[data-sidebar-tab="songs"] #focused-editor-banner-title { min-width: 200px; }
+body[data-sidebar-tab="songs"] #focused-editor-banner-title { min-width: 0; }
 
 /* ── Settings redesign: a titled card per section, one row per setting ───────── */
 #settingsModal .sm-tab-panel .settings-category-content {
@@ -2499,3 +2498,37 @@ body[data-sidebar-tab="songs"] #focused-editor-banner-title { min-width: 200px; 
 }
 #settingsModal .settings-row .settings-field > * { grid-column: 2 !important; }
 #settingsModal .settings-row .settings-field > .settings-label:first-child { grid-column: 1 !important; grid-row: 1 !important; }
+
+/* Header: the title keeps its row, the controls wrap beneath it instead of overlapping */
+#main .header-toolbar #focused-editor-banner-main { min-width: min(260px, 100%); }
+#focused-editor-banner-subtitle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+#main .header-toolbar .toolbar-mode-switch { max-width: 100%; }
+
+/* Lyrics editor: title and save bar above the text */
+#song-edit-bar { display: none; align-items: center; gap: 10px; padding: 10px 24px; border-bottom: 1px solid var(--sp-line); background: var(--sp-ground); }
+body[data-sidebar-tab="songs"] #editor-container:has(#lyric-editor[style*="block"]) #song-edit-bar { display: flex; }
+#song-edit-bar label { font-size: 12px; color: var(--sp-muted); }
+#song-edit-bar #song-edit-title {
+  flex: 1 1 auto; min-width: 0; height: 38px; padding: 0 12px; border-radius: 8px;
+  background: var(--sp-inset) !important; border: 1px solid var(--sp-line-2) !important; color: var(--sp-text) !important; font-size: 14px;
+}
+#song-edit-bar .song-edit-status { font-size: 12px; color: var(--sp-subtle); white-space: nowrap; }
+#song-edit-bar .song-edit-status.is-dirty { color: var(--sp-cue); }
+#song-edit-bar #song-edit-save { height: 38px; padding: 0 14px; border-radius: 8px; background: var(--sp-text); color: var(--sp-ground); border: 0; font-weight: 600; }
+body[data-sidebar-tab="songs"] #focused-editor-banner-title { cursor: text; }
+body[data-sidebar-tab="songs"] #focused-editor-banner-title:hover::after { content: "  ✎"; font-size: 16px; color: var(--sp-subtle); }
+
+/* Cards: wide, readable cards (usually one or two across). Grid: many small tiles. They no longer look alike. */
+body[data-sidebar-tab="songs"][data-lyric-view="cards"] #lyric-buttons { --lyric-card-min: 440px; gap: 12px; }
+body[data-sidebar-tab="songs"][data-lyric-view="cards"] #lyric-buttons .lyric-btn { min-height: 120px; font-size: 18px !important; padding: 14px 16px !important; }
+body[data-sidebar-tab="songs"][data-lyric-view="grid"] #lyric-buttons { --lyric-card-min: 150px; gap: 8px; }
+body[data-sidebar-tab="songs"][data-lyric-view="grid"] #lyric-buttons .lyric-btn { min-height: 76px; font-size: 12px !important; line-height: 1.35 !important; padding: 8px 10px !important; gap: 4px; }
+body[data-sidebar-tab="songs"][data-lyric-view="grid"] #lyric-buttons .lyric-head { gap: 6px; }
+body[data-sidebar-tab="songs"][data-lyric-view="grid"] #lyric-buttons .lyric-sec { font-size: 10px; }
+body[data-sidebar-tab="songs"][data-lyric-view="grid"] #lyric-buttons .lyric-text { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* setEditorMode writes display:block inline, which kept the cards in one column: win over it */
+body[data-sidebar-tab="songs"] #lyric-buttons:not([style*="none"]) { display: grid !important; }
+body[data-sidebar-tab="songs"][data-lyric-view="grouped"] #lyric-buttons:not([style*="none"]) { display: block !important; }
+body[data-sidebar-tab="songs"] #lyric-buttons[style*="none"] { display: none !important; }
+body[data-sidebar-tab="songs"] #main .header-toolbar #focused-editor-banner-main { flex: 1 1 320px; min-width: 320px; }

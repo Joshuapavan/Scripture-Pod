@@ -261,6 +261,7 @@
 
     function sendProgramPreview(payload, opts = {}) {
       if (!payload) return false;
+      if (typeof forMonitor === 'function') payload = forMonitor(payload);
       // A mirrored live payload already carries the version gap
       if (!opts.mirror && typeof applyBibleVersionGap === 'function') payload = applyBibleVersionGap(payload);
       const viewport = getEmbeddedDisplayViewport();
@@ -325,12 +326,12 @@
       // (nothing live) must not paint a black full-screen page over a transparent output.
       const onAir = typeof getOnAirPayload === 'function' ? getOnAirPayload() : null;
       if (onAir && embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload) {
-        const payload = embeddedProgramDisplayState.payload;
+        const payload = typeof forOutput === 'function' ? forOutput(embeddedProgramDisplayState.payload) : embeddedProgramDisplayState.payload;
         postMessageToStandaloneOutput({
           type: 'PREVIEW_UPDATE',
           payload: {
             ...payload,
-            mode: payload.lowerThirdOnly ? payload.mode : 'full',
+            mode: payload.lowerThirdOnly ? payload.mode : (payload.forceLt ? 'lt' : 'full'),
             seq,
             displayViewportWidth: viewport.width,
             displayViewportHeight: viewport.height
@@ -442,6 +443,26 @@
     :root { color-scheme: dark; }
     * { box-sizing: border-box; }
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; font-family: 'Segoe UI', system-ui, sans-serif; }
+    /* Gradient background: settles in, then drifts and breathes. Moved with transforms on two
+       inherited layers, so it runs on the GPU and stays smooth. */
+    #bg.bg-animated { overflow: hidden; }
+    #bg.bg-animated::before, #bg.bg-animated::after { content: ""; position: absolute; pointer-events: none; will-change: transform, opacity; }
+    #bg.bg-animated::before {
+        inset: -35%;
+        background: inherit;
+        background-size: cover;
+        animation: bg-settle 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) both, bg-drift 18s ease-in-out 1.8s infinite alternate;
+    }
+    #bg.bg-animated::after {
+        inset: -20%;
+        background: radial-gradient(circle at 70% 65%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 55%);
+        animation: bg-glow-in 2.4s ease-out both, bg-glow 14s ease-in-out 2.4s infinite alternate;
+    }
+    @keyframes bg-settle { from { transform: translate(0, 0) scale(1.7); opacity: 0; } to { transform: translate(-4%, -3%) scale(1.2) rotate(0deg); opacity: 1; } }
+    @keyframes bg-drift { from { transform: translate(-4%, -3%) scale(1.2) rotate(0deg); } to { transform: translate(5%, 4%) scale(1.38) rotate(7deg); } }
+    @keyframes bg-glow-in { from { opacity: 0; transform: translate(-8%, 6%); } to { opacity: 1; transform: translate(0, 0); } }
+    @keyframes bg-glow { from { transform: translate(-9%, 7%) scale(1); } to { transform: translate(10%, -8%) scale(1.25); } }
+    @media (prefers-reduced-motion: reduce) { #bg.bg-animated::before, #bg.bg-animated::after { animation: none; } }
     body.display-full-mode, body.display-custom-mode { background: #000; }
     body.lower-third-only-mode, body.lyrics-lt-mode { background: transparent; }
     #bg { position: fixed; inset: 0; z-index: 2; background: #000 center / cover no-repeat; transition: filter 220ms ease, opacity 220ms ease; }
@@ -694,6 +715,7 @@
         const blurPx = Math.max(0, Math.min(40, Number(data.bgBlur || 0)));
         bg.style.opacity = enabled ? String(opacity) : '0';
         bg.style.filter = blurPx > 0 ? 'blur(' + blurPx + 'px)' : 'none';
+        bg.classList.remove('bg-animated');
 
         if (!enabled) {
           bg.style.background = '#000';
@@ -749,6 +771,7 @@
         }
 
         const mode = String(data.bgMode || 'solid');
+        bg.classList.toggle('bg-animated', mode === 'gradient');
         const angle = Number(data.bgGradientAngle || 135);
         const shadow = data.bgGradientShadow || '#111111';
         const highlight = data.bgGradientHighlight || '#000000';

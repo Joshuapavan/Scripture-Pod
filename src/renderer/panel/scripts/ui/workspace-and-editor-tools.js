@@ -204,7 +204,50 @@
       saveToStorageDebounced();
       updateButtonView();
       refreshSongTranslationPanel(currentItem);
+      if (document.activeElement !== document.getElementById('song-edit-title')) setSongEditStatus('Saved');
       if (isLive && livePointer && livePointer.kind === 'songs' && livePointer.index === currentIndex) scheduleLiveUpdate();
+    }
+
+    // Title and lyrics editing: lyrics autosave as you type; the title and the Save button commit
+    function setSongEditStatus(text, dirty = false) {
+      const el = document.getElementById('song-edit-status');
+      if (!el) return;
+      el.textContent = text;
+      el.classList.toggle('is-dirty', dirty);
+    }
+
+    function markSongEdited() { setSongEditStatus('Unsaved changes', true); }
+
+    function syncSongEditBar() {
+      const input = document.getElementById('song-edit-title');
+      if (!input || document.activeElement === input) return;
+      const song = currentItem && !getIsBibleItem(currentItem) ? currentItem : null;
+      input.value = song ? (song.title || '') : '';
+      input.disabled = !song;
+      setSongEditStatus('Saved');
+    }
+
+    function saveSongEdits() {
+      if (sidebarTab === 'bible' || !currentItem || getIsBibleItem(currentItem)) return;
+      const input = document.getElementById('song-edit-title');
+      const title = String(input ? input.value : currentItem.title || '').trim();
+      if (!title) { showToast('Song title cannot be empty'); return; }
+      if (title !== (currentItem.title || '')) {
+        const idx = songs.indexOf(currentItem);
+        if (idx < 0 || !renameSongTitle(idx, title)) return;
+      }
+      saveCurrentItem();
+      if (typeof updateFocusedEditorBanner === 'function') updateFocusedEditorBanner();
+      setSongEditStatus('Saved');
+      showToast('Song saved');
+    }
+
+    // Clicking the title opens the editor on the title field
+    function editSongFromHeader() {
+      if (sidebarTab !== 'songs' || !currentItem || getIsBibleItem(currentItem)) return;
+      setEditorMode('text');
+      const input = document.getElementById('song-edit-title');
+      if (input) { input.focus(); input.select(); }
     }
 
     function captureSingleLineFontBaseline() {
@@ -2444,6 +2487,7 @@
     }
 
     function updateFocusedEditorBanner() {
+      if (typeof syncSongEditBar === 'function') syncSongEditBar();
       const titleEl = document.getElementById('focused-editor-banner-title');
       const subtitleEl = document.getElementById('focused-editor-banner-subtitle');
       const sectionNavEl = document.getElementById('focused-editor-section-nav');

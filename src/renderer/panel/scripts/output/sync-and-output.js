@@ -55,7 +55,7 @@
         isDisplayOnline = false;
         updateStatusText();
         updateProgramDisplayStatus();
-      }, 3000);
+      }, 9000);
     }
 
     // Top bar button: red when something is on air, blue when only the Preview holds something
@@ -1031,7 +1031,7 @@ ${getLtThumbCss()}
       // before the versions on screen changed) must not appear when a display connects
       const onAir = typeof getOnAirPayload === 'function' ? getOnAirPayload() : (lastLiveState && lastLiveState.kind === 'update' ? lastLiveState.payload : null);
       const state = onAir
-        ? { kind: 'update', payload: { ...onAir } }
+        ? { kind: 'update', payload: forOutput({ ...onAir }) }
         : { kind: 'clear' };
       const payload = state.payload;
       const activeMedia = payload?.bgEnabled && Number(payload.bgOpacity ?? 1) > 0
@@ -1278,7 +1278,17 @@ ${getLtThumbCss()}
       }
     }
 
-    function broadcastMessage(msg) {
+    // Lyrics always go out as a lower third; the monitors in the panel show them full screen
+    function isSongPayload(p) {
+      return !!p && p.isBible === false && !p.lowerThirdOnly && !p.restorePrevious && typeof p.text === 'string';
+    }
+    function forOutput(p) { return isSongPayload(p) ? { ...p, mode: 'lt', forceLt: true } : p; }
+    function forMonitor(p) { return isSongPayload(p) ? { ...p, mode: 'full' } : p; }
+
+    function broadcastMessage(rawMsg) {
+      let msg = rawMsg;
+      if (msg && msg.type === 'UPDATE') msg = forOutput(msg);
+      else if (msg && msg.type === 'SYNC_STATE' && msg.state && msg.state.payload) msg = { ...msg, state: { ...msg.state, payload: forOutput(msg.state.payload) } };
       const outputMessage = mapOutputMessageMedia(msg);
       if (channel) channel.postMessage(outputMessage);
       const relayMessage = compactRelayMedia(outputMessage);
@@ -1306,10 +1316,20 @@ ${getLtThumbCss()}
     }
     if (window.BSPDesktop && typeof window.BSPDesktop.onOutputReady === 'function') {
       window.BSPDesktop.onOutputReady(() => {
+        markDisplayOnline();
         if (typeof queueStandaloneSyncBurst === 'function') queueStandaloneSyncBurst();
       });
     }
-    setInterval(pingDisplays, 5000);
+    setInterval(pingDisplays, 4000);
+    // The app's own output and feed windows are not reached by the pings (they are fed directly),
+    // so ask the app whether one is open
+    if (window.BSPDesktop && typeof window.BSPDesktop.isOutputOpen === 'function') {
+      setInterval(async () => {
+        try {
+          if (await window.BSPDesktop.isOutputOpen() || await window.BSPDesktop.isFeedOpen()) markDisplayOnline();
+        } catch (e) { /* bridge unavailable */ }
+      }, 3000);
+    }
 
     function showToast(msg) {
       const toast = document.getElementById('toast');
@@ -1354,7 +1374,18 @@ ${getLtThumbCss()}
           window.parent.postMessage({ source: 'bsp-panel-parent', message: outputMessage }, '*');
         }
       } catch (_) {}
-      embeddedProgramDisplayState = { kind: 'update', payload: outputMessage };
+      // A small update (for example background video loop/speed) carries no verse: fold it into
+      // the stored state instead of replacing it, or later syncs would send an empty page
+      const isPartial = typeof payload.text !== 'string' && !payload.lowerThirdOnly && !payload.restorePrevious;
+      const prevLive = lastLiveState && lastLiveState.kind === 'update' ? lastLiveState.payload : null;
+      if (isPartial && prevLive) {
+        lastLiveState = { kind: 'update', payload: { ...prevLive, ...payload, seq: prevLive.seq } };
+        if (embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload) {
+          embeddedProgramDisplayState = { kind: 'update', payload: { ...embeddedProgramDisplayState.payload, ...payload, seq: embeddedProgramDisplayState.payload.seq } };
+        }
+        return;
+      }
+      embeddedProgramDisplayState = { kind: 'update', payload: forMonitor(outputMessage) };
       // Record what is on air first: the standalone output sync below only shows on-air content
       lastLiveState = { kind: 'update', payload: msg };
       if (appState && appState.live) appState.live.lastLiveState = lastLiveState;

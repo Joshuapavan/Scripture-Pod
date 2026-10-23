@@ -1118,3 +1118,24 @@ html.has-key-bg body.display-full-mode {
 
 /* Settles the card in its hidden pose before it animates in */
 #name-role-overlay.is-resetting, #name-role-overlay.is-resetting * { transition: none !important; animation: none !important; }
+
+/* Gradient background: settles in, then drifts and breathes. Moved with transforms on two
+   inherited layers, so it runs on the GPU and stays smooth. */
+#bg-layer.bg-animated { overflow: hidden; }
+#bg-layer.bg-animated::before, #bg-layer.bg-animated::after { content: ""; position: absolute; pointer-events: none; will-change: transform, opacity; }
+#bg-layer.bg-animated::before {
+    inset: -35%;
+    background: inherit;
+    background-size: cover;
+    animation: bg-settle 1.8s cubic-bezier(0.2, 0.7, 0.2, 1) both, bg-drift 18s ease-in-out 1.8s infinite alternate;
+}
+#bg-layer.bg-animated::after {
+    inset: -20%;
+    background: radial-gradient(circle at 70% 65%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 55%);
+    animation: bg-glow-in 2.4s ease-out both, bg-glow 14s ease-in-out 2.4s infinite alternate;
+}
+@keyframes bg-settle { from { transform: translate(0, 0) scale(1.7); opacity: 0; } to { transform: translate(-4%, -3%) scale(1.2) rotate(0deg); opacity: 1; } }
+@keyframes bg-drift { from { transform: translate(-4%, -3%) scale(1.2) rotate(0deg); } to { transform: translate(5%, 4%) scale(1.38) rotate(7deg); } }
+@keyframes bg-glow-in { from { opacity: 0; transform: translate(-8%, 6%); } to { opacity: 1; transform: translate(0, 0); } }
+@keyframes bg-glow { from { transform: translate(-9%, 7%) scale(1); } to { transform: translate(10%, -8%) scale(1.25); } }
+@media (prefers-reduced-motion: reduce) { #bg-layer.bg-animated::before, #bg-layer.bg-animated::after { animation: none; } }

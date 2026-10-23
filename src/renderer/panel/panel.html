@@ -20,7 +20,7 @@
       <button type="button" class="tab" id="tab-schedule" onclick="setSidebarTab('schedule')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg><span data-i18n="ui_tab_setlist">Setlist</span></button>
       <button type="button" class="tab" id="tab-overlays" onclick="openOverlaysWorkspace()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 15h20"/><path d="M6 18h6"/></svg><span>Overlays</span></button>
     </nav>
-    <div id="status-bar">
+    <div id="status-bar" title="Shows whether an output display is connected: the output window, an OBS Browser Source, or another computer on the network">
       <div id="status-dot"></div>
       <span id="status-text" data-i18n="status_offline">Display Offline</span>
     </div>
@@ -103,7 +103,7 @@
       <div class="header-toolbar">
         <div id="focused-editor-banner-main">
           <div id="focused-editor-banner-eyebrow">Bible workspace</div>
-          <div id="focused-editor-banner-title">Workspace</div>
+          <div id="focused-editor-banner-title" onclick="editSongFromHeader()">Workspace</div>
           <div id="focused-editor-banner-subtitle"></div>
         </div>
         <button type="button" class="add-btn" title="New song" aria-label="New song" onclick="openModal('newSongModal')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -575,6 +575,12 @@
       </div>
     </section>
         <div id="editor-container">
+          <div id="song-edit-bar" class="song-edit-bar">
+            <label for="song-edit-title">Title</label>
+            <input id="song-edit-title" type="text" maxlength="120" placeholder="Song title" autocomplete="off" oninput="markSongEdited()" onkeydown="if(event.key==='Enter'){event.preventDefault();saveSongEdits();}">
+            <span id="song-edit-status" class="song-edit-status" role="status">Saved</span>
+            <button type="button" class="btn" id="song-edit-save" onclick="saveSongEdits()">Save changes</button>
+          </div>
           <div id="focused-editor-banner">
             <div id="focused-editor-section-nav"></div>
           </div>
