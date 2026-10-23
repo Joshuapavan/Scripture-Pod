@@ -4394,6 +4394,11 @@
       const refFontSelect = document.getElementById('ref-font-family');
       if (refFontSelect) refFontSelect.value = refFontFamily;
       setTimeout(syncBibleSearchDb, 3000);
+      // Nothing is on air after a start: clear the stored last message so a display that
+      // connects (OBS browser source, output window) cannot replay an old verse
+      setTimeout(() => {
+        try { if (typeof getOnAirPayload === 'function' && !getOnAirPayload()) postClear({ fade: false }); } catch (e) { /* non-fatal */ }
+      }, 1500);
       updateFirstRunSetupVisibility();
       if (typeof refreshLocalServerInfo === 'function') {
         refreshLocalServerInfo().then(() => {

@@ -58,7 +58,27 @@
       }, 3000);
     }
 
+    // Top bar button: red when something is on air, blue when only the Preview holds something
+    function updateAirIndicator() {
+      const el = document.getElementById('air-indicator');
+      if (!el) return;
+      const onAir = typeof getOnAirPayload === 'function' && !!getOnAirPayload();
+      const cued = typeof previewMonitorState !== 'undefined' && previewMonitorState.kind === 'update';
+      const state = onAir ? 'live' : (cued ? 'preview' : 'idle');
+      if (el.dataset.state === state) return;
+      el.dataset.state = state;
+      el.querySelector('.air-indicator-text').textContent = state === 'live' ? 'Live' : (state === 'preview' ? 'Preview' : 'Idle');
+      el.title = state === 'live' ? 'Something is going out live' : (state === 'preview' ? 'Something is in Preview, not live' : 'Nothing live or in preview');
+    }
+
+    function onAirIndicatorClick() {
+      const state = document.getElementById('air-indicator')?.dataset.state;
+      showToast(state === 'live' ? 'On air. Esc clears the output.' : (state === 'preview' ? 'In Preview only. Go live (Space) to send it out.' : 'Nothing is live or in Preview.'));
+    }
+    setInterval(updateAirIndicator, 400);
+
     function updateProgramDisplayStatus() {
+      updateAirIndicator();
       const dot = document.getElementById('program-display-status-dot');
       const outputState = document.getElementById('program-display-output-state');
       const routeLabel = document.getElementById('program-display-route-label');
@@ -1007,8 +1027,11 @@ ${getLtThumbCss()}
     }
 
     function sendSyncState(opts = {}) {
-      const state = (lastLiveState && lastLiveState.kind === 'update')
-        ? { kind: 'update', payload: { ...lastLiveState.payload } }
+      // Only what is on air goes out: a verse left over from an earlier session (or from
+      // before the versions on screen changed) must not appear when a display connects
+      const onAir = typeof getOnAirPayload === 'function' ? getOnAirPayload() : (lastLiveState && lastLiveState.kind === 'update' ? lastLiveState.payload : null);
+      const state = onAir
+        ? { kind: 'update', payload: { ...onAir } }
         : { kind: 'clear' };
       const payload = state.payload;
       const activeMedia = payload?.bgEnabled && Number(payload.bgOpacity ?? 1) > 0

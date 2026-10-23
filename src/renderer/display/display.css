@@ -25,6 +25,10 @@ body, html {
 body.lower-third-only-mode {
     background: transparent;
 }
+/* The black full-screen page fades with the content instead of snapping off */
+body {
+    transition: background-color var(--body-fade, 0.35s) ease;
+}
 body.display-full-mode {
     background: #000;
 }

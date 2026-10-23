@@ -24,6 +24,10 @@
       <div id="status-dot"></div>
       <span id="status-text" data-i18n="status_offline">Display Offline</span>
     </div>
+    <button type="button" id="air-indicator" class="air-indicator" data-state="idle" onclick="onAirIndicatorClick()" aria-live="polite" title="Nothing live or in preview">
+      <span class="air-indicator-dot" aria-hidden="true"></span>
+      <span class="air-indicator-text">Idle</span>
+    </button>
     <button type="button" class="topbar-btn" id="btn-topbar-outputs" onclick="showOutputsCard()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg><span>Outputs</span></button>
     <button type="button" class="topbar-btn topbar-icon-btn" id="sidebar-quick-actions-btn" aria-label="Quick actions" data-i18n-aria-label="ui_quick_actions" title="Quick actions" data-i18n-title="ui_quick_actions" aria-haspopup="true" onclick="toggleSidebarQuickActions()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg></button>
     <button class="topbar-btn topbar-icon-btn" aria-label="Settings" id="btn-settings" onclick="openModal('settingsModal')" title="Settings" data-i18n-title="common_settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></svg></button>
@@ -197,6 +201,7 @@
         <div id="saved-names-list" class="saved-names-list"></div>
       </nav>
       <div class="overlays-stage">
+        <div id="overlay-sticky" class="overlay-sticky">
         <div class="overlays-stage-head">
           <div class="overlays-workspace-head">
             <span class="overlays-workspace-eyebrow">Overlay</span>
@@ -208,6 +213,7 @@
         <div id="overlay-preview-shell" class="sp-monitor-shell">
           <span class="overlay-preview-feed">Over program feed</span>
           <iframe id="overlay-preview-frame" title="Overlay preview" tabindex="-1" allowtransparency="true"></iframe>
+        </div>
         </div>
         <section class="overlays-design" aria-labelledby="overlays-design-title">
           <h2 id="overlays-design-title">Design</h2>

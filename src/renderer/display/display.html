@@ -2937,6 +2937,9 @@
         return;
       }
       const token = clearToken;
+      // Let the page background fade out together with the text and background layers
+      document.documentElement.style.setProperty('--body-fade', `${durationSec}s`);
+      document.body.classList.remove('display-full-mode');
       elements.txt.style.opacity = '0';
       elements.bg.style.opacity = '0';
       elements.ltWrap.style.opacity = '0';
