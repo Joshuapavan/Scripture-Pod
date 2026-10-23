@@ -601,22 +601,7 @@
     .name-role-social b { display: inline-flex; align-items: center; justify-content: center; width: var(--social-engagement-icon-size,20px); height: var(--social-engagement-icon-size,20px); flex: 0 0 var(--social-engagement-icon-size,20px); color: var(--social-engagement-accent,#90D5FF); }
     .name-role-social b svg { display: block; width: 100%; height: 100%; }
     .name-role-social span { max-width: 32vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    #social-engagement-overlay { position: fixed; left: 50%; bottom: 17vh; z-index: 8; display: flex; justify-content: center; width: min(920px, 82vw); transform: translate(calc(-50% + var(--social-engagement-offset-x,0vw)),var(--social-engagement-offset-y,0vh)); pointer-events: none; opacity: 0; visibility: hidden; transition: opacity 360ms ease, visibility 360ms ease; }
-    #social-engagement-overlay.is-visible { opacity: 1; visibility: visible; }
-    .social-engagement-overlay-card { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 100%; opacity: 0; transform: translateY(24px) scale(0.96); transition: opacity 560ms ease, transform 700ms cubic-bezier(0.2,0.85,0.25,1); }
-    #social-engagement-overlay.is-visible .social-engagement-overlay-card { opacity: 1; transform: translateY(0) scale(1); }
-    .social-engagement-overlay-socials, .social-engagement-overlay-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; width: max-content; max-width: 100%; justify-content: center; padding: 7px 12px; border: 1px solid color-mix(in srgb,var(--social-engagement-accent,#90D5FF) 42%,transparent); border-radius: 999px; background: color-mix(in srgb,var(--social-engagement-primary,#90D5FF) 68%,transparent); color: var(--social-engagement-foreground,#fff); }
-    .social-engagement-overlay-actions { padding: 6px 10px 7px; }
-    .social-engagement-overlay-socials[hidden], .social-engagement-overlay-actions[hidden] { display: none; }
-    #social-engagement-overlay .name-role-action { opacity: 0; transform: translateY(9px) scale(0.96); border-color: color-mix(in srgb,var(--social-engagement-accent,#90D5FF) 70%,transparent); font-size: var(--social-engagement-action-size,11px); }
-    #social-engagement-overlay.is-visible .name-role-action:not([hidden]) { opacity: 1; transform: translateY(0) scale(1); }
-    #social-engagement-overlay.is-visible .name-role-action-like { transition-delay: 100ms; }
-    #social-engagement-overlay.is-visible .name-role-action-share { transition-delay: 190ms; }
-    #social-engagement-overlay.is-visible .name-role-action-subscribe { transition-delay: 280ms; }
     .name-role-action { display: inline-flex; align-items: center; gap: 5px; padding: 5px 9px; border: 1px solid color-mix(in srgb,var(--social-engagement-accent,#90D5FF) 70%,transparent); border-radius: 999px; background: rgba(7,12,16,0.32); color: currentColor; font-size: var(--social-engagement-action-size,11px); font-weight: 800; opacity: 0; transform: translateY(9px) scale(0.96); transition: opacity 360ms ease,transform 460ms cubic-bezier(0.2,0.85,0.25,1); }
-    #social-engagement-overlay .name-role-social { font-size: var(--social-engagement-size,32px); }
-    #social-engagement-overlay .name-role-action svg { width: 1em; height: 1em; flex: 0 0 1em; fill: none; stroke: var(--social-engagement-accent,#90D5FF); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; opacity: 0; transform: scale(0.55) rotate(-8deg); transition: opacity 300ms ease,transform 420ms cubic-bezier(0.2,0.85,0.25,1); }
-    #social-engagement-overlay.is-visible .name-role-action svg { opacity: 1; transform: scale(1) rotate(0); }
     #name-role-overlay.is-visible .name-role-action:not([hidden]) { opacity: 1; transform: translateY(0) scale(1); }
     #name-role-overlay.is-visible .name-role-action-like { transition-delay: 100ms; }
     #name-role-overlay.is-visible .name-role-action-share { transition-delay: 190ms; }
@@ -631,12 +616,12 @@
     #stage.mode-lt #lt-wrap { display: flex; align-items: center; justify-content: center; }
     #stage.mode-lt #text-layer { max-width: min(96vw, 1900px); text-align: center; }
     .jo-ref-line { margin-bottom: 8px; font-weight: 800; letter-spacing: 0.03em; display: inline-block; }
-    .jo-body { font-weight: 700; }
-    .dual-primary-block { margin-bottom: 20px; }
+    .jo-body { font-weight: inherit; }
     .dual-secondary-wrapper, .triple-tertiary-wrapper { margin-top: var(--bible-version-gap, 14px); width: 100%; }
     .dual-secondary-wrapper { opacity: 0.96; }
     #hud { position: fixed; right: 10px; top: 10px; z-index: 9; font-size: 11px; color: rgba(255,255,255,0.65); background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.15); border-radius: 7px; padding: 4px 8px; }
     ${(typeof window !== 'undefined' && window.SP_LT_EXTRA && window.SP_LT_EXTRA.css) || ''}
+    ${(typeof window !== 'undefined' && window.SP_SOCIAL && window.SP_SOCIAL.css) || ''}
   </style>
 </head>
 <body>
@@ -664,21 +649,9 @@
       </div>
     </div>
   </div>
-  <div id="social-engagement-overlay" aria-hidden="true">
-    <div class="social-engagement-overlay-card">
-      <div class="social-engagement-overlay-socials" hidden>
-        <span class="name-role-social name-role-social-instagram"><b aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none"/></svg></b><span></span></span>
-        <span class="name-role-social name-role-social-facebook"><b aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 3h-2.6A4.4 4.4 0 0 0 8 7.4V10H5v3.5h3V21h3.6v-7.5h3l.5-3.5h-3.5V7.8c0-1 .3-1.5 1.6-1.5H15V3z"/></svg></b><span></span></span>
-        <span class="name-role-social name-role-social-website"><b aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg></b><span></span></span>
-      </div>
-      <div class="social-engagement-overlay-actions" hidden>
-        <span class="name-role-action name-role-action-like"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10v11H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2zM7 10l5-8c1.5 0 2.5 1.4 2 2.8L13 9h6a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 18 20H7"/></svg><span>LIKE</span></span>
-        <span class="name-role-action name-role-action-share"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3M7 8l5-5 5 5M5 13v7a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7"/></svg><span>SHARE</span></span>
-        <span class="name-role-action name-role-action-subscribe"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>SUBSCRIBE</span></span>
-      </div>
-    </div>
-  </div>
+  <div id="social-engagement-overlay" aria-hidden="true" data-position="bottom-center" data-theme="solid"></div>
   <div id="hud">${opts.preview ? 'Program Preview' : 'Standalone Output'}</div>
+  <script>${(typeof window !== 'undefined' && window.SP_SOCIAL_SOURCE) || ''}</script>
   <script>
     (function () {
       const CHANNEL_NAME = ${channelLiteral};
@@ -1176,6 +1149,10 @@
           stage.style.justifyContent = (hAlign === 'left') ? 'flex-start' : (hAlign === 'right') ? 'flex-end' : 'center';
           stage.style.alignItems = mapVAlign(vAlign);
           fullText.style.textAlign = (hAlign === 'justify') ? 'left' : hAlign;
+          // Same side padding as the display page (a percentage of the width)
+          fullText.style.boxSizing = 'border-box';
+          fullText.style.width = '100%';
+          fullText.style.padding = '0 ' + Math.max(0, Number(data.padLRFull != null ? data.padLRFull : (data.padLR != null ? data.padLR : 5))) + '%';
           fullText.style.fontSize = String(Math.max(10, Number(data.fontSizeFull || 40))) + 'pt';
           fullText.style.textTransform = String(data.fullTextTransform || 'none');
           setTypography(data, fullText);
@@ -1283,13 +1260,13 @@
         const rawStyle = String(data && data.style || 'classic-rise');
         const legacyStyle = rawStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const normalizedStyle = legacyStyle ? legacyStyle[1] + '-gms-' + legacyStyle[2] : rawStyle;
-        const styleMatch = normalizedStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const styleMatch = normalizedStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment|sapphire|crimson|forest|graphite|rose|ocean|amber|violet|outline|halo|chapel)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const layout = styleMatch ? styleMatch[1] : 'classic';
         const theme = styleMatch ? styleMatch[2] : 'gms';
         const animation = styleMatch ? styleMatch[3] : 'rise';
         const style = layout + '-' + theme + '-' + animation;
         const accentColor = /^#[0-9a-f]{6}$/i.test(data && data.accentColor || '') ? data.accentColor : '#90D5FF';
-        const primaryDefaults = { legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF', modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF', glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF', aurora: '#90D5FF', sunrise: '#90D5FF', royal: '#90D5FF', minimal: '#90D5FF', pill: '#90D5FF', holo: '#90D5FF', frost: '#90D5FF', cinema: '#90D5FF', sharp: '#90D5FF', emerald: '#90D5FF', pulse: '#90D5FF', parchment: '#90D5FF' };
+        const primaryDefaults = { legacy: '#90D5FF', gms: '#90D5FF', noir: '#90D5FF', broadcast: '#90D5FF', modern: '#90D5FF', news: '#90D5FF', spotlight: '#90D5FF', clean: '#90D5FF', glass: '#90D5FF', copper: '#90D5FF', editorial: '#90D5FF', neon: '#90D5FF', ribbon: '#90D5FF', aurora: '#90D5FF', sunrise: '#90D5FF', royal: '#90D5FF', minimal: '#90D5FF', pill: '#90D5FF', holo: '#90D5FF', frost: '#90D5FF', cinema: '#90D5FF', sharp: '#90D5FF', emerald: '#90D5FF', pulse: '#90D5FF', parchment: '#90D5FF', sapphire: '#90D5FF', crimson: '#90D5FF', forest: '#90D5FF', graphite: '#90D5FF', rose: '#90D5FF', ocean: '#90D5FF', amber: '#90D5FF', violet: '#90D5FF', outline: '#90D5FF', halo: '#90D5FF', chapel: '#90D5FF' };
         const primaryColor = /^#[0-9a-f]{6}$/i.test(data && data.primaryColor || '') ? data.primaryColor : (primaryDefaults[theme] || '#90D5FF');
         const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
         const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
@@ -1315,7 +1292,7 @@
           else logoEl.removeAttribute('src');
           logoEl.hidden = !logo;
         }
-        overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
+        overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'theme-sapphire', 'theme-crimson', 'theme-forest', 'theme-graphite', 'theme-rose', 'theme-ocean', 'theme-amber', 'theme-violet', 'theme-outline', 'theme-halo', 'theme-chapel', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
         overlay.classList.add('style-' + layout, 'theme-' + theme, 'motion-' + animation);
         overlay.classList.toggle('logo-black', logoColor === 'black');
         overlay.classList.toggle('logo-off', logoColor === 'off');
@@ -1350,63 +1327,7 @@
       }
 
       function updateSocialEngagementOverlay(data) {
-        const overlay = document.getElementById('social-engagement-overlay');
-        if (!overlay) return;
-        const socials = data && data.socials || {};
-        const actions = data && data.actions || {};
-        const socialValues = {
-          instagram: String(socials.instagram || '').trim(),
-          facebook: String(socials.facebook || '').trim(),
-          website: String(socials.website || '').trim()
-        };
-        const actionValues = {
-          like: !!actions.like,
-          share: !!actions.share,
-          subscribe: !!actions.subscribe
-        };
-        const socialsEl = overlay.querySelector('.social-engagement-overlay-socials');
-        const actionsEl = overlay.querySelector('.social-engagement-overlay-actions');
-        const accentColor = /^#[0-9a-f]{6}$/i.test(data && data.accentColor || '') ? data.accentColor : '#90D5FF';
-        const primaryColor = /^#[0-9a-f]{6}$/i.test(data && data.primaryColor || '') ? data.primaryColor : '#90D5FF';
-        const primaryRgb = primaryColor.slice(1).match(/.{2}/g).map((part) => parseInt(part, 16) / 255).map((channel) => channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4));
-        const primaryLuminance = 0.2126 * primaryRgb[0] + 0.7152 * primaryRgb[1] + 0.0722 * primaryRgb[2];
-        const foregroundColor = primaryLuminance >= 0.72 ? '#101216' : '#ffffff';
-        const size = Math.max(10, Math.min(40, Number(data && data.size) || 32));
-        const offsetX = Math.max(-40, Math.min(40, Number(data && data.offsetX) || 0));
-        const offsetY = Math.max(-40, Math.min(40, Number(data && data.offsetY) || 0));
-        Object.entries(socialValues).forEach(([key, value]) => {
-          const item = socialsEl && socialsEl.querySelector('.name-role-social-' + key);
-          if (!item) return;
-          item.hidden = !value;
-          const text = item.querySelector('span');
-          if (text) text.textContent = value;
-        });
-        if (socialsEl) socialsEl.hidden = !Object.values(socialValues).some(Boolean);
-        Object.entries(actionValues).forEach(([key, visible]) => {
-          const item = actionsEl && actionsEl.querySelector('.name-role-action-' + key);
-          if (item) item.hidden = !visible;
-        });
-        if (actionsEl) actionsEl.hidden = !Object.values(actionValues).some(Boolean);
-        const enabled = !!(data && data.enabled) && (
-          Object.values(socialValues).some(Boolean) || Object.values(actionValues).some(Boolean)
-        );
-        const signature = JSON.stringify({ socialValues, actionValues, accentColor: accentColor, primaryColor, size: size, offsetX, offsetY });
-        const changed = overlay.dataset.signature !== signature;
-        if (enabled && changed && overlay.classList.contains('is-visible')) {
-          overlay.classList.remove('is-visible');
-          void overlay.offsetWidth;
-        }
-        overlay.dataset.signature = signature;
-        overlay.style.setProperty('--social-engagement-primary', primaryColor);
-        overlay.style.setProperty('--social-engagement-foreground', foregroundColor);
-        overlay.style.setProperty('--social-engagement-accent', accentColor);
-        overlay.style.setProperty('--social-engagement-size', size + 'px');
-        overlay.style.setProperty('--social-engagement-action-size', Math.max(10, Math.round(size * 0.75)) + 'px');
-        overlay.style.setProperty('--social-engagement-icon-size', Math.round(size * 1.4) + 'px');
-        overlay.style.setProperty('--social-engagement-offset-x', offsetX + 'vw');
-        overlay.style.setProperty('--social-engagement-offset-y', offsetY + 'vh');
-        overlay.setAttribute('aria-hidden', enabled ? 'false' : 'true');
-        overlay.classList.toggle('is-visible', enabled);
+        if (window.SP_SOCIAL) window.SP_SOCIAL.update(document.getElementById('social-engagement-overlay'), data);
       }
 
       function clearOutput() {

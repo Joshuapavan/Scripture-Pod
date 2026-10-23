@@ -109,14 +109,31 @@
       };
     }
 
+    // Every control of the Social engagement overlay that is saved as one block
+    const SOCIAL_TEXT_FIELDS = ['instagram', 'facebook', 'youtube', 'x', 'tiktok', 'whatsapp', 'website', 'headline'];
+    const SOCIAL_ACTION_FIELDS = ['like', 'comment', 'share', 'subscribe', 'follow'];
+    const SOCIAL_SELECT_FIELDS = ['layout', 'theme', 'position', 'motion', 'autohide'];
+    let socialAutoHideTimer = null;
+
     function getSocialEngagementOverlaySettings(enabled) {
+      const field = (name) => String(document.getElementById('social-engagement-' + name)?.value || '').trim();
       return {
         enabled: !!enabled,
         socials: {
-          instagram: String(document.getElementById('social-engagement-instagram')?.value || '').trim(),
-          facebook: String(document.getElementById('social-engagement-facebook')?.value || '').trim(),
-          website: String(document.getElementById('social-engagement-website')?.value || '').trim()
+          instagram: field('instagram'),
+          facebook: field('facebook'),
+          youtube: field('youtube'),
+          x: field('x'),
+          tiktok: field('tiktok'),
+          whatsapp: field('whatsapp'),
+          website: field('website')
         },
+        headline: field('headline'),
+        layout: field('layout') || 'bar',
+        theme: field('theme') || 'solid',
+        position: field('position') || 'bottom-center',
+        motion: field('motion') || 'pulse',
+        autoHideSeconds: Math.max(0, Number(field('autohide')) || 0),
         primaryColor: document.getElementById('social-engagement-primary')?.value || '#90D5FF',
         accentColor: document.getElementById('social-engagement-accent')?.value || '#90D5FF',
         size: Number(document.getElementById('social-engagement-size')?.value || 32),
@@ -124,10 +141,41 @@
         offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('social-engagement-offset-y')?.value) || 0)),
         actions: {
           like: document.getElementById('social-engagement-like')?.checked === true,
+          comment: document.getElementById('social-engagement-comment')?.checked === true,
           share: document.getElementById('social-engagement-share')?.checked === true,
-          subscribe: document.getElementById('social-engagement-subscribe')?.checked === true
+          subscribe: document.getElementById('social-engagement-subscribe')?.checked === true,
+          follow: document.getElementById('social-engagement-follow')?.checked === true
         }
       };
+    }
+
+    // The saved form of the controls above, restored at startup
+    function collectSocialEngagementConfig() {
+      const config = { text: {}, actions: {}, select: {} };
+      SOCIAL_TEXT_FIELDS.forEach(name => { config.text[name] = String(document.getElementById('social-engagement-' + name)?.value || ''); });
+      SOCIAL_ACTION_FIELDS.forEach(name => { config.actions[name] = document.getElementById('social-engagement-' + name)?.checked === true; });
+      SOCIAL_SELECT_FIELDS.forEach(name => { config.select[name] = String(document.getElementById('social-engagement-' + name)?.value || ''); });
+      return config;
+    }
+
+    function restoreSocialEngagementConfig(config) {
+      if (!config || typeof config !== 'object') return;
+      SOCIAL_TEXT_FIELDS.forEach((name) => {
+        const el = document.getElementById('social-engagement-' + name);
+        if (el && config.text && config.text[name] != null) el.value = config.text[name];
+      });
+      SOCIAL_ACTION_FIELDS.forEach((name) => {
+        const el = document.getElementById('social-engagement-' + name);
+        if (el && config.actions && config.actions[name] != null) el.checked = !!config.actions[name];
+      });
+      SOCIAL_SELECT_FIELDS.forEach((name) => {
+        const el = document.getElementById('social-engagement-' + name);
+        if (el && config.select && config.select[name] && [...el.options].some(o => o.value === config.select[name])) el.value = config.select[name];
+      });
+    }
+
+    function socialEngagementHasContent(overlay) {
+      return Object.values(overlay.socials).some(Boolean) || Object.values(overlay.actions).some(Boolean) || !!overlay.headline;
     }
 
     function isLiveLowerThirdOverlayActive(overlayName) {
@@ -261,16 +309,12 @@
         socialEngagementOverlay: {
           ...settings,
           enabled: visible !== false,
-          socials: {
-            instagram: '@church',
-            facebook: 'facebook.com/church',
-            website: 'church.org'
-          },
-          actions: {
-            like: true,
-            share: true,
-            subscribe: true
-          }
+          // Your own entries; sample handles and buttons stand in when none are filled in
+          ...(socialEngagementHasContent(settings) ? {} : {
+            socials: { instagram: '@church', youtube: 'ChurchOnline', website: 'church.org' },
+            actions: { like: true, comment: false, share: true, subscribe: true, follow: false },
+            headline: 'Join us online'
+          })
         }
       });
       if (!opts.keepTimers || visible) showToast('Social lower-third example sent to preview');
@@ -319,9 +363,9 @@
       if (!button) return;
       const enabled = button.getAttribute('aria-pressed') !== 'true';
       const overlay = getSocialEngagementOverlaySettings(enabled);
-      const hasAnyContent = Object.values(overlay.socials).some(Boolean) || Object.values(overlay.actions).some(Boolean);
+      const hasAnyContent = socialEngagementHasContent(overlay);
       if (enabled && !hasAnyContent) {
-        showToast('Enter a social handle or enable an action before showing the social lower third');
+        showToast('Add a handle, a headline or an action before showing the social lower third');
         return;
       }
       if (enabled) {
@@ -329,6 +373,12 @@
         takeLiveOutputForLowerThird();
       }
       setLowerThirdButtonState(button, enabled, 'social lower third');
+      clearTimeout(socialAutoHideTimer);
+      if (enabled && overlay.autoHideSeconds > 0) {
+        socialAutoHideTimer = setTimeout(() => {
+          if (button.getAttribute('aria-pressed') === 'true') toggleSocialEngagementOverlay();
+        }, overlay.autoHideSeconds * 1000);
+      }
       handleSocialEngagementOverlayChange(true);
     }
 
@@ -364,7 +414,18 @@
       sharp: ['#101216', '#FFFFFF', '#FFFFFF', '#FFFFFF', '#101216'],
       emerald: ['#065F46', '#6EE7B7', '#FFFFFF', '#044535', '#A7F3D0'],
       pulse: ['#B91C1C', '#FCA5A5', '#FFFFFF', '#7F1212', '#FECACA'],
-      parchment: ['#F1E6C8', '#8B5E34', '#3B2A16', '#E3D3A8', '#3B2A16']
+      parchment: ['#F1E6C8', '#8B5E34', '#3B2A16', '#E3D3A8', '#3B2A16'],
+      sapphire: ['#12327A', '#7FB2FF', '#FFFFFF', '#0D2358', '#CFE2FF'],
+      crimson: ['#7A1020', '#FF8A8A', '#FFFFFF', '#560A16', '#FFD3D3'],
+      forest: ['#0F4A2E', '#8FE3A8', '#FFFFFF', '#0A3320', '#CDF5DA'],
+      graphite: ['#23262D', '#9AA4B2', '#F2F4F7', '#181B20', '#B7C0CC'],
+      rose: ['#F8D9E0', '#E0457B', '#3A1220', '#FFFFFF', '#8A2A4A'],
+      ocean: ['#0E5A73', '#6FE0F0', '#FFFFFF', '#0A4357', '#C9F4FA'],
+      amber: ['#F2B134', '#7A4A00', '#2B1A00', '#FFE3A3', '#5A3600'],
+      violet: ['#4B2A8F', '#C7A8FF', '#FFFFFF', '#341C66', '#E3D4FF'],
+      outline: ['#00000000', '#FFFFFF', '#FFFFFF', '#00000000', '#E2E8F0'],
+      halo: ['#0C0F1A', '#7AF0FF', '#FFFFFF', '#0C0F1A', '#9BEFFF'],
+      chapel: ['#F4EDE0', '#9C7B3C', '#2E2314', '#E9DFC8', '#6A5426']
     };
 
     // A miniature lower third in the design's colors and layout family
@@ -608,6 +669,7 @@
       appState.settings.nameRoleOverlayShare = payload.actions.share;
       appState.settings.nameRoleOverlaySubscribe = payload.actions.subscribe;
       appState.settings.socialEngagementOverlayEnabled = enabled;
+      appState.settings.socialEngagementConfig = collectSocialEngagementConfig();
       appState.settings.socialEngagementOverlayPrimaryColor = payload.primaryColor;
       appState.settings.socialEngagementOverlayAccentColor = payload.accentColor;
       appState.settings.socialEngagementOverlaySize = String(payload.size);
@@ -619,7 +681,7 @@
       saveState();
       saveToStorageDebounced();
       if (enabled) {
-        const hasAnyContent = Object.values(payload.socials).some(Boolean) || Object.values(payload.actions).some(Boolean);
+        const hasAnyContent = socialEngagementHasContent(payload);
         if (!hasAnyContent) {
           enabledButton?.setAttribute('aria-pressed', 'false');
           if (enabledButton) enabledButton.textContent = 'Show on air';

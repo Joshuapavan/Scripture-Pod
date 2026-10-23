@@ -1366,7 +1366,8 @@
         styles.push('box-shadow:none;');
         styles.push(referenceShadowEnabled ? 'text-shadow:0 10px 24px rgba(0,0,0,0.65);' : 'text-shadow:none;');
       }
-      return `<span style="${styles.join(';')}">${text}</span>`;
+      const keepFont = (refFontFamily && refFontFamily !== 'inherit') ? ' data-keep-font="1"' : '';
+      return `<span${keepFont} style="${styles.join(';')}">${text}</span>`;
     }
 
     function buildFullBibleSegment({ referenceLabel, verseHtml, refSize, refColor, refBgColor, verseAlign, refAlign, verseShadowStyle, refPosition, refTextTransform }) {
@@ -1736,6 +1737,8 @@
       const keepInputs = !!opts.keepInputs;
       newSongFetchedLyrics = '';
       newSongFetchedLookupKey = '';
+      const lyricsBox = document.getElementById('new-song-lyrics');
+      if (lyricsBox && !keepInputs) lyricsBox.value = '';
       clearNewSongLookupResults();
       setNewSongLookupBusy(false);
       updateNewSongFetchStatus(t('new_song_no_lyrics_fetched'), 'muted');
@@ -1858,6 +1861,8 @@
       if (titleInput && pickedTitle) titleInput.value = pickedTitle;
       if (artistInput && pickedArtist) artistInput.value = pickedArtist;
       newSongFetchedLyrics = lyrics;
+      const lyricsBox = document.getElementById('new-song-lyrics');
+      if (lyricsBox) lyricsBox.value = lyrics;
       newSongFetchedLookupKey = getNewSongLookupKey(titleInput?.value || '', artistInput?.value || '');
       updateNewSongFetchStatus(t('new_song_lyrics_ready_selected'), 'success');
       showToast(t('new_song_lyrics_selected'));

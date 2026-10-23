@@ -2331,3 +2331,15 @@ body[data-hide-verse-lt="1"] .overlay-list-item[data-overlay="scripture"] { disp
 
 /* Look: where the reference sits. Verses only (lyrics have no reference). */
 body[data-sidebar-tab="songs"] #look-card #look-ref-row { display: none !important; }
+
+/* New song: a name and lyrics are enough */
+.new-song-lyrics-field { display: flex; flex-direction: column; gap: 6px; margin: 12px 0; }
+.new-song-lyrics-field label { color: var(--sp-muted); font-size: 12px; }
+#new-song-lyrics {
+  min-height: 190px; resize: vertical; padding: 12px; border-radius: 10px;
+  background: var(--sp-inset) !important; border: 1px solid var(--sp-line-2) !important; color: var(--sp-text) !important;
+  font: inherit; font-size: 14px; line-height: 1.5;
+}
+.new-song-lyrics-hint { color: var(--sp-subtle); font-size: 12px; }
+#newSongModal .modal-content { width: min(640px, 92vw); }
+#newSongModal .new-song-live-btn { background: var(--sp-live) !important; border-color: var(--sp-live) !important; color: #fff !important; font-weight: 600; }

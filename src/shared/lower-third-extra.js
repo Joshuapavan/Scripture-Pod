@@ -11,7 +11,7 @@
  * No backticks or template placeholders may appear in the CSS below.
  */
 (function (root) {
-  var THEMES = ['aurora', 'sunrise', 'royal', 'minimal', 'pill', 'holo', 'frost', 'cinema', 'sharp', 'emerald', 'pulse', 'parchment'];
+  var THEMES = ['aurora', 'sunrise', 'royal', 'minimal', 'pill', 'holo', 'frost', 'cinema', 'sharp', 'emerald', 'pulse', 'parchment', 'sapphire', 'crimson', 'forest', 'graphite', 'rose', 'ocean', 'amber', 'violet', 'outline', 'halo', 'chapel'];
   var MOTIONS = ['bounce', 'elastic', 'iris', 'slice', 'swing', 'turn', 'cascade', 'typewriter', 'glitch', 'flicker'];
 
   var P = 'var(--name-role-primary,#90D5FF)';
@@ -104,11 +104,68 @@
     t('parchment') + NAME + '{font-family:Georgia,"Times New Roman",serif;font-weight:700;color:#3b2a14;}',
     t('parchment') + ROLE + '{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:500;color:#7a5a2a;}',
 
+    /* ══ Pastor-name designs ═══════════════════════════════════════════════ */
+    /* Sapphire: deep blue glass with a light top edge */
+    t('sapphire') + CARD + '{background:linear-gradient(120deg,color-mix(in srgb,' + P + ' 38%,#0a1c52),color-mix(in srgb,' + P + ' 12%,#071233));border:1px solid rgba(160,200,255,.38);color:#fff;box-shadow:0 18px 48px rgba(0,0,12,.5);}',
+    t('sapphire') + CARD + '::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,' + A + ',transparent);}',
+    t('sapphire') + ROLE + '{color:color-mix(in srgb,' + A + ' 60%,#fff);}',
+
+    /* Crimson: dark red with a bright accent edge */
+    t('crimson') + CARD + '{background:linear-gradient(115deg,#5c0a18,#2b050c);border-left:7px solid ' + A + ';border-radius:4px;color:#fff;box-shadow:0 18px 48px rgba(0,0,0,.55);}',
+    t('crimson') + ROLE + '{color:color-mix(in srgb,' + A + ' 55%,#ffd9d9);letter-spacing:.04em;}',
+
+    /* Forest: calm green gradient */
+    t('forest') + CARD + '{background:linear-gradient(120deg,color-mix(in srgb,' + P + ' 22%,#0b3d26),#06241a);border:1px solid rgba(160,240,190,.3);color:#fff;box-shadow:0 18px 46px rgba(0,0,0,.5);}',
+    t('forest') + ROLE + '{color:color-mix(in srgb,' + A + ' 45%,#c9f5d8);}',
+
+    /* Graphite: neutral charcoal with a thin accent stripe */
+    t('graphite') + CARD + '{background:linear-gradient(180deg,#2a2d35,#17191e);border:1px solid rgba(255,255,255,.1);border-left:5px solid ' + A + ';border-radius:6px;color:#f2f4f7;box-shadow:0 16px 40px rgba(0,0,0,.5);}',
+    t('graphite') + ROLE + '{color:#b7c0cc;}',
+
+    /* Rose: soft pink with dark type */
+    t('rose') + CARD + '{background:linear-gradient(135deg,#fde6ec,#f6c6d3);border:1px solid rgba(190,60,100,.35);border-radius:18px;color:#3a1220;box-shadow:0 16px 38px rgba(80,10,30,.35);}',
+    t('rose') + NAME + '{color:#3a1220;font-weight:700;}',
+    t('rose') + ROLE + '{color:color-mix(in srgb,' + A + ' 45%,#6a1a38);font-weight:600;}',
+
+    /* Ocean: teal gradient with a soft highlight */
+    t('ocean') + CARD + '{background:linear-gradient(115deg,color-mix(in srgb,' + P + ' 30%,#0c5870),#073646);border:1px solid rgba(140,230,245,.32);color:#fff;box-shadow:0 18px 46px rgba(0,20,30,.5);}',
+    t('ocean') + CARD + '::before{content:"";position:absolute;inset:0;border-radius:inherit;background:radial-gradient(90% 140% at 0% 0%,rgba(255,255,255,.2),transparent 60%);}',
+    t('ocean') + ROLE + '{color:#c9f4fa;}',
+
+    /* Amber: warm gold with dark type */
+    t('amber') + CARD + '{background:linear-gradient(110deg,#f7c14d,#e8962a);border-radius:12px;color:#2b1a00;box-shadow:0 16px 38px rgba(90,50,0,.45);}',
+    t('amber') + NAME + '{color:#2b1a00;font-weight:800;}',
+    t('amber') + ROLE + '{color:#5a3600;font-weight:600;}',
+
+    /* Violet: purple gradient with a soft glow */
+    t('violet') + CARD + '{background:linear-gradient(125deg,color-mix(in srgb,' + P + ' 30%,#4b2a8f),#241247);border:1px solid rgba(210,190,255,.35);color:#fff;box-shadow:0 0 34px color-mix(in srgb,' + A + ' 30%,transparent),0 18px 46px rgba(0,0,0,.5);}',
+    t('violet') + ROLE + '{color:#e3d4ff;}',
+
+    /* Outline: nothing but a thin white frame over the picture */
+    t('outline') + CARD + '{background:rgba(0,0,0,.18);border:2px solid rgba(255,255,255,.85);border-radius:6px;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.8);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);box-shadow:none;}',
+    t('outline') + NAME + '{font-weight:700;letter-spacing:.02em;}',
+    t('outline') + ROLE + '{color:#fff;opacity:.92;letter-spacing:.14em;text-transform:uppercase;font-weight:500;}',
+
+    /* Halo: dark card ringed in a glowing accent */
+    t('halo') + CARD + '{background:linear-gradient(145deg,#0c0f1a,#141a2c);border-radius:16px;color:#fff;box-shadow:0 0 0 1px ' + A + ',0 0 30px color-mix(in srgb,' + A + ' 55%,transparent),0 18px 48px rgba(0,0,0,.55);}',
+    t('halo') + '.is-visible' + CARD + '{animation:lt-halo 3s ease-in-out infinite;}',
+    t('halo') + ROLE + '{color:color-mix(in srgb,' + A + ' 70%,#fff);}',
+
+    /* Chapel: warm cream with serif type and a gold rule, for a gentler look */
+    t('chapel') + CARD + '{background:linear-gradient(165deg,#f8f2e6,#eadfc8);border:1px solid #b99a5a;border-radius:8px;color:#2e2314;box-shadow:inset 0 0 0 4px rgba(255,255,255,.35),0 16px 38px rgba(40,25,5,.4);}',
+    t('chapel') + NAME + '{font-family:Georgia,"Times New Roman",serif;font-weight:700;color:#2e2314;letter-spacing:.01em;}',
+    t('chapel') + ROLE + '{font-family:Georgia,"Times New Roman",serif;font-variant:small-caps;letter-spacing:.12em;font-weight:600;color:#7a5f2a;}',
+    t('chapel') + CARD + '::after{content:"";position:absolute;left:10%;right:10%;bottom:6px;height:1px;background:linear-gradient(90deg,transparent,#b99a5a,transparent);}',
+
+    /* The white church logo needs to turn dark on the light designs */
+    ['rose', 'amber', 'chapel'].map(function (x) { return t(x) + ' .name-role-overlay-logo'; }).join(',') + '{filter:brightness(0);opacity:.85;}',
+
     /* ── Keyframes shared by the themes above ───────────────────────────── */
     '@property --lt-angle{syntax:"<angle>";inherits:false;initial-value:0deg;}',
     '@keyframes lt-spin{to{--lt-angle:360deg;}}',
     '@keyframes lt-shine{from{left:-60%;}to{left:140%;}}',
     '@keyframes lt-pulse{0%,100%{box-shadow:0 0 0 4px color-mix(in srgb,' + A + ' 30%,transparent);}50%{box-shadow:0 0 0 9px color-mix(in srgb,' + A + ' 8%,transparent);}}',
+    '@keyframes lt-halo{0%,100%{box-shadow:0 0 0 1px ' + A + ',0 0 22px color-mix(in srgb,' + A + ' 40%,transparent),0 18px 48px rgba(0,0,0,.55);}50%{box-shadow:0 0 0 1px ' + A + ',0 0 40px color-mix(in srgb,' + A + ' 70%,transparent),0 18px 48px rgba(0,0,0,.55);}}',
     '@keyframes lt-travel{from{background-position:200% 0;}to{background-position:-200% 0;}}',
 
     /* ══ Extra animations ═════════════════════════════════════════════════

@@ -176,7 +176,8 @@ src/
         integrations/  host mode, translation, remote display tools
     display/     The output page (display.html, display.css)
     fonts/       Bundled fonts (Geist, Geist Mono, Source Serif 4) shared by both pages
-  shared/        Code used by both pages (lower-third-extra.js)
+  shared/        Code used by both pages: lower-third-extra.js (name designs and animations),
+                 social-overlay.js (the social engagement lower third)
 assets/          bibles/ (bundled Bible XML), logo/, bg/
 build/           App icons and the logo used by the panel (electron-builder buildResources)
 scripts/         Build and maintenance scripts (mobile build, icon render)

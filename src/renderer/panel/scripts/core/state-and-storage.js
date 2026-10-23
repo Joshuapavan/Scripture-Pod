@@ -1413,6 +1413,7 @@
         nameRoleOverlayOffsetX: document.getElementById('name-role-overlay-offset-x')?.value || '0',
         nameRoleOverlayOffsetY: document.getElementById('name-role-overlay-offset-y')?.value || '0',
         socialEngagementOverlayEnabled: document.getElementById('social-engagement-overlay-show-btn')?.getAttribute('aria-pressed') === 'true',
+        socialEngagementConfig: typeof collectSocialEngagementConfig === 'function' ? collectSocialEngagementConfig() : undefined,
         socialEngagementOverlayCollapsed: document.getElementById('social-engagement-overlay-panel')?.classList.contains('is-collapsed') === true,
         socialEngagementOverlayPrimaryColor: document.getElementById('social-engagement-primary')?.value || '#90D5FF',
         socialEngagementOverlayAccentColor: document.getElementById('social-engagement-accent')?.value || '#90D5FF',
