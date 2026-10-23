@@ -7,11 +7,6 @@ on:
   create:
   pull_request:
   workflow_dispatch:
-    inputs:
-      publish:
-        description: Also publish a GitHub release with the installers
-        type: boolean
-        default: false
 
 permissions:
   contents: write
@@ -65,9 +60,12 @@ jobs:
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Linux system libraries (WebKitGTK)
         if: matrix.os == 'ubuntu-22.04'
+        timeout-minutes: 10
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
+          # Retries and short timeouts so one slow mirror cannot stall the whole job
+          sudo apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=20
+          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=3 -o Acquire::http::Timeout=20 \
+            libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libxdo-dev
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
@@ -93,9 +91,9 @@ jobs:
           retention-days: 14
 
   release:
-    # Builds from main only upload downloadable files to the run. A release is published for a
-    # v* tag, or when you run the workflow by hand with "publish" ticked.
-    if: ${{ (github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
+    # Builds from main only upload downloadable files to the run. A release is published only
+    # when you push a v* tag (git tag v2.0.6 && git push origin v2.0.6).
+    if: ${{ github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v') }}
     needs: [test, build]
     runs-on: ubuntu-latest
     steps:
@@ -105,17 +103,12 @@ jobs:
           pattern: packaged-*
           path: release-assets
           merge-multiple: true
-      - name: Create versioned tag and GitHub release
+      - name: Publish GitHub release for the tag
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            tag="$GITHUB_REF_NAME"
-          else
-            version=$(node -p "require('./package.json').version")
-            tag="v${version}-build.${GITHUB_RUN_NUMBER}"
-          fi
+          tag="$GITHUB_REF_NAME"
           release_flags=()
           if [[ "$tag" == *-* ]]; then
             release_flags+=(--prerelease)
@@ -128,17 +121,12 @@ jobs:
             exit 1
           fi
           if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            existing_asset_count=$(gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets | length')
-            if [[ "$existing_asset_count" != '0' ]]; then
-              echo "Release $tag already has assets; refusing to overwrite them." >&2
-              exit 1
-            fi
             gh release upload "$tag" "${release_assets[@]}" --repo "$GITHUB_REPOSITORY" --clobber
           else
             gh release create "$tag" "${release_assets[@]}" \
               --repo "$GITHUB_REPOSITORY" \
-              --target "$GITHUB_SHA" \
+              --verify-tag \
               --title "Scripture Pod $tag" \
-              --notes "Automated release from commit $GITHUB_SHA." \
+              --notes "Automated release from tag $tag." \
               "${release_flags[@]}"
           fi

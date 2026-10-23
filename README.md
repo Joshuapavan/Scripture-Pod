@@ -42,8 +42,8 @@ warning on first open: right-click the app and choose Open. On Windows, SmartScr
 choose More info, then Run anyway.
 
 CI builds on every push to `main` and uploads the installers to the run (Actions, open the run,
-Artifacts, kept 14 days). Nothing is published as a release unless you push a `v*` tag or run
-the workflow by hand with "publish" ticked.
+Artifacts, kept 14 days). A release is published only when you push a `v*` tag, for example
+`git tag v2.0.6 && git push origin v2.0.6`.
 
 ## Output and OBS
 
