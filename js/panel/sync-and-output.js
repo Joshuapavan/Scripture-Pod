@@ -189,7 +189,30 @@
       button.title = enabled ? `Hide ${title}` : `Show ${title}`;
     }
 
-    function previewNameRoleLowerThirdExample() {
+    // Test / replay: the example comes in, holds, then goes out, so both the
+    // intro and the outro of the chosen animation are seen. Choosing a design or
+    // an overlay keeps its example on the Preview instead.
+    const LT_TEST_HOLD_MS = 3200;
+    let lowerThirdTestTimers = [];
+
+    function playLowerThirdTest(show) {
+      lowerThirdTestTimers.forEach(clearTimeout);
+      lowerThirdTestTimers = [];
+      show(false);                                   // start hidden so the intro plays every time
+      lowerThirdTestTimers.push(setTimeout(() => show(true), 120));
+      lowerThirdTestTimers.push(setTimeout(() => show(false), 120 + LT_TEST_HOLD_MS));
+    }
+
+    function testNameRoleLowerThird() {
+      playLowerThirdTest(visible => previewNameRoleLowerThirdExample(visible, { keepTimers: true }));
+    }
+
+    function testSocialEngagementLowerThird() {
+      playLowerThirdTest(visible => previewSocialEngagementLowerThirdExample(visible, { keepTimers: true }));
+    }
+
+    function previewNameRoleLowerThirdExample(visible = true, opts = {}) {
+      if (!opts.keepTimers) { lowerThirdTestTimers.forEach(clearTimeout); lowerThirdTestTimers = []; }
       const settings = getNameRoleOverlaySettings(true);
       sendProgramPreview({
         text: '',
@@ -211,14 +234,16 @@
         lowerThirdOnly: true,
         nameRoleOverlay: {
           ...settings,
+          enabled: visible !== false,
           name: settings.name || 'PS. Samson Arthur Paul',
           role: settings.name ? settings.role : 'Senior Pastor'
         }
       });
-      showToast('Lower-third example sent to preview');
+      if (!opts.keepTimers || visible) showToast('Lower-third example sent to preview');
     }
 
-    function previewSocialEngagementLowerThirdExample() {
+    function previewSocialEngagementLowerThirdExample(visible = true, opts = {}) {
+      if (!opts.keepTimers) { lowerThirdTestTimers.forEach(clearTimeout); lowerThirdTestTimers = []; }
       const settings = getSocialEngagementOverlaySettings(true);
       sendProgramPreview({
         text: '',
@@ -240,6 +265,7 @@
         lowerThirdOnly: true,
         socialEngagementOverlay: {
           ...settings,
+          enabled: visible !== false,
           socials: {
             instagram: '@church',
             facebook: 'facebook.com/church',
@@ -252,7 +278,7 @@
           }
         }
       });
-      showToast('Social lower-third example sent to preview');
+      if (!opts.keepTimers || visible) showToast('Social lower-third example sent to preview');
     }
 
     // One thing on the live output at a time: a verse or lyric replaces a lower

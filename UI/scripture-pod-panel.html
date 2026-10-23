@@ -29,6 +29,7 @@
       <span class="topbar-pill-state" id="topbar-stream-state">Offline</span>
     </div>
     <button type="button" class="topbar-btn" id="btn-topbar-outputs" onclick="showOutputsCard()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg><span>Outputs</span></button>
+    <button type="button" class="topbar-btn topbar-icon-btn" id="sidebar-quick-actions-btn" aria-label="Quick actions" data-i18n-aria-label="ui_quick_actions" title="Quick actions" data-i18n-title="ui_quick_actions" aria-haspopup="true" onclick="toggleSidebarQuickActions()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg></button>
     <button class="topbar-btn topbar-icon-btn" aria-label="Settings" id="btn-settings" onclick="openModal('settingsModal')" title="Settings" data-i18n-title="common_settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></svg></button>
   </div>
 
@@ -92,7 +93,7 @@
       <div id="song-list"></div>
     </div>
     <div id="sidebar-width-handle"><div class="grip"></div></div>
-    <button type="button" id="sidebar-quick-actions-btn" aria-label="Quick actions" data-i18n-aria-label="ui_quick_actions" title="Quick actions" data-i18n-title="ui_quick_actions" onclick="toggleSidebarQuickActions()"><span>Quick</span></button>
+    
     <div id="sidebar-quick-actions-panel" aria-hidden="true"></div>
     <div id="sidebar-resize-handle" >
       <div id="panel-inline-style-1"></div>
@@ -264,7 +265,7 @@
                   <option value="glitch">Glitch</option>
                   <option value="flicker">Flicker</option>
                 </select>
-              <button type="button" class="ov-icon-btn" aria-label="Replay animation" title="Replay animation" onclick="previewNameRoleLowerThirdExample()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
+              <button type="button" class="ov-icon-btn" aria-label="Replay animation" title="Replay animation" onclick="testNameRoleLowerThird()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
             </div>
             <span class="ov-label">Logo</span>
             <div class="ov-control">
@@ -408,7 +409,7 @@
                   </optgroup>
                 </select></div>
           <div class="ov-footer">
-            <button type="button" class="ov-test-btn name-role-overlay-example-btn" onclick="previewNameRoleLowerThirdExample()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>Test</button>
+            <button type="button" class="ov-test-btn name-role-overlay-example-btn" onclick="testNameRoleLowerThird()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>Test</button>
             <button type="button" class="ov-air-btn name-role-overlay-show-btn" id="name-role-overlay-show-btn" aria-pressed="false" onclick="toggleNameRoleOverlay()">Show on air</button>
           </div>
         </div>
@@ -457,7 +458,7 @@
               
           </section>
           <div class="ov-footer">
-            <button type="button" class="ov-test-btn name-role-overlay-example-btn" onclick="previewSocialEngagementLowerThirdExample()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>Test</button>
+            <button type="button" class="ov-test-btn name-role-overlay-example-btn" onclick="testSocialEngagementLowerThird()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>Test</button>
             <button type="button" class="ov-air-btn name-role-overlay-show-btn" id="social-engagement-overlay-show-btn" aria-pressed="false" onclick="toggleSocialEngagementOverlay()">Show on air</button>
           </div>
         </div>

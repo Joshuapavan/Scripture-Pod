@@ -419,6 +419,11 @@
             showToast('No active Bible reference to pin');
             return;
           }
+          if (isPinnedBibleReference(ref.query, ref.versionId)) {
+            unpinBibleReference(ref.query, ref.versionId);
+            showToast('Reference unpinned');
+            return;
+          }
           pinBibleReference(ref);
           showToast(t('reference_pinned'));
         };

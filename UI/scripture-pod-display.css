@@ -1291,3 +1291,6 @@ html.has-key-bg body.display-full-mode {
     perspective: 1000px;
 }
 #name-role-overlay.logo-off .name-role-overlay-logo { display: none; }
+
+/* Settles the card in its hidden pose before it animates in */
+#name-role-overlay.is-resetting, #name-role-overlay.is-resetting * { transition: none !important; animation: none !important; }

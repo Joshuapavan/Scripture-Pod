@@ -1587,7 +1587,6 @@ body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons .lyric-btn .jo-v
 body.overlays-workspace-active #sidebar,
 body.overlays-workspace-active #sidebar-width-handle,
 body.overlays-workspace-active #sidebar-resize-handle,
-body.overlays-workspace-active #sidebar-quick-actions-btn,
 body.overlays-workspace-active #program-display-panel,
 body.overlays-workspace-active #program-width-handle { display: none !important; }
 body.overlays-workspace-active #left-workspace,
@@ -2352,3 +2351,35 @@ body[data-overlay="social"] #overlays-workspace #name-role-overlay-panel { displ
 .ov-sizes { min-width: 0; }
 .ov-card { min-width: 0; }
 .ov-card > * { min-width: 0; }
+
+/* Quick actions: a top bar button with a drop-down panel (was a floating tab) */
+#app-topbar #sidebar-quick-actions-btn {
+  position: static !important;
+  display: inline-flex !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 10px !important;
+  opacity: 1;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+#app-topbar #sidebar-quick-actions-btn.active { background: var(--sp-text) !important; color: var(--sp-ground) !important; border-color: var(--sp-text) !important; }
+#sidebar-quick-actions-panel { z-index: 9300; }
+
+/* Pinned & recent: the pin icon is a button; the library scrolls as a whole in the Bible tab */
+.library-quick-ref { padding: 0 !important; gap: 0; cursor: default; }
+.library-quick-ref-icon {
+  flex: 0 0 36px; width: 36px; height: 100%; align-items: center; justify-content: center;
+  border: 0; border-radius: 8px 0 0 8px; background: transparent; cursor: pointer;
+}
+.library-quick-ref-icon:hover { color: var(--sp-text); background: var(--sp-line-2); }
+.library-quick-ref.is-pinned .library-quick-ref-icon:hover { color: var(--sp-subtle); }
+.library-quick-ref-open {
+  flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; height: 100%;
+  padding: 0 10px 0 2px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.library-quick-ref-open:focus-visible, .library-quick-ref-icon:focus-visible { outline: 2px solid var(--sp-cue); outline-offset: -2px; }
+.bible-search-tool-btn.active, #nav-mirror-ref-pin-current.active { color: #E8B04B; }
+.bible-search-tool-btn.active svg { fill: currentColor; fill-opacity: .25; }
+body[data-sidebar-tab="bible"] #sidebar { overflow-y: auto; }
+body[data-sidebar-tab="bible"] #sidebar > #song-list.chapter-grid-mode { overflow: visible; }

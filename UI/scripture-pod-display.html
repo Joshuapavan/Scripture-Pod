@@ -1249,8 +1249,6 @@
       if (!data) {
         overlay.setAttribute('aria-hidden', 'true');
         overlay.classList.remove('is-visible');
-        overlay.style.removeProperty('--name-role-offset-x');
-        overlay.style.removeProperty('--name-role-offset-y');
         return;
       }
       const name = String(data?.name || '').trim();
@@ -1315,6 +1313,13 @@
       if (enabled && changed && overlay.classList.contains('is-visible')) {
         overlay.classList.remove('is-visible');
         void overlay.offsetWidth;
+      }
+      // Coming on: settle the card in the chosen animation's hidden pose first,
+      // so it animates in from there rather than from the previous animation's pose
+      if (enabled && !overlay.classList.contains('is-visible')) {
+        overlay.classList.add('is-resetting');
+        void overlay.offsetWidth;
+        overlay.classList.remove('is-resetting');
       }
       overlay.classList.toggle('is-visible', enabled);
     }

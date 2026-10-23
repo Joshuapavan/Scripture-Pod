@@ -592,41 +592,31 @@
       positionSidebarQuickActions();
     }
 
+    // The Quick button lives in the top bar; its panel drops down beneath it
     function positionSidebarQuickActions() {
-      const sidebar = document.getElementById('sidebar');
-      const handle = document.getElementById('sidebar-width-handle');
       const btn = document.getElementById('sidebar-quick-actions-btn');
       const panel = document.getElementById('sidebar-quick-actions-panel');
-      if (!sidebar || !btn || !panel) return;
+      if (!btn || !panel) return;
+      // It drops down from the top bar, so it must not sit inside the clipped library column
+      if (panel.parentElement !== document.body) document.body.appendChild(panel);
 
-      const visible = isSidebarQuickActionsVisible();
-      if (!visible) {
-        btn.style.display = 'none';
+      if (!isSidebarQuickActionsVisible()) {
         panel.classList.remove('open');
         panel.setAttribute('aria-hidden', 'true');
         sidebarQuickActionsOpen = false;
+        btn.classList.remove('active');
         return;
       }
 
-      const sidebarRect = sidebar.getBoundingClientRect();
-      const handleRect = handle ? handle.getBoundingClientRect() : null;
-      const gap = 0;
-      const top = Math.max(64, sidebarRect.top + 110);
-      btn.style.display = 'flex';
-      const handleCenter = handleRect && handleRect.width > 0
-        ? (handleRect.left + handleRect.right) / 2
-        : sidebarRect.right;
-      const anchorLeft = Math.round(handleCenter - (btn.offsetWidth || 26) / 2);
-      btn.style.left = `${anchorLeft}px`;
-      btn.style.top = `${Math.round(top)}px`;
       btn.classList.toggle('active', sidebarQuickActionsOpen);
-
       if (!sidebarQuickActionsOpen) return;
 
+      const rect = btn.getBoundingClientRect();
       panel.classList.add('open');
       panel.setAttribute('aria-hidden', 'false');
-      panel.style.left = `${Math.round(anchorLeft + btn.offsetWidth + gap + 6)}px`;
-      panel.style.top = `${Math.round(Math.max(56, Math.min(top - 10, window.innerHeight - panel.offsetHeight - 14)))}px`;
+      const width = panel.offsetWidth || 280;
+      panel.style.left = `${Math.round(Math.max(8, Math.min(rect.right - width, window.innerWidth - width - 8)))}px`;
+      panel.style.top = `${Math.round(rect.bottom + 8)}px`;
     }
 
     function toggleSidebarQuickActions(forceOpen) {

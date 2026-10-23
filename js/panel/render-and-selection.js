@@ -2270,6 +2270,7 @@
         }
       }
       if (isBibleEntry && sidebarTab === 'bible') syncBibleBookSelect();
+      if (isBibleEntry && typeof updateBibleRefPinButtons === 'function') updateBibleRefPinButtons();
       renderSongs();
       if (!skipButtonView) {
         updateButtonView({ preserveScroll: preserveButtonScroll, skipAutoScroll: preserveButtonScroll });

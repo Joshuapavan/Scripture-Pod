@@ -587,6 +587,7 @@
     #name-role-overlay .name-role-overlay-logo { filter: brightness(0) invert(1); }
     #name-role-overlay.logo-black .name-role-overlay-logo { filter: brightness(0); }
     #name-role-overlay.logo-off .name-role-overlay-logo { display: none; }
+    #name-role-overlay.is-resetting, #name-role-overlay.is-resetting * { transition: none !important; animation: none !important; }
     .name-role-overlay-logo[hidden] { display: none; }
     .name-role-overlay-content { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 8px; }
     .name-role-overlay-copy { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; gap: 0.08em; }
@@ -1270,8 +1271,6 @@
         if (!data) {
           overlay.setAttribute('aria-hidden', 'true');
           overlay.classList.remove('is-visible');
-          overlay.style.removeProperty('--name-role-offset-x');
-          overlay.style.removeProperty('--name-role-offset-y');
           return;
         }
         const name = String(data && data.name || '').trim();
@@ -1335,6 +1334,12 @@
         if (enabled && changed && overlay.classList.contains('is-visible')) {
           overlay.classList.remove('is-visible');
           void overlay.offsetWidth;
+        }
+        // Coming on: settle the card in the chosen animation's hidden pose first
+        if (enabled && !overlay.classList.contains('is-visible')) {
+          overlay.classList.add('is-resetting');
+          void overlay.offsetWidth;
+          overlay.classList.remove('is-resetting');
         }
         overlay.classList.toggle('is-visible', enabled);
       }
