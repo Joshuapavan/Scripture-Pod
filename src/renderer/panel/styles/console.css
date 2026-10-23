@@ -490,10 +490,6 @@ body.sp-program-on-air .sp-monitor-tag.is-program::before {
 }
 body.sp-program-on-air #program-display-shell { box-shadow: 0 0 0 2px var(--sp-live) !important; }
 
-#btn-go-live {
-  border-radius: 10px !important;
-}
-
 /* Look card: Lines · Mode · Background · Type, as label/control rows */
 #look-card {
   flex: 0 0 auto;
@@ -695,8 +691,6 @@ body.overlays-workspace-active #workspace-height-handle { display: none !importa
   background: var(--sp-card) !important;
   border: 1px solid var(--sp-line) !important;
 }
-#overlays-workspace .name-role-overlay-heading strong,
-#overlays-workspace .name-role-overlay-heading > span:first-child { font-size: 15px !important; font-weight: 600 !important; }
 #overlays-workspace .name-role-overlay-show-btn.active,
 #overlays-workspace .name-role-overlay-show-btn[aria-pressed="true"] {
   background: var(--sp-live) !important;
@@ -980,7 +974,6 @@ body.overlays-workspace-active #workspace-height-handle { display: none !importa
 }
 
 /* ── Lower-third design picker (Overlays) ─────────────────────────────────── */
-#overlays-workspace .name-role-overlay-style-row { grid-template-columns: minmax(0, 1fr) !important; }
 #overlays-workspace #name-role-overlay-design { display: none !important; }
 .lt-design-picker { display: flex; flex-direction: column; gap: 10px; }
 .lt-design-families {
@@ -1157,16 +1150,13 @@ body.overlays-workspace-active #workspace-height-handle { display: none !importa
 }
 
 /* ── Dialogs, Settings, popovers ──────────────────────────────────────────── */
-.modal-overlay .modal-content,
-.sp-overlay .sp-modal,
-.first-run-setup-dialog {
+.modal-overlay .modal-content, .first-run-setup-dialog {
   background: var(--sp-panel) !important;
   border: 1px solid var(--sp-line-2) !important;
   border-radius: 14px !important;
   box-shadow: 0 24px 64px rgb(0 0 0 / 0.55) !important;
   color: var(--sp-text) !important;
 }
-.sp-overlay .sp-modal-header,
 #settingsModal .settings-modal-title {
   background: var(--sp-chrome) !important;
   border-bottom: 1px solid var(--sp-line) !important;
@@ -1197,9 +1187,7 @@ body.overlays-workspace-active #workspace-height-handle { display: none !importa
 #settingsModal .seg-btn.active svg,
 .segmented-picker .seg-btn.active svg { color: var(--sp-ground) !important; stroke: currentColor; }
 
-#settingsModal .settings-label,
-.sp-overlay label,
-.sp-overlay .pgm-stream-label { color: var(--sp-muted) !important; font-size: 12px !important; font-weight: 500 !important; letter-spacing: 0 !important; text-transform: none !important; }
+#settingsModal .settings-label, .sp-overlay label { color: var(--sp-muted) !important; font-size: 12px !important; font-weight: 500 !important; letter-spacing: 0 !important; text-transform: none !important; }
 #settingsModal .settings-select,
 #settingsModal input[type="text"],
 #settingsModal input[type="number"],
@@ -1469,24 +1457,6 @@ body:not([data-sidebar-tab="bible"]) #library-quick-refs { display: none !import
 .library-quick-ref-version { max-width: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sp-subtle); font-family: var(--sp-mono); font-size: 11px; }
 
 /* ── Top bar: Stream status ───────────────────────────────────────────────── */
-#app-topbar .topbar-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--sp-line);
-  background: var(--sp-panel);
-  color: var(--sp-text);
-  font-size: 13px;
-  font-weight: 500;
-}
-#app-topbar .topbar-pill-state { color: var(--sp-muted); }
-#app-topbar .topbar-pill-dot { width: 8px; height: 8px; border-radius: 999px; background: #5C636B; }
-#app-topbar .topbar-pill.is-starting .topbar-pill-dot { background: #E8B04B; }
-#app-topbar .topbar-pill.is-live .topbar-pill-dot { background: var(--sp-live); }
-#app-topbar .topbar-pill.is-live .topbar-pill-state { color: var(--sp-text); }
 
 /* ── Bible Reader view: the chapter as one passage ────────────────────────── */
 body.bible-reader-view[data-sidebar-tab="bible"] #lyric-buttons,
@@ -1655,7 +1625,6 @@ body[data-overlay="social"] #overlays-workspace #name-role-overlay-panel { displ
 body.overlays-workspace-active #page-projection #program-display-panel#program-display-panel,
 body.overlays-workspace-active #page-projection #program-width-handle { display: none !important; }
 /* The design picker lives under the large preview; its old box goes */
-#overlays-workspace .name-role-overlay-style-row > .name-role-overlay-extra-section:has(#name-role-overlay-design) { display: none !important; }
 
 /* ── Lyrics: numbered slide grid, arrangement chips, Send lyrics to ──────── */
 body[data-sidebar-tab="songs"] #lyric-buttons { counter-reset: slide; }

@@ -248,11 +248,11 @@ input[type="checkbox"], input[type="radio"] { accent-color: hsl(var(--primary));
 .btn-ghost { border-color: transparent !important; background: transparent !important; box-shadow: none; }
 .btn-ghost:hover { background: hsl(var(--accent)) !important; }
 /* primary variant */
-.sp-btn-primary, .header-toolbar .add-btn, #btn-output-go-live, #btn-output-go-live-panel {
+.header-toolbar .add-btn, #btn-output-go-live, #btn-output-go-live-panel {
   background: hsl(var(--primary)) !important; color: hsl(var(--primary-foreground)) !important;
   border-color: hsl(var(--primary)) !important; box-shadow: var(--shadow-sm);
 }
-.sp-btn-primary:hover, .header-toolbar .add-btn:hover, #btn-output-go-live:hover, #btn-output-go-live-panel:hover {
+.header-toolbar .add-btn:hover, #btn-output-go-live:hover, #btn-output-go-live-panel:hover {
   background: hsl(var(--primary) / 0.9) !important; color: hsl(var(--primary-foreground)) !important;
 }
 /* destructive variant: Project Live, flips to success while live */
@@ -305,13 +305,13 @@ input[type="checkbox"], input[type="radio"] { accent-color: hsl(var(--primary));
 
 /* ── Bottom controls & cards ────────────────────────────────────────────── */
 .live-controls { background: hsl(var(--background)) !important; border-top: 1px solid hsl(var(--border)) !important; }
-.main-panel-stacks > div, .editor-section, .feedback-card, .name-role-overlay-extra-section {
+.main-panel-stacks > div, .editor-section, .feedback-card {
   background: hsl(var(--card)) !important;
   border: 1px solid hsl(var(--border)) !important;
   border-radius: var(--radius-lg) !important;
   box-shadow: var(--shadow-xs);
 }
-.main-panel-stacks > div > span:first-child, .section-label, .studio-pane-title, .editor-label, .settings-label, .slider-header {
+.main-panel-stacks > div > span:first-child, .section-label, .editor-label, .settings-label, .slider-header {
   color: hsl(var(--muted-foreground)) !important; font-size: 12px; font-weight: 500; letter-spacing: 0 !important; text-transform: none !important;
 }
 .editor-section-title { color: hsl(var(--foreground)) !important; font-size: 13px; font-weight: 600; }
@@ -334,15 +334,14 @@ input[type="checkbox"], input[type="radio"] { accent-color: hsl(var(--primary));
   background: hsl(0 0% 0% / 0.7) !important;
   -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
 }
-.modal-content, .sp-modal, #settingsModal .modal-content {
+.modal-content, #settingsModal .modal-content {
   background: hsl(var(--popover)) !important;
   color: hsl(var(--popover-foreground));
   border: 1px solid hsl(var(--border)) !important;
   border-radius: var(--radius-xl) !important;
   box-shadow: var(--shadow-lg) !important;
 }
-.sp-modal-header, #settingsModal .settings-modal-title { border-bottom: 1px solid hsl(var(--border)) !important; font-weight: 600; letter-spacing: -0.01em; }
-.sp-modal-footer { border-top: 1px solid hsl(var(--border)) !important; }
+#settingsModal .settings-modal-title { border-bottom: 1px solid hsl(var(--border)) !important; font-weight: 600; letter-spacing: -0.01em; }
 
 /* First-run welcome dialog */
 .first-run-setup-kicker { color: hsl(var(--muted-foreground)); font-size: 12px; font-weight: 500; letter-spacing: 0; text-transform: none; }

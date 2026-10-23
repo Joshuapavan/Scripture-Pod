@@ -24,11 +24,6 @@
       <div id="status-dot"></div>
       <span id="status-text" data-i18n="status_offline">Display Offline</span>
     </div>
-    <div id="topbar-stream-status" class="topbar-pill">
-      <span class="topbar-pill-dot"></span>
-      <span>Stream</span>
-      <span class="topbar-pill-state" id="topbar-stream-state">Offline</span>
-    </div>
     <button type="button" class="topbar-btn" id="btn-topbar-outputs" onclick="showOutputsCard()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg><span>Outputs</span></button>
     <button type="button" class="topbar-btn topbar-icon-btn" id="sidebar-quick-actions-btn" aria-label="Quick actions" data-i18n-aria-label="ui_quick_actions" title="Quick actions" data-i18n-title="ui_quick_actions" aria-haspopup="true" onclick="toggleSidebarQuickActions()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg></button>
     <button class="topbar-btn topbar-icon-btn" aria-label="Settings" id="btn-settings" onclick="openModal('settingsModal')" title="Settings" data-i18n-title="common_settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></svg></button>
@@ -174,8 +169,6 @@
           <button class="btn" id="panel-inline-style-23" onclick="openStandaloneOutputFromUi()" data-i18n="output_auto_external">Auto External</button>
         </div>
       </div>
-      <div id="scene-layer-context-menu" class="sl-context-menu" role="menu" aria-hidden="true"></div>
-      <div id="scene-layer-context-submenu" class="sl-context-menu sl-context-submenu" role="menu" aria-hidden="true"></div>
       <!-- Sidebar context menu (Song / Bible / Setlist) -->
       <div id="sidebar-context-menu" class="sl-context-menu" role="menu" aria-hidden="true"></div>
       <div id="lt-preset-context-menu" class="sl-context-menu" role="menu" aria-hidden="true"></div>
@@ -656,8 +649,6 @@
       </div>
       <div id="program-display-stage">
         <div id="program-display-shell" data-aspect="16:9">
-          <div id="source-compositor"></div>
-          <div id="transform-overlay"></div>
           <iframe id="program-display-frame" title="Program Display Preview" data-i18n-title="ui_program_display_preview" allowtransparency="true"></iframe>
         </div>
       </div>
@@ -740,10 +731,6 @@
             <button type="button" class="lyrics-output-type-btn" id="lyrics-output-monitor-btn" aria-pressed="false" onclick="toggleLyricsMonitorOutput()" title="Open or close fullscreen monitor output">
               <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
               <span>Monitor</span>
-            </button>
-            <button type="button" class="lyrics-output-type-btn" id="lyrics-output-stream-btn" aria-pressed="false" onclick="toggleLyricsStreamOutput()" title="Start or stop the Program Stream">
-              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
-              <span>Stream</span>
             </button>
           </div>
         </div>
@@ -855,407 +842,10 @@
     <div id="workspace-height-handle"><div class="grip"></div></div>
     <!-- Full-page overlay to prevent iframes from stealing pointer events during resize -->
     <div id="resize-drag-overlay" ></div>
-    <div id="studio-dock"  aria-hidden="true">
-      <button id="scene-transition-toolbar-btn" type="button" disabled>Transition</button>
-      <div id="scene-list"></div>
-      <button id="source-fx-toolbar-btn" type="button" disabled>FX</button>
-      <div id="sources-list"></div>
-
-      <button id="pgm-media-play" type="button"></button>
-      <input id="pgm-media-seek" type="range" min="0" max="1" step="any" value="0">
-      <span id="pgm-media-time">0:00 / 0:00</span>
-      <div id="controls-panel-body"></div>
-      <div id="extras-panel-body"></div>
-
-      <span id="pgm-stream-pill">OFFLINE</span>
-      <button id="pgm-stream-toggle-btn" type="button">Start Streaming</button>
-      <button id="pgm-stream-settings-btn" type="button">Settings</button>
-      <strong id="pgm-stream-platform">Not configured</strong>
-      <strong id="pgm-stream-destination">No server URL</strong>
-      <strong id="pgm-stream-canvas-info">1920x1080</strong>
-      <strong id="pgm-stream-output-info">1920x1080</strong>
-      <strong id="pgm-stream-audio-info">Program Mix</strong>
-      <strong id="pgm-stream-encoder">Checking...</strong>
-      <strong id="pgm-stream-error">None</strong>
-      <div id="pgm-mix-debug-panel" ><div id="pgm-mix-debug-rows"></div></div>
-    </div>
   </div>
   </div> <!-- /app-body-row -->
   </div> <!-- /page-projection -->
 
-  <div class="sp-overlay" id="pgm-stream-settings-overlay" onclick="if(event.target===this)pgmStreamCloseSettings()">
-    <div class="sp-modal" onclick="event.stopPropagation()">
-      <div class="sp-modal-header">Connect Streaming Platform</div>
-      <div class="sp-modal-body">
-        <div class="pgm-stream-grid">
-          <div class="pgm-stream-grid-full">
-            <label class="pgm-stream-label" for="pgm-stream-platform-select">Platform</label>
-            <select class="pgm-stream-input" id="pgm-stream-platform-select" onchange="pgmStreamHandlePlatformChange()">
-              <option value="youtube">YouTube</option>
-              <option value="facebook">Facebook</option>
-              <option value="twitch">Twitch</option>
-              <option value="kick">Kick</option>
-              <option value="instagram">Instagram</option>
-              <option value="custom">Custom RTMP</option>
-            </select>
-          </div>
-          <div class="pgm-stream-grid-full">
-            <label class="pgm-stream-label" for="pgm-stream-url-input">Server URL</label>
-            <input class="pgm-stream-input" id="pgm-stream-url-input" type="text" placeholder="rtmps://a.rtmp.youtube.com/live2" spellcheck="false">
-          </div>
-          <div class="pgm-stream-grid-full">
-            <label class="pgm-stream-label" for="pgm-stream-key-input">Stream Key</label>
-            <input class="pgm-stream-input" id="pgm-stream-key-input" type="password" placeholder="Paste stream key" spellcheck="false">
-          </div>
-          <div class="pgm-stream-grid-full" id="panel-inline-style-51"><span id="panel-inline-style-52">Video</span></div>
-          <div>
-            <label class="pgm-stream-label" for="pgm-stream-canvas-select">Base (Canvas) Resolution</label>
-            <select class="pgm-stream-input" id="pgm-stream-canvas-select">
-              <option value="1920x1080">1920×1080</option>
-              <option value="2560x1440">2560×1440</option>
-              <option value="1280x720">1280×720</option>
-              <option value="854x480">854×480</option>
-            </select>
-          </div>
-          <div>
-            <label class="pgm-stream-label" for="pgm-stream-resolution-select">Output (Scaled) Resolution</label>
-            <select class="pgm-stream-input" id="pgm-stream-resolution-select">
-              <option value="1920x1080">1920×1080</option>
-              <option value="1280x720">1280×720</option>
-              <option value="854x480">854×480</option>
-            </select>
-          </div>
-          <div>
-            <label class="pgm-stream-label" for="pgm-stream-fps-select">Frame Rate</label>
-            <select class="pgm-stream-input" id="pgm-stream-fps-select">
-              <option value="60">60 fps</option>
-              <option value="30" selected>30 fps</option>
-              <option value="25">25 fps</option>
-              <option value="24">24 fps</option>
-            </select>
-          </div>
-          <div>
-            <label class="pgm-stream-label" for="pgm-stream-bitrate-input">Video Bitrate (kbps)</label>
-            <input class="pgm-stream-input" id="pgm-stream-bitrate-input" type="number" min="500" max="20000" step="100" value="4500">
-          </div>
-	          <div class="pgm-stream-grid-full" id="panel-inline-style-53"><span id="panel-inline-style-54">Audio</span></div>
-	          <div class="pgm-stream-grid-full">
-	            <label class="pgm-stream-label">Audio Source</label>
-	            <div class="pgm-stream-input" id="panel-inline-style-55">Program Display Mix (internal bus)</div>
-	          </div>
-	        </div>
-	        <div class="pgm-stream-help" id="pgm-stream-help">
-	          Program audio is taken from the same internal mix bus as Program output. Connect destination, then click Start Streaming.
-	        </div>
-	      </div>
-      <div class="sp-modal-footer">
-        <button onclick="pgmStreamCloseSettings()">Cancel</button>
-        <button class="sp-btn-primary" onclick="pgmStreamSaveSettings()">Save Settings</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======== Scene / Source Popup Modals ======== -->
-
-  <!-- Add Scene Popup -->
-  <div class="sp-overlay" id="add-scene-overlay" onclick="closeAddScenePopup()">
-    <div class="sp-modal" onclick="event.stopPropagation()">
-      <div class="sp-modal-header">Add Scene</div>
-      <div class="sp-modal-body">
-        <input class="sp-input" id="add-scene-name" type="text" placeholder="Scene name..." data-i18n-placeholder="scene_name_placeholder" onkeydown="if(event.key==='Enter')confirmAddScene()">
-      </div>
-      <div class="sp-modal-footer">
-        <button onclick="closeAddScenePopup()">Cancel</button>
-        <button class="sp-btn-primary" onclick="confirmAddScene()">Add</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Scene Transition Popup -->
-  <div class="sp-overlay" id="scene-transition-overlay" onclick="closeSceneTransitionPopup()">
-    <div class="sp-modal" id="panel-inline-style-56" onclick="event.stopPropagation()">
-      <div class="sp-modal-header" id="scene-transition-header">Scene Transition</div>
-      <div class="sp-modal-body">
-        <!-- Enable toggle -->
-        <div class="tr-section">
-          <div class="tr-toggle-row">
-            <span class="tr-toggle-label">Enable Transition</span>
-            <button class="tr-toggle" id="tr-enabled-toggle" onclick="trToggleEnabled()"></button>
-          </div>
-        </div>
-
-        <!-- Transition Type -->
-        <div class="tr-section" id="tr-type-section">
-          <span class="tr-label">Type</span>
-          <div class="tr-type-grid" id="tr-type-grid">
-            <button class="tr-type-btn" data-type="cut" onclick="trSelectType('cut')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="2" y1="2" x2="22" y2="22"/><line x1="2" y1="22" x2="22" y2="2"/></svg>
-              <span class="tr-type-name">Cut</span>
-            </button>
-            <button class="tr-type-btn" data-type="fade" onclick="trSelectType('fade')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2" opacity="0.3"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-              <span class="tr-type-name">Fade</span>
-            </button>
-            <button class="tr-type-btn" data-type="crossfade" onclick="trSelectType('crossfade')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="4" width="12" height="10" rx="2" opacity="0.4"/><rect x="10" y="10" width="12" height="10" rx="2"/></svg>
-              <span class="tr-type-name">Crossfade</span>
-            </button>
-            <button class="tr-type-btn" data-type="slide-left" onclick="trSelectType('slide-left')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/><rect x="3" y="3" width="18" height="18" rx="2" opacity="0.2"/></svg>
-              <span class="tr-type-name">Slide Left</span>
-            </button>
-            <button class="tr-type-btn" data-type="slide-right" onclick="trSelectType('slide-right')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/><rect x="3" y="3" width="18" height="18" rx="2" opacity="0.2"/></svg>
-              <span class="tr-type-name">Slide Right</span>
-            </button>
-            <button class="tr-type-btn" data-type="slide-up" onclick="trSelectType('slide-up')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/><rect x="3" y="3" width="18" height="18" rx="2" opacity="0.2"/></svg>
-              <span class="tr-type-name">Slide Up</span>
-            </button>
-            <button class="tr-type-btn" data-type="slide-down" onclick="trSelectType('slide-down')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/><rect x="3" y="3" width="18" height="18" rx="2" opacity="0.2"/></svg>
-              <span class="tr-type-name">Slide Down</span>
-            </button>
-            <button class="tr-type-btn" data-type="zoom-in" onclick="trSelectType('zoom-in')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-              <span class="tr-type-name">Zoom In</span>
-            </button>
-            <button class="tr-type-btn" data-type="zoom-out" onclick="trSelectType('zoom-out')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-              <span class="tr-type-name">Zoom Out</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Duration -->
-        <div class="tr-section" id="tr-duration-section">
-          <span class="tr-label">Duration</span>
-          <div class="tr-row">
-            <div class="tr-slider-wrap">
-              <input type="range" class="tr-slider" id="tr-duration-slider" min="50" max="3000" step="50" value="500" oninput="trUpdateDuration(this.value)">
-              <span class="tr-value" id="tr-duration-value">500ms</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Easing -->
-        <div class="tr-section" id="tr-easing-section">
-          <span class="tr-label">Easing</span>
-          <select class="tr-select" id="tr-easing-select" onchange="trUpdateEasing(this.value)">
-            <option value="ease">Ease</option>
-            <option value="ease-in">Ease In</option>
-            <option value="ease-out">Ease Out</option>
-            <option value="ease-in-out">Ease In Out</option>
-            <option value="linear">Linear</option>
-            <option value="spring">Spring</option>
-          </select>
-        </div>
-
-        <!-- Preview -->
-        <div class="tr-section">
-          <span class="tr-label">Preview</span>
-          <div class="tr-preview" id="tr-preview-area">
-            <div class="tr-preview-box" id="tr-preview-box"></div>
-          </div>
-        </div>
-      </div>
-      <div class="sp-modal-footer">
-        <button class="sp-btn-danger" onclick="trClearTransition()">Remove</button>
-        <button onclick="closeSceneTransitionPopup()">Cancel</button>
-        <button class="sp-btn-primary" onclick="trSaveTransition()">Apply</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add Source Type Picker Popup (Apple) -->
-  <div class="sp-overlay" id="add-source-overlay" onclick="closeAddSourcePopup()">
-    <div class="sp-modal" onclick="event.stopPropagation()" id="panel-inline-style-57">
-      <div class="sp-modal-header">Add Source</div>
-      <div class="sp-modal-body" id="source-type-list">
-        <div class="sp-source-item" onclick="openSourceConfig('camera')">
-          <svg class="sp-source-icon" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-          <span class="sp-source-label">Camera</span>
-        </div>
-        <div class="sp-source-item" onclick="openSourceConfig('audio-input')">
-          <svg class="sp-source-icon" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-          <span class="sp-source-label">Audio Input</span>
-        </div>
-        <div class="sp-source-item" onclick="openSourceConfig('media-source')">
-          <svg class="sp-source-icon" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          <span class="sp-source-label">Media Source</span>
-        </div>
-        <div class="sp-source-item" onclick="openSourceConfig('image')">
-          <svg class="sp-source-icon" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          <span class="sp-source-label">Image</span>
-        </div>
-        <div class="sp-source-item" onclick="openSourceConfig('text')">
-          <svg class="sp-source-icon" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-          <span class="sp-source-label">Text (GFX)</span>
-        </div>
-        <div class="sp-source-item" onclick="openSourceConfig('ndi')">
-          <svg class="sp-source-icon" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 0 1 0 8.49"/><path d="M7.76 16.24a6 6 0 0 1 0-8.49"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 19.07a10 10 0 0 1 0-14.14"/></svg>
-          <span class="sp-source-label">NDI®</span>
-        </div>
-        <div class="sp-source-item" onclick="openSourceConfig('window-capture')">
-          <svg class="sp-source-icon" viewBox="0 0 24 24" fill="none" stroke="#e879f9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="2" y1="7" x2="22" y2="7"/><circle cx="5" cy="5" r="0.5" fill="#ef4444" stroke="#ef4444"/><circle cx="7.5" cy="5" r="0.5" fill="#fbbf24" stroke="#fbbf24"/><circle cx="10" cy="5" r="0.5" fill="#34d399" stroke="#34d399"/></svg>
-          <span class="sp-source-label">Window Capture</span>
-        </div>
-        <div class="sp-source-item" onclick="openSourceConfig('scene')">
-          <svg class="sp-source-icon" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          <span class="sp-source-label">Scene</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Source Config Modal (individual source settings) (Apple) -->
-  <div class="sp-overlay" id="source-config-overlay" onclick="closeSourceConfig()">
-    <div class="sp-modal" onclick="event.stopPropagation()" id="panel-inline-style-58">
-      <div class="sp-modal-header" id="source-config-title">Configure Source</div>
-      <div class="sp-modal-body" id="source-config-body" ></div>
-      <div class="sp-modal-footer">
-        <button onclick="closeSourceConfig()">Cancel</button>
-        <button class="sp-btn-primary" onclick="confirmAddSource()">Add Source</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="sp-overlay fx-overlay" id="source-fx-overlay" onclick="closeSourceFxPopup()">
-    <div class="sp-modal rec-fx-popup" onclick="event.stopPropagation()">
-      <div class="rec-fx-header">
-        <div class="source-fx-header-top">
-          <button class="source-fx-close-dot" onclick="closeSourceFxPopup()" aria-label="Close">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="7" x2="17" y2="17"/><line x1="17" y1="7" x2="7" y2="17"/></svg>
-          </button>
-        </div>
-        <div class="source-fx-menu-grid" id="source-fx-menu-grid-audio">
-          <button type="button" class="source-fx-main-power" id="source-fx-power-btn" aria-label="Power" onclick="toggleCurrentSourceFxMaster()"></button>
-          <div class="source-fx-menu-left-top">
-            <button type="button" class="source-fx-preset-trigger" id="source-fx-preset-trigger" onclick="toggleSourceFxPresetMenu(event)">
-              <span class="source-fx-preset-trigger-text" id="source-fx-preset-trigger-text">Presets</span>
-              <svg class="source-fx-preset-trigger-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="#7B889A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-          </div>
-          <div class="source-fx-menu-right-top">
-          </div>
-          <div class="source-fx-menu-left-bottom">
-            <div class="source-fx-menu-pill group">
-              <button type="button" aria-label="Previous" onclick="sourceFxPresetNav(-1)">‹</button>
-              <button type="button" aria-label="Next" onclick="sourceFxPresetNav(1)">›</button>
-            </div>
-            <button type="button" class="source-fx-menu-pill disabled" disabled>Compare</button>
-            <div class="source-fx-menu-pill group">
-              <button type="button" onclick="sourceFxPresetCopy()">Copy</button>
-              <button type="button" onclick="sourceFxPresetPaste()">Paste</button>
-            </div>
-          </div>
-          <div class="source-fx-menu-right-bottom">
-          </div>
-        </div>
-        <div class="source-fx-menu-grid" id="source-fx-menu-grid-video" >
-          <button type="button" class="source-fx-main-power" id="video-fx-power-btn" aria-label="Power" onclick="toggleCurrentVideoFxMaster()"></button>
-          <div class="source-fx-menu-left-top">
-            <button type="button" class="source-fx-preset-trigger" id="video-fx-preset-trigger" onclick="toggleVideoFxPresetMenu(event)">
-              <span class="source-fx-preset-trigger-text" id="video-fx-preset-trigger-text">Presets</span>
-              <svg class="source-fx-preset-trigger-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1L5 5L9 1" stroke="#7B889A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-          </div>
-          <div class="source-fx-menu-right-top">
-          </div>
-          <div class="source-fx-menu-left-bottom">
-            <div class="source-fx-menu-pill group">
-              <button type="button" aria-label="Previous" onclick="videoFxPresetNav(-1)">‹</button>
-              <button type="button" aria-label="Next" onclick="videoFxPresetNav(1)">›</button>
-            </div>
-            <button type="button" class="source-fx-menu-pill disabled" disabled>Compare</button>
-            <div class="source-fx-menu-pill group">
-              <button type="button" onclick="videoFxCopy()">Copy</button>
-              <button type="button" onclick="videoFxPaste()">Paste</button>
-            </div>
-          </div>
-          <div class="source-fx-menu-right-bottom">
-          </div>
-        </div>
-      </div>
-      <div class="rec-fx-body">
-        <div id="source-fx-mode-panel-audio" class="source-fx-mode-panel active">
-          <div id="source-fx-panel-fx" class="rec-fx-panel active">
-            <div class="rec-fx-list" id="source-fx-list"></div>
-            <div class="rec-fx-editor" id="source-fx-editor"></div>
-          </div>
-          <div id="source-fx-panel-presets" class="rec-fx-panel">
-            <div class="rec-fx-preset-list" id="source-fx-presets-list"></div>
-            <div class="rec-fx-save-row">
-              <input class="rec-fx-input" id="source-fx-save-name" type="text" placeholder="Preset name">
-              <button class="rec-fx-btn" type="button" onclick="saveCurrentFxAsPreset()">Save</button>
-            </div>
-          </div>
-        </div>
-        <div id="source-fx-mode-panel-video" class="source-fx-mode-panel">
-          <div id="source-fx-panel-video-fx" class="rec-fx-panel active">
-            <div class="rec-fx-list" id="video-fx-list"></div>
-            <div class="rec-fx-editor" id="video-fx-editor"></div>
-          </div>
-          <div id="source-fx-panel-video-presets" class="rec-fx-panel">
-            <div class="rec-fx-preset-list" id="video-fx-presets-list"></div>
-            <div class="rec-fx-save-row">
-              <input class="rec-fx-input" id="video-fx-save-name" type="text" placeholder="Preset name">
-              <button class="rec-fx-btn" type="button" onclick="saveCurrentVideoFxAsPreset()">Save</button>
-            </div>
-          </div>
-        </div>
-
-      </div>
-      <div class="source-fx-footer">
-        <button type="button" class="source-fx-footer-add-btn" id="source-fx-footer-add-btn" onclick="toggleSourceFxAddPicker(event)" title="Add Effect">+</button>
-        <div class="source-fx-add-picker" id="source-fx-add-picker" onclick="event.stopPropagation()"></div>
-        <span class="source-fx-footer-label" id="source-fx-footer-label">Audio Effects</span>
-        <div class="source-fx-footer-tabs">
-          <button class="source-fx-footer-tab active" data-fx-mode="audio" onclick="sourceSetFxMode('audio')">Audio FX</button>
-          <button class="source-fx-footer-tab" data-fx-mode="video" onclick="sourceSetFxMode('video')">Video FX</button>
-        </div>
-      </div>
-    </div>
-    <div class="source-fx-preset-dropdown" id="source-fx-preset-dropdown" onclick="event.stopPropagation()"></div>
-  </div>
-
-  <!-- ═══════ Pro Mixer Overlay ═══════ -->
-  <div class="promix-overlay" id="promix-overlay">
-    <div class="promix-window" id="promix-window">
-      <div class="promix-resize-handle" id="promix-resize-handle"></div>
-      <div class="promix-resize-handle-right" id="promix-resize-handle-right"></div>
-      <div class="promix-resize-handle-bottom" id="promix-resize-handle-bottom"></div>
-      <div class="promix-titlebar">
-        <button class="promix-close-btn" onclick="closeProMixer()" aria-label="Close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#4a0000" stroke-width="4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
-        </button>
-        <span class="promix-titlebar-text">Pro Mixer</span>
-        <div class="promix-menu-row" data-promix-nodrag="1">
-          <div class="promix-menu-group" data-promix-nodrag="1">
-            <button class="promix-menu-btn" onclick="_promixMenuAddBus()">Add Bus</button>
-            <button class="promix-menu-btn" onclick="_promixMenuOpenMasterFx()">Master FX</button>
-            <button class="promix-menu-btn" onclick="_promixMenuOpenSettings()">Audio Setup</button>
-          </div>
-          <div class="promix-menu-group" data-promix-nodrag="1">
-            <button class="promix-menu-btn" onclick="_promixMenuResetSolo()">Clear Solo</button>
-            <button class="promix-menu-btn warn" id="promix-menu-mute-all" onclick="_promixMenuMuteAll()">Mute All</button>
-            <button class="promix-menu-btn" id="promix-menu-unmute-all" onclick="_promixMenuUnmuteAll()">Unmute All</button>
-            <button class="promix-menu-btn" onclick="_promixMenuUnityGain()">Unity</button>
-          </div>
-          <span class="promix-menu-meta" id="promix-scene-label">Scene:</span>
-          <select class="promix-scene-select" id="promix-scene-select" data-promix-nodrag="1" onchange="_promixSelectScene(this.value)" title="Choose scene for mixer strips"></select>
-          <span class="promix-menu-meta" id="promix-strip-count">0 strips</span>
-        </div>
-      </div>
-      <div class="promix-body" id="promix-body">
-        <div id="panel-inline-style-59" data-i18n="ui_no_audio_layers">No audio layers</div>
-      </div>
-    </div>
-  </div>
-  <!-- Pro Mixer FX parameter popover -->
-  <div class="promix-fx-param-pop" id="promix-fx-param-pop"></div>
-  <!-- Pro Mixer FX add picker -->
-  <div class="promix-fx-add-picker" id="promix-fx-add-picker"></div>
 
   <!-- Page Navigation Bar -->
   <div id="page-nav-bar">
@@ -3457,11 +3047,7 @@
   <script src="./scripts/sources/media-and-background.js"></script>
   <script src="./scripts/output/output-and-streaming.js"></script>
   <script src="./scripts/integrations/remote-show-tools.js"></script>
-  <script src="./scripts/sources/scene-and-source-tools.js"></script>
-  <script src="./scripts/sources/fx-and-source-config.js"></script>
-  <script src="./scripts/sources/source-runtime-and-promixer.js"></script>
-  <script src="./scripts/output/program-display-and-transform.js"></script>
-  <script src="./scripts/output/recording-and-livestream-tools.js"></script>
+  <script src="./scripts/ui/app-chrome.js"></script>
   <script src="./scripts/ui/workspace-and-editor-tools.js"></script>
   <script src="./scripts/ui/app-commands-and-shortcuts.js"></script>
   <script src="./scripts/ui/command-palette.js"></script>

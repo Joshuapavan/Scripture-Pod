@@ -204,7 +204,6 @@
         bgOpacity: 0,
         bgImage: null,
         bgVideo: null,
-        sceneLayers: [],
         lowerThirdOnly: anyEnabled,
         restorePrevious: !anyEnabled,
         nameRoleOverlay: getNameRoleOverlaySettings(nameRoleEnabled),
@@ -894,10 +893,9 @@
     }
 
     function sendSyncState(opts = {}) {
-      const sceneLayers = getOutputSceneLayers();
       const state = (lastLiveState && lastLiveState.kind === 'update')
-        ? { kind: 'update', payload: { ...lastLiveState.payload, sceneLayers } }
-        : { kind: 'clear', sceneLayers };
+        ? { kind: 'update', payload: { ...lastLiveState.payload } }
+        : { kind: 'clear' };
       const payload = state.payload;
       const activeMedia = payload?.bgEnabled && Number(payload.bgOpacity ?? 1) > 0
         ? (payload.bgType === 'video' ? payload.bgVideo : (payload.bgType === 'image' ? payload.bgImage : null))
@@ -1203,7 +1201,6 @@
         sender: 'control',
         ts: Date.now(),
         seq: nextSeq(),
-        sceneLayers: getOutputSceneLayers(),
         displayViewportWidth: viewport.width,
         displayViewportHeight: viewport.height,
         ...payload
@@ -1218,7 +1215,6 @@
       embeddedProgramDisplayState = { kind: 'update', payload: outputMessage };
       syncEmbeddedProgramDisplay();
       syncStandaloneOutputDirect();
-      syncLsProjectionPreview();
       lastLiveState = { kind: 'update', payload: msg };
       if (appState && appState.live) appState.live.lastLiveState = lastLiveState;
       schedulePersistAppState();
@@ -1234,8 +1230,7 @@
         proto: 1,
         sender: 'control',
         ts: Date.now(),
-        seq: nextSeq(),
-        sceneLayers: getOutputSceneLayers()
+        seq: nextSeq()
       };
       if (opts.transitionDuration != null) msg.transitionDuration = opts.transitionDuration;
       if (opts.fade != null) msg.fade = !!opts.fade;
@@ -1248,7 +1243,6 @@
       embeddedProgramDisplayState = { kind: 'clear' };
       syncEmbeddedProgramDisplay();
       syncStandaloneOutputDirect();
-      syncLsProjectionPreview();
       lastLiveState = { kind: 'clear' };
       if (appState && appState.live) appState.live.lastLiveState = lastLiveState;
       schedulePersistAppState();

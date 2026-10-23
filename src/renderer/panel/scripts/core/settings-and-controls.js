@@ -712,78 +712,10 @@
       input.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    let _stepperHoldTimeout = null;
-    let _stepperHoldInterval = null;
-    let _activeStepperButton = null;
-    let _stepperHoldStartedRepeating = false;
 
-    function clearStepperHoldTimers() {
-      if (_stepperHoldTimeout) {
-        clearTimeout(_stepperHoldTimeout);
-        _stepperHoldTimeout = null;
-      }
-      if (_stepperHoldInterval) {
-        clearInterval(_stepperHoldInterval);
-        _stepperHoldInterval = null;
-      }
-      _activeStepperButton = null;
-      _stepperHoldStartedRepeating = false;
-    }
 
-    function runStepperButtonAction(button) {
-      if (!(button instanceof Element)) return;
-      const onclick = button.getAttribute('onclick') || '';
-      let match = onclick.match(/stepNumericInput\('([^']+)'\s*,\s*([-+]?\d+(?:\.\d+)?)\)/);
-      if (match) {
-        stepNumericInput(match[1], Number(match[2]));
-        return;
-      }
-      match = onclick.match(/stepPositionOffset\('([^']+)'\s*,\s*([-+]?\d+(?:\.\d+)?)\)/);
-      if (match) {
-        stepPositionOffset(match[1], Number(match[2]));
-      }
-    }
 
-    function beginStepperHold(button) {
-      clearStepperHoldTimers();
-      _activeStepperButton = button;
-      _stepperHoldStartedRepeating = false;
-      _stepperHoldTimeout = setTimeout(() => {
-        _stepperHoldStartedRepeating = true;
-        runStepperButtonAction(button);
-        _stepperHoldInterval = setInterval(() => {
-          runStepperButtonAction(button);
-        }, 55);
-      }, 260);
-    }
 
-    function bindStepperPressAndHold() {
-      document.querySelectorAll('.numeric-stepper-buttons button, .position-offset-stepper button').forEach((button) => {
-        if (button.dataset.holdBound === '1') return;
-        button.dataset.holdBound = '1';
-        button.addEventListener('pointerdown', (event) => {
-          if (event.button !== 0) return;
-          button.dataset.suppressStepperClick = '0';
-          beginStepperHold(button);
-        });
-        button.addEventListener('pointerup', () => {
-          if (_activeStepperButton === button && _stepperHoldStartedRepeating) {
-            button.dataset.suppressStepperClick = '1';
-          }
-          clearStepperHoldTimers();
-        });
-        button.addEventListener('pointercancel', clearStepperHoldTimers);
-        button.addEventListener('pointerleave', clearStepperHoldTimers);
-        button.addEventListener('blur', clearStepperHoldTimers);
-        button.addEventListener('click', (event) => {
-          if (button.dataset.suppressStepperClick === '1') {
-            button.dataset.suppressStepperClick = '0';
-            event.preventDefault();
-            event.stopImmediatePropagation();
-          }
-        }, true);
-      });
-    }
 
     function saveToStorageDebounced() {
       schedulePersistAppState();
