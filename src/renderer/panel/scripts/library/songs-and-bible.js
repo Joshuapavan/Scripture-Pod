@@ -1148,8 +1148,19 @@
           applyBibleActiveButtonStyle(btn, bibleVersionIndex, idx === lineCursor);
         }
 
-        btn.onclick = () => {
+        btn.onclick = (event) => {
           lineCursor = idx;
+          // Command/Ctrl-click cues the card in Preview without sending it out
+          if (event && (event.metaKey || event.ctrlKey)) {
+            if (isBible && linesPerPage === 1) {
+              const verseNum = getFirstVerseNumber(p.raw);
+              if (verseNum) setBibleGroupAnchor(verseNum, currentItem);
+            }
+            previewCueHold = true;
+            updateActiveButtonInPlace(idx, isBible, bibleVersionIndex);
+            previewCurrentSelection();
+            return;
+          }
           if (isBible && linesPerPage === 1) {
             const verseNum = getFirstVerseNumber(p.raw);
             if (verseNum) setBibleGroupAnchor(verseNum, currentItem);
@@ -1345,10 +1356,13 @@
       return (isLive || overlayOnAir) ? payload : null;
     }
 
+    // Set by a Command/Ctrl-click: Preview keeps showing the cued card until the next Go live
+    let previewCueHold = false;
+
     function refreshPreviewMonitor() {
       if (isPreviewOnlyMode()) return;
       // Preview only is off: Preview and Program show the same thing, what is on air
-      const onAirPayload = getOnAirPayload();
+      const onAirPayload = previewCueHold ? null : getOnAirPayload();
       if (onAirPayload) {
         sendProgramPreview(onAirPayload, { mirror: true });
         setPreviewMonitorCaption('On air');
@@ -1428,6 +1442,7 @@
     }
 
     function projectLive(trigger = false, toggleIfSame = false) {
+      previewCueHold = false;
       if (isPreviewOnlyMode()) {
         previewCurrentSelection();
         showToast('Preview Only is on. Turn it off to project live.');
