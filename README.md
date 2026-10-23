@@ -35,15 +35,15 @@ npm run tauri:build
 
 Installers are written to `src-tauri/target/release/bundle/` (`.app` and `.dmg` on macOS,
 `.exe` on Windows, `.deb` and `.AppImage` on Linux). Build each system on that system.
-The same builds run in GitHub Actions (`.github/workflows/push-release.yml`) and are attached
-to a release.
+The same builds run in GitHub Actions (`.github/workflows/push-release.yml`).
 
-macOS apps are only ad-hoc signed unless you add an Apple Developer ID. Set these repository
-secrets and the release build signs and notarizes: `APPLE_CERTIFICATE` (base64 .p12),
-`APPLE_CERTIFICATE_PASSWORD`, `APPLE_SIGNING_IDENTITY`, `APPLE_ID`, `APPLE_PASSWORD`
-(app-specific password) and `APPLE_TEAM_ID`. Without them macOS shows an "unidentified
-developer" warning: right-click the app and choose Open. On Windows, SmartScreen may warn:
+macOS apps are unsigned (no Apple Developer ID), so macOS shows an "unidentified developer"
+warning on first open: right-click the app and choose Open. On Windows, SmartScreen may warn:
 choose More info, then Run anyway.
+
+CI builds on every push to `main` and uploads the installers to the run (Actions, open the run,
+Artifacts, kept 14 days). Nothing is published as a release unless you push a `v*` tag or run
+the workflow by hand with "publish" ticked.
 
 ## Output and OBS
 

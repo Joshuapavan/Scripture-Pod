@@ -6,8 +6,12 @@ on:
       - main
   create:
   pull_request:
-
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Also publish a GitHub release with the installers
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -70,26 +74,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
-      # Signing and notarization run only when these secrets exist.
-      # macOS: APPLE_CERTIFICATE (base64 .p12), APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
-      #        APPLE_ID, APPLE_PASSWORD (app-specific), APPLE_TEAM_ID
+      # Unsigned on purpose (no Apple Developer ID): macOS shows an "unidentified developer"
+      # warning on first open (right-click the app, then Open).
       - name: Build installer
-        run: |
-          # Missing secrets arrive as empty strings, and Tauri then tries to sign with them and fails.
-          # Unset the empty ones so the build is simply unsigned.
-          for v in APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_SIGNING_IDENTITY APPLE_ID APPLE_PASSWORD APPLE_TEAM_ID; do
-            if [ -z "${!v}" ]; then unset "$v"; fi
-          done
-          npx --yes @tauri-apps/cli@2 build ${{ matrix.args }}
+        run: npx --yes @tauri-apps/cli@2 build ${{ matrix.args }}
         working-directory: src-tauri
         shell: bash
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       - name: Upload installers
         uses: actions/upload-artifact@v7
         with:
@@ -100,10 +90,12 @@ jobs:
             src-tauri/target/release/bundle/deb/*.deb
             src-tauri/target/release/bundle/appimage/*.AppImage
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
 
   release:
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' || (github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) }}
+    # Builds from main only upload downloadable files to the run. A release is published for a
+    # v* tag, or when you run the workflow by hand with "publish" ticked.
+    if: ${{ (github.event_name == 'create' && github.event.ref_type == 'tag' && startsWith(github.event.ref, 'v')) || (github.event_name == 'workflow_dispatch' && inputs.publish) }}
     needs: [test, build]
     runs-on: ubuntu-latest
     steps:
