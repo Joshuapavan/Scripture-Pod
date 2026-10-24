@@ -81,7 +81,8 @@
         { label: 'Outputs', run: () => showOutputsCard() },
         { label: 'Keyboard shortcuts', run: () => openShortcutsWindow() },
         { label: 'Settings', run: () => openModal('settingsModal') },
-        { label: 'New song', run: () => openModal('newSongModal') }
+        { label: 'New song', run: () => openModal('newSongModal') },
+        { label: 'Search lyrics online', run: () => openLyricsWebSearch('', 'any') }
       ];
     }
 
@@ -159,6 +160,20 @@
           run: () => { setSidebarTab('schedule'); handleFocusedSchedulePanelAction('select', index); }
         }));
       if (setlistHits.length) groups.push({ title: 'Setlist', items: setlistHits });
+
+      // Anything typed can also be searched for on the web (English, Kannada or Tamil songs)
+      const webQuery = raw.trim();
+      if (webQuery.length >= 2) {
+        groups.push({
+          title: 'Search the web',
+          items: [
+            { label: `Search lyrics online for “${webQuery}”`, meta: 'Any language', run: () => openLyricsWebSearch(webQuery, 'any') },
+            { label: `…in English`, meta: 'Lyrics', run: () => openLyricsWebSearch(webQuery, 'english') },
+            { label: `…in Kannada`, meta: 'Saved as typed English', run: () => openLyricsWebSearch(webQuery, 'kannada') },
+            { label: `…in Tamil`, meta: 'Saved as typed English', run: () => openLyricsWebSearch(webQuery, 'tamil') }
+          ]
+        });
+      }
 
       const actions = getCommandPaletteActions().filter(action => normalizeSearchText(action.label).includes(q));
       if (actions.length) {

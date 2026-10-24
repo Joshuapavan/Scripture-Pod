@@ -187,8 +187,10 @@
       const artistInput = document.getElementById('new-song-artist');
       const lyricsInput = document.getElementById('new-song-lyrics');
       const artist = (artistInput?.value || '').trim();
-      const pastedLyrics = (lyricsInput?.value || '').trim();
-      let title = (input.value || '').trim();
+      // Kannada and Tamil script is stored as typed English
+      const toTyped = (text) => (window.SP_TRANSLIT && window.SP_TRANSLIT.detectScript(text) !== 'latin') ? window.SP_TRANSLIT.toTypedEnglish(text) : text;
+      const pastedLyrics = toTyped((lyricsInput?.value || '').trim());
+      let title = toTyped((input.value || '').trim());
       const lookupKey = getNewSongLookupKey(title, artist);
       const fetchedLyrics = (lookupKey === newSongFetchedLookupKey) ? newSongFetchedLyrics : '';
       // Pasted lyrics are sliced into sections the same way fetched ones are

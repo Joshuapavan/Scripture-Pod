@@ -1611,6 +1611,7 @@
     function openModal(id) {
       const modal = document.getElementById(id);
       if (!modal) return;
+      if (id === 'autoLyricsModal') loadLyricsSourceKeyInputs();
       if (id === 'settingsModal') {
         populateLanguageSelect();
         setLanguage(currentLanguage, { silent: true });
@@ -1747,6 +1748,7 @@
         const artist = entry.artist || 'Unknown artist';
         const album = entry.album || '';
         const source = entry.source || '';
+        const langTag = entry.language ? ` • ${entry.language}${entry.converted ? ' → typed English' : ''}` : '';
         btn.innerHTML = `<div style="font-weight:600;font-size:12px">${esc(track)}</div><div style="font-size:11px;color:var(--text-secondary)">${esc(artist)}${album ? ' • ' + esc(album) : ''}${source ? ' • ' + esc(source) : ''}</div>`;
         btn.onclick = () => selectNewSongLookupResult(idx);
         host.appendChild(btn);
@@ -1811,9 +1813,21 @@
       const artist = String(entry.artistName || entry.artist_name || entry.artist || '').trim();
       const album = String(entry.albumName || entry.album_name || entry.album || '').trim();
       const source = String(entry.sourceName || entry.source || 'LRCLIB').trim();
-      const lyrics = extractLyricsFromLookupPayload(entry);
-      if (!lyrics || !title) return null;
-      return { title, artist, album, source, lyrics };
+      const rawLyrics = extractLyricsFromLookupPayload(entry);
+      if (!rawLyrics || !title) return null;
+      // Kannada and Tamil results are stored as typed English (Latin letters), so every song reads the same
+      const script = (window.SP_TRANSLIT && window.SP_TRANSLIT.detectScript(`${title}\n${rawLyrics}`)) || 'latin';
+      const toLatin = (text) => (window.SP_TRANSLIT && script !== 'latin') ? window.SP_TRANSLIT.toTypedEnglish(text) : text;
+      return {
+        worship: !!entry.worship,
+        title: toLatin(title),
+        artist: toLatin(artist),
+        album: toLatin(album),
+        source,
+        lyrics: toLatin(rawLyrics),
+        language: entry.languageHint || (script === 'kannada' ? 'Kannada' : (script === 'tamil' ? 'Tamil' : 'English')),
+        converted: script !== 'latin'
+      };
     }
 
     function dedupeLyricsSearchResults(results) {
@@ -1830,7 +1844,96 @@
       return out;
     }
 
-    async function searchLyricsCatalog(title, artist) {
+    // "Christian worship songs only": results are scored by worship words (English, and the typed-English
+    // forms of Kannada and Tamil words) and the songs without any are left out, best matches first.
+    const WORSHIP_STRONG = ['jesus', 'christ', 'hallelujah', 'halleluyah', 'hosanna', 'savior', 'saviour', 'holy spirit', 'worship', 'emmanuel', 'messiah', 'amen',
+      'yesu', 'iyesu', 'yesappa', 'yaesu', 'kristh', 'kiristh', 'karthar', 'karththar', 'devaru', 'daevaru', 'thaevan', 'daevaa', 'parishuddh', 'aaradhan', 'aaradhane', 'ratchak', 'rakshak', 'stuthi', 'sthuthi', 'sthothra', 'aaviyan'];
+    const WORSHIP_WEAK = ['lord', 'god', 'praise', 'grace', 'glory', 'cross', 'lamb', 'king of kings', 'redeemer', 'blood of', 'heaven', 'holy', 'faith', 'prayer', 'blessed', 'mercy', 'father', 'spirit', 'psalm', 'deva', 'appa', 'karthaave', 'kartha'];
+    function worshipScore(entry) {
+      const hay = `${entry.title || ''}\n${entry.lyrics || ''}`.toLowerCase();
+      let score = 0;
+      WORSHIP_STRONG.forEach((w) => { if (hay.includes(w)) score += 3; });
+      WORSHIP_WEAK.forEach((w) => { if (hay.includes(w)) score += 1; });
+      return score;
+    }
+    function isWorshipSong(entry) { return !!entry.worship || worshipScore(entry) >= 3; }
+
+    // tamilchristiansongs.in: an all-Christian Tamil song library with a search API and a typed-English
+    // (romanised) version of each song. Its server does not allow requests from a web page, so the app fetches it.
+    async function fetchFromSite(url) {
+      if (window.BSPDesktop && typeof window.BSPDesktop.fetchText === 'function') {
+        const r = await window.BSPDesktop.fetchText({ url });
+        return r && r.ok ? r.body : '';
+      }
+      try { const res = await fetch(url); return res.ok ? await res.text() : ''; } catch (e) { return ''; }
+    }
+    async function searchTamilChristianSongs(query, limit = 5) {
+      const q = String(query || '').trim();
+      if (!q) return [];
+      const text = await fetchFromSite(`https://tamilchristiansongs.in/api/search/?q=${encodeURIComponent(q)}&per_page=${limit}`);
+      let list = [];
+      try { list = JSON.parse(text).results || []; } catch (e) { return []; }
+      const pages = await Promise.all(list.slice(0, limit).map(async (item) => {
+        const html = await fetchFromSite(`https://tamilchristiansongs.in${item.url}`);
+        if (!html) return null;
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        // The site gives a romanised version of each song: that is the typed English we store
+        const roman = doc.querySelector('#tamilroman .whitespace-pre-line');
+        const tamil = doc.querySelector('#tamiltext');
+        const lyrics = ((roman && roman.textContent) || (tamil && tamil.innerText) || (tamil && tamil.textContent) || '').replace(/\r/g, '').replace(/\n{3,}/g, '\n\n').trim();
+        if (!lyrics) return null;
+        return { title: String(item.title || '').replace(/\s*[-–|]\s*(lyrics|tamil christian songs).*$/i, '').trim() || 'Untitled', artist: '', album: '', source: 'tamilchristiansongs.in', lyrics, worship: true, languageHint: 'Tamil' };
+      }));
+      return pages.filter(Boolean);
+    }
+
+    // Optional extra sources, kept on this computer only. Genius and YouTube do not hand out lyrics,
+    // so they are used to find the proper song and artist names, which are then looked up for lyrics.
+    const LYRICS_KEYS_STORAGE = 'scripturePod.lyricsKeys.v1';
+    function getLyricsSourceKeys() {
+      try { const v = JSON.parse(localStorage.getItem(LYRICS_KEYS_STORAGE) || '{}'); return { genius: String(v.genius || '').trim(), youtube: String(v.youtube || '').trim() }; }
+      catch (e) { return { genius: '', youtube: '' }; }
+    }
+    function saveLyricsSourceKeys() {
+      const genius = document.getElementById('lyrics-key-genius')?.value.trim() || '';
+      const youtube = document.getElementById('lyrics-key-youtube')?.value.trim() || '';
+      try { localStorage.setItem(LYRICS_KEYS_STORAGE, JSON.stringify({ genius, youtube })); } catch (e) { /* storage unavailable */ }
+      showToast('Lyrics sources saved');
+    }
+    function loadLyricsSourceKeyInputs() {
+      const keys = getLyricsSourceKeys();
+      const g = document.getElementById('lyrics-key-genius'); if (g) g.value = keys.genius;
+      const y = document.getElementById('lyrics-key-youtube'); if (y) y.value = keys.youtube;
+    }
+
+    // Song and artist names from Genius and YouTube for a search the lyrics sources could not answer
+    async function findSongNameCandidates(query, signal, opts = {}) {
+      const keys = getLyricsSourceKeys();
+      const found = [];
+      const getJson = async (url, headers) => {
+        const res = await fetch(url, { signal, headers });
+        return res.ok ? res.json() : null;
+      };
+      if (keys.genius) {
+        const data = await getJson(`https://api.genius.com/search?q=${encodeURIComponent(query)}`, { Authorization: `Bearer ${keys.genius}` }).catch(() => null);
+        (data?.response?.hits || []).slice(0, 4).forEach((h) => {
+          const r = h.result || {};
+          if (r.title) found.push({ title: String(r.title), artist: String(r.primary_artist?.name || '') });
+        });
+      }
+      if (keys.youtube) {
+        const data = await getJson(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&maxResults=4&q=${encodeURIComponent(query + (opts && opts.worshipOnly ? ' christian worship song lyrics' : ' lyrics'))}&key=${encodeURIComponent(keys.youtube)}`).catch(() => null);
+        (data?.items || []).forEach((it) => {
+          // Video titles look like "Song name - Artist (Lyrical Video)": keep the part before the bracket
+          const raw = String(it.snippet?.title || '').replace(/[\(\[｜|].*$/, '').trim();
+          const parts = raw.split(/\s[-–]\s/);
+          if (parts[0]) found.push({ title: parts[0].trim(), artist: (parts[1] || '').trim() });
+        });
+      }
+      return found;
+    }
+
+    async function searchLyricsCatalog(title, artist, language = 'any', opts = {}) {
       const cleanTitle = String(title || '').trim();
       const cleanArtist = String(artist || '').trim();
       if (!cleanTitle && !cleanArtist) throw new Error('Title or artist required');
@@ -1861,7 +1964,45 @@
         if (Array.isArray(payload)) collected.push(...payload);
         else if (payload && typeof payload === 'object') collected.push(payload);
       }
-      return dedupeLyricsSearchResults(collected);
+      // Tamil worship songs: tamilchristiansongs.in has them with a typed-English version
+      if (language !== 'english' && language !== 'kannada') {
+        const tamilSongs = await searchTamilChristianSongs(`${cleanTitle} ${cleanArtist}`.trim()).catch(() => []);
+        collected.push(...tamilSongs);
+      }
+      // A second public source for English songs when both the title and the artist are known
+      if (cleanTitle && cleanArtist && language !== 'kannada' && language !== 'tamil') {
+        const ovh = await doFetchJson(`https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`).catch(() => null);
+        if (ovh && typeof ovh.lyrics === 'string' && ovh.lyrics.trim()) {
+          collected.push({ title: cleanTitle, artist: cleanArtist, lyrics: ovh.lyrics, source: 'lyrics.ovh' });
+        }
+      }
+      let results = dedupeLyricsSearchResults(collected);
+      const want = { english: 'English', kannada: 'Kannada', tamil: 'Tamil' }[String(language || 'any').toLowerCase()];
+      if (want) results = results.filter((r) => r.language === want);
+      const keepWorship = (list) => {
+        if (!opts.worshipOnly) return list;
+        const kept = list.filter(isWorshipSong).sort((a, b) => worshipScore(b) - worshipScore(a));
+        kept.hidden = list.length - kept.length;
+        return kept;
+      };
+      results = keepWorship(results);
+      // Nothing found: ask Genius / YouTube (when a key is saved) for the proper names, then look those up
+      if (!results.length) {
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), timeoutMs);
+        try {
+          const names = await findSongNameCandidates(`${cleanTitle} ${cleanArtist}`.trim(), ctl.signal, opts);
+          const more = [];
+          for (const n of names.slice(0, 6)) {
+            const payload = await doFetchJson(`https://lrclib.net/api/search?q=${encodeURIComponent(`${n.title} ${n.artist}`.trim())}`).catch(() => null);
+            if (Array.isArray(payload)) more.push(...payload);
+          }
+          results = dedupeLyricsSearchResults(more);
+          if (want) results = results.filter((r) => r.language === want);
+          results = keepWorship(results);
+        } catch (e) { /* the extra sources are optional */ } finally { clearTimeout(timer); }
+      }
+      return results;
     }
 
     function selectNewSongLookupResult(index) {
@@ -1904,11 +2045,11 @@
       updateNewSongFetchStatus(t('new_song_searching_matches'), 'muted');
       clearNewSongLookupResults();
       try {
-        const results = await searchLyricsCatalog(title, artist);
+        const results = await searchLyricsCatalog(title, artist, document.getElementById('new-song-lyrics-language')?.value || 'any', { worshipOnly: document.getElementById('new-song-worship-only')?.checked !== false });
         if (!Array.isArray(results) || !results.length) {
           newSongFetchedLyrics = '';
           newSongFetchedLookupKey = '';
-          updateNewSongFetchStatus(t('new_song_no_matching_lyrics_found'), 'error');
+          updateNewSongFetchStatus(results && results.hidden ? `No worship songs matched. ${results.hidden} other song${results.hidden === 1 ? '' : 's'} hidden: untick "Worship songs only" to see ${results.hidden === 1 ? 'it' : 'them'}.` : t('new_song_no_matching_lyrics_found'), 'error');
           showToast(t('auto_lyrics_no_results_found'));
           return;
         }
@@ -2120,7 +2261,7 @@
         const row = document.createElement('button');
         row.type = 'button';
         row.style.cssText = 'display:block;width:100%;text-align:left;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin:0 0 8px;color:var(--text);cursor:pointer;';
-        const meta = `${entry.artist || 'Unknown artist'}${entry.album ? ' • ' + entry.album : ''}${entry.source ? ' • ' + entry.source : ''}`;
+        const meta = `${entry.artist || 'Unknown artist'}${entry.album ? ' • ' + entry.album : ''}${entry.source ? ' • ' + entry.source : ''}${entry.language ? ' • ' + entry.language + (entry.converted ? ' → typed English' : '') : ''}`;
         row.innerHTML = `<div style="font-size:12px;font-weight:700">${esc(entry.title)}</div><div style="font-size:11px;color:var(--text-secondary)">${esc(meta)}</div>`;
         row.onclick = () => {
           addAutoLyricsResultToSongs(entry, { openEditor: true, closeModal: false });
@@ -2142,6 +2283,19 @@
     }
 
 
+    // From the ⌘K palette: open the Auto-Lyrics window with the typed words and search the web at once
+    function openLyricsWebSearch(query, language = 'any') {
+      openModal('autoLyricsModal');
+      const titleInput = document.getElementById('auto-lyrics-title');
+      const artistInput = document.getElementById('auto-lyrics-artist');
+      const languageSelect = document.getElementById('auto-lyrics-language');
+      if (titleInput) titleInput.value = String(query || '').trim();
+      if (artistInput) artistInput.value = '';
+      if (languageSelect) languageSelect.value = language;
+      updateAutoLyricsInputClearButtons();
+      searchAutoLyrics();
+    }
+
     async function searchAutoLyrics() {
       if (autoLyricsLookupBusy) return;
       const title = (document.getElementById('auto-lyrics-title')?.value || '').trim();
@@ -2156,11 +2310,11 @@
       closeAutoLyricsContextMenu();
       hideAutoLyricsPreview();
       try {
-        const results = await searchLyricsCatalog(title, artist);
+        const results = await searchLyricsCatalog(title, artist, document.getElementById('auto-lyrics-language')?.value || 'any', { worshipOnly: document.getElementById('auto-lyrics-worship-only')?.checked !== false });
         autoLyricsResults = Array.isArray(results) ? results.slice(0, 40) : [];
         renderAutoLyricsResults();
         if (!autoLyricsResults.length) {
-          updateAutoLyricsStatus(t('auto_lyrics_no_results_found'), 'error');
+          updateAutoLyricsStatus(results && results.hidden ? `No worship songs matched. ${results.hidden} other song${results.hidden === 1 ? '' : 's'} hidden: untick "Worship songs only" to see ${results.hidden === 1 ? 'it' : 'them'}.` : t('auto_lyrics_no_results_found'), 'error');
           showToast(t('auto_lyrics_no_results_found'));
           return;
         }

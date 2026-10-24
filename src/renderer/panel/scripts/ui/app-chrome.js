@@ -165,28 +165,13 @@ function positionAutoLyricsModal() {
       if (!modal || modal.style.display !== 'flex') return;
       const content = modal.querySelector('.modal-content');
       if (!content) return;
-      const mainAnchorBtn = document.getElementById('main-get-lyrics-btn');
-      const footerAnchorBtn = document.getElementById('footer-auto-lyrics-btn');
-      const anchorBtn = (mainAnchorBtn && mainAnchorBtn.style.display !== 'none')
-        ? mainAnchorBtn
-        : footerAnchorBtn;
+      // Centred in the window, whatever opened it
       const margin = 10;
-      const anchorGap = 16;
       content.style.left = `${margin}px`;
       content.style.top = `${margin}px`;
-      const contentRect = content.getBoundingClientRect();
-      const anchorRect = anchorBtn
-        ? anchorBtn.getBoundingClientRect()
-        : { left: window.innerWidth * 0.5, width: 0, top: window.innerHeight - margin, bottom: window.innerHeight - margin };
-      let left = anchorRect.left + ((anchorRect.width || 0) - contentRect.width) / 2;
-      left = Math.max(margin, Math.min(left, window.innerWidth - contentRect.width - margin));
-      let top = anchorRect.top - contentRect.height - anchorGap;
-      if (top < margin) top = anchorRect.bottom + anchorGap;
-      if (top + contentRect.height > window.innerHeight - margin) {
-        top = Math.max(margin, window.innerHeight - contentRect.height - margin);
-      }
-      content.style.left = `${Math.round(left)}px`;
-      content.style.top = `${Math.round(top)}px`;
+      const rect = content.getBoundingClientRect();
+      content.style.left = `${Math.max(margin, Math.round((window.innerWidth - rect.width) / 2))}px`;
+      content.style.top = `${Math.max(margin, Math.round((window.innerHeight - rect.height) / 2))}px`;
     }
 
 function toggleFooterBibleVersionPopover(forceOpen) {

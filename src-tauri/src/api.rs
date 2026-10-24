@@ -47,6 +47,31 @@ pub fn local_server_info(state: &AppState) -> Value {
     })
 }
 
+// Lyrics sites that do not allow requests from a web page are fetched here, from the app itself.
+// Only these hosts, over https, are allowed.
+const FETCH_HOSTS: [&str; 1] = ["tamilchristiansongs.in"];
+
+fn fetch_text(arg: &Value) -> Value {
+    let url = arg["url"].as_str().unwrap_or("");
+    let allowed = url.strip_prefix("https://").map(|rest| {
+        let host = rest.split(|c| c == '/' || c == '?' || c == '#').next().unwrap_or("");
+        FETCH_HOSTS.iter().any(|h| host == *h)
+    }).unwrap_or(false);
+    if !allowed { return json!({"error": "That address is not allowed"}); }
+    let agent = ureq::AgentBuilder::new().timeout(std::time::Duration::from_secs(15)).build();
+    match agent.get(url).set("Accept", "application/json,text/html").call() {
+        Ok(resp) => {
+            let status = resp.status();
+            let mut body = String::new();
+            use std::io::Read;
+            let _ = resp.into_reader().take(3_000_000).read_to_string(&mut body);
+            json!({"ok": true, "status": status, "body": body})
+        }
+        Err(ureq::Error::Status(code, _)) => json!({"ok": false, "status": code, "body": ""}),
+        Err(e) => json!({"error": e.to_string()}),
+    }
+}
+
 pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, body: &str) -> Value {
     let arg: Value = serde_json::from_str(body).unwrap_or(Value::Null);
     let err = |m: &str| json!({"error": m});
@@ -58,6 +83,7 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "openFeed" => { windows::open_feed(app, &arg); json!({"ok": true}) }
         "closeFeed" => { windows::close(app, "feed", true); json!({"ok": true}) }
         "relayClientCount" => json!(state.relay.client_count()),
+        "fetchText" => fetch_text(&arg),
         "isFeedOpen" => json!(app.get_webview_window("feed").is_some()),
         "sendOutputMessage" => {
             // { message, target } from the page; a bare message goes to both windows

@@ -955,8 +955,21 @@
           <input type="text" id="auto-lyrics-artist" class="auto-lyrics-input" placeholder="Artist..." data-i18n-placeholder="auto_lyrics_artist_placeholder" oninput="updateAutoLyricsInputClearButtons()" onkeydown="if(event.key==='Enter')searchAutoLyrics()">
           <button type="button" id="auto-lyrics-artist-clear" class="auto-lyrics-clear-btn" aria-label="Clear artist" data-i18n-aria-label="auto_lyrics_clear_artist" onclick="clearAutoLyricsField('artist')">X</button>
         </div>
+        <select id="auto-lyrics-language" class="lyrics-language-select" aria-label="Song language" title="Songs in Kannada or Tamil script are saved as typed English">
+          <option value="any">Any language</option>
+          <option value="english">English</option>
+          <option value="kannada">Kannada</option>
+          <option value="tamil">Tamil</option>
+        </select>
+        <label class="worship-only-toggle" title="Only show Christian worship songs, best matches first"><input type="checkbox" id="auto-lyrics-worship-only" checked> Worship songs only</label>
         <button class="btn" id="auto-lyrics-search-btn" type="button"  onclick="searchAutoLyrics()" data-i18n="common_search">Search</button>
       </div>
+      <details class="lyrics-sources">
+        <summary>More sources (optional)</summary>
+        <p>Lyrics come from LRCLIB, lyrics.ovh and tamilchristiansongs.in (Tamil worship songs). Add a Genius token or a YouTube API key to also find songs by their proper names when the first search finds nothing. Genius and YouTube give names only; the lyrics still come from the sources above. Keys stay on this computer.</p>
+        <label>Genius access token <input type="password" id="lyrics-key-genius" autocomplete="off" onchange="saveLyricsSourceKeys()"></label>
+        <label>YouTube API key <input type="password" id="lyrics-key-youtube" autocomplete="off" onchange="saveLyricsSourceKeys()"></label>
+      </details>
       <div id="auto-lyrics-status"  data-i18n="auto_lyrics_prompt">Enter a title or artist and search.</div>
       <div id="auto-lyrics-results" ></div>
     </div>
@@ -3025,6 +3038,13 @@
       <div id="panel-inline-style-196">
         <input type="text" id="new-song-title" placeholder="Title (optional)..." data-i18n-placeholder="new_song_title_placeholder"  oninput="handleNewSongLookupInputChange()">
         <input type="text" id="new-song-artist" placeholder="Artist..." data-i18n-placeholder="auto_lyrics_artist_placeholder"  oninput="handleNewSongLookupInputChange()">
+        <select id="new-song-lyrics-language" class="lyrics-language-select" aria-label="Song language" title="Songs in Kannada or Tamil script are saved as typed English">
+          <option value="any">Any language</option>
+          <option value="english">English</option>
+          <option value="kannada">Kannada</option>
+          <option value="tamil">Tamil</option>
+        </select>
+        <label class="worship-only-toggle" title="Only show Christian worship songs, best matches first"><input type="checkbox" id="new-song-worship-only" checked> Worship songs only</label>
         <button class="btn" id="new-song-fetch-btn" type="button"  onclick="autoFetchNewSongLyrics()" data-i18n="new_song_search_lyrics">Search Lyrics</button>
       </div>
       <span id="new-song-fetch-status"  data-i18n="new_song_no_lyrics_fetched">No lyrics fetched</span>
@@ -3063,6 +3083,7 @@
     </div>
   </div>
   <script src="../../../node_modules/qrcode-generator/dist/qrcode.js"></script>
+  <script src="../../shared/transliterate.js"></script>
   <script src="../../shared/lower-third-extra.js"></script>
   <script src="../../shared/social-overlay.js"></script>
   <script src="./scripts/core/state-and-storage.js"></script>

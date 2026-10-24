@@ -8,7 +8,7 @@
     return v;
   };
   const api = {};
-  ['getDisplays', 'openOutput', 'closeOutput', 'isOutputOpen', 'openFeed', 'closeFeed', 'isFeedOpen', 'relayClientCount',
+  ['getDisplays', 'openOutput', 'closeOutput', 'isOutputOpen', 'openFeed', 'closeFeed', 'isFeedOpen', 'relayClientCount', 'fetchText',
     'sendWebSocketOutputMessage', 'requestOutputFullscreen', 'getLocalServerInfo',
     'listBundledBibleFiles', 'readBundledBibleFile', 'readBundledChurchLogo', 'cacheBackgroundMedia', 'copyText',
     'openBackup'].forEach((n) => { api[n] = call(n); });

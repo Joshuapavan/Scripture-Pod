@@ -1988,7 +1988,7 @@ body[data-sidebar-tab="schedule"]:not(.overlays-workspace-active) #setlist-next-
 }
 
 /* ── ⌘K search palette ────────────────────────────────────────────────────── */
-.command-palette { position: fixed; inset: 0; z-index: 10000; display: flex; justify-content: center; align-items: flex-start; padding-top: 12vh; }
+.command-palette { position: fixed; inset: 0; z-index: 10000; display: flex; justify-content: center; align-items: center; padding-top: 0; }
 .command-palette[hidden] { display: none; }
 .command-palette-backdrop { position: absolute; inset: 0; background: rgb(0 0 0 / 0.55); }
 .command-palette-dialog {
@@ -2749,3 +2749,14 @@ select option, select optgroup {
   width: calc(100% * min(var(--monitor-zoom, 1), 1)) !important;
   margin-inline: auto !important;
 }
+
+.lyrics-language-select { height: 32px; padding: 0 28px 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); font-size: 13px; }
+
+.lyrics-sources { margin: 10px 0 4px; font-size: 12px; color: var(--sp-muted); }
+.lyrics-sources summary { cursor: pointer; color: var(--sp-text); }
+.lyrics-sources p { margin: 8px 0; line-height: 1.45; }
+.lyrics-sources label { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 6px 0; }
+.lyrics-sources input { flex: 1; max-width: 260px; height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background: var(--sp-inset); color: var(--sp-text); }
+
+.worship-only-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sp-text); white-space: nowrap; }
+#autoLyricsModal { background: rgb(0 0 0 / 0.55) !important; }
