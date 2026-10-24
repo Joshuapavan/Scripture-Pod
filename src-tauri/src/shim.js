@@ -8,10 +8,11 @@
     return v;
   };
   const api = {};
-  ['getDisplays', 'openOutput', 'closeOutput', 'isOutputOpen', 'openFeed', 'closeFeed', 'isFeedOpen',
-    'sendOutputMessage', 'sendWebSocketOutputMessage', 'requestOutputFullscreen', 'getLocalServerInfo',
+  ['getDisplays', 'openOutput', 'closeOutput', 'isOutputOpen', 'openFeed', 'closeFeed', 'isFeedOpen', 'relayClientCount',
+    'sendWebSocketOutputMessage', 'requestOutputFullscreen', 'getLocalServerInfo',
     'listBundledBibleFiles', 'readBundledBibleFile', 'readBundledChurchLogo', 'cacheBackgroundMedia', 'copyText',
     'openBackup'].forEach((n) => { api[n] = call(n); });
+  api.sendOutputMessage = (message, target) => call('sendOutputMessage')({ message, target });
   api.bibleSearch = (method, payload) => call('bibleSearch')({ method, payload });
   api.saveBackup = (filename, contents) => call('saveBackup')({ filename, contents });
   api.openRecordingInLocation = (payload = {}) => call('openInLocation')(payload.path);

@@ -50,6 +50,12 @@ commit that edits a file in `.github/workflows`, so such a push builds but publi
 
 - **Output window:** Outputs, then pick a screen. It is a transparent, frameless window
   that you capture in OBS with Window Capture or Display Capture.
+- **Lyrics:** the live display always shows them as a lower third on a transparent page: the Stream
+  feed, the Display link (OBS Browser Source) and the Program panel. Monitor feeds show them full
+  screen with the clock: the main screen output window (HDMI or any external monitor) and the
+  Monitor link (wireless). The Preview panel is full screen too. Bible verses follow the Look mode.
+- **Monitor clock:** Outputs, Monitor clock shows the time on the main screen window and on every
+  Monitor link (12 or 24 hour, any corner). The live display never shows it.
 - **Stream feed:** a second, opaque output for a capture card, filled with a key colour
   (black for Luma Key, green for Chroma Key).
 - **Browser source:** the app serves the display page on your network. In OBS add a Browser

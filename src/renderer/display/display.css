@@ -1139,3 +1139,24 @@ html.has-key-bg body.display-full-mode {
 @keyframes bg-glow-in { from { opacity: 0; transform: translate(-8%, 6%); } to { opacity: 1; transform: translate(0, 0); } }
 @keyframes bg-glow { from { transform: translate(-9%, 7%) scale(1); } to { transform: translate(10%, -8%) scale(1.25); } }
 @media (prefers-reduced-motion: reduce) { #bg-layer.bg-animated::before, #bg-layer.bg-animated::after { animation: none; } }
+
+/* Monitor clock */
+#monitor-clock {
+    position: fixed;
+    z-index: 60;
+    padding: 0.25em 0.6em;
+    font: 600 3.4vw/1 ui-monospace, 'Geist Mono', 'SF Mono', Menlo, monospace;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.38);
+    border-radius: 0.3em;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+    pointer-events: none;
+}
+#monitor-clock[hidden] { display: none; }
+#monitor-clock.corner-tr { top: 2.2vh; right: 2vw; }
+#monitor-clock.corner-tl { top: 2.2vh; left: 2vw; }
+#monitor-clock.corner-br { bottom: 2.2vh; right: 2vw; }
+#monitor-clock.corner-bl { bottom: 2.2vh; left: 2vw; }
+
+body.bible-live #monitor-clock { display: none !important; }

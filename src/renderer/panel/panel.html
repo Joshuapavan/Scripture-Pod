@@ -825,6 +825,31 @@
           </div>
           <p class="output-route-hint" id="stream-feed-obs-hint">Empty areas stay transparent, as on the main output.</p>
         </div>
+        <div class="output-route" id="output-route-clock">
+          <div class="output-route-head">
+            <strong>Monitor clock</strong>
+            <span class="output-route-kind">Main screen · Wireless</span>
+            <span class="output-route-state" id="monitor-clock-state">Off</span>
+          </div>
+          <p class="output-route-hint">Show the time on the monitors. The stream feed never shows it.</p>
+          <div class="output-route-grid">
+            <span id="monitor-clock-format-label">Format</span>
+            <div class="segmented-picker" role="group" aria-labelledby="monitor-clock-format-label">
+              <button type="button" class="seg-btn" id="monitor-clock-12" aria-pressed="true" onclick="setMonitorClockOption('format', '12')">12 hour</button>
+              <button type="button" class="seg-btn" id="monitor-clock-24" aria-pressed="false" onclick="setMonitorClockOption('format', '24')">24 hour</button>
+            </div>
+            <label for="monitor-clock-corner">Corner</label>
+            <select id="monitor-clock-corner" onchange="setMonitorClockOption('corner', this.value)">
+              <option value="tr">Top right</option>
+              <option value="tl">Top left</option>
+              <option value="br">Bottom right</option>
+              <option value="bl">Bottom left</option>
+            </select>
+          </div>
+          <div class="output-route-actions">
+            <button type="button" class="btn" id="btn-monitor-clock" aria-pressed="false" onclick="toggleMonitorClock()">Show clock</button>
+          </div>
+        </div>
         <div class="output-route" id="output-route-network">
           <div class="output-route-head">
             <strong>Wireless</strong>

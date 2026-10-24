@@ -2532,3 +2532,6 @@ body[data-sidebar-tab="songs"] #lyric-buttons:not([style*="none"]) { display: gr
 body[data-sidebar-tab="songs"][data-lyric-view="grouped"] #lyric-buttons:not([style*="none"]) { display: block !important; }
 body[data-sidebar-tab="songs"] #lyric-buttons[style*="none"] { display: none !important; }
 body[data-sidebar-tab="songs"] #main .header-toolbar #focused-editor-banner-main { flex: 1 1 320px; min-width: 320px; }
+
+/* Lyrics always go out as a lower third on the live feed and show full screen on monitors, so the Mode choice is gone there */
+body[data-sidebar-tab="songs"] #look-card :has(> #ratio-picker) { display: none !important; }

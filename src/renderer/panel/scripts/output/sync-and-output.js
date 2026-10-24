@@ -1027,11 +1027,12 @@ ${getLtThumbCss()}
     }
 
     function sendSyncState(opts = {}) {
+      if (typeof sendMonitorClock === 'function') setTimeout(sendMonitorClock, 0);
       // Only what is on air goes out: a verse left over from an earlier session (or from
       // before the versions on screen changed) must not appear when a display connects
       const onAir = typeof getOnAirPayload === 'function' ? getOnAirPayload() : (lastLiveState && lastLiveState.kind === 'update' ? lastLiveState.payload : null);
       const state = onAir
-        ? { kind: 'update', payload: forOutput({ ...onAir }) }
+        ? { kind: 'update', payload: forMonitor({ ...onAir }) }
         : { kind: 'clear' };
       const payload = state.payload;
       const activeMedia = payload?.bgEnabled && Number(payload.bgOpacity ?? 1) > 0
@@ -1278,31 +1279,93 @@ ${getLtThumbCss()}
       }
     }
 
-    // Lyrics always go out as a lower third; the monitors in the panel show them full screen
+    // Lyrics: the live outputs (main screen window, stream feed window, Program panel) are a lower
+    // third; Preview and every monitor link (the LAN display address) show the lyrics full screen
     function isSongPayload(p) {
       return !!p && p.isBible === false && !p.lowerThirdOnly && !p.restorePrevious && typeof p.text === 'string';
     }
-    function forOutput(p) { return isSongPayload(p) ? { ...p, mode: 'lt', forceLt: true } : p; }
-    function forMonitor(p) { return isSongPayload(p) ? { ...p, mode: 'full' } : p; }
+    // Each variant uses its own background opacity slider (LT Opacity for the live display, Full for monitors)
+    // (the slider is read directly: its inline oninput runs before the handler that updates the variable)
+    const pctToOpacity = (v) => Math.max(0, Math.min(100, Number(v))) / 100;
+    const sliderPct = (id, fallback) => { const v = parseInt(document.getElementById(id)?.value, 10); return Number.isNaN(v) ? fallback : v; };
+    function forOutput(p) {
+      if (!isSongPayload(p)) return p;
+      const out = { ...p, mode: 'lt', forceLt: true };
+      out.bgOpacity = pctToOpacity(sliderPct('bg-opacity-lt', bgOpacityLT));
+      return out;
+    }
+    function forMonitor(p) {
+      if (!isSongPayload(p)) return p;
+      const out = { ...p, mode: 'full', forceLt: false };
+      out.bgOpacity = pctToOpacity(sliderPct('bg-opacity-full', bgOpacityFull));
+      return out;
+    }
+    function mapMessagePayload(msg, fn) {
+      if (msg && msg.type === 'UPDATE') return fn(msg);
+      if (msg && msg.type === 'SYNC_STATE' && msg.state && msg.state.payload) return { ...msg, state: { ...msg.state, payload: fn(msg.state.payload) } };
+      return msg;
+    }
 
     function broadcastMessage(rawMsg) {
-      let msg = rawMsg;
-      if (msg && msg.type === 'UPDATE') msg = forOutput(msg);
-      else if (msg && msg.type === 'SYNC_STATE' && msg.state && msg.state.payload) msg = { ...msg, state: { ...msg.state, payload: forOutput(msg.state.payload) } };
-      const outputMessage = mapOutputMessageMedia(msg);
-      if (channel) channel.postMessage(outputMessage);
-      const relayMessage = compactRelayMedia(outputMessage);
-      relaySend(relayMessage);
-      if (window.BSPDesktop && typeof window.BSPDesktop.sendWebSocketOutputMessage === 'function') {
-        window.BSPDesktop.sendWebSocketOutputMessage(relayMessage).catch(() => {});
-      }
-      mirrorSyncMessage(outputMessage);
-      // The app's own output windows get live messages directly
-      if (outputMessage && (outputMessage.type === 'UPDATE' || outputMessage.type === 'CLEAR' || outputMessage.type === 'SYNC_STATE') &&
-          window.BSPDesktop && typeof window.BSPDesktop.sendOutputMessage === 'function') {
-        window.BSPDesktop.sendOutputMessage(outputMessage).catch(() => {});
+      // Live display (stream feed, display link, Program): lyrics as a lower third on a transparent page.
+      // Monitor feeds (HDMI main screen, monitor link, Preview): lyrics full screen, with the clock.
+      // Messages that differ between the two are tagged with an audience; the pages ignore the other one.
+      const differs = !!rawMsg && (rawMsg.type === 'UPDATE' || rawMsg.type === 'SYNC_STATE');
+      const tag = (m, audience) => (differs && m ? { ...m, audience } : m);
+      const monitorMsg = tag(mapOutputMessageMedia(mapMessagePayload(rawMsg, forMonitor)), 'monitor');
+      const liveMsg = differs ? tag(mapOutputMessageMedia(mapMessagePayload(rawMsg, forOutput)), 'live') : monitorMsg;
+      const sendBoth = (fn) => { fn(liveMsg); if (differs) fn(monitorMsg); };
+      if (channel) sendBoth((m) => channel.postMessage(m));
+      sendBoth((m) => {
+        const relayMessage = compactRelayMedia(m);
+        relaySend(relayMessage);
+        if (window.BSPDesktop && typeof window.BSPDesktop.sendWebSocketOutputMessage === 'function') {
+          window.BSPDesktop.sendWebSocketOutputMessage(relayMessage).catch(() => {});
+        }
+      });
+      mirrorSyncMessage(liveMsg);
+      const desktop = window.BSPDesktop && typeof window.BSPDesktop.sendOutputMessage === 'function' ? window.BSPDesktop : null;
+      if (desktop) {
+        if (rawMsg && (rawMsg.type === 'UPDATE' || rawMsg.type === 'CLEAR' || rawMsg.type === 'SYNC_STATE')) {
+          // The stream feed is the live output; the HDMI main screen is a monitor
+          desktop.sendOutputMessage(liveMsg, 'feed').catch(() => {});
+          desktop.sendOutputMessage(monitorMsg, 'output').catch(() => {});
+        } else if (rawMsg && rawMsg.type === 'CLOCK') {
+          desktop.sendOutputMessage(monitorMsg, 'output').catch(() => {});
+        }
       }
     }
+
+    // Clock on the monitors (output window and monitor links), never on the stream feed
+    const MONITOR_CLOCK_KEY = 'scripturePod.monitorClock.v1';
+    let monitorClock = { enabled: false, format: '12', corner: 'tr' };
+    try { Object.assign(monitorClock, JSON.parse(localStorage.getItem(MONITOR_CLOCK_KEY) || '{}')); } catch (e) { /* storage unavailable */ }
+
+    function sendMonitorClock() {
+      broadcastMessage({ type: 'CLOCK', proto: 1, sender: 'control', ts: Date.now(), enabled: !!monitorClock.enabled, format: monitorClock.format, corner: monitorClock.corner });
+    }
+
+    function syncMonitorClockUi() {
+      const on = !!monitorClock.enabled;
+      const btn = document.getElementById('btn-monitor-clock');
+      if (btn) { btn.setAttribute('aria-pressed', on ? 'true' : 'false'); btn.textContent = on ? 'Hide clock' : 'Show clock'; }
+      const state = document.getElementById('monitor-clock-state');
+      if (state) state.textContent = on ? 'On' : 'Off';
+      document.getElementById('monitor-clock-12')?.setAttribute('aria-pressed', monitorClock.format === '12' ? 'true' : 'false');
+      document.getElementById('monitor-clock-24')?.setAttribute('aria-pressed', monitorClock.format === '24' ? 'true' : 'false');
+      const corner = document.getElementById('monitor-clock-corner');
+      if (corner && corner.value !== monitorClock.corner) corner.value = monitorClock.corner;
+    }
+
+    function saveMonitorClock() {
+      try { localStorage.setItem(MONITOR_CLOCK_KEY, JSON.stringify(monitorClock)); } catch (e) { /* storage unavailable */ }
+      syncMonitorClockUi();
+      sendMonitorClock();
+    }
+
+    function toggleMonitorClock() { monitorClock.enabled = !monitorClock.enabled; saveMonitorClock(); }
+    function setMonitorClockOption(key, value) { monitorClock[key] = value; saveMonitorClock(); }
+    setTimeout(() => { syncMonitorClockUi(); sendMonitorClock(); }, 1500);
 
     function pingDisplays() {
       if (channel) channel.postMessage({ type: 'PING' });
@@ -1317,6 +1380,7 @@ ${getLtThumbCss()}
     if (window.BSPDesktop && typeof window.BSPDesktop.onOutputReady === 'function') {
       window.BSPDesktop.onOutputReady(() => {
         markDisplayOnline();
+        if (typeof sendMonitorClock === 'function') setTimeout(sendMonitorClock, 400);
         if (typeof queueStandaloneSyncBurst === 'function') queueStandaloneSyncBurst();
       });
     }
@@ -1327,6 +1391,11 @@ ${getLtThumbCss()}
       setInterval(async () => {
         try {
           if (await window.BSPDesktop.isOutputOpen() || await window.BSPDesktop.isFeedOpen()) markDisplayOnline();
+          else if (typeof window.BSPDesktop.relayClientCount === 'function') {
+            // Any receiver on the relay (OBS source, monitor link, another computer); the panel's own socket is one of them
+            const own = typeof relaySocket !== 'undefined' && relaySocket && relaySocket.readyState === WebSocket.OPEN ? 1 : 0;
+            if ((await window.BSPDesktop.relayClientCount()) - own > 0) markDisplayOnline();
+          }
         } catch (e) { /* bridge unavailable */ }
       }, 3000);
     }
@@ -1385,7 +1454,7 @@ ${getLtThumbCss()}
         }
         return;
       }
-      embeddedProgramDisplayState = { kind: 'update', payload: forMonitor(outputMessage) };
+      embeddedProgramDisplayState = { kind: 'update', payload: forOutput(outputMessage) };
       // Record what is on air first: the standalone output sync below only shows on-air content
       lastLiveState = { kind: 'update', payload: msg };
       if (appState && appState.live) appState.live.lastLiveState = lastLiveState;

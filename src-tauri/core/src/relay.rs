@@ -10,6 +10,7 @@ pub struct Relay {
 }
 
 impl Relay {
+    pub fn client_count(&self) -> usize { self.clients.lock().unwrap().len() }
     pub fn broadcast(&self, msg: &str, except: Option<u64>) {
         let mut clients = self.clients.lock().unwrap();
         clients.retain(|(id, tx)| Some(*id) == except || tx.send(msg.to_string()).is_ok());

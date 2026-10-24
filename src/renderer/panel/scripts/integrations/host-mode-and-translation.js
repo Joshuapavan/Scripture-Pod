@@ -63,7 +63,7 @@
       if (!info?.displayUrl) return '';
       try {
         const url = new URL(info.displayUrl);
-        url.searchParams.set('hostMode', 'standalone');
+        url.searchParams.set('role', 'monitor');
         return url.toString();
       } catch (error) {
         return '';

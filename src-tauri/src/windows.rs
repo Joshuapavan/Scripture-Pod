@@ -63,10 +63,12 @@ pub fn emit_main(app: &AppHandle, event: &str) {
     if let Some(w) = app.get_webview_window("main") { eval(&w, &format!("window.__bspEmit&&window.__bspEmit({:?})", event)); }
 }
 
-pub fn post_to_outputs(app: &AppHandle, message: &Value) -> bool {
+// target: "output" (the monitor window), "feed" (the stream feed window), anything else = both
+pub fn post_to_outputs(app: &AppHandle, message: &Value, target: Option<&str>) -> bool {
     let js = format!("window.postMessage({}, '*')", message);
     let mut any = false;
     for label in ["output", "feed"] {
+        if let Some(t) = target { if (t == "output" || t == "feed") && t != label { continue; } }
         if let Some(w) = app.get_webview_window(label) { eval(&w, &js); any = true; }
     }
     any

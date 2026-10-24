@@ -304,9 +304,9 @@
       return true;
     }
 
-    function postMessageToStandaloneOutput(message) {
+    function postMessageToStandaloneOutput(message, target) {
       if (window.BSPDesktop && typeof window.BSPDesktop.sendOutputMessage === 'function') {
-        window.BSPDesktop.sendOutputMessage(message).catch(() => {});
+        window.BSPDesktop.sendOutputMessage(message, target).catch(() => {});
         return true;
       }
       if (!standaloneDisplayWindow || standaloneDisplayWindow.closed) return false;
@@ -326,8 +326,9 @@
       // (nothing live) must not paint a black full-screen page over a transparent output.
       const onAir = typeof getOnAirPayload === 'function' ? getOnAirPayload() : null;
       if (onAir && embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload) {
-        const payload = typeof forOutput === 'function' ? forOutput(embeddedProgramDisplayState.payload) : embeddedProgramDisplayState.payload;
-        postMessageToStandaloneOutput({
+        // The stream feed shows the live output (lower third); the HDMI main screen is a monitor (full screen)
+        const base = embeddedProgramDisplayState.payload;
+        const send = (payload, target) => postMessageToStandaloneOutput({
           type: 'PREVIEW_UPDATE',
           payload: {
             ...payload,
@@ -336,7 +337,9 @@
             displayViewportWidth: viewport.width,
             displayViewportHeight: viewport.height
           }
-        });
+        }, target);
+        send(typeof forOutput === 'function' ? forOutput(base) : base, 'feed');
+        send(typeof forMonitor === 'function' ? forMonitor(base) : base, 'output');
       } else {
         postMessageToStandaloneOutput({ type: 'PREVIEW_CLEAR' });
       }
@@ -1387,16 +1390,18 @@
         pushLiveUpdate();
       } else if (embeddedProgramDisplayState.kind === 'update' && embeddedProgramDisplayState.payload) {
         const viewport = getEmbeddedDisplayViewport();
-        postMessageToStandaloneOutput({
+        const base = {
           ...embeddedProgramDisplayState.payload,
           type: 'UPDATE',
           proto: 1,
           sender: 'control',
           ts: Date.now(),
           seq: nextSeq(),
-            displayViewportWidth: viewport.width,
+          displayViewportWidth: viewport.width,
           displayViewportHeight: viewport.height
-        });
+        };
+        postMessageToStandaloneOutput(typeof forOutput === 'function' ? forOutput(base) : base, 'feed');
+        postMessageToStandaloneOutput(typeof forMonitor === 'function' ? forMonitor(base) : base, 'output');
       } else {
         sendSyncState();
       }

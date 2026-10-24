@@ -42,8 +42,13 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "isOutputOpen" => json!(app.get_webview_window("output").is_some()),
         "openFeed" => { windows::open_feed(app, &arg); json!({"ok": true}) }
         "closeFeed" => { windows::close(app, "feed", true); json!({"ok": true}) }
+        "relayClientCount" => json!(state.relay.client_count()),
         "isFeedOpen" => json!(app.get_webview_window("feed").is_some()),
-        "sendOutputMessage" => json!({"ok": windows::post_to_outputs(app, &arg)}),
+        "sendOutputMessage" => {
+            // { message, target } from the page; a bare message goes to both windows
+            if arg["message"].is_object() { json!({"ok": windows::post_to_outputs(app, &arg["message"], arg["target"].as_str())}) }
+            else { json!({"ok": windows::post_to_outputs(app, &arg, None)}) }
+        }
         "sendWebSocketOutputMessage" => {
             state.relay.broadcast(&if let Some(s) = arg.as_str() { s.to_string() } else { arg.to_string() }, None);
             json!({"ok": true})
@@ -108,6 +113,19 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
             if let Some(w) = app.get_webview_window("output") {
                 let js = arg.as_str().unwrap_or("");
                 let _ = w.eval(&format!("(async()=>{{try{{const r=await (async()=>{{{}}})();await fetch('/__bsp/log?label=out',{{method:'POST',body:JSON.stringify(JSON.stringify(r))}});}}catch(e){{await fetch('/__bsp/log?label=out',{{method:'POST',body:JSON.stringify('ERR '+e.message)}});}}}})()", js));
+            }
+            json!(true)
+        }
+        #[cfg(any(debug_assertions, feature = "harness"))]
+        "devWrite" => { let ok = fs::write(arg["path"].as_str().unwrap_or("/tmp/dev-write"), arg["contents"].as_str().unwrap_or("")).is_ok(); json!({"ok": ok}) }
+        #[cfg(any(debug_assertions, feature = "harness"))]
+        "devRead" => json!({"contents": fs::read_to_string(arg.as_str().unwrap_or("")).unwrap_or_default()}),
+        // Development harness only: run JS in the output window (result goes to the log)
+        #[cfg(any(debug_assertions, feature = "harness"))]
+        "evalFeed" => {
+            if let Some(w) = app.get_webview_window("feed") {
+                let js = arg.as_str().unwrap_or("");
+                let _ = w.eval(&format!("(async()=>{{try{{const r=await (async()=>{{{}}})();await fetch('/__bsp/log?label=feed',{{method:'POST',body:JSON.stringify(JSON.stringify(r))}});}}catch(e){{await fetch('/__bsp/log?label=feed',{{method:'POST',body:JSON.stringify('ERR '+e.message)}});}}}})()", js));
             }
             json!(true)
         }
