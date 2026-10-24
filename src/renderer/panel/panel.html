@@ -300,7 +300,11 @@
               <label>Name <span class="ov-number"><input type="number" id="name-role-overlay-name-size" aria-label="Name text size in pixels" min="24" max="160" step="1" value="56" onchange="handleNameRoleOverlayChange()"></span></label>
               <label>Role <span class="ov-number"><input type="number" id="name-role-overlay-role-size" aria-label="Role text size in pixels" min="12" max="72" step="1" value="24" onchange="handleNameRoleOverlayChange()"></span></label>
               <label>Logo <span class="ov-number"><input type="number" id="name-role-overlay-logo-size" aria-label="Logo size in pixels" min="24" max="320" step="1" value="128" onchange="handleNameRoleOverlayChange()"></span></label>
+              <label title="Space between the lower third and the left edge of the screen">Pad left <span class="ov-number"><input type="number" id="name-role-overlay-pad-l" aria-label="Lower third left padding in pixels" min="0" max="400" step="1" value="0" oninput="handleNameRoleOverlayChange(false, true)" onchange="handleNameRoleOverlayChange()"></span></label>
+              <label title="Space between the lower third and the right edge of the screen">Pad right <span class="ov-number"><input type="number" id="name-role-overlay-pad-r" aria-label="Lower third right padding in pixels" min="0" max="400" step="1" value="0" oninput="handleNameRoleOverlayChange(false, true)" onchange="handleNameRoleOverlayChange()"></span></label>
             </div>
+            <label for="name-role-overlay-scale" class="ov-label">Overall size</label>
+            <div class="ov-slider"><input type="range" id="name-role-overlay-scale" min="50" max="200" step="5" value="100" oninput="handleNameRoleOverlayChange(false, true)"><output id="name-role-overlay-scale-value">100%</output></div>
             <label for="name-role-overlay-offset-x" class="ov-label">Horizontal</label>
             <div class="ov-slider"><input type="range" id="name-role-overlay-offset-x" min="-40" max="40" step="1" value="0" oninput="handleNameRoleOverlayChange(false, true)"><output id="name-role-overlay-offset-x-value">0%</output></div>
             <label for="name-role-overlay-offset-y" class="ov-label">Vertical</label>
@@ -344,6 +348,14 @@
                     <option value="classic-outline">Outline</option>
                     <option value="classic-halo">Halo</option>
                     <option value="classic-chapel">Chapel</option>
+                    <option value="classic-duobar">Stacked Bar</option>
+                    <option value="classic-duoblock">Name Block</option>
+                    <option value="classic-duorule">Underline</option>
+                    <option value="classic-duoghost">Ghost Name</option>
+                    <option value="classic-duotag">Role Tag</option>
+                    <option value="classic-duoslant">Slant</option>
+                    <option value="classic-duoflag">Role Flag</option>
+                    <option value="classic-duopill">Pill Layers</option>
                   </optgroup>
                   <optgroup label="Right Title Bar">
                     <option value="right-legacy">Right Legacy LT</option>
@@ -382,6 +394,14 @@
                     <option value="right-outline">Right Outline</option>
                     <option value="right-halo">Right Halo</option>
                     <option value="right-chapel">Right Chapel</option>
+                    <option value="right-duobar">Right Stacked Bar</option>
+                    <option value="right-duoblock">Right Name Block</option>
+                    <option value="right-duorule">Right Underline</option>
+                    <option value="right-duoghost">Right Ghost Name</option>
+                    <option value="right-duotag">Right Role Tag</option>
+                    <option value="right-duoslant">Right Slant</option>
+                    <option value="right-duoflag">Right Role Flag</option>
+                    <option value="right-duopill">Right Pill Layers</option>
                   </optgroup>
                   <optgroup label="Centered Banner">
                     <option value="centered-gms">Centered Lime</option>
@@ -419,6 +439,14 @@
                     <option value="centered-outline">Centered Outline</option>
                     <option value="centered-halo">Centered Halo</option>
                     <option value="centered-chapel">Centered Chapel</option>
+                    <option value="centered-duobar">Centered Stacked Bar</option>
+                    <option value="centered-duoblock">Centered Name Block</option>
+                    <option value="centered-duorule">Centered Underline</option>
+                    <option value="centered-duoghost">Centered Ghost Name</option>
+                    <option value="centered-duotag">Centered Role Tag</option>
+                    <option value="centered-duoslant">Centered Slant</option>
+                    <option value="centered-duoflag">Centered Role Flag</option>
+                    <option value="centered-duopill">Centered Pill Layers</option>
                   </optgroup>
                   <optgroup label="Wide Band">
                     <option value="band-gms">Lime Band</option>
@@ -456,6 +484,14 @@
                     <option value="band-outline">Outline Band</option>
                     <option value="band-halo">Halo Band</option>
                     <option value="band-chapel">Chapel Band</option>
+                    <option value="band-duobar">Stacked Bar Band</option>
+                    <option value="band-duoblock">Name Block Band</option>
+                    <option value="band-duorule">Underline Band</option>
+                    <option value="band-duoghost">Ghost Name Band</option>
+                    <option value="band-duotag">Role Tag Band</option>
+                    <option value="band-duoslant">Slant Band</option>
+                    <option value="band-duoflag">Role Flag Band</option>
+                    <option value="band-duopill">Pill Layers Band</option>
                   </optgroup>
                 </select></div>
           <div class="ov-footer">
@@ -584,6 +620,7 @@
           <div id="focused-editor-banner">
             <div id="focused-editor-section-nav"></div>
           </div>
+          <div class="section-tag-bar" data-target="lyric-editor"></div>
           <textarea id="lyric-editor" placeholder="Type/Paste Lyrics here..." data-i18n-placeholder="ui_placeholder_lyrics" oninput="saveCurrentItem()"></textarea>
           <div id="song-translation-panel" >
             <div id="panel-inline-style-24">
@@ -936,6 +973,53 @@
   </div>
   <div id="auto-lyrics-preview" ></div>
   <div id="auto-lyrics-context-menu" ></div>
+
+  <!-- Keyboard shortcuts -->
+  <div id="shortcutsModal" class="modal-overlay">
+    <div class="modal-content shortcuts-window" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title">
+      <div class="shortcuts-head">
+        <div>
+          <h3 id="shortcuts-title">Keyboard shortcuts</h3>
+          <p>Everything you can do without the mouse. Press <kbd>?</kbd> any time to see this again.</p>
+        </div>
+        <button class="btn" type="button" onclick="closeModal('shortcutsModal')">Got it</button>
+      </div>
+      <div class="shortcuts-grid">
+        <section>
+          <h4>Go live</h4>
+          <div class="shortcut-row"><span>Send the selection live</span><kbd>Space</kbd></div>
+          <div class="shortcut-row"><span>Send the selection live</span><kbd>Enter</kbd></div>
+          <div class="shortcut-row"><span>Send to Preview only</span><kbd>⌥ Space · Ctrl Space</kbd></div>
+          <div class="shortcut-row"><span>Clear the live output</span><kbd>Esc</kbd></div>
+          <div class="shortcut-row"><span>Clear Preview</span><kbd>⌥ Esc · ⌘ Esc</kbd></div>
+          <div class="shortcut-row"><span>Clear everything</span><kbd>⇧ Esc</kbd></div>
+        </section>
+        <section>
+          <h4>Bible</h4>
+          <div class="shortcut-row"><span>Previous / next verse</span><kbd>↑ ↓</kbd></div>
+          <div class="shortcut-row"><span>Previous / next chapter</span><kbd>← →</kbd></div>
+          <div class="shortcut-row"><span>Go to a passage or run a command</span><kbd>⌘ K</kbd></div>
+          <div class="shortcut-row"><span>Cue a verse to Preview only</span><kbd>⌘/Ctrl + click</kbd></div>
+        </section>
+        <section>
+          <h4>Lyrics and Setlist</h4>
+          <div class="shortcut-row"><span>Previous / next slide</span><kbd>← →</kbd></div>
+          <div class="shortcut-row"><span>Previous / next song or item</span><kbd>↑ ↓</kbd></div>
+          <div class="shortcut-row"><span>Lines shown at once</span><kbd>1 – 6</kbd></div>
+          <div class="shortcut-row"><span>Cue a slide to Preview only</span><kbd>⌘/Ctrl + click</kbd></div>
+        </section>
+        <section>
+          <h4>Around the app</h4>
+          <div class="shortcut-row"><span>Switch Bible, Lyrics and Setlist</span><kbd>Tab · ⇧ Tab</kbd></div>
+          <div class="shortcut-row"><span>Show or hide the sidebar</span><kbd>S · ⌘ B</kbd></div>
+          <div class="shortcut-row"><span>Open Imports</span><kbd>I</kbd></div>
+          <div class="shortcut-row"><span>Command palette</span><kbd>⌘ K</kbd></div>
+          <div class="shortcut-row"><span>Work on the lyric text while editing a song</span><kbd>⌘ A · C · V</kbd></div>
+          <div class="shortcut-row"><span>Show this window</span><kbd>?</kbd></div>
+        </section>
+      </div>
+    </div>
+  </div>
 
   <!-- Settings Modal -->
   <div id="settingsModal" class="modal-overlay">
@@ -3041,7 +3125,8 @@
       <div class="new-song-lyrics-field">
         <label for="new-song-lyrics">Lyrics</label>
         <textarea id="new-song-lyrics" rows="9" spellcheck="false" placeholder="Paste the lyrics here. A blank line starts a new slide; repeated blocks are found and labelled as the chorus." oninput="document.getElementById('new-song-fetch-status').style.visibility = this.value.trim() ? 'hidden' : ''" onkeydown="handleNewSongLyricsKey(event)"></textarea>
-        <span class="new-song-lyrics-hint" id="new-song-lyrics-hint">Name and lyrics are all you need.</span>
+        <div class="section-tag-bar" data-target="new-song-lyrics"></div>
+        <span class="new-song-lyrics-hint" id="new-song-lyrics-hint">Name and lyrics are all you need. To arrange the song, select some lines (or put the cursor in a block) and tag them as a verse, chorus, bridge and so on.</span>
       </div>
       <div id="panel-inline-style-197">
         <button class="btn" id="panel-inline-style-198" onclick="closeModal('newSongModal')" data-i18n="common_cancel">Cancel</button>

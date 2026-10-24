@@ -2535,3 +2535,39 @@ body[data-sidebar-tab="songs"] #main .header-toolbar #focused-editor-banner-main
 
 /* Lyrics always go out as a lower third on the live feed and show full screen on monitors, so the Mode choice is gone there */
 body[data-sidebar-tab="songs"] #look-card :has(> #ratio-picker) { display: none !important; }
+
+/* ── Outputs popover (opens from the top bar Outputs button) ───────────────── */
+#outputs-card {
+  position: fixed;
+  z-index: 60;
+  top: 56px;
+  right: 12px;
+  width: min(420px, calc(100vw - 24px));
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  margin: 0;
+  display: none;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+}
+#outputs-card.is-open { display: block; }
+#btn-topbar-outputs.is-active { background: var(--sp-card, rgba(255,255,255,0.08)); }
+
+/* ── Keyboard shortcuts window ─────────────────────────────────────────────── */
+.shortcuts-window { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 64px); overflow-y: auto; padding: 22px 24px 24px; }
+.shortcuts-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.shortcuts-head h3 { margin: 0 0 4px; font-size: 18px; font-weight: 600; color: var(--sp-text); }
+.shortcuts-head p { margin: 0; font-size: 13px; color: var(--sp-subtle, #8b9299); }
+.shortcuts-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.shortcuts-grid section { padding: 14px 16px; border: 1px solid var(--sp-line); border-radius: 12px; background: var(--sp-card); }
+.shortcuts-grid h4 { margin: 0 0 8px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sp-subtle, #8b9299); font-weight: 600; }
+.shortcut-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 0; border-top: 1px solid var(--sp-line); font-size: 13px; color: var(--sp-text); }
+.shortcut-row:first-of-type { border-top: 0; }
+.shortcuts-window kbd { flex: 0 0 auto; padding: 3px 8px; border-radius: 6px; border: 1px solid var(--sp-line); background: var(--sp-inset, rgba(255,255,255,0.06)); font: 500 12px var(--sp-mono, ui-monospace, monospace); color: var(--sp-text); white-space: nowrap; }
+@media (max-width: 640px) { .shortcuts-grid { grid-template-columns: 1fr; } }
+
+/* ── Section tag chips above the lyric text areas ──────────────────────────── */
+.section-tag-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 8px 0 6px; }
+.section-tag-label { margin-right: 4px; font-size: 12px; color: var(--sp-subtle, #8b9299); }
+.section-tag-chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-text); font: 500 12px var(--sp-sans, inherit); cursor: pointer; }
+.section-tag-chip:hover { background: var(--sp-inset, rgba(255,255,255,0.08)); }
+.section-tag-chip.is-clear { color: var(--sp-subtle, #8b9299); border-style: dashed; }

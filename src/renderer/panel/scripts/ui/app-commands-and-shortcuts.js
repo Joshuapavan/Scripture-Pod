@@ -106,6 +106,82 @@
 
     // A song needs a name and lyrics; the lyrics can be pasted from the web.
     // opts.live also shows the first slide on the live output.
+    // ── Tag lyrics sections (Verse, Chorus, Bridge …) while typing or pasting ──
+    const SECTION_TAG_KINDS = [
+      { kind: 'Verse', numbered: true }, { kind: 'Chorus' }, { kind: 'Pre-Chorus' },
+      { kind: 'Bridge' }, { kind: 'Tag' }, { kind: 'Intro' }, { kind: 'Outro' }, { kind: 'Interlude' }
+    ];
+    const SECTION_HEADER_RE = /^\s*\[[^\]\n]{1,40}\]\s*$/;
+
+    function buildSectionTagBars() {
+      document.querySelectorAll('.section-tag-bar').forEach((bar) => {
+        if (bar.dataset.ready) return;
+        bar.dataset.ready = 'true';
+        const target = bar.dataset.target;
+        const targetEl = document.getElementById(target);
+        if (target === 'lyric-editor' && targetEl) bar.style.display = getComputedStyle(targetEl).display === 'none' ? 'none' : 'flex';
+        bar.innerHTML = '<span class="section-tag-label">Tag selection as</span>' +
+          SECTION_TAG_KINDS.map((k) => `<button type="button" class="section-tag-chip" data-kind="${k.kind}">${k.kind}</button>`).join('') +
+          '<button type="button" class="section-tag-chip is-clear" data-kind="">Remove tag</button>';
+        bar.addEventListener('mousedown', (e) => { if (e.target.closest('.section-tag-chip')) e.preventDefault(); }); // keep the text selection
+        bar.addEventListener('click', (e) => {
+          const chip = e.target.closest('.section-tag-chip');
+          if (chip) tagLyricsSection(target, chip.dataset.kind);
+        });
+      });
+    }
+
+    // Puts a [Kind] header above the selected lines (or the block under the cursor); verses count up by themselves
+    function tagLyricsSection(textareaId, kind) {
+      const ta = document.getElementById(textareaId);
+      if (!ta) return;
+      const text = ta.value;
+      let start = ta.selectionStart || 0;
+      const end = ta.selectionEnd || start;
+      const lineStart = (i) => text.lastIndexOf('\n', Math.max(0, i) - 1) + 1;
+      // No selection: the tag goes above the block (run of lines) the cursor is in
+      let from = lineStart(start);
+      if (start !== end) { const prev = text.slice(lineStart(from - 1), Math.max(0, from - 1)); if (from > 0 && SECTION_HEADER_RE.test(prev)) from = lineStart(from - 1); }
+      if (start === end) {
+        const lines = text.split('\n');
+        let pos = 0, idx = 0;
+        for (; idx < lines.length; idx++) { if (start <= pos + lines[idx].length) break; pos += lines[idx].length + 1; }
+        let b = idx;
+        while (b > 0 && lines[b - 1].trim() && !SECTION_HEADER_RE.test(lines[b - 1])) b--;
+        if (b > 0 && SECTION_HEADER_RE.test(lines[b - 1])) b--; // the block's own tag, to be replaced
+        from = lines.slice(0, b).join('\n').length + (b > 0 ? 1 : 0);
+
+      }
+      let before = text.slice(0, from);
+      let after = text.slice(from);
+      // An existing header right at the start of the block is replaced
+      const firstLineEnd = after.indexOf('\n') === -1 ? after.length : after.indexOf('\n');
+      let removedHeader = false;
+      if (SECTION_HEADER_RE.test(after.slice(0, firstLineEnd))) {
+        after = after.slice(firstLineEnd + 1);
+        removedHeader = true;
+      }
+      let header = '';
+      if (kind) {
+        const meta = SECTION_TAG_KINDS.find((k) => k.kind === kind);
+        let label = kind;
+        if (meta && meta.numbered) {
+          const used = (before.match(new RegExp('^\\s*\\[' + kind + '\\s*\\d*\\]', 'gim')) || []).length;
+          label = `${kind} ${used + 1}`;
+        }
+        header = `[${label}]\n`;
+        if (before && !before.endsWith('\n\n')) before = before.replace(/\n?$/, '\n\n');
+      }
+      ta.value = before + header + after;
+      const caret = (before + header).length;
+      ta.focus();
+      ta.setSelectionRange(caret, caret);
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      if (typeof showToast === 'function') showToast(kind ? `Tagged as ${kind}` : (removedHeader ? 'Tag removed' : 'No tag here'));
+    }
+    document.addEventListener('DOMContentLoaded', buildSectionTagBars);
+    if (document.readyState !== 'loading') buildSectionTagBars();
+
     function createNewItem(opts = {}) {
       const input = document.getElementById('new-song-title');
       const artistInput = document.getElementById('new-song-artist');
@@ -222,6 +298,18 @@
       return true;
     }
 
+    // The shortcuts window: opened by "?", the command palette, and once after the first-run setup is finished
+    function openShortcutsWindow() {
+      openModal('shortcutsModal');
+      try { localStorage.setItem('scripturePod.shortcutsSeen.v1', '1'); } catch (_) {}
+    }
+    function maybeShowShortcutsAfterSetup() {
+      let seen = false;
+      try { seen = localStorage.getItem('scripturePod.shortcutsSeen.v1') === '1'; } catch (_) {}
+      if (seen) return;
+      setTimeout(() => { if (![...document.querySelectorAll('.modal-overlay')].some((m) => m.style.display === 'flex')) openShortcutsWindow(); }, 500);
+    }
+
     function setupKeyboardShortcuts() {
       document.addEventListener('keydown', (e) => {
         const target = e.target;
@@ -307,6 +395,7 @@
           return;
         }
         if (isTypingTarget) return;
+        if (e.key === '?' && !isMod && !e.altKey) { e.preventDefault(); openShortcutsWindow(); return; }
         if (handleLiveShortcut(e)) return;
         if (!isMod && !e.altKey && !e.shiftKey && keyLower === 's') {
           e.preventDefault();

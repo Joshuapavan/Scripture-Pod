@@ -917,7 +917,7 @@
         const rawStyle = String(data && data.style || 'classic-rise');
         const legacyStyle = rawStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const normalizedStyle = legacyStyle ? legacyStyle[1] + '-gms-' + legacyStyle[2] : rawStyle;
-        const styleMatch = normalizedStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment|sapphire|crimson|forest|graphite|rose|ocean|amber|violet|outline|halo|chapel)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const styleMatch = normalizedStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment|sapphire|crimson|forest|graphite|rose|ocean|amber|violet|outline|halo|chapel|duobar|duoblock|duorule|duoghost|duotag|duoslant|duoflag|duopill)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const layout = styleMatch ? styleMatch[1] : 'classic';
         const theme = styleMatch ? styleMatch[2] : 'gms';
         const animation = styleMatch ? styleMatch[3] : 'rise';
@@ -934,6 +934,9 @@
         const nameSize = Math.max(24, Math.min(160, Number(data && data.nameSize) || 56));
         const roleSize = Math.max(12, Math.min(72, Number(data && data.roleSize) || 24));
         const logoSize = Math.max(24, Math.min(320, Number(data && data.logoSize) || 128));
+        const accRgb = accentColor.slice(1).match(/.{2}/g).map((p) => parseInt(p, 16) / 255).map((c) => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+        const accentForeground = (0.2126 * accRgb[0] + 0.7152 * accRgb[1] + 0.0722 * accRgb[2]) >= 0.4 ? '#0b0d10' : '#ffffff';
+        const padL = Math.max(0, Math.min(400, Number(data && data.padL)||0)), padR = Math.max(0, Math.min(400, Number(data && data.padR)||0));
         const offsetX = Math.max(-40, Math.min(40, Number(data.offsetX) || 0));
         const offsetY = Math.max(-40, Math.min(40, Number(data.offsetY) || 0));
         const enabled = !!(data && data.enabled) && !!name;
@@ -942,14 +945,14 @@
         const logoEl = overlay.querySelector('.name-role-overlay-logo');
         const changed = overlay.dataset.name !== name || overlay.dataset.role !== role ||
           overlay.dataset.style !== style || overlay.dataset.accentColor !== accentColor || overlay.dataset.logo !== logo || overlay.dataset.logoColor !== logoColor;
-        if (nameEl) nameEl.textContent = name;
+        if (nameEl) { nameEl.textContent = name; nameEl.dataset.text = name; }
         if (roleEl) roleEl.textContent = role;
         if (logoEl) {
           if (logo) logoEl.src = logo;
           else logoEl.removeAttribute('src');
           logoEl.hidden = !logo;
         }
-        overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'theme-sapphire', 'theme-crimson', 'theme-forest', 'theme-graphite', 'theme-rose', 'theme-ocean', 'theme-amber', 'theme-violet', 'theme-outline', 'theme-halo', 'theme-chapel', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
+        overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'theme-sapphire', 'theme-crimson', 'theme-forest', 'theme-graphite', 'theme-rose', 'theme-ocean', 'theme-amber', 'theme-violet', 'theme-outline', 'theme-halo', 'theme-chapel', 'theme-duobar', 'theme-duoblock', 'theme-duorule', 'theme-duoghost', 'theme-duotag', 'theme-duoslant', 'theme-duoflag', 'theme-duopill', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
         overlay.classList.add('style-' + layout, 'theme-' + theme, 'motion-' + animation);
         overlay.classList.toggle('logo-black', logoColor === 'black');
         overlay.classList.toggle('logo-off', logoColor === 'off');
@@ -960,6 +963,11 @@
         overlay.style.setProperty('--name-role-name-size', nameSize + 'px');
         overlay.style.setProperty('--name-role-role-size', roleSize + 'px');
         overlay.style.setProperty('--name-role-logo-size', logoSize + 'px');
+        overlay.style.setProperty('--name-role-accent-fg', accentForeground);
+        overlay.style.setProperty('--name-role-pad-l', padL + 'px');
+        overlay.style.setProperty('--name-role-pad-r', padR + 'px');
+        overlay.classList.toggle('has-pad', padL > 0 || padR > 0);
+        overlay.style.setProperty('--name-role-scale', String(Math.max(0.5, Math.min(2, (Number(data && data.scale) || 100) / 100))));
         overlay.style.setProperty('--name-role-offset-x', offsetX + 'vw');
         overlay.style.setProperty('--name-role-offset-y', offsetY + 'vh');
         overlay.dataset.name = name;
@@ -1426,13 +1434,46 @@
     }
 
     // Top bar Outputs button: bring the Outputs card into view.
-    function showOutputsCard() {
+    // Outputs are global, so the card lives in a popover opened by clicking the top bar Outputs button
+    function outputsCardEl() {
       const card = document.getElementById('outputs-card');
-      if (!card) return;
-      card.scrollIntoView({ block: 'start', behavior: 'smooth' });
-      card.classList.add('is-flash');
-      setTimeout(() => card.classList.remove('is-flash'), 1200);
+      if (card && card.parentElement !== document.body) document.body.appendChild(card);
+      return card;
     }
+    function setOutputsPopover(open) {
+      const card = outputsCardEl();
+      const btn = document.getElementById('btn-topbar-outputs');
+      if (!card) return;
+      if (open && btn) {
+        const r = btn.getBoundingClientRect();
+        card.style.top = Math.round(r.bottom + 8) + 'px';
+        card.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + 'px';
+      }
+      card.classList.toggle('is-open', !!open);
+      btn?.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn?.classList.toggle('is-active', !!open);
+    }
+    function showOutputsCard() {
+      const card = outputsCardEl();
+      if (!card) return;
+      setOutputsPopover(!card.classList.contains('is-open'));
+    }
+    (function initOutputsPopover() {
+      const setup = () => {
+        outputsCardEl();
+        document.getElementById('btn-topbar-outputs')?.setAttribute('aria-haspopup', 'true');
+        document.addEventListener('mousedown', (e) => {
+          const c = document.getElementById('outputs-card');
+          if (!c || !c.classList.contains('is-open')) return;
+          if (c.contains(e.target) || e.target.closest?.('#btn-topbar-outputs')) return;
+          setOutputsPopover(false);
+        });
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') setOutputsPopover(false);
+        });
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup); else setup();
+    })();
 
     // ── Stream feed (cable) ────────────────────────────────────────────────
     // A second output window on its own display, meant for an HDMI cable into

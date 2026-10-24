@@ -1454,6 +1454,8 @@
       document.getElementById('mode-text').classList.toggle('active', m === 'text');
       document.getElementById('mode-btn').classList.toggle('active', m === 'btn');
       editorMode = m;
+      const tagBar = document.querySelector('.section-tag-bar[data-target="lyric-editor"]');
+      if (tagBar) tagBar.style.display = m === 'text' ? 'flex' : 'none';
       refreshWorkspaceLayoutUi();
       saveToStorageDebounced();
     }

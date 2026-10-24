@@ -124,6 +124,9 @@
         nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
         roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),
         logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128),
+        scale: Math.max(50, Math.min(200, Number(document.getElementById('name-role-overlay-scale')?.value) || 100)),
+        padL: Math.max(0, Math.min(400, Number(document.getElementById('name-role-overlay-pad-l')?.value) || 0)),
+        padR: Math.max(0, Math.min(400, Number(document.getElementById('name-role-overlay-pad-r')?.value) || 0)),
         offsetX: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-x')?.value) || 0)),
         offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-y')?.value) || 0))
       };
@@ -306,7 +309,7 @@
         nameRoleOverlay: {
           ...settings,
           enabled: visible !== false,
-          name: settings.name || 'PS. Samson Arthur Paul',
+          name: settings.name || 'PS Samson',
           role: settings.name ? settings.role : 'Senior Pastor'
         }
       });
@@ -445,7 +448,7 @@ ${getLtThumbCss()}
     function readLtThumbSample() {
       const hex = (id, fallback) => { const v = document.getElementById(id)?.value || ''; return /^#[0-9a-f]{6}$/i.test(v) ? v : fallback; };
       return {
-        name: document.getElementById('name-role-overlay-name')?.value.trim() || 'Pastor John',
+        name: document.getElementById('name-role-overlay-name')?.value.trim() || 'PS Samson',
         role: document.getElementById('name-role-overlay-role')?.value.trim() || 'Senior Pastor',
         primary: hex('name-role-overlay-primary', '#90D5FF'),
         accent: hex('name-role-overlay-accent', '#90D5FF')
@@ -763,9 +766,14 @@ ${getLtThumbCss()}
       appState.settings.nameRoleOverlayNameSize = document.getElementById('name-role-overlay-name-size')?.value || '56';
       appState.settings.nameRoleOverlayRoleSize = document.getElementById('name-role-overlay-role-size')?.value || '24';
       appState.settings.nameRoleOverlayLogoSize = document.getElementById('name-role-overlay-logo-size')?.value || '128';
+      appState.settings.nameRoleOverlayScale = document.getElementById('name-role-overlay-scale')?.value || '100';
+      appState.settings.nameRoleOverlayPadLeft = document.getElementById('name-role-overlay-pad-l')?.value || '0';
+      appState.settings.nameRoleOverlayPadRight = document.getElementById('name-role-overlay-pad-r')?.value || '0';
       appState.settings.nameRoleOverlayOffsetX = String(document.getElementById('name-role-overlay-offset-x')?.value || '0');
       appState.settings.nameRoleOverlayOffsetY = String(document.getElementById('name-role-overlay-offset-y')?.value || '0');
       document.getElementById('name-role-overlay-offset-x-value').textContent = `${appState.settings.nameRoleOverlayOffsetX}%`;
+      const scaleValueEl = document.getElementById('name-role-overlay-scale-value');
+      if (scaleValueEl) scaleValueEl.textContent = `${appState.settings.nameRoleOverlayScale}%`;
       document.getElementById('name-role-overlay-offset-y-value').textContent = `${appState.settings.nameRoleOverlayOffsetY}%`;
       saveState();
       saveToStorageDebounced();
@@ -1533,6 +1541,9 @@ ${getLtThumbCss()}
           nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
           roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),
           logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128),
+          scale: Math.max(50, Math.min(200, Number(document.getElementById('name-role-overlay-scale')?.value) || 100)),
+        padL: Math.max(0, Math.min(400, Number(document.getElementById('name-role-overlay-pad-l')?.value) || 0)),
+        padR: Math.max(0, Math.min(400, Number(document.getElementById('name-role-overlay-pad-r')?.value) || 0)),
           offsetX: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-x')?.value) || 0)),
           offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-y')?.value) || 0))
         },

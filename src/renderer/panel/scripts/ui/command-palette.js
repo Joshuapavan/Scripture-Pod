@@ -79,6 +79,7 @@
         { label: 'Reader view', run: () => { setSidebarTab('bible'); setBibleReaderView(true); } },
         { label: 'Verses view', run: () => { setSidebarTab('bible'); setBibleReaderView(false); } },
         { label: 'Outputs', run: () => showOutputsCard() },
+        { label: 'Keyboard shortcuts', run: () => openShortcutsWindow() },
         { label: 'Settings', run: () => openModal('settingsModal') },
         { label: 'New song', run: () => openModal('newSongModal') }
       ];

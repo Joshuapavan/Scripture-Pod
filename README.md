@@ -5,6 +5,26 @@ sends verses, lyrics and lower thirds to an output window or to OBS. It is a
 desktop app built with [Tauri](https://tauri.app) (Rust plus the system web view).
 macOS, Windows and Linux are supported; the app is not built for Android or iOS.
 
+## Demo
+
+![Scripture Pod demo: find a passage, cue it, go live in three languages, run lyrics and the setlist, and air a lower third](docs/media/scripture-pod-demo.gif)
+
+[Watch the demo as a video (MP4, 70 seconds)](docs/media/scripture-pod-demo.mp4)
+
+## Screenshots
+
+**Bible.** Up to three versions side by side, with Preview and Program monitors on the right.
+
+![Bible workspace with a verse live in English, Kannada and Tamil](docs/media/bible.png)
+
+**Lyrics.** Slides as cards, a grid or grouped, with arrangement chips.
+
+![Lyrics workspace with a song live](docs/media/lyrics.png)
+
+**Overlays.** Name and role lower thirds with 140+ designs.
+
+![Overlays workspace with a name and role lower third](docs/media/overlays.png)
+
 ## Requirements
 
 - [Rust](https://rustup.rs) (stable)

@@ -11,7 +11,7 @@
  * No backticks or template placeholders may appear in the CSS below.
  */
 (function (root) {
-  var THEMES = ['aurora', 'sunrise', 'royal', 'minimal', 'pill', 'holo', 'frost', 'cinema', 'sharp', 'emerald', 'pulse', 'parchment', 'sapphire', 'crimson', 'forest', 'graphite', 'rose', 'ocean', 'amber', 'violet', 'outline', 'halo', 'chapel'];
+  var THEMES = ['aurora', 'sunrise', 'royal', 'minimal', 'pill', 'holo', 'frost', 'cinema', 'sharp', 'emerald', 'pulse', 'parchment', 'sapphire', 'crimson', 'forest', 'graphite', 'rose', 'ocean', 'amber', 'violet', 'outline', 'halo', 'chapel', 'duobar', 'duoblock', 'duorule', 'duoghost', 'duotag', 'duoslant', 'duoflag', 'duopill'];
   var MOTIONS = ['bounce', 'elastic', 'iris', 'slice', 'swing', 'turn', 'cascade', 'typewriter', 'glitch', 'flicker'];
 
   var P = 'var(--name-role-primary,#90D5FF)';
@@ -21,7 +21,9 @@
   var NAME = ' .name-role-overlay-name';
   var ROLE = ' .name-role-overlay-role';
 
+  var DUO = ['duobar', 'duoblock', 'duorule', 'duoghost', 'duotag', 'duoslant', 'duoflag', 'duopill'];
   function t(theme) { return O + '.theme-' + theme; }
+  var ANY_DUO = O + ':is(' + DUO.map(function (x) { return '.theme-' + x; }).join(',') + ')';
   var ANY_THEME = O + ':is(' + THEMES.map(function (x) { return '.theme-' + x; }).join(',') + ')';
 
   var css = [
@@ -156,6 +158,64 @@
     t('chapel') + NAME + '{font-family:Georgia,"Times New Roman",serif;font-weight:700;color:#2e2314;letter-spacing:.01em;}',
     t('chapel') + ROLE + '{font-family:Georgia,"Times New Roman",serif;font-variant:small-caps;letter-spacing:.12em;font-weight:600;color:#7a5f2a;}',
     t('chapel') + CARD + '::after{content:"";position:absolute;left:10%;right:10%;bottom:6px;height:1px;background:linear-gradient(90deg,transparent,#b99a5a,transparent);}',
+
+
+    /* ══ Two-layer designs: the name and the role sit on their own layers, the logo beside them ══
+       Name layer uses the Primary colour, role layer the Secondary colour. */
+    ANY_DUO + CARD + '{border-radius:0;color:#fff;align-items:center;gap:18px;}',
+    ANY_DUO + ' .name-role-overlay-copy{gap:0;}',
+    ANY_DUO + NAME + '{font-weight:800;line-height:1.04;text-transform:uppercase;letter-spacing:.01em;}',
+    ANY_DUO + ROLE + '{font-weight:700;letter-spacing:.1em;text-transform:uppercase;}',
+    ANY_DUO + '.style-centered .name-role-overlay-copy,' + ANY_DUO + '.style-band .name-role-overlay-copy{align-items:center;}',
+    ANY_DUO + ' .name-role-overlay-logo{margin:0 4px 0 0;}',
+
+    /* Stacked Bar: a vertical rule, a bold name, the role on a coloured strip */
+    t('duobar') + CARD + '::before{content:"";align-self:stretch;width:5px;background:' + P + ';flex:0 0 5px;order:-1;}',
+    t('duobar') + NAME + '{text-shadow:0 2px 14px rgba(0,0,0,.55);padding:0 .1em;}',
+    t('duobar') + ROLE + '{background:' + A + ';color:var(--name-role-accent-fg,#0b0d10);padding:.18em .7em;font-size:calc(var(--name-role-role-size,24px)*.8);align-self:stretch;margin-top:.15em;}',
+
+    /* Name Block: the name on a solid block, the role in plain type under a rule */
+    t('duoblock') + NAME + '{background:' + P + ';color:var(--name-role-foreground,#fff);padding:.06em .45em .1em;}',
+    t('duoblock') + ROLE + '{color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.6);font-size:calc(var(--name-role-role-size,24px)*.75);margin-top:.35em;padding-left:.7em;border-left:4px solid ' + A + ';}',
+
+    /* Underline: centred type with a drawn rule between the layers */
+    t('duorule') + CARD + '{text-align:center;}',
+    t('duorule') + ' .name-role-overlay-copy{align-items:center;}',
+    t('duorule') + NAME + '{color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.6);padding:0 .3em .1em;border-bottom:3px solid ' + A + ';}',
+    t('duorule') + ROLE + '{color:#fff;opacity:.92;font-weight:500;margin-top:.3em;text-shadow:0 2px 10px rgba(0,0,0,.6);}',
+
+    /* Ghost Name: an outlined echo of the name floats above the solid one */
+    t('duoghost') + CARD + '{overflow:visible;}',
+    t('duoghost') + NAME + '{position:relative;color:#fff;font-style:italic;text-shadow:0 2px 14px rgba(0,0,0,.5);margin-top:.5em;}',
+    t('duoghost') + NAME + '::before{content:attr(data-text);position:absolute;left:.7em;bottom:100%;margin-bottom:-.4em;font-size:.62em;color:transparent;-webkit-text-stroke:1px ' + A + ';opacity:.9;white-space:nowrap;pointer-events:none;}',
+    t('duoghost') + ROLE + '{color:#fff;font-weight:600;margin-top:.35em;padding-top:.3em;border-top:3px solid ' + A + ';font-size:calc(var(--name-role-role-size,24px)*.75);}',
+
+    /* Role Tag: a big name with the role as a coloured tag on its baseline */
+    t('duotag') + ' .name-role-overlay-copy{flex-direction:row;align-items:flex-end;gap:.5em;flex-wrap:wrap;}',
+    t('duotag') + NAME + '{color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.55);}',
+    t('duotag') + ROLE + '{background:' + A + ';color:var(--name-role-accent-fg,#0b0d10);padding:.14em .6em;font-size:calc(var(--name-role-role-size,24px)*.75);margin-bottom:.35em;}',
+
+    /* Slant: two skewed bars, the role indented under the name */
+    t('duoslant') + NAME + '{background:' + P + ';color:var(--name-role-foreground,#fff);padding:.04em .6em .08em;transform:skewX(-12deg);font-style:italic;}',
+    t('duoslant') + ROLE + '{background:' + A + ';color:var(--name-role-accent-fg,#0b0d10);padding:.18em .8em;transform:skewX(-12deg);font-style:italic;margin:.14em 0 0 1.6em;font-size:calc(var(--name-role-role-size,24px)*.8);}',
+
+    /* Role Flag: the role flies above the name block, with a coloured underline */
+    t('duoflag') + CARD + '::before{content:"";align-self:stretch;width:5px;background:' + A + ';flex:0 0 5px;order:-1;}',
+    t('duoflag') + ' .name-role-overlay-copy{flex-direction:column-reverse;}',
+    t('duoflag') + NAME + '{background:' + P + ';color:var(--name-role-foreground,#fff);padding:.04em .5em .08em;box-shadow:0 .16em 0 ' + A + ';}',
+    t('duoflag') + ROLE + '{color:#fff;font-size:calc(var(--name-role-role-size,24px)*.7);margin-bottom:.3em;text-shadow:0 2px 10px rgba(0,0,0,.6);}',
+
+    /* Pill Layers: a name block with the role pill overlapping its lower edge */
+    t('duopill') + NAME + '{background:' + P + ';color:var(--name-role-foreground,#fff);padding:.1em .7em .26em;border-radius:12px;box-shadow:0 10px 26px rgba(0,0,0,.35);}',
+    t('duopill') + ROLE + '{background:' + A + ';color:var(--name-role-accent-fg,#0b0d10);padding:.2em .9em;border-radius:999px;margin:-.5em 0 0 1.1em;font-size:calc(var(--name-role-role-size,24px)*.75);box-shadow:0 6px 16px rgba(0,0,0,.3);position:relative;}',
+
+    /* Overall size of the whole lower third */
+    O + CARD + '{zoom:var(--name-role-scale,1);}',
+
+    /* Left and right padding: space between the lower third and the screen edges (swapped for the mirrored Right layout) */
+    O + '.has-pad' + CARD + '{margin-left:var(--name-role-pad-l,0px);margin-right:var(--name-role-pad-r,0px);}',
+    O + '.has-pad' + CARD + '{max-width:calc(86vw - var(--name-role-pad-l,0px) - var(--name-role-pad-r,0px));}',
+    O + '.has-pad.style-right' + CARD + '{margin-left:var(--name-role-pad-r,0px);margin-right:var(--name-role-pad-l,0px);}',
 
     /* The white church logo needs to turn dark on the light designs */
     ['rose', 'amber', 'chapel'].map(function (x) { return t(x) + ' .name-role-overlay-logo'; }).join(',') + '{filter:brightness(0);opacity:.85;}',

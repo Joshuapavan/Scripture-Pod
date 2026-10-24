@@ -667,7 +667,10 @@
       if (!setup) return;
       const hasContent = (Array.isArray(songs) && songs.length > 0) ||
         (bibles && Object.keys(bibles).length > 0);
+      const wasVisible = setup.hidden === false;
       setup.hidden = setup.dataset.dismissed === 'true' || hasContent;
+      // The setup has just been finished: show the shortcuts once
+      if (wasVisible && setup.hidden && typeof maybeShowShortcutsAfterSetup === 'function') maybeShowShortcutsAfterSetup();
     }
 
     function dismissFirstRunSetup() {
@@ -702,6 +705,9 @@
       const overlayNameSizeInput = document.getElementById('name-role-overlay-name-size');
       const overlayRoleSizeInput = document.getElementById('name-role-overlay-role-size');
       const overlayLogoSizeInput = document.getElementById('name-role-overlay-logo-size');
+      const overlayScaleInput = document.getElementById('name-role-overlay-scale');
+      const overlayPadLeftInput = document.getElementById('name-role-overlay-pad-l');
+      const overlayPadRightInput = document.getElementById('name-role-overlay-pad-r');
       const overlayOffsetXInput = document.getElementById('name-role-overlay-offset-x');
       const overlayOffsetYInput = document.getElementById('name-role-overlay-offset-y');
       const overlayInstagram = document.getElementById('social-engagement-instagram');
@@ -731,7 +737,7 @@
       }
       if (overlayDesignInput && overlayAnimationInput) {
         const savedOverlayStyle = String(ui.nameRoleOverlayStyle || 'classic-gms-rise');
-        const currentStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment|sapphire|crimson|forest|graphite|rose|ocean|amber|violet|outline|halo|chapel)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const currentStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment|sapphire|crimson|forest|graphite|rose|ocean|amber|violet|outline|halo|chapel|duobar|duoblock|duorule|duoghost|duotag|duoslant|duoflag|duopill)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const previousStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
         const layoutOnly = ['classic', 'right', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : '';
         const design = currentStyle ? `${currentStyle[1]}-${currentStyle[2]}` : `${previousStyle?.[1] || layoutOnly || 'classic'}-gms`;
@@ -758,10 +764,15 @@
       if (overlayAccentInput && /^#[0-9a-f]{6}$/i.test(ui.nameRoleOverlayAccentColor || '')) overlayAccentInput.value = ui.nameRoleOverlayAccentColor;
       if (overlayNameSizeInput) overlayNameSizeInput.value = String(Math.max(24, Math.min(160, Number(ui.nameRoleOverlayNameSize) || 56)));
       if (overlayRoleSizeInput) overlayRoleSizeInput.value = String(Math.max(12, Math.min(72, Number(ui.nameRoleOverlayRoleSize) || 24)));
+      if (overlayScaleInput) overlayScaleInput.value = String(Math.max(50, Math.min(200, Number(ui.nameRoleOverlayScale) || 100)));
+      if (overlayPadLeftInput) overlayPadLeftInput.value = String(Math.max(0, Math.min(400, Number(ui.nameRoleOverlayPadLeft) || 0)));
+      if (overlayPadRightInput) overlayPadRightInput.value = String(Math.max(0, Math.min(400, Number(ui.nameRoleOverlayPadRight) || 0)));
       if (overlayLogoSizeInput) overlayLogoSizeInput.value = String(Math.max(24, Math.min(320, Number(ui.nameRoleOverlayLogoSize) || 128)));
       if (overlayOffsetXInput) overlayOffsetXInput.value = String(Math.max(-40, Math.min(40, Number(ui.nameRoleOverlayOffsetX) || 0)));
       if (overlayOffsetYInput) overlayOffsetYInput.value = String(Math.max(-40, Math.min(40, Number(ui.nameRoleOverlayOffsetY) || 0)));
       document.getElementById('name-role-overlay-offset-x-value').textContent = `${overlayOffsetXInput?.value || 0}%`;
+      const overlayScaleValueEl = document.getElementById('name-role-overlay-scale-value');
+      if (overlayScaleValueEl) overlayScaleValueEl.textContent = `${overlayScaleInput?.value || 100}%`;
       document.getElementById('name-role-overlay-offset-y-value').textContent = `${overlayOffsetYInput?.value || 0}%`;
       if (overlayInstagram) overlayInstagram.value = String(ui.nameRoleOverlayInstagram || '');
       if (overlayFacebook) overlayFacebook.value = String(ui.nameRoleOverlayFacebook || '');
