@@ -1043,21 +1043,6 @@
         document.getElementById('shorten-bible-versions').checked = true;
       }
       if (ui.shortenBibleBooks != null) document.getElementById('shorten-bible-books').checked = ui.shortenBibleBooks;
-      populateSongTranslationLanguageOptions();
-      document.getElementById('song-bilingual-enabled').checked = !!ui.songBilingualEnabled;
-      document.getElementById('song-display-mode').value = String(ui.songDisplayMode || DEFAULT_SONG_BILINGUAL_SETTINGS.displayMode);
-      document.getElementById('song-translation-mode').value = String(ui.songTranslationMode || DEFAULT_SONG_BILINGUAL_SETTINGS.translationMode);
-      document.getElementById('song-auto-translate-import').checked = ui.songAutoTranslateOnImport !== false;
-      document.getElementById('song-auto-translate-open').checked = ui.songAutoTranslateOnOpen !== false;
-      document.getElementById('song-translation-language').value = String(ui.songTargetLanguage || DEFAULT_SONG_BILINGUAL_SETTINGS.targetLanguage);
-      document.getElementById('song-translation-source-language').value = String(ui.songSourceLanguage || DEFAULT_SONG_BILINGUAL_SETTINGS.sourceLanguage);
-      document.getElementById('song-secondary-font-scale').value = String(ui.songSecondaryFontScale || DEFAULT_SONG_BILINGUAL_SETTINGS.secondaryFontScale);
-      document.getElementById('song-cache-translations').checked = ui.songCacheTranslationsLocally !== false;
-      document.getElementById('song-free-translation-api-url').value = String(ui.songFreeTranslationApiUrl || DEFAULT_SONG_BILINGUAL_SETTINGS.freeTranslationApiUrl);
-      document.getElementById('song-translation-api-url').value = String(ui.songTranslationApiUrl || DEFAULT_SONG_BILINGUAL_SETTINGS.translationApiUrl);
-      document.getElementById('song-translation-api-key').value = String(ui.songTranslationApiKey || DEFAULT_SONG_BILINGUAL_SETTINGS.translationApiKey);
-      updateSongTranslationModeUi();
-      setSongTranslationProviderStatus('Not tested', 'muted');
       if (ui.showVerseNos != null) document.getElementById('show-verse-nos').checked = ui.showVerseNos;
       if (ui.textColor) {
         document.getElementById('text-color').value = ui.textColor;
@@ -4207,7 +4192,6 @@
       const stateUpdatedAt = opts.stateUpdatedAt || 0;
       initializeDefaultStyles();
       if (runInit && !hasInitialized) populateLanguageSelect();
-      populateSongTranslationLanguageOptions();
 
       songs = songRecords.map(hydrateSongFromRecord);
       bibles = {};

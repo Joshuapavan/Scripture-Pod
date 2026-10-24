@@ -525,61 +525,11 @@
       return combinedText;
     }
 
-    function buildStackedSongBilingualHtml(primaryHtml, secondaryHtml, secondaryScale) {
-      const scale = Math.max(0.4, Math.min(1, parseFloat(secondaryScale) || DEFAULT_SONG_BILINGUAL_SETTINGS.secondaryFontScale));
-      const secondaryPercent = (scale * 100).toFixed(2).replace(/\.00$/, '');
-      const secondaryBlock = secondaryHtml
-        ? `<div class="song-bilingual-secondary" style="margin-top:0.55em;font-size:${secondaryPercent}%;line-height:1.18;opacity:0.96">${secondaryHtml}</div>`
-        : '';
-      return `<div class="song-bilingual-stack">${primaryHtml}${secondaryBlock}</div>`;
-    }
-
     function getProjectedSongTextPair(song, pageIndex, lineCountOverride = null) {
-      if (!song || getIsBibleItem(song)) {
-        return { primaryHtml: '', secondaryHtml: '', bilingualEnabled: false, renderMode: 'primary' };
-      }
-      normalizeSongTranslationState(song);
+      if (!song || getIsBibleItem(song)) return { primaryHtml: '' };
       const primaryPages = getPagesFromItem(song, false, lineCountOverride);
       const primaryPage = primaryPages[Math.max(0, Math.min(pageIndex, primaryPages.length - 1))] || primaryPages[0] || null;
-      const primaryHtml = primaryPage ? (primaryPage.text || '') : '';
-      const settings = getSongBilingualSettings();
-      const canShowBilingual = settings.bilingualEnabled &&
-        !!song.translatedLyrics.trim() &&
-        String(song.translationStatus || '').toLowerCase() === 'ready';
-      const displayMode = settings.displayMode || 'stacked';
-      if (!canShowBilingual) {
-        return { primaryHtml, secondaryHtml: '', bilingualEnabled: false, renderMode: 'primary' };
-      }
-      if (displayMode === 'primary') {
-        return {
-          primaryHtml,
-          secondaryHtml: '',
-          bilingualEnabled: false,
-          renderMode: 'primary'
-        };
-      }
-      const translatedSong = {
-        ...song,
-        content: song.translatedLyrics,
-        text: song.translatedLyrics
-      };
-      const secondaryPages = getPagesFromItem(translatedSong, false, lineCountOverride);
-      const secondaryPage = secondaryPages[Math.max(0, Math.min(pageIndex, secondaryPages.length - 1))] || secondaryPages[0] || null;
-      const secondaryHtml = secondaryPage ? (secondaryPage.text || '') : '';
-      if (displayMode === 'translated-only') {
-        return {
-          primaryHtml: secondaryHtml,
-          secondaryHtml: '',
-          bilingualEnabled: false,
-          renderMode: 'translated-only'
-        };
-      }
-      return {
-        primaryHtml,
-        secondaryHtml,
-        bilingualEnabled: true,
-        renderMode: 'stacked'
-      };
+      return { primaryHtml: primaryPage ? (primaryPage.text || '') : '' };
     }
 
     function scrollButtonsToTop() {

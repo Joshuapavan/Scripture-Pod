@@ -2571,3 +2571,181 @@ body[data-sidebar-tab="songs"] #look-card :has(> #ratio-picker) { display: none 
 .section-tag-chip { padding: 4px 10px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-text); font: 500 12px var(--sp-sans, inherit); cursor: pointer; }
 .section-tag-chip:hover { background: var(--sp-inset, rgba(255,255,255,0.08)); }
 .section-tag-chip.is-clear { color: var(--sp-subtle, #8b9299); border-style: dashed; }
+
+/* ── Quick actions menu, in the current theme ──────────────────────────────── */
+#sidebar-quick-actions-panel {
+  width: 300px;
+  min-width: 260px;
+  max-height: min(72vh, 600px);
+  padding: 6px 0 8px;
+  border-radius: 12px;
+  border: 1px solid var(--sp-line);
+  background: var(--sp-card);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--sp-text);
+}
+#sidebar-quick-actions-panel .sidebar-qa-header { margin: 0; padding: 12px 16px 6px; }
+#sidebar-quick-actions-panel .sidebar-qa-title {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--sp-text);
+}
+#sidebar-quick-actions-panel .sidebar-qa-group { margin: 0; padding: 4px 0 6px; border-top: 1px solid var(--sp-line); }
+#sidebar-quick-actions-panel .sidebar-qa-group:first-of-type { border-top: 0; }
+#sidebar-quick-actions-panel .sidebar-qa-group-title {
+  margin: 0;
+  padding: 8px 16px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sp-subtle, #8b9299);
+}
+#sidebar-quick-actions-panel .sidebar-qa-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 38px;
+  margin: 0;
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 13px;
+  color: var(--sp-text);
+}
+#sidebar-quick-actions-panel .sidebar-qa-item:hover { background: var(--sp-inset, rgba(255, 255, 255, 0.04)); }
+/* The toggle is a switch */
+#sidebar-quick-actions-panel .sidebar-qa-toggle {
+  position: relative;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 20px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--sp-line);
+  background: var(--sp-inset, rgba(255, 255, 255, 0.08));
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+#sidebar-quick-actions-panel .sidebar-qa-toggle::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--sp-subtle, #8b9299);
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+#sidebar-quick-actions-panel .sidebar-qa-toggle.active { background: var(--sp-text); border-color: var(--sp-text); }
+#sidebar-quick-actions-panel .sidebar-qa-toggle.active::after { transform: translateX(14px); background: var(--sp-card); }
+#sidebar-quick-actions-panel .sidebar-qa-select-wrap { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+#sidebar-quick-actions-panel .sidebar-qa-select {
+  height: 30px;
+  min-width: 110px;
+  padding: 0 28px 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--sp-line);
+  background-color: var(--sp-inset, rgba(255, 255, 255, 0.06));
+  color: var(--sp-text);
+  font-size: 12px;
+}
+#sidebar-quick-actions-panel .sidebar-qa-select-badge {
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--sp-line);
+  font: 500 10px var(--sp-mono, ui-monospace, monospace);
+  color: var(--sp-subtle, #8b9299);
+}
+#sidebar-quick-actions-panel .sidebar-qa-group {
+  background: transparent;
+  border-width: 1px 0 0;
+  border-style: solid;
+  border-color: var(--sp-line);
+  border-radius: 0;
+  box-shadow: none;
+}
+#sidebar-quick-actions-panel .sidebar-qa-group:first-of-type { border-top-width: 0; }
+#sidebar-quick-actions-panel .sidebar-qa-select-wrap { position: static; }
+#sidebar-quick-actions-panel .sidebar-qa-select-badge {
+  position: static;
+  inset: auto;
+  transform: none;
+  background: transparent;
+  color: var(--sp-subtle, #8b9299);
+  box-shadow: none;
+}
+
+/* ── Standard dropdowns: native controls follow the theme, lists use the card colours ── */
+:root:not([data-theme-mode="light"]) { color-scheme: dark; }
+:root[data-theme-mode="light"] { color-scheme: light; }
+select { color-scheme: inherit; }
+select option, select optgroup {
+  background-color: var(--sp-card);
+  color: var(--sp-text);
+}
+
+/* ── Monitor zoom ──────────────────────────────────────────────────────────── */
+#monitor-zoom {
+  order: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 6px 12px 0;
+}
+.monitor-zoom-label { margin-right: auto; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sp-subtle); font-weight: 600; }
+.monitor-zoom-btn, .monitor-zoom-value {
+  height: 24px;
+  min-width: 24px;
+  padding: 0 8px;
+  border-radius: 6px;
+  border: 1px solid var(--sp-line);
+  background: var(--sp-card);
+  color: var(--sp-text);
+  font: 500 12px var(--sp-mono, ui-monospace, monospace);
+  cursor: pointer;
+}
+.monitor-zoom-btn:hover, .monitor-zoom-value:hover { background: var(--sp-inset); }
+.monitor-zoom-btn:disabled { opacity: 0.4; cursor: default; }
+/* Zoomed out: the monitors shrink inside the column, centred */
+#preview-display-shell, #program-display-shell {
+  width: calc(100% * min(var(--monitor-zoom, 1), 1));
+  margin-inline: auto;
+}
+/* Zoomed in: the column itself gets wider (the resize handle still wins) */
+@media (min-width: 1100px) {
+  body.monitor-zoom-wide #page-projection #program-display-panel#program-display-panel {
+    flex-basis: min(var(--monitor-rail-w, 400px), 55vw);
+  }
+}
+
+/* ── Smaller displays: tighter chrome, narrower monitor column ───────────── */
+@media (max-width: 1360px) {
+  #app-topbar { gap: 6px 10px; padding: 6px 12px !important; }
+  #app-topbar .topbar-btn { padding-inline: 10px; }
+  #page-projection #program-display-panel#program-display-panel { flex-basis: 340px; min-width: 300px; }
+}
+@media (max-width: 1100px) {
+  /* Icons only for the tabs and status pills, so the top bar stays on one row */
+  #app-topbar .sidebar-tabs .tab { font-size: 0; gap: 0; padding: 0 12px; }
+  #app-topbar .sidebar-tabs .tab svg { margin: 0; }
+  #app-topbar #app-topbar-title { display: none; }
+  #app-topbar .air-indicator-text { display: none; }
+  #app-topbar .topbar-btn { padding-inline: 8px; }
+  #app-topbar { flex-wrap: nowrap; }
+}
+@media (max-height: 760px) {
+  #app-topbar { min-height: 48px; padding-block: 4px !important; }
+}
+#program-display-shell:not([data-aspect="9:16"]) {
+  width: calc(100% * min(var(--monitor-zoom, 1), 1)) !important;
+  margin-inline: auto !important;
+}

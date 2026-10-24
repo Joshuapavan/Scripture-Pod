@@ -622,27 +622,6 @@
           </div>
           <div class="section-tag-bar" data-target="lyric-editor"></div>
           <textarea id="lyric-editor" placeholder="Type/Paste Lyrics here..." data-i18n-placeholder="ui_placeholder_lyrics" oninput="saveCurrentItem()"></textarea>
-          <div id="song-translation-panel" >
-            <div id="panel-inline-style-24">
-              <strong id="panel-inline-style-25">Translation</strong>
-              <span id="song-translation-status" >Idle</span>
-              <div id="panel-inline-style-26">
-                <button class="btn" type="button" id="panel-inline-style-27" onclick="handleTranslateCurrentSong()">Update Translation</button>
-                <button class="btn" type="button" id="panel-inline-style-28" onclick="removeCurrentSongTranslation()">Remove Translation</button>
-              </div>
-            </div>
-            <div id="panel-inline-style-29">
-              <label class="mini-toggle" id="panel-inline-style-30">
-                <span>Show bilingual globally</span>
-                <input type="checkbox" id="song-bilingual-item-enabled" onchange="handleSongBilingualToggleChange()">
-              </label>
-              <label class="mini-toggle" id="panel-inline-style-31">
-                <span>Lock translation</span>
-                <input type="checkbox" id="song-translation-lock" onchange="handleSongTranslationLockChange()">
-              </label>
-            </div>
-            <textarea id="song-translation-editor" placeholder="Translated lyrics will appear here..."  oninput="handleSongSecondaryLyricsInput()"></textarea>
-          </div>
           <div id="lyric-buttons"></div>
         </div>
       </div>
@@ -674,6 +653,12 @@
         <span class="program-preview-state">PREVIEW</span>
       </div>
       <div id="monitor-stack">
+      <div id="monitor-zoom" role="group" aria-label="Monitor size">
+        <span class="monitor-zoom-label">Monitors</span>
+        <button type="button" class="monitor-zoom-btn" id="monitor-zoom-out" onclick="stepMonitorZoom(-10)" title="Zoom the monitors out" aria-label="Zoom out">&minus;</button>
+        <button type="button" class="monitor-zoom-value" id="monitor-zoom-value" onclick="setMonitorZoom(null)" title="Back to automatic size">100%</button>
+        <button type="button" class="monitor-zoom-btn" id="monitor-zoom-in" onclick="stepMonitorZoom(10)" title="Zoom the monitors in" aria-label="Zoom in">+</button>
+      </div>
       <div id="program-scale-controls">
         <div class="program-scale-left">
           <button type="button" class="program-scale-btn" id="program-scale-out">-</button>
@@ -897,6 +882,11 @@
             <span id="program-display-output-state">Display offline</span>
           </div>
           <p class="output-route-hint">Open the Display link in a browser on the other computer, or in OBS as a Browser Source. A Browser Source keeps transparency, so no keying is needed.</p>
+          <div class="program-display-link-row">
+            <label for="network-host-select">Network</label>
+            <select id="network-host-select" onchange="setNetworkHost(this.value)" title="Which of this computer's network addresses the links use (Wi-Fi or Ethernet)"></select>
+          </div>
+          <p class="output-route-hint">If a link will not open on the other device, pick the address on the same network as that device. Both devices must be on the same network, and guest Wi-Fi or "client isolation" blocks it.</p>
           <div class="program-display-link-row">
             <label for="program-display-link">Display Link</label>
             <input type="text" id="program-display-link" readonly placeholder="Launch display to load URL">
@@ -1774,89 +1764,6 @@
                 <input type="checkbox" id="display-song-sections" onchange="onAnyControlChange()">
                 <span data-i18n="settings_display_songs_by_sections">Display Songs By Sections</span>
               </label>
-              <div id="panel-inline-style-122">
-              <div id="panel-inline-style-123">Bilingual Lyrics</div>
-              <label class="mini-toggle" id="panel-inline-style-124">
-                <span>Enable Auto Translation</span>
-                <input type="checkbox" id="song-bilingual-enabled" onchange="handleSongBilingualSettingsToggle()">
-              </label>
-              <div class="settings-field" id="panel-inline-style-125">
-                <label class="settings-label">Translation Mode</label>
-                <select id="song-translation-mode" class="settings-select" onchange="handleSongTranslationModeChange()">
-                  <option value="free">Free (Default)</option>
-                  <option value="premium">Premium API</option>
-                  <option value="manual">Manual Only</option>
-                </select>
-              </div>
-              <div class="settings-field" id="panel-inline-style-126">
-                <label class="settings-label">Lyrics Display Mode</label>
-                <select id="song-display-mode" class="settings-select" onchange="handleSongDisplayModeChange()">
-                  <option value="primary">Primary only</option>
-                  <option value="stacked">Primary + translated</option>
-                  <option value="translated-only">Translated only</option>
-                </select>
-              </div>
-              <div class="settings-row" id="panel-inline-style-127">
-                <div class="settings-field" id="panel-inline-style-128">
-                  <label class="settings-label">Target Language</label>
-                  <select id="song-translation-language" class="settings-select" onchange="onAnyControlChange()"></select>
-                </div>
-                <div class="settings-field" id="panel-inline-style-129">
-                  <label class="settings-label">Source Language</label>
-                  <select id="song-translation-source-language" class="settings-select" onchange="onAnyControlChange()"></select>
-                </div>
-                <div class="settings-field" id="panel-inline-style-130">
-                  <label class="settings-label">Secondary Text Size</label>
-                  <div class="numeric-stepper-wrap">
-                    <div class="numeric-stepper-input-wrap">
-                      <input type="number" id="song-secondary-font-scale" class="numeric-stepper-input" min="0.4" max="1" step="0.01" value="0.76" oninput="handleSongSecondaryFontScaleInput()" onchange="handleSongSecondaryFontScaleInput()">
-                      <span class="numeric-stepper-unit">x</span>
-                    </div>
-                    <div class="numeric-stepper-buttons">
-                      <button type="button" onclick="stepNumericInput('song-secondary-font-scale', 1)" aria-label="Increase secondary text size"><svg viewBox="0 0 12 8" aria-hidden="true"><path d="M2 6L6 2L10 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                      <button type="button" onclick="stepNumericInput('song-secondary-font-scale', -1)" aria-label="Decrease secondary text size"><svg viewBox="0 0 12 8" aria-hidden="true"><path d="M2 2L6 6L10 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-                <div id="panel-inline-style-131">
-                  <button class="btn" type="button" id="panel-inline-style-132" onclick="testSongTranslationProvider()">Test Connection</button>
-                  <span id="song-translation-provider-status" >Not tested</span>
-                </div>
-                <details id="song-translation-advanced" >
-                  <summary id="panel-inline-style-133">Advanced</summary>
-                  <div id="panel-inline-style-134">
-                    <div id="song-translation-free-fields" >
-                      <div class="settings-field" id="panel-inline-style-135">
-                        <label class="settings-label">Free Translation URL</label>
-                        <input type="text" id="song-free-translation-api-url" class="settings-input" placeholder="https://translate.argosopentech.com/translate" oninput="onAnyControlChange()">
-                      </div>
-                    </div>
-                    <div id="song-translation-premium-fields" >
-                      <div class="settings-field" id="panel-inline-style-136">
-                        <label class="settings-label">Premium Translation API URL</label>
-                        <input type="text" id="song-translation-api-url" class="settings-input" placeholder="https://libretranslate.com/translate" oninput="onAnyControlChange()">
-                      </div>
-                      <div class="settings-field" id="panel-inline-style-137">
-                        <label class="settings-label">Premium Translation API Key</label>
-                        <input type="password" id="song-translation-api-key" class="settings-input" placeholder="Optional" oninput="onAnyControlChange()">
-                      </div>
-                    </div>
-                  </div>
-                </details>
-                <label class="mini-toggle" id="panel-inline-style-138">
-                  <span>Auto translate on import</span>
-                  <input type="checkbox" id="song-auto-translate-import" onchange="onAnyControlChange()" checked>
-                </label>
-                <label class="mini-toggle" id="panel-inline-style-139">
-                  <span>Auto translate on song open</span>
-                  <input type="checkbox" id="song-auto-translate-open" onchange="onAnyControlChange()" checked>
-                </label>
-                <label class="mini-toggle" id="panel-inline-style-140">
-                  <span>Cache translations locally</span>
-                  <input type="checkbox" id="song-cache-translations" onchange="onAnyControlChange()" checked>
-                </label>
-              </div>
             </div>
           </div>
         </div>
@@ -3162,7 +3069,7 @@
   <script src="./scripts/library/bible-search-db.js"></script>
   <script src="./scripts/core/panel-app-core.js"></script>
   <script src="./scripts/core/reference-localization-theme.js"></script>
-  <script src="./scripts/integrations/host-mode-and-translation.js"></script>
+  <script src="./scripts/integrations/host-mode.js"></script>
   <script src="./scripts/library/songs-and-bible.js"></script>
   <script src="./scripts/library/render-and-selection.js"></script>
   <script src="./scripts/sources/media-and-background.js"></script>

@@ -1,4 +1,7 @@
 // Scripture Pod desktop app: servers, relay, Bible search and windows.
+// A release build is a plain windowed app: no console window opens next to it on Windows.
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
 mod api;
 mod windows;
 
@@ -51,8 +54,8 @@ fn main() {
             let relay_port = env_port("SCRIPTURE_POD_RELAY_PORT", 5511);
             server::start(state.clone(), http);
             if let Some(p) = relay::start(state.relay.clone(), state.token.clone(), relay_port) { state.relay_port.store(p, Ordering::SeqCst); }
-            let info = api::local_server_info(&state);
-            println!("Scripture Pod display URL: {}", info["displayUrl"].as_str().unwrap_or(""));
+            #[cfg(any(debug_assertions, feature = "harness"))]
+            println!("Scripture Pod display URL: {}", api::local_server_info(&state)["displayUrl"].as_str().unwrap_or(""));
             app.manage(state.clone());
             app.manage(Arc::new(windows::SilentClose::default()));
             windows::open_main(app.handle());

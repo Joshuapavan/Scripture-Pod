@@ -9,9 +9,24 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_dialog::DialogExt;
 use tauri_plugin_opener::OpenerExt;
 
+// Addresses another device on the network can reach this computer at. Virtual interfaces (VPN, Docker,
+// AirDrop, VM bridges) and link-local addresses are left out, and real Wi-Fi/Ethernet addresses
+// on private ranges come first, so joining Ethernet as well as Wi-Fi lists both.
 fn lan_addresses() -> Vec<String> {
-    let mut v: Vec<String> = if_addrs::get_if_addrs().unwrap_or_default().into_iter()
-        .filter(|i| !i.is_loopback()).filter_map(|i| match i.ip() { std::net::IpAddr::V4(a) => Some(a.to_string()), _ => None }).collect();
+    let skip = ["utun", "awdl", "llw", "bridge", "docker", "veth", "vmnet", "vboxnet", "vnic", "tailscale", "zt", "tun", "tap", "lo"];
+    let mut found: Vec<(u8, String)> = if_addrs::get_if_addrs().unwrap_or_default().into_iter()
+        .filter(|i| !i.is_loopback())
+        .filter(|i| { let n = i.name.to_lowercase(); !skip.iter().any(|p| n.starts_with(p)) })
+        .filter_map(|i| match i.ip() {
+            std::net::IpAddr::V4(a) if !a.is_link_local() && !a.is_unspecified() => {
+                let rank = if a.is_private() { 0 } else { 1 };
+                Some((rank, a.to_string()))
+            }
+            _ => None,
+        })
+        .collect();
+    found.sort_by_key(|(rank, _)| *rank);
+    let mut v: Vec<String> = found.into_iter().map(|(_, a)| a).collect();
     v.dedup();
     v
 }
@@ -133,7 +148,11 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "devWrite" => { let ok = fs::write(arg["path"].as_str().unwrap_or("/tmp/dev-write"), arg["contents"].as_str().unwrap_or("")).is_ok(); json!({"ok": ok}) }
         #[cfg(any(debug_assertions, feature = "harness"))]
         "devRead" => json!({"contents": fs::read_to_string(arg.as_str().unwrap_or("")).unwrap_or_default()}),
-        "log" => { println!("[page:{}] {}", label, arg); json!(true) }
+        "log" => {
+            #[cfg(any(debug_assertions, feature = "harness"))]
+            println!("[page:{}] {}", label, arg);
+            json!(true)
+        }
         "outputReady" => { if label == "output" || label == "feed" { windows::emit_main(app, "output-ready"); } json!(true) }
         _ => err("unknown call"),
     }

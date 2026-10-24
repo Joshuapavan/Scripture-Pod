@@ -1434,6 +1434,41 @@
     }
 
     // Top bar Outputs button: bring the Outputs card into view.
+    // Zoom for the Preview and Program monitors. Out makes them smaller; in widens the monitor column.
+    // With no choice made the size follows the window height, so a small display gets smaller monitors.
+    const MONITOR_ZOOM_KEY = 'scripturePod.monitorZoom.v1';
+    let monitorZoomChoice = null;
+    try { const v = parseInt(localStorage.getItem(MONITOR_ZOOM_KEY), 10); if (v >= 50 && v <= 150) monitorZoomChoice = v; } catch (e) { /* storage unavailable */ }
+    function autoMonitorZoom() {
+      const h = window.innerHeight;
+      return h < 640 ? 60 : h < 720 ? 70 : h < 820 ? 80 : h < 920 ? 90 : 100;
+    }
+    function applyMonitorZoom() {
+      const z = monitorZoomChoice == null ? autoMonitorZoom() : monitorZoomChoice;
+      const root = document.documentElement;
+      root.style.setProperty('--monitor-zoom', String(z / 100));
+      root.style.setProperty('--monitor-rail-w', Math.round(400 * Math.max(1, z / 100)) + 'px');
+      document.body.classList.toggle('monitor-zoom-wide', z > 100);
+      const label = document.getElementById('monitor-zoom-value');
+      if (label) label.textContent = z + '%' + (monitorZoomChoice == null ? ' auto' : '');
+      document.getElementById('monitor-zoom-out')?.toggleAttribute('disabled', z <= 50);
+      document.getElementById('monitor-zoom-in')?.toggleAttribute('disabled', z >= 150);
+    }
+    function setMonitorZoom(value) {
+      monitorZoomChoice = value == null ? null : Math.max(50, Math.min(150, Math.round(value)));
+      try {
+        if (monitorZoomChoice == null) localStorage.removeItem(MONITOR_ZOOM_KEY);
+        else localStorage.setItem(MONITOR_ZOOM_KEY, String(monitorZoomChoice));
+      } catch (e) { /* storage unavailable */ }
+      applyMonitorZoom();
+    }
+    function stepMonitorZoom(delta) {
+      const current = monitorZoomChoice == null ? autoMonitorZoom() : monitorZoomChoice;
+      setMonitorZoom(current + delta);
+    }
+    window.addEventListener('resize', () => { if (monitorZoomChoice == null) applyMonitorZoom(); });
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applyMonitorZoom); else applyMonitorZoom();
+
     // Outputs are global, so the card lives in a popover opened by clicking the top bar Outputs button
     function outputsCardEl() {
       const card = document.getElementById('outputs-card');

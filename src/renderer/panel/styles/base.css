@@ -7402,16 +7402,6 @@
   background: var(--accent);
 }
 
-#song-translation-panel#song-translation-panel {
-  display: none;
-  margin-top: 10px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: rgba(255,255,255,0.02);
-  padding: 10px;
-  flex-direction: column;
-  gap: 10px;
-}
 
 #panel-inline-style-24#panel-inline-style-24,
 #panel-inline-style-131#panel-inline-style-131 {
@@ -7426,17 +7416,6 @@
   color: var(--text);
 }
 
-#song-translation-status#song-translation-status,
-#panel-inline-style-36#panel-inline-style-36,
-#panel-inline-style-38#panel-inline-style-38,
-#panel-inline-style-40#panel-inline-style-40,
-#panel-inline-style-42#panel-inline-style-42,
-#auto-lyrics-status#auto-lyrics-status,
-#song-translation-provider-status#song-translation-provider-status,
-#new-song-fetch-status#new-song-fetch-status {
-  font-size: 11px;
-  color: var(--text-secondary);
-}
 
 #panel-inline-style-26#panel-inline-style-26 {
   margin-left: auto;
@@ -7467,18 +7446,6 @@
   flex: 0 0 auto;
 }
 
-#song-translation-editor#song-translation-editor {
-  min-height: 140px;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 10px 12px;
-  background: #0a0d14;
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  font-family: inherit;
-  resize: vertical;
-}
 
 #panel-inline-style-32#panel-inline-style-32 {
   background: #444;
@@ -8530,12 +8497,6 @@
   font-size: 12px;
 }
 
-#song-translation-advanced#song-translation-advanced {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 8px 10px;
-  background: rgba(255,255,255,0.01);
-}
 
 #panel-inline-style-133#panel-inline-style-133 {
   cursor: pointer;
@@ -8551,17 +8512,7 @@
   margin-top: 10px;
 }
 
-#song-translation-free-fields#song-translation-free-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
 
-#song-translation-premium-fields#song-translation-premium-fields {
-  display: none;
-  flex-direction: column;
-  gap: 10px;
-}
 
 #panel-inline-style-143#panel-inline-style-143,
 #panel-inline-style-145#panel-inline-style-145 {

@@ -204,19 +204,12 @@
         title,
         content: initialContent,
         text: initialContent,
-        translatedLyrics: '',
-        translationLanguage: getSongBilingualSettings().targetLanguage,
-        translationStatus: 'idle',
-        translationLocked: false,
-        translatedAt: 0,
-        translationHash: computeTranslationHash(initialContent, getSongBilingualSettings().targetLanguage),
         searchableText: normalizeSearchText(`${title}\n${initialContent}`),
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
       songs.push(newSong);
       idbPut(STORE_SONGS, buildSongRecord(newSong, { isNew: true })).catch(() => {});
-      maybeTranslateImportedSong(newSong);
       setSidebarTab('songs');
       const searchInput = document.getElementById('song-search');
       if (searchInput) searchInput.value = '';

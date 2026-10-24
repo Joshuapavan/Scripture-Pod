@@ -1110,19 +1110,12 @@
               title,
               content: text,
               text,
-              translatedLyrics: '',
-              translationLanguage: getSongBilingualSettings().targetLanguage,
-              translationStatus: 'idle',
-              translationLocked: false,
-              translatedAt: 0,
-              translationHash: computeTranslationHash(text, getSongBilingualSettings().targetLanguage),
               searchableText: normalizeSearchText(`${title}\n${text}`),
               createdAt: Date.now(),
               updatedAt: Date.now()
             };
             songs.push(newSong);
             idbPut(STORE_SONGS, buildSongRecord(newSong, { isNew: true })).catch(() => {});
-            maybeTranslateImportedSong(newSong);
             importedCount += 1;
           } else {
             skippedUnsupported += 1;
@@ -1208,13 +1201,6 @@
         title: raw.title || raw.name || '',
         text,
         content: text,
-        translatedLyrics: raw.translatedLyrics || '',
-        translationLanguage: raw.translationLanguage || '',
-        translationStatus: raw.translationStatus || 'idle',
-        translationLocked: !!raw.translationLocked,
-        translatedAt: raw.translatedAt || 0,
-        translationHash: raw.translationHash || '',
-        bilingualEnabled: !!raw.bilingualEnabled,
         createdAt: raw.createdAt,
         updatedAt: raw.updatedAt
       };
@@ -2294,9 +2280,7 @@
       let list = getButtonContextList();
       currentIndex = i; currentItem = list[i] || null;
       if (!currentItem) return;
-      if (!getIsBibleItem(currentItem)) normalizeSongTranslationState(currentItem);
       document.getElementById('lyric-editor').value = currentItem.content || "";
-      refreshSongTranslationPanel(currentItem);
       if (!preserveLineCursor) lineCursor = 0;
       const isBibleEntry = getIsBibleItem(currentItem);
       if (isBibleEntry) {
@@ -2318,7 +2302,6 @@
         updateButtonView({ preserveScroll: preserveButtonScroll, skipAutoScroll: preserveButtonScroll });
       }
       enforceBibleModeRules();
-      maybeTranslateCurrentSongOnOpen();
       if (!preserveButtonScroll && !skipButtonView) scrollButtonsToTop();
       saveToStorageDebounced();
       schedulePreviewMonitorRefresh();

@@ -82,62 +82,10 @@
       'dualVersionSecondaryId',
       'dualVersionTertiaryId'
     ];
-    const DEFAULT_SONG_BILINGUAL_SETTINGS = {
-      bilingualEnabled: false,
-      displayMode: 'stacked',
-      translationMode: 'free',
-      autoTranslateOnImport: true,
-      autoTranslateOnOpen: true,
-      targetLanguage: 'fr',
-      sourceLanguage: 'auto',
-      secondaryFontScale: 0.76,
-      cacheTranslationsLocally: true,
-      freeTranslationApiUrl: 'https://translate.googleapis.com/translate_a/single',
-      translationApiUrl: '',
-      translationApiKey: ''
-    };
     const DEFAULT_SETLIST_SETTINGS = {
       autoGoLiveOnSelect: false,
       advancePreviewAfterLive: true
     };
-    const SONG_TRANSLATION_LANGUAGES = [
-      { code: 'auto', label: 'Auto Detect' },
-      { code: 'en', label: 'English' },
-      { code: 'fr', label: 'French' },
-      { code: 'es', label: 'Spanish' },
-      { code: 'pt', label: 'Portuguese' },
-      { code: 'de', label: 'German' },
-      { code: 'it', label: 'Italian' },
-      { code: 'nl', label: 'Dutch' },
-      { code: 'pl', label: 'Polish' },
-      { code: 'ru', label: 'Russian' },
-      { code: 'uk', label: 'Ukrainian' },
-      { code: 'tr', label: 'Turkish' },
-      { code: 'ar', label: 'Arabic' },
-      { code: 'fa', label: 'Persian' },
-      { code: 'he', label: 'Hebrew' },
-      { code: 'hi', label: 'Hindi' },
-      { code: 'bn', label: 'Bengali' },
-      { code: 'pa', label: 'Punjabi' },
-      { code: 'ur', label: 'Urdu' },
-      { code: 'ta', label: 'Tamil' },
-      { code: 'te', label: 'Telugu' },
-      { code: 'ml', label: 'Malayalam' },
-      { code: 'kn', label: 'Kannada' },
-      { code: 'gu', label: 'Gujarati' },
-      { code: 'mr', label: 'Marathi' },
-      { code: 'zh', label: 'Chinese' },
-      { code: 'ja', label: 'Japanese' },
-      { code: 'ko', label: 'Korean' },
-      { code: 'id', label: 'Indonesian' },
-      { code: 'ms', label: 'Malay' },
-      { code: 'sw', label: 'Swahili' },
-      { code: 'yo', label: 'Yoruba' },
-      { code: 'ig', label: 'Igbo' },
-      { code: 'ha', label: 'Hausa' },
-      { code: 'zu', label: 'Zulu' },
-      { code: 'xh', label: 'Xhosa' }
-    ];
     const channel = (typeof BroadcastChannel === 'function')
       ? new BroadcastChannel(CHANNEL_NAME)
       : null;
@@ -166,8 +114,6 @@
     let autoLyricsUiBound = false;
     let pendingHello = false;
     let songSaveTimer = null;
-    let songTranslationJobs = new Map();
-    let songTranslationTimers = new Map();
     let searchTimer = null;
     let songs = [], bibles = {}, schedule = [];
     let buttonContextTab = 'bible';

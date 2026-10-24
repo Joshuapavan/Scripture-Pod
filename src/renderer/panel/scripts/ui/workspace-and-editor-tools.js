@@ -105,22 +105,6 @@
           { id: 'show-song-category-name', labelKey: 'settings_show_category_name' },
           { id: 'display-song-sections', labelKey: 'settings_display_songs_by_sections' },
           {
-            label: 'Show bilingual',
-            getValue: () => getSongBilingualSettings().bilingualEnabled,
-            onChange: (nextValue) => setGlobalSongBilingualEnabled(nextValue)
-          },
-          {
-            label: 'Lyrics display',
-            type: 'select',
-            getValue: () => getSongBilingualSettings().displayMode,
-            onChange: (nextValue) => setGlobalSongDisplayMode(nextValue),
-            options: [
-              { value: 'primary', label: 'Primary only' },
-              { value: 'stacked', label: 'Primary + translated' },
-              { value: 'translated-only', label: 'Translated only' }
-            ]
-          },
-          {
             id: 'full-text-transform',
             labelKey: 'settings_song_text_transform',
             type: 'select',
@@ -188,22 +172,12 @@
       const prevText = currentItem.content || currentItem.text || '';
       currentItem.content = nextText;
       currentItem.text = nextText;
-      normalizeSongTranslationState(currentItem);
-      if (nextText !== prevText) {
-        const settings = getSongBilingualSettings();
-        currentItem.translationLanguage = settings.targetLanguage;
-        markSongTranslationStale(currentItem);
-        if (settings.bilingualEnabled && settings.autoTranslateOnOpen && !currentItem.translationLocked) {
-          scheduleSongTranslation(currentItem.id);
-        }
-      }
       currentItem.updatedAt = Date.now();
       currentItem.searchableText = normalizeSearchText(`${currentItem.title || ''}\n${nextText}`);
       scheduleSongPersist(currentItem);
       saveState();
       saveToStorageDebounced();
       updateButtonView();
-      refreshSongTranslationPanel(currentItem);
       if (document.activeElement !== document.getElementById('song-edit-title')) setSongEditStatus('Saved');
       if (isLive && livePointer && livePointer.kind === 'songs' && livePointer.index === currentIndex) scheduleLiveUpdate();
     }
@@ -1446,11 +1420,6 @@
       if (isBibleContentActive() && m === 'text') return;
       document.getElementById('lyric-editor').style.display = m === 'text' ? 'block' : 'none';
       document.getElementById('lyric-buttons').style.display = m === 'btn' ? 'block' : 'none';
-      const translationPanel = document.getElementById('song-translation-panel');
-      if (translationPanel) {
-        const showTranslationPanel = m === 'text' && !!(currentItem && !getIsBibleItem(currentItem));
-        translationPanel.style.display = showTranslationPanel ? 'flex' : 'none';
-      }
       document.getElementById('mode-text').classList.toggle('active', m === 'text');
       document.getElementById('mode-btn').classList.toggle('active', m === 'btn');
       editorMode = m;
@@ -2085,19 +2054,12 @@
         title,
         content,
         text: content,
-        translatedLyrics: '',
-        translationLanguage: getSongBilingualSettings().targetLanguage,
-        translationStatus: 'idle',
-        translationLocked: false,
-        translatedAt: 0,
-        translationHash: computeTranslationHash(content, getSongBilingualSettings().targetLanguage),
         searchableText: normalizeSearchText(`${title}\n${content}`),
         createdAt: Date.now(),
         updatedAt: Date.now()
       };
       songs.push(newSong);
       idbPut(STORE_SONGS, buildSongRecord(newSong, { isNew: true })).catch(() => {});
-      maybeTranslateImportedSong(newSong);
       saveState();
       saveToStorageDebounced();
       if (openEditor) {

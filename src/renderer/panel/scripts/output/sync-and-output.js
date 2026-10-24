@@ -1929,17 +1929,12 @@ ${getLtThumbCss()}
       } else {
         songTextPair = getProjectedSongTextPair(liveItem, liveLineCursor, effectiveLiveLinesPerPage);
         const songPrimaryHtml = songTextPair.primaryHtml || verseHtml;
-        const songSecondaryHtml = songTextPair.secondaryHtml || '';
-        const bilingualSettings = getSongBilingualSettings();
         if (mode !== 'full' && useCustomStyle) {
           outHtml = `<div class="jo-body" style="padding-left:60px;${verseShadowStyle}">${songPrimaryHtml}</div>`;
         } else if (mode === 'full') {
           outHtml = `<div class="jo-body" style="text-align:center;${verseShadowStyle}">${songPrimaryHtml}</div>`;
         } else {
           outHtml = `<div class="jo-body" style="${verseShadowStyle}">${songPrimaryHtml}</div>`;
-        }
-        if (songTextPair.bilingualEnabled && songSecondaryHtml) {
-          outHtml = buildStackedSongBilingualHtml(outHtml, songSecondaryHtml, bilingualSettings.secondaryFontScale);
         }
       }
       let dualSectionHtml = '';
@@ -2188,10 +2183,6 @@ ${getLtThumbCss()}
         dualVersionSecondaryId: dualVersionSecondaryId || null,
         dualVersionTertiaryId: dualVersionTertiaryId || null,
         dualVersionPrimaryId: (livePointer.kind === 'bible') ? livePointer.version : null,
-        bilingualEnabled: livePointer.kind === 'songs' && !!(songTextPair &&
-          songTextPair.bilingualEnabled),
-        translatedText: livePointer.kind === 'songs' ? ((songTextPair && songTextPair.secondaryHtml) || '') : '',
-        secondaryFontScale: getSongBilingualSettings().secondaryFontScale,
         nameRoleOverlay: ui.nameRoleOverlay
       };
       if (previewOnly) return sendProgramPreview(payload);

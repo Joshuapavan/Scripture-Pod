@@ -770,7 +770,6 @@
       if (typeof saveProjectionSettingsProfileForTab === 'function') {
         saveProjectionSettingsProfileForTab(getEffectiveSettingsTargetTab());
       }
-      setSongTranslationProviderStatus('Not tested', 'muted');
       updateBgModePicker();
       saveToStorageDebounced();
       schedulePersistBackground();

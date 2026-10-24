@@ -259,7 +259,6 @@
       lineCursor = 0;
       const editor = document.getElementById('lyric-editor');
       if (editor) editor.value = '';
-      refreshSongTranslationPanel(null);
       renderSongs();
       updateButtonView();
       updateFocusedEditorBanner();
