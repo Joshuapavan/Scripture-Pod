@@ -57,9 +57,27 @@ Installers are written to `src-tauri/target/release/bundle/` (`.app` and `.dmg` 
 `.exe` on Windows, `.deb` and `.AppImage` on Linux). Build each system on that system.
 The same builds run in GitHub Actions (`.github/workflows/push-release.yml`).
 
-macOS apps are unsigned (no Apple Developer ID), so macOS shows an "unidentified developer"
-warning on first open: right-click the app and choose Open. On Windows, SmartScreen may warn:
-choose More info, then Run anyway.
+macOS apps are unsigned (no Apple Developer ID), so macOS blocks a downloaded copy. If it says
+"Scripture Pod is damaged and can't be opened", the app is fine: macOS has only tagged the download
+as quarantined. Drag it to Applications, then run this once in Terminal and open it again:
+
+```bash
+xattr -cr "/Applications/Scripture Pod.app"
+```
+
+If you see an "unidentified developer" warning instead, right-click the app and choose Open.
+
+**Windows:** the installer is unsigned, so SmartScreen may show "Windows protected your PC". Choose
+**More info**, then **Run anyway**. If the file was downloaded inside a zip and will not run, right-click
+it, open **Properties**, tick **Unblock**, and try again.
+
+**Linux:** nothing is blocked. For the `.AppImage`, make it executable once and run it:
+
+```bash
+chmod +x Scripture*.AppImage && ./Scripture*.AppImage
+```
+
+For the `.deb`, install it with `sudo apt install ./Scripture*.deb`.
 
 CI builds on every push to `main` and publishes a pre-release with the installers
 (`v<version>-build.<run number>`); pushing a `v*` tag publishes a normal release. The installers
