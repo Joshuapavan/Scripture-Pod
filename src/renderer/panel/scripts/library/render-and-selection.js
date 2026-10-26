@@ -1453,11 +1453,8 @@
       }
     }
 
-    async function exportBackup() {
-      try {
-        const filename = formatBackupFilename(new Date());
-        let saveHandle = null;
-        const isObsBrowserSource = !!(window.obsstudio && !(window.BSPDesktop && typeof window.BSPDesktop.saveRecordingFile === 'function'));
+    // Everything the backup holds, as one JSON string (used by Export Backup and the automatic backups)
+    async function buildBackupJson() {
         let dbOk = true;
         await openDb().catch(err => {
           console.error('Backup export: openDb failed', err);
@@ -1520,6 +1517,16 @@
         };
         const json = safeStringify(backup);
         if (!json) throw new Error('Backup stringify failed');
+      return { json, songRecords, bibleRecords };
+    }
+
+    async function exportBackup() {
+      try {
+        const filename = formatBackupFilename(new Date());
+        let saveHandle = null;
+        const isObsBrowserSource = !!(window.obsstudio && !(window.BSPDesktop && typeof window.BSPDesktop.saveRecordingFile === 'function'));
+        const built = await buildBackupJson();
+        const { json, songRecords, bibleRecords } = built;
         if (window.BSPDesktop && typeof window.BSPDesktop.saveBackup === 'function') {
           const result = await window.BSPDesktop.saveBackup(filename, json);
           if (result?.canceled) return;

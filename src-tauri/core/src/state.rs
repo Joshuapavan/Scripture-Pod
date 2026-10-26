@@ -40,6 +40,11 @@ pub struct AppState {
     pub pair_code: String,
     pub peers: Mutex<HashMap<String, Peer>>,
     pub browser_port: AtomicU16,
+    // Phone remote: off until switched on, a key in the link, commands waiting for the panel and the state it shows
+    pub remote_enabled: AtomicBool,
+    pub remote_key: String,
+    pub remote_queue: Mutex<Vec<String>>,
+    pub remote_state: Mutex<String>,
     pub joins: Joins,
     // Computers picked in the controlling app: their browser is let in without asking, as this role
     pub allowed_ips: Mutex<HashMap<String, String>>,
@@ -63,6 +68,10 @@ impl AppState {
             pair_code: format!("{:06}", rand::random::<u32>() % 1_000_000),
             peers: Mutex::new(HashMap::new()),
             browser_port: AtomicU16::new(0),
+            remote_enabled: AtomicBool::new(false),
+            remote_key: random_hex(8),
+            remote_queue: Mutex::new(Vec::new()),
+            remote_state: Mutex::new("{}".to_string()),
             joins: Arc::new(Mutex::new(HashMap::new())),
             allowed_ips: Mutex::new(HashMap::new()),
             on_connect: Mutex::new(None),

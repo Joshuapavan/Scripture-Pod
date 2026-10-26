@@ -2789,3 +2789,15 @@ select option, select optgroup {
 .setlist-template-btn { font-size: 12px; }
 .setlist-template-name, .setlist-template-select { height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); font-size: 13px; }
 .setlist-template-name { min-width: 240px; }
+
+.auto-backup-field { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; }
+.auto-backup-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.auto-backup-row input[type="text"] { flex: 1; min-width: 160px; height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background: var(--sp-inset); color: var(--sp-text); }
+.auto-backup-row select { height: 32px; border-radius: 8px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); padding: 0 8px; }
+
+#update-bar { position: fixed; z-index: 9000; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-text); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5); font-size: 13px; }
+
+.phone-remote-qr { display: block; width: 168px; height: 168px; margin: 8px auto; padding: 6px; border-radius: 10px; background: #fff; image-rendering: pixelated; }
+
+/* Long song and verse lists: rows off screen are not laid out or painted until they scroll into view */
+#song-list .song-item { content-visibility: auto; contain-intrinsic-size: auto 44px; }

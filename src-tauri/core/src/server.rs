@@ -38,6 +38,47 @@ fetch("/__join",{method:"POST",body:JSON.stringify({name:name(),role:role})}).th
 })();
 </script></body></html>"##;
 
+const REMOTE_ACTIONS: [&str; 8] = ["goLive", "preview", "clear", "nextSlide", "prevSlide", "nextItem", "prevItem", "clearAll"];
+
+const REMOTE_PAGE: &str = r##"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Scripture Pod remote</title>
+<style>*{box-sizing:border-box}html,body{height:100%;margin:0;background:#0c0d0f;color:#edeef0;font:16px system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+main{min-height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;max-width:560px;margin:0 auto}
+.now{border:1px solid #23272c;border-radius:14px;padding:14px;background:#131518}.tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8b9299;margin-bottom:6px}
+#cur{font-size:20px;line-height:1.3;white-space:pre-line;max-height:34vh;overflow:auto}#nxt{margin-top:10px;font-size:15px;color:#a3a9b0;white-space:pre-line;max-height:16vh;overflow:auto}
+.live{display:inline-block;padding:2px 8px;border-radius:6px;background:#e5372a;font-size:12px;font-weight:700;margin-left:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}button{height:64px;border-radius:14px;border:1px solid #2e3339;background:#181b1f;color:#edeef0;font-size:17px;font-weight:600}
+button:active{background:#23272c}.go{grid-column:1/3;background:#e5372a;border-color:#e5372a;height:76px;font-size:20px}.msg{text-align:center;color:#8b9299;font-size:13px;min-height:18px}</style></head>
+<body><main><div class="now"><div class="tag"><span id="ttl">Scripture Pod</span><span id="lv" class="live" hidden>LIVE</span></div><div id="cur">Connecting…</div><div id="nxt"></div></div>
+<div class="grid"><button data-a="prevSlide">◀ Previous</button><button data-a="nextSlide">Next ▶</button><button class="go" data-a="goLive">Go live</button>
+<button data-a="clear">Clear</button><button data-a="preview">Preview only</button><button data-a="prevItem">Previous song</button><button data-a="nextItem">Next song</button></div><div class="msg" id="msg"></div></main>
+<script>
+(function(){var key=new URLSearchParams(location.search).get("k")||"";
+function msg(t){document.getElementById("msg").textContent=t||""}
+function paint(s){document.getElementById("ttl").textContent=s.title||"Scripture Pod";document.getElementById("cur").textContent=s.current||(s.live?"":"Nothing on screen");document.getElementById("nxt").textContent=s.next?"Next: "+s.next:"";document.getElementById("lv").hidden=!s.live}
+function poll(){fetch("/__remote/state?k="+encodeURIComponent(key)).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(s){paint(s);msg("")}).catch(function(){msg("Not connected: check the link and that the remote is switched on")})}
+document.querySelectorAll("button[data-a]").forEach(function(b){b.addEventListener("click",function(){if(navigator.vibrate)navigator.vibrate(20);fetch("/__remote?k="+encodeURIComponent(key),{method:"POST",body:JSON.stringify({action:b.dataset.a})}).then(function(){setTimeout(poll,250)}).catch(function(){msg("Could not send")})})});
+poll();setInterval(poll,1200);})();
+</script></body></html>"##;
+
+// The phone remote: a page, its state, and commands that the panel picks up. Off until switched on, key required.
+fn remote_request(mut req: tiny_http::Request, state: &AppState, path: &str, query: &str) {
+    let json = |code: u16, body: String| Response::from_string(body).with_status_code(code).with_header(header("Content-Type", "application/json")).with_header(header("Cache-Control", "no-store"));
+    let key = query.trim_start_matches('?').split('&').find_map(|kv| kv.strip_prefix("k=")).unwrap_or("");
+    let (a, b) = (key.as_bytes(), state.remote_key.as_bytes());
+    let key_ok = a.len() == b.len() && a.iter().zip(b).fold(0u8, |d, (x, y)| d | (x ^ y)) == 0;
+    if !state.remote_enabled.load(Ordering::SeqCst) || !key_ok { return { let _ = req.respond(json(403, r#"{"error":"Not allowed"}"#.into())); }; }
+    if path == "/__remote/state" { let body = state.remote_state.lock().unwrap().clone(); return { let _ = req.respond(json(200, body)); }; }
+    let mut body = String::new();
+    let _ = req.as_reader().take(512).read_to_string(&mut body);
+    let v: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
+    let action = v["action"].as_str().unwrap_or("");
+    if !REMOTE_ACTIONS.contains(&action) { return { let _ = req.respond(json(400, r#"{"error":"Unknown action"}"#.into())); }; }
+    let mut q = state.remote_queue.lock().unwrap();
+    if q.len() < 20 { q.push(action.to_string()); }
+    drop(q);
+    let _ = req.respond(json(200, r#"{"ok":true}"#.into()));
+}
+
 // A browser opened the display address: it asks to join, is let in when the controlling app allows it
 fn join_request(mut req: tiny_http::Request, state: &AppState, path: &str) {
     let json = |code: u16, body: String| Response::from_string(body).with_status_code(code).with_header(header("Content-Type", "application/json")).with_header(header("Cache-Control", "no-store"));
@@ -50,7 +91,7 @@ fn join_request(mut req: tiny_http::Request, state: &AppState, path: &str) {
         let name: String = v["name"].as_str().unwrap_or("Browser").chars().take(60).collect();
         let sid = random_hex(8);
         let allowed = state.allowed_ips.lock().unwrap().get(&ip).cloned();
-        let role = allowed.clone().unwrap_or_else(|| if v["role"].as_str() == Some("monitor") { "monitor".into() } else { "live".into() });
+        let role = allowed.clone().unwrap_or_else(|| match v["role"].as_str() { Some("monitor") => "monitor".into(), Some("stage") => "stage".into(), _ => "live".into() });
         let status = if allowed.is_some() { "approved" } else { "pending" };
         let now = std::time::Instant::now();
         let mut joins = state.joins.lock().unwrap();
@@ -66,7 +107,7 @@ fn join_request(mut req: tiny_http::Request, state: &AppState, path: &str) {
     if j.status == "approved" {
         // The page is opened on the same address it was loaded from (this computer, as that laptop reaches it)
         let hostname = host.rsplit_once(':').map(|(h, _)| h).unwrap_or(&host).to_string();
-        let role = if j.role == "monitor" { "&role=monitor" } else { "" };
+        let role = match j.role.as_str() { "monitor" => "&role=monitor", "stage" => "&role=stage", _ => "" };
         let url = format!("http://{}/{}?hostMode=websocket&relay=ws%3A%2F%2F{}%3A{}&relayToken={}&sid={}{}", host, DISPLAY_PAGE, hostname, state.relay_port.load(Ordering::SeqCst), state.token, j.sid, role);
         out["url"] = serde_json::Value::String(url);
     }
@@ -117,13 +158,21 @@ fn connect_request(mut req: tiny_http::Request, state: &AppState, path: &str) {
 fn handle(req: tiny_http::Request, state: &AppState) {
     let full = req.url().to_string();
     let bare = full.split('?').next().unwrap_or("");
-    if bare == "/display.html" || bare == "/monitor.html" || bare == "/join" {
-        let role = if bare == "/monitor.html" { "monitor" } else { "live" };
+    if bare == "/display.html" || bare == "/monitor.html" || bare == "/stage.html" || bare == "/join" {
+        let role = match bare { "/monitor.html" => "monitor", "/stage.html" => "stage", _ => "live" };
         let page = JOIN_PAGE.replace("__ROLE__", role);
         let _ = req.respond(Response::from_string(page).with_header(header("Content-Type", "text/html; charset=utf-8")).with_header(header("Cache-Control", "no-store")));
         return;
     }
     if bare == "/__join" || bare.starts_with("/__join/") { return join_request(req, state, bare); }
+    if bare == "/remote.html" {
+        let _ = req.respond(Response::from_string(REMOTE_PAGE).with_header(header("Content-Type", "text/html; charset=utf-8")).with_header(header("Cache-Control", "no-store")));
+        return;
+    }
+    if bare == "/__remote" || bare == "/__remote/state" {
+        let query = full.split_once('?').map(|(_, q)| q.to_string()).unwrap_or_default();
+        return remote_request(req, state, bare, &query);
+    }
     if req.method() == &tiny_http::Method::Post && (full == "/__connect" || full == "/__disconnect") { return connect_request(req, state, &full); }
     let (path, query) = full.split_once('?').map(|(p, q)| (p.to_string(), format!("?{}", q))).unwrap_or((full.clone(), String::new()));
     if let Some(id) = path.strip_prefix("/background-media/") { return media(req, state, id); }

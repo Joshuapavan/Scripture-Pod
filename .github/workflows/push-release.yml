@@ -77,6 +77,8 @@ jobs:
       - name: Build installer
         run: npx --yes @tauri-apps/cli@2 build ${{ matrix.args }}
         working-directory: src-tauri
+        env:
+          SP_BUILD: ${{ github.run_number }}
         shell: bash
       - name: Upload installers
         uses: actions/upload-artifact@v7

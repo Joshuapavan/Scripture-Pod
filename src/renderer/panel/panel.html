@@ -904,6 +904,32 @@
             </button>
           </div>
         </div>
+        <div class="output-route" id="output-route-phone">
+          <div class="output-route-head">
+            <strong>Phone remote</strong>
+            <span class="output-route-kind">Same network</span>
+          </div>
+          <p class="output-route-hint">Control the service from a phone: next and previous slide, go live, clear. Switch it on, then scan the code with the phone's camera. Anyone with the link can control the service, so switch it off when you are done.</p>
+          <label class="mini-toggle"><span>Phone remote</span><input type="checkbox" id="phone-remote-toggle" onchange="setPhoneRemoteEnabled(this.checked)"></label>
+          <div id="phone-remote-details" hidden>
+            <img id="phone-remote-qr" class="phone-remote-qr" alt="QR code for the phone remote">
+            <div class="program-display-link-row">
+              <input type="text" id="phone-remote-url" readonly>
+              <button type="button" class="btn" onclick="copyPhoneRemoteUrl()" title="Copy the link" aria-label="Copy the link"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="output-route" id="output-route-stage">
+          <div class="output-route-head">
+            <strong>Stage display</strong>
+            <span class="output-route-kind">For the worship team</span>
+          </div>
+          <p class="output-route-hint">A screen for the singers and speaker: the words on screen now, the next slide, and the time. Open it on a screen here, or on another laptop with its browser (pick "Stage display" under Show as, below).</p>
+          <div class="output-route-actions">
+            <button type="button" class="btn" id="btn-stage-display" onclick="toggleStageDisplay()">Open stage display</button>
+            <select id="stage-display-screen" aria-label="Screen for the stage display"></select>
+          </div>
+        </div>
         <div class="output-route" id="output-route-browser">
           <div class="output-route-head">
             <strong>Any laptop with a browser</strong>
@@ -920,6 +946,7 @@
             <select id="browser-role" onchange="try{localStorage.setItem('scripturePod.browserRole.v1',this.value)}catch(e){};refreshBrowserDisplay()">
               <option value="live">Live display (lower third, transparent)</option>
               <option value="monitor">Monitor (full screen, clock)</option>
+              <option value="stage">Stage display (now, next, clock)</option>
             </select>
           </div>
           <div class="output-route-actions">
@@ -1927,6 +1954,23 @@
                 <button class="btn" id="panel-inline-style-158" onclick="exportBackup()">📦 <span data-i18n="settings_backup_export">Export Backup</span></button>
                 <button class="btn" id="panel-inline-style-159" onclick="triggerBackupImport()">⬆️ <span data-i18n="settings_backup_import">Import Backup</span></button>
               </div>
+            </div>
+            <div class="settings-field">
+              <label class="settings-label">Updates</label>
+              <div class="auto-backup-row"><button type="button" class="btn" onclick="checkForUpdate(true)">Check for updates</button><span id="update-check-status" class="output-route-hint"></span></div>
+            </div>
+            <div class="settings-field auto-backup-field" id="auto-backup-field">
+              <label class="settings-label">Automatic backups</label>
+              <label class="mini-toggle"><span>Back up to a folder by itself</span><input type="checkbox" id="auto-backup-enabled" onchange="saveAutoBackupSettings()"></label>
+              <div class="auto-backup-row"><input type="text" id="auto-backup-folder" readonly placeholder="No folder chosen"><button type="button" class="btn" onclick="chooseAutoBackupFolder()">Choose folder</button></div>
+              <div class="auto-backup-row">
+                <label for="auto-backup-interval">How often</label>
+                <select id="auto-backup-interval" onchange="saveAutoBackupSettings()"><option value="launch">Every time the app starts</option><option value="daily">Once a day</option><option value="weekly">Once a week</option></select>
+                <label for="auto-backup-keep">Keep</label>
+                <select id="auto-backup-keep" onchange="saveAutoBackupSettings()"><option value="5">5</option><option value="10">10</option><option value="20">20</option><option value="50">50</option></select>
+              </div>
+              <div class="auto-backup-row"><button type="button" class="btn" onclick="runAutoBackup(true)">Back up now</button><span id="auto-backup-status" class="output-route-hint"></span></div>
+              <p class="output-route-hint">Point the folder at Dropbox, Google Drive or OneDrive to keep a copy off this computer. Only the newest backups are kept.</p>
             </div>
             <div class="settings-field" id="panel-inline-style-160">
               <label class="settings-label" data-i18n="settings_reset_plugin">Reset Plugin</label>
@@ -3164,6 +3208,9 @@
   <script src="./scripts/ui/workspace-and-editor-tools.js"></script>
   <script src="./scripts/ui/app-commands-and-shortcuts.js"></script>
   <script src="./scripts/ui/custom-shortcuts.js"></script>
+  <script src="./scripts/integrations/auto-backup.js"></script>
+  <script src="./scripts/integrations/update-check.js"></script>
+  <script src="./scripts/integrations/phone-remote.js"></script>
   <script src="./scripts/ui/command-palette.js"></script>
   <script src="./scripts/core/settings-and-controls.js"></script>
   <script src="./scripts/ui/sidebar-and-workspace.js"></script>

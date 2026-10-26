@@ -139,6 +139,23 @@ Links contain a per-launch access token. Treat them like passwords and re-copy t
 restart. RemoteShow QR codes are generated on the computer and never sent to a QR service.
 This is a browser display, not an NDI stream.
 
+## Everyday tools
+
+- **Stage display.** Outputs, **Stage display** opens a full-screen window for the worship team with the
+  words on screen now, the next slide and the time. Any laptop can show it too: pick **Stage display** under
+  **Show as** in **Any laptop with a browser**.
+- **Phone remote.** Outputs, **Phone remote**: switch it on and scan the code with a phone on the same
+  network. The phone gets Next, Previous, Go live, Clear and Preview, and shows what is on screen. Anyone
+  with the link can control the service, so switch it off when you are done.
+- **Shortcuts and clicker.** Settings, **Shortcuts**: add your own keys for the main actions. A presentation
+  clicker works as it is: Page Down and Page Up move through slides, "." or B clears the screen.
+- **Service templates.** In the Setlist, **Save as template** keeps the current setlist; **Start from a
+  template** begins next week's from it.
+- **Automatic backups.** Settings, General: choose a folder (Dropbox, Drive or OneDrive gives an off-computer
+  copy), how often, and how many to keep. **Back up now** runs one at once.
+- **Update notice.** The app looks for a newer release once a day (and on **Check for updates** in Settings)
+  and offers its download page. It does not install updates by itself: that needs signed builds.
+
 ## Backup and restore
 
 Use **Export Backup** and **Import Backup** in Settings (Import Backup is also on the

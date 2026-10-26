@@ -86,7 +86,7 @@ fn connect_device(state: &Arc<AppState>, arg: &Value, open: bool) -> Value {
     let same_net = lan_addresses().into_iter().find(|a| a.parse::<std::net::Ipv4Addr>().map(|x| x.octets()[..3] == prefix[..]).unwrap_or(false));
     let host = same_net.unwrap_or_else(|| lan_addresses().first().cloned().unwrap_or_else(|| "127.0.0.1".into()));
     let (hp, rp) = (state.http_port.load(Ordering::SeqCst), state.relay_port.load(Ordering::SeqCst));
-    let role = if arg["role"].as_str() == Some("monitor") { "&role=monitor" } else { "" };
+    let role = match arg["role"].as_str() { Some("monitor") => "&role=monitor", Some("stage") => "&role=stage", _ => "" };
     let url = format!("http://{}:{}/{}?hostMode=websocket&relay=ws%3A%2F%2F{}%3A{}&relayToken={}{}", host, hp, DISPLAY_PAGE, host, rp, state.token, role);
     let path = if open { "/__connect" } else { "/__disconnect" };
     let body = json!({"url": url, "code": code}).to_string();
@@ -145,6 +145,9 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "openOutput" => { windows::open_output(app, &arg); json!({"ok": true}) }
         "closeOutput" => { windows::close(app, "output", false); json!({"ok": true}) }
         "isOutputOpen" => json!(app.get_webview_window("output").is_some()),
+        "openStage" => { windows::open_stage(app, &arg); json!({"ok": true}) }
+        "closeStage" => { windows::close(app, "stage", true); json!({"ok": true}) }
+        "isStageOpen" => json!(app.get_webview_window("stage").is_some()),
         "openFeed" => { windows::open_feed(app, &arg); json!({"ok": true}) }
         "closeFeed" => { windows::close(app, "feed", true); json!({"ok": true}) }
         "relayClientCount" => json!(state.relay.client_count()),
@@ -168,7 +171,8 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "getBrowserDisplay" => {
             let bp = state.browser_port.load(Ordering::SeqCst);
             json!({"port": bp, "urls": lan_addresses().iter().map(|a| format!("http://{}:{}/display.html", a, bp)).collect::<Vec<_>>(),
-                   "monitorUrls": lan_addresses().iter().map(|a| format!("http://{}:{}/monitor.html", a, bp)).collect::<Vec<_>>()})
+                   "monitorUrls": lan_addresses().iter().map(|a| format!("http://{}:{}/monitor.html", a, bp)).collect::<Vec<_>>(),
+                   "stageUrls": lan_addresses().iter().map(|a| format!("http://{}:{}/stage.html", a, bp)).collect::<Vec<_>>()})
         }
         "listJoins" => {
             let now = std::time::Instant::now();
@@ -183,7 +187,7 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "allowIp" => {
             // Pick a laptop from the list: its browser is let in without asking, as this role
             let ip = arg["ip"].as_str().unwrap_or("").to_string();
-            let role = if arg["role"].as_str() == Some("monitor") { "monitor" } else { "live" };
+            let role = match arg["role"].as_str() { Some("monitor") => "monitor", Some("stage") => "stage", _ => "live" };
             if ip.parse::<std::net::Ipv4Addr>().map(|a| !a.is_private()).unwrap_or(true) { return err("Only computers on your own network can be used"); }
             if arg["allow"].as_bool().unwrap_or(true) {
                 state.allowed_ips.lock().unwrap().insert(ip.clone(), role.to_string());
@@ -202,7 +206,7 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
             let mut joins = state.joins.lock().unwrap();
             let Some(j) = joins.get_mut(&sid) else { return err("That laptop is no longer waiting"); };
             match action {
-                "approve" => { j.status = "approved".into(); j.role = if arg["role"].as_str() == Some("monitor") { "monitor".into() } else { "live".into() }; }
+                "approve" => { j.status = "approved".into(); j.role = match arg["role"].as_str() { Some("monitor") => "monitor".into(), Some("stage") => "stage".into(), _ => "live".into() }; }
                 "deny" => j.status = "denied".into(),
                 _ => { j.status = "revoked".into(); drop(joins); state.relay.kick_sid(&sid); return json!({"ok": true}); }
             }
@@ -264,6 +268,53 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
                 Err(e) => err(&e.to_string()),
             }
         }
+        "getRemote" => {
+            let bp = state.browser_port.load(Ordering::SeqCst);
+            json!({"enabled": state.remote_enabled.load(Ordering::SeqCst), "key": state.remote_key,
+                   "urls": lan_addresses().iter().map(|a| format!("http://{}:{}/remote.html?k={}", a, bp, state.remote_key)).collect::<Vec<_>>()})
+        }
+        "setRemoteEnabled" => { state.remote_enabled.store(arg["enabled"].as_bool().unwrap_or(false), Ordering::SeqCst); json!({"ok": true}) }
+        "pollRemote" => { let mut q = state.remote_queue.lock().unwrap(); let v: Vec<String> = q.drain(..).collect(); json!(v) }
+        "setRemoteState" => { *state.remote_state.lock().unwrap() = arg.to_string(); json!({"ok": true}) }
+        "getAppInfo" => json!({"version": app.package_info().version.to_string(), "build": option_env!("SP_BUILD").unwrap_or("0")}),
+        // The newest published release, for the "update available" notice (this address only)
+        "checkUpdate" => {
+            let agent = ureq::AgentBuilder::new().timeout(std::time::Duration::from_secs(10)).build();
+            match agent.get("https://api.github.com/repos/Joshuapavan/Scripture-Pod-V2/releases/latest").set("User-Agent", "scripture-pod").set("Accept", "application/vnd.github+json").call() {
+                Ok(resp) => {
+                    let v: Value = serde_json::from_str(&resp.into_string().unwrap_or_default()).unwrap_or(Value::Null);
+                    json!({"tag": v["tag_name"], "name": v["name"], "url": v["html_url"]})
+                }
+                Err(e) => err(&format!("Could not check for updates: {}", e)),
+            }
+        }
+        "openReleasePage" => {
+            let url = arg.as_str().unwrap_or("");
+            if url.starts_with("https://github.com/Joshuapavan/Scripture-Pod-V2/") { let _ = app.opener().open_url(url, None::<&str>); json!({"ok": true}) } else { err("That address is not allowed") }
+        }
+        "pickFolder" => {
+            let picked = app.dialog().file().set_title("Choose a folder for automatic backups").blocking_pick_folder();
+            match picked.and_then(|p| p.into_path().ok()) {
+                Some(p) => json!({"path": p.to_string_lossy()}),
+                None => json!({"canceled": true}),
+            }
+        }
+        // Automatic backups: write a file into the chosen folder and keep only the newest few
+        "writeBackupFile" => {
+            let (folder, name, keep) = (arg["folder"].as_str().unwrap_or(""), arg["filename"].as_str().unwrap_or(""), arg["keep"].as_u64().unwrap_or(10).clamp(1, 100) as usize);
+            let Some(contents) = arg["contents"].as_str() else { return err("Backup contents must be text"); };
+            let dir = PathBuf::from(folder);
+            if folder.is_empty() || !dir.is_dir() { return err("The backup folder is not available"); }
+            if name.is_empty() || name.contains('/') || name.contains('\\') || !name.ends_with(".json") { return err("Invalid file name"); }
+            let path = dir.join(name);
+            if let Err(e) = fs::write(&path, contents) { return err(&e.to_string()); }
+            let mut files: Vec<_> = fs::read_dir(&dir).map(|rd| rd.flatten().filter(|e| {
+                let n = e.file_name().to_string_lossy().to_string(); n.starts_with("ScripturePodPro_Backup_") && n.ends_with(".json")
+            }).collect()).unwrap_or_default();
+            files.sort_by_key(|e| e.file_name());
+            while files.len() > keep { let old = files.remove(0); let _ = fs::remove_file(old.path()); }
+            json!({"ok": true, "filePath": path.to_string_lossy(), "bytesWritten": fs::metadata(&path).map(|m| m.len()).unwrap_or(0)})
+        }
         "openBackup" => {
             let picked = app.dialog().file().set_title("Import Backup").add_filter("JSON Backup", &["json"]).blocking_pick_file();
             let Some(path) = picked.and_then(|p| p.into_path().ok()) else { return json!({"canceled": true}); };
@@ -295,6 +346,14 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
             if let Some(w) = app.get_webview_window("feed") {
                 let js = arg.as_str().unwrap_or("");
                 let _ = w.eval(&format!("(async()=>{{try{{const r=await (async()=>{{{}}})();await fetch('/__bsp/log?label=feed',{{method:'POST',body:JSON.stringify(JSON.stringify(r))}});}}catch(e){{await fetch('/__bsp/log?label=feed',{{method:'POST',body:JSON.stringify('ERR '+e.message)}});}}}})()", js));
+            }
+            json!(true)
+        }
+        #[cfg(any(debug_assertions, feature = "harness"))]
+        "evalStage" => {
+            if let Some(w) = app.get_webview_window("stage") {
+                let js = arg.as_str().unwrap_or("");
+                let _ = w.eval(&format!("(async()=>{{try{{const r=await (async()=>{{{}}})();await fetch('/__bsp/log?label=stage',{{method:'POST',body:JSON.stringify(JSON.stringify(r))}});}}catch(e){{await fetch('/__bsp/log?label=stage',{{method:'POST',body:JSON.stringify('ERR '+e.message)}});}}}})()", js));
             }
             json!(true)
         }

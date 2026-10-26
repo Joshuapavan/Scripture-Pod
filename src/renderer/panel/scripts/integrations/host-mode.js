@@ -261,7 +261,7 @@
 
     function browserDisplayUrlFor(info, role) {
       if (!info) return '';
-      const list = role === 'monitor' ? info.monitorUrls : info.urls;
+      const list = role === 'monitor' ? info.monitorUrls : (role === 'stage' ? info.stageUrls : info.urls);
       const chosen = (typeof localServerInfo !== 'undefined' && localServerInfo && localServerInfo.preferredHost) || '';
       return (list || []).find((u) => chosen && u.includes(`//${chosen}:`)) || (list || [])[0] || '';
     }
@@ -383,3 +383,32 @@
       };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
     })();
+
+    // ── Stage display window on a screen of this computer ───────────────────────────
+    async function refreshStageDisplayUi() {
+      const bridge = window.BSPDesktop;
+      const btn = document.getElementById('btn-stage-display');
+      const select = document.getElementById('stage-display-screen');
+      if (!bridge || typeof bridge.isStageOpen !== 'function' || !btn) return;
+      const open = await bridge.isStageOpen().catch(() => false);
+      btn.textContent = open ? 'Close stage display' : 'Open stage display';
+      if (select && !select.options.length && typeof bridge.getDisplays === 'function') {
+        const displays = await bridge.getDisplays().catch(() => []);
+        select.innerHTML = displays.map((d, i) => `<option value="${d.id}">${d.label || 'Screen ' + (i + 1)} (${d.width}×${d.height})${d.isPrimary ? ' · main' : ''}</option>`).join('');
+        const external = displays.find((d) => !d.isInternal && !d.isPrimary);
+        if (external) select.value = external.id;
+      }
+    }
+    async function toggleStageDisplay() {
+      const bridge = window.BSPDesktop;
+      if (!bridge) return;
+      if (await bridge.isStageOpen().catch(() => false)) await bridge.closeStage();
+      else {
+        await bridge.openStage({ displayId: document.getElementById('stage-display-screen')?.value || '' });
+        // a stage screen opened mid-service shows what is on air straight away
+        setTimeout(() => { try { if (typeof sendSyncState === 'function') sendSyncState(); } catch (e) { /* nothing live */ } }, 900);
+      }
+      setTimeout(refreshStageDisplayUi, 500);
+    }
+    setInterval(() => { if (document.getElementById('outputs-card')?.classList.contains('is-open')) refreshStageDisplayUi(); }, 2500);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refreshStageDisplayUi); else refreshStageDisplayUi();

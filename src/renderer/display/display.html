@@ -35,6 +35,12 @@
     <div id="text-container" class="hardware-accelerated"></div>
   </div>
   <div id="monitor-clock" aria-hidden="true" hidden></div>
+  <div id="stage-view" hidden>
+    <div class="stage-top"><span id="stage-title"></span><span id="stage-clock"></span></div>
+    <div class="stage-label" id="stage-section">Now</div>
+    <div class="stage-current" id="stage-current"></div>
+    <div class="stage-next-block"><div class="stage-label">Next</div><div class="stage-next" id="stage-next"></div></div>
+  </div>
   <div id="name-role-overlay" aria-hidden="true">
     <div class="name-role-overlay-card">
       <span class="name-role-overlay-accent"></span>
@@ -192,9 +198,31 @@
     const IS_STANDALONE_MONITOR = new URLSearchParams(window.location.search).get('hostMode') === 'standalone';
     // Monitor feeds (HDMI main screen window, monitor link) show lyrics full screen with the clock;
     // everything else (stream feed, display link) is the live display: lower third, transparent page
-    const IS_MONITOR_FEED = new URLSearchParams(window.location.search).get('role') === 'monitor' ||
+    const IS_MONITOR_FEED = ['monitor', 'stage'].includes(new URLSearchParams(window.location.search).get('role')) ||
       (IS_STANDALONE_MONITOR && new URLSearchParams(window.location.search).get('feed') !== '1');
-    const MY_AUDIENCE = IS_MONITOR_FEED ? 'monitor' : 'live';
+    // Stage display for the worship team: what is on screen now, what comes next, and the time
+    const IS_STAGE = new URLSearchParams(window.location.search).get('role') === 'stage';
+    const MY_AUDIENCE = (IS_MONITOR_FEED || IS_STAGE) ? 'monitor' : 'live';
+    let stageClock = { format: '12' };
+    function paintStageClock() {
+      const el = document.getElementById('stage-clock');
+      if (el) el.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: stageClock.format !== '24' }).replace(/^0/, '');
+    }
+    function renderStageView(info) {
+      const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || ''; };
+      const s = info || {};
+      set('stage-title', [s.title, s.ref].filter(Boolean).join(' · '));
+      set('stage-section', s.section ? `Now · ${s.section}` : (s.current ? 'Now' : ''));
+      set('stage-current', s.current);
+      set('stage-next', s.next);
+      const nextBlock = document.querySelector('.stage-next-block');
+      if (nextBlock) nextBlock.style.visibility = s.next ? 'visible' : 'hidden';
+    }
+    if (IS_STAGE) {
+      document.body.classList.add('stage-role');
+      document.getElementById('stage-view').hidden = false;
+      paintStageClock(); setInterval(paintStageClock, 1000);
+    }
     // Stream feed over a cable: fill transparent areas with a key colour
     const KEY_BACKGROUND = { black: '#000000', green: '#00B140' }[new URLSearchParams(window.location.search).get('keyBg')] || '';
     if (KEY_BACKGROUND) {
@@ -519,6 +547,15 @@
 
     function handleInboundMessage(d, source) {
       if (d && d.audience && d.audience !== MY_AUDIENCE) return;
+      if (IS_STAGE) {
+        if (d && d.type === 'RS_ENVELOPE' && d.payload) return handleInboundMessage(d.payload, source);
+        if (d && d.type === 'UPDATE') renderStageView(d.stage || null);
+        else if (d && d.type === 'SYNC_STATE') renderStageView(d.state && d.state.kind === 'update' && d.state.payload ? d.state.payload.stage : null);
+        else if (d && d.type === 'CLEAR') renderStageView(null);
+        else if (d && d.type === 'CLOCK' && d.format) { stageClock.format = d.format; paintStageClock(); }
+        else if (d && d.type === 'PING') { if (source === 'relay') relaySend({ type: 'PONG' }); }
+        return;
+      }
       if (d && d.type === 'RS_ENVELOPE') {
         const payload = d.payload;
         if (d.version && Number(d.version) < 1) return;
