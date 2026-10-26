@@ -215,6 +215,9 @@
       if (typeof updateFocusedEditorBanner === 'function') updateFocusedEditorBanner();
       setSongEditStatus('Saved');
       showToast('Song saved');
+      // Saved: straight back to the slides
+      setEditorMode('btn');
+      updateButtonView();
     }
 
     // Clicking the title opens the editor on the title field
