@@ -1773,6 +1773,8 @@
     }
 
     function handleNewSongLookupInputChange() {
+      showLyricsSuggestion('new-song-suggest', '', () => {});
+      scheduleLiveLyricsSearch('new');
       const titleInput = document.getElementById('new-song-title');
       const artistInput = document.getElementById('new-song-artist');
       const key = getNewSongLookupKey(titleInput?.value || '', artistInput?.value || '');
@@ -1842,6 +1844,97 @@
         out.push(n);
       });
       return out;
+    }
+
+    // ── Search as you type, and "Did you mean …?" for misspelt titles ─────────────────
+    // Titles from earlier results are remembered on this computer, so a misspelling can be matched
+    // against songs it has already seen as well as the songs in the library.
+    const LYRICS_TITLE_INDEX_KEY = 'scripturePod.lyricsTitleIndex.v1';
+    function loadLyricsTitleIndex() {
+      try { const v = JSON.parse(localStorage.getItem(LYRICS_TITLE_INDEX_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+    }
+    function rememberLyricsTitles(results) {
+      const known = loadLyricsTitleIndex();
+      const seen = new Set(known.map((t) => t.toLowerCase()));
+      (results || []).forEach((r) => {
+        const title = String((r && r.title) || '').trim();
+        if (title && title.length <= 80 && !seen.has(title.toLowerCase())) { seen.add(title.toLowerCase()); known.push(title); }
+      });
+      try { localStorage.setItem(LYRICS_TITLE_INDEX_KEY, JSON.stringify(known.slice(-600))); } catch (e) { /* storage unavailable */ }
+    }
+    function lyricsEditDistance(a, b, limit) {
+      if (Math.abs(a.length - b.length) > limit) return limit + 1;
+      let prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+      for (let i = 1; i <= a.length; i++) {
+        const cur = [i];
+        let rowMin = i;
+        for (let j = 1; j <= b.length; j++) {
+          const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+          cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + cost);
+          if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) cur[j] = Math.min(cur[j], prev[j - 2] + 1);
+          if (cur[j] < rowMin) rowMin = cur[j];
+        }
+        if (rowMin > limit) return limit + 1;
+        prev = cur;
+      }
+      return prev[b.length];
+    }
+    const lyricsWordKey = (s) => String(s || '').toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+    // The closest known title (or the query with its misspelt words fixed), or '' when nothing is close
+    function suggestSongTitle(query, extraTitles = []) {
+      const q = lyricsWordKey(query);
+      if (q.length < 3) return '';
+      const titles = Array.from(new Set([...(songs || []).map((s) => s.title || ''), ...loadLyricsTitleIndex(), ...extraTitles].map((t) => String(t).trim()).filter(Boolean)));
+      let best = '', bestScore = Infinity, exactKnown = false;
+      titles.forEach((title) => {
+        const key = lyricsWordKey(title);
+        if (!key) return;
+        if (key === q || key.startsWith(q)) { exactKnown = true; return; }
+        // Compare against the same-length start of the title too, so a half-typed misspelling still matches
+        const fullLimit = Math.max(1, Math.floor(Math.min(q.length, key.length) * 0.2));
+        const full = lyricsEditDistance(q, key, fullLimit);
+        const headLimit = Math.floor(q.length * 0.2);
+        const head = q.length >= 5 ? lyricsEditDistance(q, key.slice(0, q.length), headLimit) + 0.5 : Infinity;
+        const d = Math.min(full <= fullLimit ? full : Infinity, head <= headLimit + 0.5 ? head : Infinity);
+        if (d < Infinity && d < bestScore) { best = title; bestScore = d; }
+      });
+      if (exactKnown) return '';
+      if (best) return best;
+      // Word by word against the words of known titles
+      const vocab = new Set();
+      titles.forEach((t) => lyricsWordKey(t).split(' ').forEach((w) => { if (w.length >= 3) vocab.add(w); }));
+      let changed = false;
+      const fixed = q.split(' ').map((word) => {
+        if (word.length < 3 || vocab.has(word)) return word;
+        let bw = word, bd = Infinity;
+        vocab.forEach((v) => { const d = lyricsEditDistance(word, v, word.length >= 7 ? 2 : 1); if (d < bd && d <= (word.length >= 7 ? 2 : 1)) { bd = d; bw = v; } });
+        if (bw !== word) changed = true;
+        return bw;
+      }).join(' ');
+      return changed ? fixed.replace(/\b\p{L}/gu, (c) => c.toUpperCase()) : '';
+    }
+    function showLyricsSuggestion(hostId, suggestion, onPick) {
+      const host = document.getElementById(hostId);
+      if (!host) return;
+      host.replaceChildren();
+      if (!suggestion) { host.style.display = 'none'; return; }
+      host.style.display = '';
+      host.append('Did you mean ');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = suggestion;
+      btn.onclick = () => onPick(suggestion);
+      host.appendChild(btn);
+      host.append('?');
+    }
+    const liveLyricsTimers = {};
+    function scheduleLiveLyricsSearch(kind) {
+      clearTimeout(liveLyricsTimers[kind]);
+      const value = (document.getElementById(kind === 'new' ? 'new-song-title' : 'auto-lyrics-title')?.value || '').trim();
+      if (value.length < 2) return;
+      liveLyricsTimers[kind] = setTimeout(() => {
+        if (kind === 'new') autoFetchNewSongLyrics(); else searchAutoLyrics();
+      }, 450);
     }
 
     // "Christian worship songs only": results are scored by worship words (English, and the typed-English
@@ -2030,8 +2123,9 @@
       clearNewSongLookupResults();
     }
 
+    let newSongSearchQueued = false;
     async function autoFetchNewSongLyrics() {
-      if (newSongLookupBusy) return;
+      if (newSongLookupBusy) { newSongSearchQueued = true; return; }
       const titleInput = document.getElementById('new-song-title');
       const artistInput = document.getElementById('new-song-artist');
       const title = (titleInput?.value || '').trim();
@@ -2046,6 +2140,12 @@
       clearNewSongLookupResults();
       try {
         const results = await searchLyricsCatalog(title, artist, document.getElementById('new-song-lyrics-language')?.value || 'any', { worshipOnly: document.getElementById('new-song-worship-only')?.checked !== false });
+        rememberLyricsTitles(results);
+        showLyricsSuggestion('new-song-suggest', (!results || !results.length) ? suggestSongTitle(title) : '', (picked) => {
+          const input = document.getElementById('new-song-title');
+          if (input) input.value = picked;
+          autoFetchNewSongLyrics();
+        });
         if (!Array.isArray(results) || !results.length) {
           newSongFetchedLyrics = '';
           newSongFetchedLookupKey = '';
@@ -2068,6 +2168,7 @@
         showToast(t('new_song_lyrics_search_failed'));
       } finally {
         setNewSongLookupBusy(false);
+        if (newSongSearchQueued) { newSongSearchQueued = false; autoFetchNewSongLyrics(); }
       }
     }
 
@@ -2296,8 +2397,9 @@
       searchAutoLyrics();
     }
 
+    let autoLyricsSearchQueued = false;
     async function searchAutoLyrics() {
-      if (autoLyricsLookupBusy) return;
+      if (autoLyricsLookupBusy) { autoLyricsSearchQueued = true; return; }
       const title = (document.getElementById('auto-lyrics-title')?.value || '').trim();
       const artist = (document.getElementById('auto-lyrics-artist')?.value || '').trim();
       if (!title && !artist) {
@@ -2312,6 +2414,13 @@
       try {
         const results = await searchLyricsCatalog(title, artist, document.getElementById('auto-lyrics-language')?.value || 'any', { worshipOnly: document.getElementById('auto-lyrics-worship-only')?.checked !== false });
         autoLyricsResults = Array.isArray(results) ? results.slice(0, 40) : [];
+        rememberLyricsTitles(results);
+        showLyricsSuggestion('auto-lyrics-suggest', autoLyricsResults.length ? '' : suggestSongTitle(title), (picked) => {
+          const input = document.getElementById('auto-lyrics-title');
+          if (input) input.value = picked;
+          updateAutoLyricsInputClearButtons();
+          searchAutoLyrics();
+        });
         renderAutoLyricsResults();
         if (!autoLyricsResults.length) {
           updateAutoLyricsStatus(results && results.hidden ? `No worship songs matched. ${results.hidden} other song${results.hidden === 1 ? '' : 's'} hidden: untick "Worship songs only" to see ${results.hidden === 1 ? 'it' : 'them'}.` : t('auto_lyrics_no_results_found'), 'error');
@@ -2327,6 +2436,7 @@
         showToast(t('auto_lyrics_search_failed'));
       } finally {
         setAutoLyricsLookupBusy(false);
+        if (autoLyricsSearchQueued) { autoLyricsSearchQueued = false; searchAutoLyrics(); }
       }
     }
 

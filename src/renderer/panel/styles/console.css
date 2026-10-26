@@ -2760,3 +2760,6 @@ select option, select optgroup {
 
 .worship-only-toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--sp-text); white-space: nowrap; }
 #autoLyricsModal { background: rgb(0 0 0 / 0.55) !important; }
+
+.lyrics-suggest { margin: 6px 0 2px; font-size: 13px; color: var(--sp-muted); }
+.lyrics-suggest button { padding: 0; border: 0; background: none; color: var(--sp-cue); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }

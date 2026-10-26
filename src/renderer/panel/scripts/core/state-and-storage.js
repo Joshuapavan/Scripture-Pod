@@ -1397,6 +1397,7 @@
         socialEngagementOverlayAccentColor: document.getElementById('social-engagement-accent')?.value || '#90D5FF',
         socialEngagementOverlaySize: document.getElementById('social-engagement-size')?.value || '32',
         socialEngagementOverlaySizeVersion: 2,
+        socialEngagementBgOpacity: (() => { const el = document.getElementById('social-engagement-bg-opacity'); return el && el.dataset.custom === '1' ? String(el.value) : ''; })(),
         socialEngagementOverlayOffsetX: document.getElementById('social-engagement-offset-x')?.value || '0',
         socialEngagementOverlayOffsetY: document.getElementById('social-engagement-offset-y')?.value || '0',
         nameRoleOverlaySocialsEnabled: [

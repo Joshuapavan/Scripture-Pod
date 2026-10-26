@@ -160,6 +160,7 @@
         primaryColor: document.getElementById('social-engagement-primary')?.value || '#90D5FF',
         accentColor: document.getElementById('social-engagement-accent')?.value || '#90D5FF',
         size: Number(document.getElementById('social-engagement-size')?.value || 32),
+        bgOpacity: (() => { const el = document.getElementById('social-engagement-bg-opacity'); return el && el.dataset.custom === '1' ? Number(el.value) : null; })(),
         offsetX: Math.max(-40, Math.min(40, Number(document.getElementById('social-engagement-offset-x')?.value) || 0)),
         offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('social-engagement-offset-y')?.value) || 0)),
         actions: {
@@ -815,6 +816,8 @@ ${getLtThumbCss()}
       appState.settings.socialEngagementOverlayAccentColor = payload.accentColor;
       appState.settings.socialEngagementOverlaySize = String(payload.size);
       appState.settings.socialEngagementOverlaySizeVersion = 2;
+      appState.settings.socialEngagementBgOpacity = payload.bgOpacity === null ? '' : String(payload.bgOpacity);
+      { const out = document.getElementById('social-engagement-bg-opacity-value'); if (out) out.textContent = payload.bgOpacity === null ? 'Theme' : `${payload.bgOpacity}%`; }
       appState.settings.socialEngagementOverlayOffsetX = String(payload.offsetX);
       appState.settings.socialEngagementOverlayOffsetY = String(payload.offsetY);
       document.getElementById('social-engagement-offset-x-value').textContent = `${payload.offsetX}%`;

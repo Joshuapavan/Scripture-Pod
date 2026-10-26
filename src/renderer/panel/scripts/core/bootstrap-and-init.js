@@ -793,6 +793,12 @@
         const migratedDefaultSize = ui.socialEngagementOverlaySizeVersion !== 2 && savedSocialSize === 14;
         socialSizeInput.value = String(Math.max(10, Math.min(40, migratedDefaultSize ? 32 : (savedSocialSize || 32))));
       }
+      { const opEl = document.getElementById('social-engagement-bg-opacity'); const saved = ui.socialEngagementBgOpacity;
+        if (opEl) {
+          if (saved !== undefined && saved !== null && saved !== '' && !isNaN(Number(saved))) { opEl.value = String(Math.max(0, Math.min(100, Number(saved)))); opEl.dataset.custom = '1'; }
+          else { opEl.value = '85'; delete opEl.dataset.custom; }
+          const out = document.getElementById('social-engagement-bg-opacity-value'); if (out) out.textContent = opEl.dataset.custom ? `${opEl.value}%` : 'Theme';
+        } }
       if (socialOffsetXInput) socialOffsetXInput.value = String(Math.max(-40, Math.min(40, Number(ui.socialEngagementOverlayOffsetX) || 0)));
       if (socialOffsetYInput) socialOffsetYInput.value = String(Math.max(-40, Math.min(40, Number(ui.socialEngagementOverlayOffsetY) || 0)));
       document.getElementById('social-engagement-offset-x-value').textContent = `${socialOffsetXInput?.value || 0}%`;

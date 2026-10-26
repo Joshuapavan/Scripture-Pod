@@ -548,6 +548,20 @@
       button.scrollIntoView({ block: 'nearest', behavior: 'auto' });
     }
 
+    // After a search lands on a verse, bring it into view whatever input was used (a click or the keyboard)
+    function revealActiveVerse() {
+      const go = () => {
+        const container = document.getElementById('lyric-buttons');
+        const active = container && container.querySelector('.lyric-btn.active');
+        if (!active) return;
+        const cRect = container.getBoundingClientRect();
+        const bRect = active.getBoundingClientRect();
+        container.scrollTop += (bRect.top - cRect.top) - Math.max(0, (cRect.height - bRect.height) / 3);
+      };
+      go();
+      requestAnimationFrame(() => { go(); setTimeout(go, 120); });
+    }
+
     function isButtonInView(container, button) {
       if (!container || !button) return true;
       const cRect = container.getBoundingClientRect();
@@ -1048,9 +1062,14 @@
       const preserveScroll = !!opts.preserveScroll;
       const skipAutoScroll = (opts.skipAutoScroll !== undefined) ? !!opts.skipAutoScroll : preserveScroll;
       const requestedScrollTop = Number.isFinite(opts.scrollTop) ? Math.max(0, opts.scrollTop) : null;
+      // Rebuilding the same chapter or song (a click that goes live, a Look change) keeps its scroll place;
+      // only a different chapter or song starts at the top
+      const buildKey = currentItem ? `${currentIndex}|${currentItem.version || ''}|${currentItem.id || currentItem.title || ''}|${linesPerPage}` : '';
+      const sameItem = !!buildKey && container.dataset.builtFor === buildKey;
       const prevScrollTop = preserveScroll
         ? (requestedScrollTop != null ? requestedScrollTop : container.scrollTop)
-        : 0;
+        : (sameItem ? container.scrollTop : 0);
+      container.dataset.builtFor = buildKey;
       container.innerHTML = '';
       if (!currentItem) return;
 
@@ -1135,7 +1154,7 @@
         block.appendChild(row);
       });
 
-      if (preserveScroll) {
+      if (preserveScroll || sameItem) {
         const maxScroll = Math.max(0, container.scrollHeight - container.clientHeight);
         container.scrollTop = Math.min(prevScrollTop, maxScroll);
       }

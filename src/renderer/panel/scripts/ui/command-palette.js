@@ -59,7 +59,8 @@
         const pageIdx = pages.findIndex(p => matchesVerseStart(p.raw, parsed.versePrefix));
         if (pageIdx !== -1) lineCursor = pageIdx;
       }
-      updateButtonView();
+      updateButtonView({ skipAutoScroll: true });
+      revealActiveVerse();
       const extracted = extractBookAndChapter(currentItem);
       addBibleRecentReference(buildBibleRefEntry(extracted.book, extracted.chap, parsed.versePrefix || '', null, activeBibleVersion));
     }

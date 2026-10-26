@@ -556,7 +556,8 @@
       const pages = getPagesFromItem(currentItem, true);
       const vIdx = pages.findIndex(p => matchesVerseStart(p.raw, verse));
       if (vIdx !== -1) lineCursor = vIdx;
-      updateButtonView();
+      updateButtonView({ skipAutoScroll: true });
+      revealActiveVerse();
       if (currentItem) {
         const extracted = extractBookAndChapter(currentItem);
         addBibleRecentReference(buildBibleRefEntry(extracted.book, extracted.chap, verse, null, activeBibleVersion));
@@ -2257,7 +2258,8 @@
       const pageIdx = pages.findIndex(p => matchesVerseStart(p.raw, verseStart));
       if (pageIdx !== -1) {
         lineCursor = pageIdx;
-        updateButtonView();
+        updateButtonView({ skipAutoScroll: true });
+        revealActiveVerse();
         projectLive(true);
       }
       const picked = bibles[activeBibleVersion][idx];

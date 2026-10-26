@@ -598,6 +598,8 @@
             <div class="ov-sizes ov-sizes-one">
               <label>Text &amp; icon <span class="ov-number"><input type="number" id="social-engagement-size" aria-label="Social text and icon size in pixels" min="10" max="40" step="1" value="32" onchange="handleSocialEngagementOverlayChange()"></span></label>
             </div>
+            <label for="social-engagement-bg-opacity" class="ov-label">Bar opacity</label>
+            <div class="ov-slider"><input type="range" id="social-engagement-bg-opacity" min="0" max="100" step="5" value="85" oninput="this.dataset.custom='1';handleSocialEngagementOverlayChange(false, true)"><output id="social-engagement-bg-opacity-value">Theme</output></div>
             <label for="social-engagement-offset-x" class="ov-label">Horizontal</label>
             <div class="ov-slider"><input type="range" id="social-engagement-offset-x" min="-40" max="40" step="1" value="0" oninput="handleSocialEngagementOverlayChange(false, true)"><output id="social-engagement-offset-x-value">0%</output></div>
             <label for="social-engagement-offset-y" class="ov-label">Vertical</label>
@@ -948,7 +950,7 @@
       </div>
       <div id="panel-inline-style-64">
         <div class="auto-lyrics-input-wrap">
-          <input type="text" id="auto-lyrics-title" class="auto-lyrics-input" placeholder="Song title (optional)..." data-i18n-placeholder="auto_lyrics_song_title_placeholder" oninput="updateAutoLyricsInputClearButtons()" onkeydown="if(event.key==='Enter')searchAutoLyrics()">
+          <input type="text" id="auto-lyrics-title" class="auto-lyrics-input" placeholder="Song title (optional)..." data-i18n-placeholder="auto_lyrics_song_title_placeholder" oninput="updateAutoLyricsInputClearButtons();showLyricsSuggestion('auto-lyrics-suggest','',()=>{});scheduleLiveLyricsSearch('auto')" onkeydown="if(event.key==='Enter')searchAutoLyrics()">
           <button type="button" id="auto-lyrics-title-clear" class="auto-lyrics-clear-btn" aria-label="Clear song title" data-i18n-aria-label="auto_lyrics_clear_song_title" onclick="clearAutoLyricsField('title')">X</button>
         </div>
         <div class="auto-lyrics-input-wrap artist">
@@ -970,6 +972,7 @@
         <label>Genius access token <input type="password" id="lyrics-key-genius" autocomplete="off" onchange="saveLyricsSourceKeys()"></label>
         <label>YouTube API key <input type="password" id="lyrics-key-youtube" autocomplete="off" onchange="saveLyricsSourceKeys()"></label>
       </details>
+      <div id="auto-lyrics-suggest" class="lyrics-suggest" style="display:none"></div>
       <div id="auto-lyrics-status"  data-i18n="auto_lyrics_prompt">Enter a title or artist and search.</div>
       <div id="auto-lyrics-results" ></div>
     </div>
@@ -3047,6 +3050,7 @@
         <label class="worship-only-toggle" title="Only show Christian worship songs, best matches first"><input type="checkbox" id="new-song-worship-only" checked> Worship songs only</label>
         <button class="btn" id="new-song-fetch-btn" type="button"  onclick="autoFetchNewSongLyrics()" data-i18n="new_song_search_lyrics">Search Lyrics</button>
       </div>
+      <div id="new-song-suggest" class="lyrics-suggest" style="display:none"></div>
       <span id="new-song-fetch-status"  data-i18n="new_song_no_lyrics_fetched">No lyrics fetched</span>
       <div id="new-song-search-results" ></div>
       <div class="new-song-lyrics-field">

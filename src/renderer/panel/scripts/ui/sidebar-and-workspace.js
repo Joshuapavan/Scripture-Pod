@@ -90,6 +90,22 @@
     }
 
     function setSidebarTab(tab) {
+      // Leaving Overlays: the Preview monitor must go back to the selection, not stay on the lower-third example
+      const leavingOverlays = document.body.classList.contains('overlays-workspace-active');
+      if (leavingOverlays) {
+        try { if (Array.isArray(lowerThirdTestTimers)) { lowerThirdTestTimers.forEach(clearTimeout); lowerThirdTestTimers = []; } } catch (e) { /* no test running */ }
+        // Noted now: the selection refresh that follows replaces the monitor's state before the timer below runs
+        let wasLowerThird = false;
+        try { const st = previewMonitorState; wasLowerThird = !!(st && st.kind === 'update' && st.payload && st.payload.lowerThirdOnly); } catch (e) { /* no preview */ }
+        setTimeout(() => {
+          // The monitor page stays in lower-third-only mode until it is cleared, so clear it first
+          try {
+            if (wasLowerThird && !(typeof getOnAirPayload === 'function' && getOnAirPayload()) && typeof clearPreviewMonitor === 'function') clearPreviewMonitor();
+          } catch (e) { /* preview not ready */ }
+          if (typeof isPreviewOnlyMode === 'function' && isPreviewOnlyMode() && currentItem && typeof renderSelectionToPreview === 'function') renderSelectionToPreview(lineCursor, { silent: true });
+          else if (typeof refreshPreviewMonitor === 'function') refreshPreviewMonitor();
+        }, 250);
+      }
       document.body.classList.remove('overlays-workspace-active');
       const prevTab = sidebarTab;
       saveProjectionSettingsProfileForTab(getEffectiveSettingsTargetTab());
@@ -100,7 +116,7 @@
       activeWorkspaceTab = (tab === 'songs') ? 'song' : ((tab === 'schedule') ? 'schedule' : 'bible');
       saveWorkspaceTabPreference(activeWorkspaceTab);
       document.body.dataset.sidebarTab = tab;
-      if (tab === 'songs')      if (tab === 'bible')      if (tab === 'schedule')      if (prevTab === 'bible') {
+      if (prevTab === 'bible') {
         lastBibleWorkspaceSelection = captureCurrentBibleSelection();
       } else if (prevTab === 'songs') {
         lastSongWorkspaceSelection = captureCurrentSongSelection();
@@ -145,6 +161,12 @@
           if (pendingBibleSelection && pendingBibleSelection.version) {
             activeBibleVersion = pendingBibleSelection.version;
           }
+        }
+        // Coming back to the Bible (from Lyrics, Overlays or anywhere else) keeps the chapter and verse it was on
+        if (!pendingBibleSelection && lastBibleWorkspaceSelection && lastBibleWorkspaceSelection.version &&
+            Array.isArray(bibles[lastBibleWorkspaceSelection.version]) && bibles[lastBibleWorkspaceSelection.version].length) {
+          pendingBibleSelection = lastBibleWorkspaceSelection;
+          activeBibleVersion = pendingBibleSelection.version;
         }
         const bgToggle = document.getElementById('bg-toggle');
         if (prevTab === 'songs' && activeRatio === '16-9' && bgToggle && !bgToggle.checked) {

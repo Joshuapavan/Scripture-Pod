@@ -116,6 +116,8 @@ function spSocialModule(root) {
     var channels = primary.slice(1).match(/.{2}/g).map(function (part) { var c = parseInt(part, 16) / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
     var luminance = 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
     var size = Math.max(10, Math.min(40, Number(data.size) || 32));
+    // Bar opacity: only when set, otherwise the theme keeps its own look
+    var bgOpacity = (data.bgOpacity === null || data.bgOpacity === undefined || data.bgOpacity === '') ? null : Math.max(0, Math.min(100, Number(data.bgOpacity)));
     var offsetX = Math.max(-40, Math.min(40, Number(data.offsetX) || 0));
     var offsetY = Math.max(-40, Math.min(40, Number(data.offsetY) || 0));
     var layout = pick(data.layout, LAYOUTS, 'bar');
@@ -171,6 +173,12 @@ function spSocialModule(root) {
     overlay.style.setProperty('--social-engagement-foreground', luminance >= 0.72 ? '#101216' : '#ffffff');
     overlay.style.setProperty('--social-engagement-accent', accent);
     overlay.style.setProperty('--social-engagement-size', size + 'px');
+    if (bgOpacity === null || isNaN(bgOpacity)) {
+      overlay.style.removeProperty('--so-bg');
+    } else {
+      var base = { solid: primary, dark: '#080a10', light: '#ffffff', glass: '#ffffff' }[theme] || primary;
+      overlay.style.setProperty('--so-bg', 'color-mix(in srgb,' + base + ' ' + bgOpacity + '%,transparent)');
+    }
     overlay.style.setProperty('--social-engagement-action-size', Math.max(10, Math.round(size * 0.75)) + 'px');
     overlay.style.setProperty('--social-engagement-icon-size', Math.round(size * 1.4) + 'px');
     overlay.style.setProperty('--social-engagement-offset-x', offsetX + 'vw');
