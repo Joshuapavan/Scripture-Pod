@@ -2823,3 +2823,5 @@ select option, select optgroup {
 .lt-designer-stage iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: top left; pointer-events: none; }
 .lt-designer-foot { display: flex; align-items: center; gap: 8px; }
 .lt-designer-save { background: var(--sp-text); color: var(--sp-ground); }
+
+.section-tag-chip.is-tidy { margin-left: auto; border-style: solid; color: var(--sp-text); }

@@ -321,11 +321,10 @@
       ].join('|');
     }
 
-    // A section or verse longer than the Lines setting is shown in pieces of that many lines (Lines 2 turns a
-    // 4-line verse into two slides). With Lines 1 (the default) a whole section stays one slide.
+    // A section or verse longer than the Lines setting is shown in pieces of that many lines: Lines 1 shows
+    // one line at a time, Lines 2 turns a 4-line verse into two slides.
     function splitSongPagesByLines(pages, perPage) {
       const n = Math.max(1, Number(perPage) || 1);
-      if (n < 2) return pages;
       const out = [];
       pages.forEach((page) => {
         const rows = String(page.raw || '').split('\n').filter((l) => l.trim());

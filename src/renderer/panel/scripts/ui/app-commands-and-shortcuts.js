@@ -122,13 +122,27 @@
         if (target === 'lyric-editor' && targetEl) bar.style.display = getComputedStyle(targetEl).display === 'none' ? 'none' : 'flex';
         bar.innerHTML = '<span class="section-tag-label">Tag selection as</span>' +
           SECTION_TAG_KINDS.map((k) => `<button type="button" class="section-tag-chip" data-kind="${k.kind}">${k.kind}</button>`).join('') +
-          '<button type="button" class="section-tag-chip is-clear" data-kind="">Remove tag</button>';
+          '<button type="button" class="section-tag-chip is-clear" data-kind="">Remove tag</button>' +
+          '<button type="button" class="section-tag-chip is-tidy" data-tidy="1" title="Remove verse numbers and repeat marks (1., x2, (x4), xn, -2) from these lyrics">Tidy lyrics</button>';
         bar.addEventListener('mousedown', (e) => { if (e.target.closest('.section-tag-chip')) e.preventDefault(); }); // keep the text selection
         bar.addEventListener('click', (e) => {
           const chip = e.target.closest('.section-tag-chip');
-          if (chip) tagLyricsSection(target, chip.dataset.kind);
+          if (!chip) return;
+          if (chip.dataset.tidy) { tidyLyricsInTextarea(target); return; }
+          tagLyricsSection(target, chip.dataset.kind);
         });
       });
+    }
+
+    // Removes verse numbers and repeat marks from the whole text of a lyrics box (the saved song follows)
+    function tidyLyricsInTextarea(textareaId) {
+      const ta = document.getElementById(textareaId);
+      if (!ta || !window.SP_LYRICS_CLEAN) return;
+      const cleaned = window.SP_LYRICS_CLEAN.cleanPastedLyrics(ta.value);
+      if (cleaned === ta.value.trim()) { showToast('Nothing to tidy: no verse numbers or repeat marks found'); return; }
+      ta.value = cleaned;
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      showToast('Tidied the lyrics: verse numbers and repeat marks removed');
     }
 
     // Puts a [Kind] header above the selected lines (or the block under the cursor); verses count up by themselves

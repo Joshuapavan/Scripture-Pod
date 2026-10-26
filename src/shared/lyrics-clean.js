@@ -9,7 +9,8 @@
   var REPEAT = '(?:[x×]\\s*(?:\\d{1,2}|n)|(?:\\d{1,2}|n)\\s*[x×]|repeat(?:\\s*[x×]?\\s*\\d{1,2}(?:\\s*times)?)?)';
   var BRACKETED_REPEAT = new RegExp('\\s*[\\(\\[]\\s*' + REPEAT + '\\s*[\\)\\]]\\s*$', 'i');
   var TRAILING_REPEAT = new RegExp('\\s+' + REPEAT + '\\s*$', 'i');
-  var TRAILING_DASH_NUMBER = /\s[-–—]\s?\d{1,2}\s*$/;
+  // "... word -2", "... word - 2" and also "word-2" (stuck to the word): a dash and a number after a letter or punctuation
+  var TRAILING_DASH_NUMBER = /([^\d\s])\s*[-–—]\s*\d{1,2}\s*$/;
   var ONLY_REPEAT = new RegExp('^\\s*[\\(\\[]?\\s*' + REPEAT + '\\s*[\\)\\]]?\\s*$', 'i');
   var LEADING_VERSE_NUMBER = /^\s*\d{1,2}\s*[.)]\s+(?=\S)/;
   var ONLY_VERSE_NUMBER = /^\s*\d{1,2}\s*[.)]?\s*$/;
@@ -25,7 +26,7 @@
     var before;
     do {
       before = l;
-      l = l.replace(BRACKETED_REPEAT, '').replace(TRAILING_REPEAT, '').replace(TRAILING_DASH_NUMBER, '');
+      l = l.replace(BRACKETED_REPEAT, '').replace(TRAILING_REPEAT, '').replace(TRAILING_DASH_NUMBER, '$1');
     } while (l !== before);
     return l.replace(/[ \t]+$/, '');
   }

@@ -22,6 +22,9 @@ test('repeat marks after a line are removed', () => {
   assert.equal(clean('praise the name -2'), 'praise the name');
   assert.equal(clean('praise the name - 2'), 'praise the name');
   assert.equal(clean('praise the name (repeat x2)'), 'praise the name');
+  assert.equal(clean('praise the name-2'), 'praise the name');
+  assert.equal(clean('praise the name–2'), 'praise the name');
+  assert.equal(clean('sing to the king-4'), 'sing to the king');
 });
 
 test('repeat marks on a chorus label and lines of only a mark', () => {
@@ -36,5 +39,7 @@ test('ordinary words and numbers are left alone', () => {
   assert.equal(clean('we are 2 together'), 'we are 2 together');
   assert.equal(clean('Verse 1:\nalpha'), 'Verse 1:\nalpha');
   assert.equal(clean('the box'), 'the box');
+  assert.equal(clean('see psalm 23-24'), 'see psalm 23-24');
+  assert.equal(clean('a well-known song'), 'a well-known song');
   assert.equal(clean('alpha\n\n\n\nbeta'), 'alpha\n\nbeta');
 });
