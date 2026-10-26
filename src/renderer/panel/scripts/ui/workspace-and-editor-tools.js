@@ -1826,7 +1826,7 @@
         artist: toLatin(artist),
         album: toLatin(album),
         source,
-        lyrics: toLatin(rawLyrics),
+        lyrics: (window.SP_LYRICS_CLEAN ? window.SP_LYRICS_CLEAN.cleanPastedLyrics(toLatin(rawLyrics)) : toLatin(rawLyrics)),
         language: entry.languageHint || (script === 'kannada' ? 'Kannada' : (script === 'tamil' ? 'Tamil' : 'English')),
         converted: script !== 'latin'
       };

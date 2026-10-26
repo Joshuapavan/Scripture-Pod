@@ -8,7 +8,7 @@
     return v;
   };
   const api = {};
-  ['getDisplays', 'openOutput', 'closeOutput', 'isOutputOpen', 'openFeed', 'closeFeed', 'isFeedOpen', 'relayClientCount', 'fetchText', 'listDevices', 'getReceiver', 'setReceiver', 'closeRemote', 'getRemote', 'setRemoteEnabled', 'pollRemote', 'setRemoteState', 'openStage', 'closeStage', 'isStageOpen', 'pickFolder', 'getAppInfo', 'checkUpdate', 'openReleasePage', 'writeBackupFile', 'getBrowserDisplay', 'listJoins', 'allowIp', 'decideJoin', 'scanNetwork', 'connectDevice', 'disconnectDevice',
+  ['getDisplays', 'openOutput', 'closeOutput', 'isOutputOpen', 'openFeed', 'closeFeed', 'isFeedOpen', 'relayClientCount', 'fetchText', 'listDevices', 'getReceiver', 'setReceiver', 'closeRemote', 'getRemote', 'setRemoteEnabled', 'pollRemote', 'setRemoteState', 'openStage', 'closeStage', 'isStageOpen', 'pickFolder', 'getAppInfo', 'checkUpdate', 'openReleasePage', 'writeBackupFile', 'getBrowserDisplay', 'listJoins', 'allowIp', 'decideJoin', 'scanNetwork', 'connectDevice', 'disconnectDevice', 'startUpdateDownload', 'getUpdateProgress', 'openDownloadedUpdate',
     'sendWebSocketOutputMessage', 'requestOutputFullscreen', 'getLocalServerInfo',
     'listBundledBibleFiles', 'readBundledBibleFile', 'readBundledChurchLogo', 'cacheBackgroundMedia', 'copyText',
     'openBackup'].forEach((n) => { api[n] = call(n); });

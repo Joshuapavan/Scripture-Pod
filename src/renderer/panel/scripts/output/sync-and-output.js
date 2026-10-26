@@ -117,6 +117,8 @@
         name: String(document.getElementById('name-role-overlay-name')?.value || '').trim(),
         role: String(document.getElementById('name-role-overlay-role')?.value || '').trim(),
         style: getNameRoleOverlayStyle(),
+        customDesign: String(document.getElementById('name-role-overlay-design')?.value || '').endsWith('-custom') ? getActiveCustomLtDesign() : null,
+        customVars: (String(document.getElementById('name-role-overlay-design')?.value || '').endsWith('-custom') && getActiveCustomLtDesign() && window.SP_LT_EXTRA) ? window.SP_LT_EXTRA.customVars(getActiveCustomLtDesign()) : null,
         primaryColor: document.getElementById('name-role-overlay-primary')?.value || '#90D5FF',
         accentColor: document.getElementById('name-role-overlay-accent')?.value || '#90D5FF',
         logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',
@@ -467,7 +469,8 @@ ${getLtThumbCss()}
       const doc = frame.contentDocument;
       const overlay = doc && doc.getElementById('name-role-overlay');
       if (!overlay) return;
-      const [layout, theme] = String(value).split('-');
+      const isCustomTile = String(value).startsWith('custom:');
+      const [layout, theme] = isCustomTile ? ['classic', 'custom'] : String(value).split('-');
       const light = ltThumbIsLight(sample.primary);
       overlay.className = `is-visible style-${layout} theme-${theme} motion-rise${light ? ' is-light-background' : ''}`;
       overlay.style.setProperty('--name-role-primary', sample.primary);
@@ -477,6 +480,7 @@ ${getLtThumbCss()}
       overlay.style.setProperty('--name-role-role-size', '24px');
       overlay.querySelector('.name-role-overlay-name').textContent = sample.name;
       overlay.querySelector('.name-role-overlay-role').textContent = sample.role;
+      if (window.SP_LT_EXTRA) window.SP_LT_EXTRA.applyCustom(overlay, isCustomTile ? loadCustomLtDesigns().find(d => d.id === String(value).slice(7)) : null, isCustomTile);
       frame.dataset.painted = '1';
     }
 
@@ -494,7 +498,7 @@ ${getLtThumbCss()}
     }
 
     function buildLtDesignThumb(value) {
-      const [layout] = String(value).split('-');
+      const [layout] = String(value).startsWith('custom:') ? ['classic'] : String(value).split('-');
       const thumb = document.createElement('span');
       thumb.className = `lt-design-thumb is-${layout}`;
       thumb.dataset.layout = layout;
@@ -541,7 +545,7 @@ ${getLtThumbCss()}
       if (!groups.length) return;
       const current = select.value;
       const currentGroup = groups.find(g => Array.from(g.children).some(o => o.value === current)) || groups[0];
-      if (!groups.some(g => g.label === ltDesignPickerFamily)) ltDesignPickerFamily = currentGroup.label;
+      if (ltDesignPickerFamily !== MY_LT_DESIGNS_LABEL && !groups.some(g => g.label === ltDesignPickerFamily)) ltDesignPickerFamily = currentGroup.label;
 
       // Toolbar (search, family tabs, count) is built once so the search box keeps focus
       let toolbar = host.querySelector('.lt-design-toolbar');
@@ -582,26 +586,35 @@ ${getLtThumbCss()}
           tab.onclick = () => { ltDesignPickerFamily = group.label; renderLtDesignPicker(); };
           familiesEl.appendChild(tab);
         });
+        const mine = document.createElement('button');
+        mine.type = 'button';
+        mine.className = 'lt-design-family';
+        mine.textContent = MY_LT_DESIGNS_LABEL;
+        mine.dataset.family = MY_LT_DESIGNS_LABEL;
+        mine.onclick = () => { ltDesignPickerFamily = MY_LT_DESIGNS_LABEL; renderLtDesignPicker(); };
+        familiesEl.appendChild(mine);
       }
       familiesEl.querySelectorAll('.lt-design-family').forEach(tab => {
         tab.setAttribute('aria-pressed', tab.dataset.family === ltDesignPickerFamily ? 'true' : 'false');
       });
       const total = groups.reduce((n, g) => n + g.children.length, 0);
-      const options = ltDesignOptions(groups);
+      const options = (!searching && ltDesignPickerFamily === MY_LT_DESIGNS_LABEL) ? customLtDesignOptions() : ltDesignOptions(groups);
       toolbar.querySelector('.lt-design-count').textContent = searching
         ? `${options.length} of ${total} designs`
         : `${total} designs in ${groups.length} families`;
       grid.setAttribute('aria-label', searching ? 'Matching designs' : `${ltDesignPickerFamily} designs`);
+      const showingMine = !searching && ltDesignPickerFamily === MY_LT_DESIGNS_LABEL;
 
       // Rebuild the tiles only when the set shown changes; otherwise just refresh them
-      const key = options.map(o => o.value).join('|');
+      const key = (showingMine ? 'mine:' + JSON.stringify(loadCustomLtDesigns()) + '|' : '') + options.map(o => o.value).join('|');
       if (grid.dataset.key !== key) {
         grid.dataset.key = key;
         if (!options.length) {
           const none = document.createElement('p');
           none.className = 'lt-design-none';
-          none.textContent = 'No designs match.';
+          none.textContent = showingMine ? 'You have not made a design yet.' : 'No designs match.';
           grid.replaceChildren(none);
+          if (showingMine) grid.appendChild(buildCreateLtDesignTile());
         } else {
           grid.replaceChildren(...options.map((option) => {
             const tile = document.createElement('button');
@@ -612,15 +625,24 @@ ${getLtThumbCss()}
             label.className = 'lt-design-label';
             label.textContent = option.label;
             tile.append(buildLtDesignThumb(option.value), label);
-            tile.onclick = () => pickLtDesign(option.value);
+            if (option.value.startsWith('custom:')) {
+              tile.onclick = () => pickCustomLtDesign(option.value.slice(7));
+              const edit = document.createElement('span');
+              edit.className = 'lt-design-edit'; edit.setAttribute('role', 'button'); edit.title = 'Edit this design'; edit.textContent = 'Edit';
+              edit.onclick = (e) => { e.stopPropagation(); openLtDesigner(option.value.slice(7)); };
+              tile.appendChild(edit);
+            } else tile.onclick = () => pickLtDesign(option.value);
             return tile;
           }));
+          if (showingMine) grid.appendChild(buildCreateLtDesignTile());
         }
       } else {
         refreshLtThumbs();
       }
+      const activeCustomId = current.endsWith('-custom') ? getActiveCustomLtDesignId() : '';
       grid.querySelectorAll('.lt-design-tile').forEach(tile => {
-        tile.setAttribute('aria-pressed', tile.dataset.value === current ? 'true' : 'false');
+        const v = tile.dataset.value || '';
+        tile.setAttribute('aria-pressed', (v.startsWith('custom:') ? (v.slice(7) === activeCustomId) : v === current) ? 'true' : 'false');
       });
     }
 
@@ -1558,6 +1580,8 @@ ${getLtThumbCss()}
           name: String(document.getElementById('name-role-overlay-name')?.value || '').trim(),
           role: String(document.getElementById('name-role-overlay-role')?.value || '').trim(),
           style: getNameRoleOverlayStyle(),
+          customDesign: String(document.getElementById('name-role-overlay-design')?.value || '').endsWith('-custom') ? getActiveCustomLtDesign() : null,
+        customVars: (String(document.getElementById('name-role-overlay-design')?.value || '').endsWith('-custom') && getActiveCustomLtDesign() && window.SP_LT_EXTRA) ? window.SP_LT_EXTRA.customVars(getActiveCustomLtDesign()) : null,
           primaryColor: document.getElementById('name-role-overlay-primary')?.value || '#90D5FF',
           accentColor: document.getElementById('name-role-overlay-accent')?.value || '#90D5FF',
           logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',

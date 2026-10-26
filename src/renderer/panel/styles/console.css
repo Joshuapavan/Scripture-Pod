@@ -2801,3 +2801,25 @@ select option, select optgroup {
 
 /* Long song and verse lists: rows off screen are not laid out or painted until they scroll into view */
 #song-list .song-item { content-visibility: auto; contain-intrinsic-size: auto 44px; }
+/* ── Lower-third designer ────────────────────────────────────────────────── */
+.lt-design-create { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 120px; border-style: dashed !important; }
+.lt-design-create-plus { font-size: 28px; line-height: 1; color: var(--sp-subtle); }
+.lt-design-tile { position: relative; }
+.lt-design-edit { position: absolute; top: 6px; right: 6px; padding: 2px 8px; border-radius: 6px; background: var(--sp-card); border: 1px solid var(--sp-line); font-size: 11px; cursor: pointer; opacity: 0; transition: opacity 120ms ease; }
+.lt-design-tile:hover .lt-design-edit, .lt-design-tile:focus-within .lt-design-edit { opacity: 1; }
+.lt-designer { width: min(1040px, calc(100vw - 32px)); max-height: calc(100vh - 48px); display: flex; flex-direction: column; gap: 12px; padding: 18px 20px; }
+.lt-designer-head { display: flex; align-items: center; gap: 12px; }
+.lt-designer-head h3 { margin: 0; font-size: 16px; flex: 1; }
+.lt-designer-head input { width: 240px; height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background: var(--sp-inset); color: var(--sp-text); }
+.lt-designer-body { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 18px; min-height: 0; overflow: hidden; }
+.lt-designer-controls { overflow-y: auto; max-height: calc(100vh - 220px); padding-right: 8px; }
+.lt-designer-controls section { margin-bottom: 14px; }
+.lt-designer-controls h4 { margin: 0 0 6px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--sp-subtle); }
+.lt-designer-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px; padding: 4px 0; font-size: 13px; }
+.lt-designer-row input[type="range"] { width: 120px; }
+.lt-designer-row output { min-width: 40px; text-align: right; font: 500 12px var(--sp-mono, ui-monospace, monospace); color: var(--sp-subtle); }
+.lt-designer-row select { height: 28px; border-radius: 6px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); }
+.lt-designer-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 10px; background: #000; }
+.lt-designer-stage iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: top left; pointer-events: none; }
+.lt-designer-foot { display: flex; align-items: center; gap: 8px; }
+.lt-designer-save { background: var(--sp-text); color: var(--sp-ground); }

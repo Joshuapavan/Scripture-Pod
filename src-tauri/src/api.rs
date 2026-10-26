@@ -137,6 +137,63 @@ fn scan_network(state: &Arc<AppState>) -> Value {
     }).collect::<Vec<_>>())
 }
 
+// ── In-app update download ───────────────────────────────────────────────────
+// The installer for this computer is downloaded from the project's GitHub release into the Downloads
+// folder, with progress, and can then be opened. Only that project's release files are allowed.
+#[derive(Clone, Default)]
+struct UpdateProgress { state: String, received: u64, total: u64, path: String, error: String }
+static UPDATE: std::sync::Mutex<Option<UpdateProgress>> = std::sync::Mutex::new(None);
+const RELEASE_PREFIX: &str = "https://github.com/Joshuapavan/Scripture-Pod-V2/releases/download/";
+
+// The file of a release that suits this computer (system and processor)
+fn pick_asset(assets: &Value) -> Value {
+    let list = assets.as_array().cloned().unwrap_or_default();
+    let name = |a: &Value| a["name"].as_str().unwrap_or("").to_lowercase();
+    let arm = cfg!(target_arch = "aarch64");
+    let ends = |a: &Value, e: &[&str]| e.iter().any(|x| name(a).ends_with(x));
+    let arch_ok = |a: &Value| { let n = name(a); if arm { n.contains("aarch64") || n.contains("arm64") } else { n.contains("x64") || n.contains("x86_64") || n.contains("amd64") || !(n.contains("aarch64") || n.contains("arm64")) } };
+    let want: &[&str] = if cfg!(target_os = "macos") { &[".dmg"] } else if cfg!(target_os = "windows") { &[".exe", ".msi"] } else { &[".appimage", ".deb"] };
+    let pick = list.iter().find(|a| ends(a, want) && arch_ok(a)).or_else(|| list.iter().find(|a| ends(a, want)));
+    match pick { Some(a) => json!({"name": a["name"], "url": a["browser_download_url"], "size": a["size"]}), None => Value::Null }
+}
+
+fn start_update_download(app: &AppHandle, arg: &Value) -> Value {
+    let url = arg["url"].as_str().unwrap_or("").to_string();
+    let name = arg["name"].as_str().unwrap_or("").to_string();
+    if !url.starts_with(RELEASE_PREFIX) || name.is_empty() || name.contains('/') || name.contains('\\') { return json!({"error": "That download is not allowed"}); }
+    if UPDATE.lock().unwrap().as_ref().map(|u| u.state == "downloading").unwrap_or(false) { return json!({"ok": true}); }
+    let Ok(dir) = app.path().download_dir() else { return json!({"error": "There is no Downloads folder"}); };
+    let total = arg["size"].as_u64().unwrap_or(0);
+    *UPDATE.lock().unwrap() = Some(UpdateProgress { state: "downloading".into(), total, ..Default::default() });
+    std::thread::spawn(move || {
+        let fail = |m: String| { let mut g = UPDATE.lock().unwrap(); let p = g.get_or_insert_with(Default::default); p.state = "error".into(); p.error = m; };
+        let agent = ureq::AgentBuilder::new().timeout_connect(std::time::Duration::from_secs(15)).build();
+        let resp = match agent.get(&url).set("User-Agent", "scripture-pod").call() { Ok(r) => r, Err(e) => return fail(format!("Download failed: {}", e)) };
+        let size = resp.header("Content-Length").and_then(|v| v.parse::<u64>().ok()).unwrap_or(total);
+        if let Some(p) = UPDATE.lock().unwrap().as_mut() { p.total = size; }
+        let part = dir.join(format!("{}.part", name));
+        let Ok(mut file) = std::fs::File::create(&part) else { return fail("Could not write to the Downloads folder".into()) };
+        let mut reader = resp.into_reader();
+        let mut buf = vec![0u8; 64 * 1024];
+        let mut got: u64 = 0;
+        use std::io::{Read, Write};
+        loop {
+            match reader.read(&mut buf) {
+                Ok(0) => break,
+                Ok(n) => { if file.write_all(&buf[..n]).is_err() { return fail("Could not write to the Downloads folder".into()); } got += n as u64; if let Some(p) = UPDATE.lock().unwrap().as_mut() { p.received = got; } }
+                Err(e) => return fail(format!("Download interrupted: {}", e)),
+            }
+        }
+        drop(file);
+        if size > 0 && got != size { let _ = std::fs::remove_file(&part); return fail("The download was incomplete".into()); }
+        let done = dir.join(&name);
+        let _ = std::fs::remove_file(&done);
+        if std::fs::rename(&part, &done).is_err() { return fail("Could not finish the download".into()); }
+        if let Some(p) = UPDATE.lock().unwrap().as_mut() { p.state = "done".into(); p.received = got; p.path = done.to_string_lossy().to_string(); }
+    });
+    json!({"ok": true})
+}
+
 pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, body: &str) -> Value {
     let arg: Value = serde_json::from_str(body).unwrap_or(Value::Null);
     let err = |m: &str| json!({"error": m});
@@ -283,10 +340,22 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
             match agent.get("https://api.github.com/repos/Joshuapavan/Scripture-Pod-V2/releases/latest").set("User-Agent", "scripture-pod").set("Accept", "application/vnd.github+json").call() {
                 Ok(resp) => {
                     let v: Value = serde_json::from_str(&resp.into_string().unwrap_or_default()).unwrap_or(Value::Null);
-                    json!({"tag": v["tag_name"], "name": v["name"], "url": v["html_url"]})
+                    json!({"tag": v["tag_name"], "name": v["name"], "url": v["html_url"], "asset": pick_asset(&v["assets"])})
                 }
                 Err(e) => err(&format!("Could not check for updates: {}", e)),
             }
+        }
+        "startUpdateDownload" => start_update_download(app, &arg),
+        "getUpdateProgress" => {
+            let p = UPDATE.lock().unwrap().clone().unwrap_or_default();
+            json!({"state": if p.state.is_empty() { "idle" } else { p.state.as_str() }, "received": p.received, "total": p.total, "path": p.path, "error": p.error})
+        }
+        "openDownloadedUpdate" => {
+            // open the installer, or show it in its folder: only the file this download made
+            let path = UPDATE.lock().unwrap().as_ref().map(|u| u.path.clone()).unwrap_or_default();
+            if path.is_empty() { return err("Nothing has been downloaded"); }
+            if arg["reveal"].as_bool().unwrap_or(false) { let _ = app.opener().reveal_item_in_dir(&path); } else { let _ = app.opener().open_path(&path, None::<&str>); }
+            json!({"ok": true})
         }
         "openReleasePage" => {
             let url = arg.as_str().unwrap_or("");

@@ -321,6 +321,23 @@
       ].join('|');
     }
 
+    // A section or verse longer than the Lines setting is shown in pieces of that many lines (Lines 2 turns a
+    // 4-line verse into two slides). With Lines 1 (the default) a whole section stays one slide.
+    function splitSongPagesByLines(pages, perPage) {
+      const n = Math.max(1, Number(perPage) || 1);
+      if (n < 2) return pages;
+      const out = [];
+      pages.forEach((page) => {
+        const rows = String(page.raw || '').split('\n').filter((l) => l.trim());
+        if (rows.length <= n) { out.push(page); return; }
+        for (let i = 0; i < rows.length; i += n) {
+          const chunk = rows.slice(i, i + n);
+          out.push({ ...page, raw: chunk.join('\n'), text: renderSongPageHtml(chunk) });
+        }
+      });
+      return out;
+    }
+
     function getPagesFromItem(item, isBible, lineCountOverride = null) {
       if (!item) return [];
       const cacheKey = getPagesCacheKey(item, isBible, lineCountOverride);
@@ -364,7 +381,7 @@
           return setBoundedCacheValue(
             ITEM_PAGES_CACHE,
             cacheKey,
-            buildSongSectionPages(filteredLines, categoryTag || tag),
+            splitSongPagesByLines(buildSongSectionPages(filteredLines, categoryTag || tag), effectiveLinesPerPage),
             ITEM_PAGES_CACHE_LIMIT
           );
         }
@@ -423,6 +440,7 @@
             }
           });
           flushVerse();
+          return setBoundedCacheValue(ITEM_PAGES_CACHE, cacheKey, splitSongPagesByLines(pages, effectiveLinesPerPage), ITEM_PAGES_CACHE_LIMIT);
         } else {
           filteredLines.forEach((line) => {
             const trimmed = String(line || '').trim();

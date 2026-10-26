@@ -11,7 +11,7 @@
  * No backticks or template placeholders may appear in the CSS below.
  */
 (function (root) {
-  var THEMES = ['aurora', 'sunrise', 'royal', 'minimal', 'pill', 'holo', 'frost', 'cinema', 'sharp', 'emerald', 'pulse', 'parchment', 'sapphire', 'crimson', 'forest', 'graphite', 'rose', 'ocean', 'amber', 'violet', 'outline', 'halo', 'chapel', 'duobar', 'duoblock', 'duorule', 'duoghost', 'duotag', 'duoslant', 'duoflag', 'duopill'];
+  var THEMES = ['aurora', 'sunrise', 'royal', 'minimal', 'pill', 'holo', 'frost', 'cinema', 'sharp', 'emerald', 'pulse', 'parchment', 'sapphire', 'crimson', 'forest', 'graphite', 'rose', 'ocean', 'amber', 'violet', 'outline', 'halo', 'chapel', 'duobar', 'duoblock', 'duorule', 'duoghost', 'duotag', 'duoslant', 'duoflag', 'duopill', 'custom'];
   var MOTIONS = ['bounce', 'elastic', 'iris', 'slice', 'swing', 'turn', 'cascade', 'typewriter', 'glitch', 'flicker'];
 
   var P = 'var(--name-role-primary,#90D5FF)';
@@ -212,6 +212,14 @@
     /* Overall size of the whole lower third */
     O + CARD + '{zoom:var(--name-role-scale,1);}',
 
+
+    /* ══ My design: a lower third built in the designer. Every look comes from --cd-* variables set from the
+       saved design (see customVars). Name and role are two layers. ═══════════════════════════════════════ */
+    t('custom') + CARD + '{border-radius:0;color:#fff;align-items:center;gap:18px;}',
+    t('custom') + ' .name-role-overlay-copy{gap:var(--cd-gap,6px);align-items:flex-start;}',
+    t('custom') + NAME + '{display:inline-block;background:var(--cd-name-bg,#fff);color:var(--cd-name-fg,#0b0d10);padding:.08em var(--cd-pad,.5em) .14em;border-radius:var(--cd-radius,0);transform:skewX(var(--cd-skew,0deg));font-family:var(--cd-font,inherit);font-weight:var(--cd-weight,700);text-transform:var(--cd-case,none);letter-spacing:var(--cd-ls,0);border:var(--cd-border,0);border-left:var(--cd-accent,var(--cd-border,0));box-shadow:var(--cd-shadow,none);}',
+    t('custom') + ROLE + '{display:inline-block;background:var(--cd-role-bg,#e8365d);color:var(--cd-role-fg,#fff);padding:.16em calc(var(--cd-pad,.5em)*1.2);border-radius:var(--cd-radius,0);transform:skewX(var(--cd-skew,0deg));font-family:var(--cd-font,inherit);font-weight:var(--cd-weight,700);text-transform:var(--cd-case,none);letter-spacing:var(--cd-ls,0);border:var(--cd-border,0);box-shadow:var(--cd-shadow,none);margin-left:var(--cd-role-indent,0px);}',
+
     /* Left and right padding: space between the lower third and the screen edges (swapped for the mirrored Right layout) */
     O + '.has-pad' + CARD + '{margin-left:var(--name-role-pad-l,0px);margin-right:var(--name-role-pad-r,0px);}',
     O + '.has-pad' + CARD + '{max-width:calc(86vw - var(--name-role-pad-l,0px) - var(--name-role-pad-r,0px));}',
@@ -272,7 +280,64 @@
     '@media (prefers-reduced-motion:reduce){' + O + ' *{animation-duration:.01ms !important;transition-duration:.01ms !important;}}'
   ].join('\n');
 
-  root.SP_LT_EXTRA = { themes: THEMES, motions: MOTIONS, css: css };
+  // The designer's settings, and the CSS variables a saved design turns into
+  var CUSTOM_DEFAULTS = {
+    name: 'My design', nameBg: '#ffffff', nameFg: '#0b0d10', nameBgOpacity: 100,
+    roleBg: '#e8365d', roleFg: '#ffffff', roleBgOpacity: 100,
+    radius: 0, skew: 0, gap: 6, padding: 50, roleIndent: 0,
+    accentColor: '#e8365d', accentWidth: 0, borderColor: '#ffffff', borderWidth: 0,
+    font: 'Montserrat', weight: 700, caseStyle: 'upper', letterSpacing: 0, shadow: true
+  };
+  function clampNum(v, lo, hi, fallback) { var n = Number(v); return isNaN(n) ? fallback : Math.max(lo, Math.min(hi, n)); }
+  function hexOr(v, fallback) { return /^#[0-9a-f]{6}$/i.test(String(v || '')) ? v : fallback; }
+  function normalizeCustom(d) {
+    d = d || {};
+    var o = {};
+    for (var k in CUSTOM_DEFAULTS) o[k] = d[k] === undefined || d[k] === null ? CUSTOM_DEFAULTS[k] : d[k];
+    o.nameBg = hexOr(o.nameBg, '#ffffff'); o.nameFg = hexOr(o.nameFg, '#0b0d10'); o.roleBg = hexOr(o.roleBg, '#e8365d'); o.roleFg = hexOr(o.roleFg, '#ffffff');
+    o.accentColor = hexOr(o.accentColor, '#e8365d'); o.borderColor = hexOr(o.borderColor, '#ffffff');
+    o.nameBgOpacity = clampNum(o.nameBgOpacity, 0, 100, 100); o.roleBgOpacity = clampNum(o.roleBgOpacity, 0, 100, 100);
+    o.radius = clampNum(o.radius, 0, 40, 0); o.skew = clampNum(o.skew, -20, 20, 0); o.gap = clampNum(o.gap, 0, 40, 6);
+    o.padding = clampNum(o.padding, 0, 150, 50); o.roleIndent = clampNum(o.roleIndent, 0, 200, 0);
+    o.accentWidth = clampNum(o.accentWidth, 0, 24, 0); o.borderWidth = clampNum(o.borderWidth, 0, 10, 0);
+    o.weight = [400, 500, 600, 700, 800, 900].indexOf(Number(o.weight)) >= 0 ? Number(o.weight) : 700;
+    o.letterSpacing = clampNum(o.letterSpacing, -2, 12, 0);
+    o.caseStyle = ['upper', 'lower', 'none', 'title'].indexOf(o.caseStyle) >= 0 ? o.caseStyle : 'upper';
+    o.font = ['Montserrat', 'Geist', 'Source Serif 4', 'Georgia', 'Arial', 'Impact'].indexOf(o.font) >= 0 ? o.font : 'Montserrat';
+    o.shadow = !!o.shadow;
+    return o;
+  }
+  function customVars(design) {
+    var d = normalizeCustom(design);
+    var fam = { 'Montserrat': "'Montserrat',sans-serif", 'Geist': "'Geist',sans-serif", 'Source Serif 4': "'Source Serif 4',Georgia,serif", 'Georgia': 'Georgia,serif', 'Arial': 'Arial,sans-serif', 'Impact': 'Impact,sans-serif' }[d.font];
+    return {
+      '--cd-name-bg': 'color-mix(in srgb,' + d.nameBg + ' ' + d.nameBgOpacity + '%,transparent)',
+      '--cd-name-fg': d.nameFg,
+      '--cd-role-bg': 'color-mix(in srgb,' + d.roleBg + ' ' + d.roleBgOpacity + '%,transparent)',
+      '--cd-role-fg': d.roleFg,
+      '--cd-radius': d.radius + 'px',
+      '--cd-skew': (-d.skew) + 'deg',
+      '--cd-gap': d.gap + 'px',
+      '--cd-pad': (d.padding / 100) + 'em',
+      '--cd-role-indent': d.roleIndent + 'px',
+      '--cd-font': fam,
+      '--cd-weight': String(d.weight),
+      '--cd-case': { upper: 'uppercase', lower: 'lowercase', none: 'none', title: 'capitalize' }[d.caseStyle],
+      '--cd-ls': (d.letterSpacing / 100) + 'em',
+      '--cd-border': d.borderWidth ? d.borderWidth + 'px solid ' + d.borderColor : '0',
+      '--cd-accent': d.accentWidth ? d.accentWidth + 'px solid ' + d.accentColor : (d.borderWidth ? d.borderWidth + 'px solid ' + d.borderColor : '0'),
+      '--cd-shadow': d.shadow ? '0 10px 28px rgba(0,0,0,.4)' : 'none'
+    };
+  }
+  // Put a design's variables on an overlay element (and take them off for any other design)
+  function applyCustom(overlay, design, active) {
+    var names = Object.keys(customVars({}));
+    if (!active) { names.forEach(function (n) { overlay.style.removeProperty(n); }); return; }
+    var vars = customVars(design);
+    Object.keys(vars).forEach(function (n) { overlay.style.setProperty(n, vars[n]); });
+  }
+
+  root.SP_LT_EXTRA = { themes: THEMES, motions: MOTIONS, css: css, customDefaults: CUSTOM_DEFAULTS, normalizeCustom: normalizeCustom, customVars: customVars, applyCustom: applyCustom };
 
   /* Display page helper: inject the CSS once. */
   root.SP_LT_EXTRA.inject = function (doc) {

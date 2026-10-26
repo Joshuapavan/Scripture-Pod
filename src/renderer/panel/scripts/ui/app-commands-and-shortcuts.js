@@ -189,10 +189,11 @@
       const artist = (artistInput?.value || '').trim();
       // Kannada and Tamil script is stored as typed English
       const toTyped = (text) => (window.SP_TRANSLIT && window.SP_TRANSLIT.detectScript(text) !== 'latin') ? window.SP_TRANSLIT.toTypedEnglish(text) : text;
-      const pastedLyrics = toTyped((lyricsInput?.value || '').trim());
+      const tidy = (text) => (window.SP_LYRICS_CLEAN ? window.SP_LYRICS_CLEAN.cleanPastedLyrics(text) : text);
+      const pastedLyrics = tidy(toTyped((lyricsInput?.value || '').trim()));
       let title = toTyped((input.value || '').trim());
       const lookupKey = getNewSongLookupKey(title, artist);
-      const fetchedLyrics = (lookupKey === newSongFetchedLookupKey) ? newSongFetchedLyrics : '';
+      const fetchedLyrics = (lookupKey === newSongFetchedLookupKey) ? tidy(newSongFetchedLyrics) : '';
       // Pasted lyrics are sliced into sections the same way fetched ones are
       const initialContent = pastedLyrics ? inferSectionedLyricsFromText(pastedLyrics) : (fetchedLyrics || '');
       if (!title && initialContent) {
@@ -305,6 +306,28 @@
       setTimeout(() => { if (![...document.querySelectorAll('.modal-overlay')].some((m) => m.style.display === 'flex')) openShortcutsWindow(); }, 500);
     }
 
+    // Lyrics pasted from the web lose their verse numbers and repeat marks (1., x2, (x4), xn …) as they are pasted
+    function setupLyricPasteCleaning() {
+      ['new-song-lyrics', 'lyric-editor'].forEach((id) => {
+        const ta = document.getElementById(id);
+        if (!ta || ta.dataset.pasteClean) return;
+        ta.dataset.pasteClean = '1';
+        ta.addEventListener('paste', (e) => {
+          const text = e.clipboardData && e.clipboardData.getData('text');
+          if (!text || !window.SP_LYRICS_CLEAN) return;
+          const cleaned = window.SP_LYRICS_CLEAN.cleanPastedLyrics(text);
+          if (cleaned === text) return;
+          e.preventDefault();
+          const start = ta.selectionStart || 0, end = ta.selectionEnd || start;
+          ta.value = ta.value.slice(0, start) + cleaned + ta.value.slice(end);
+          ta.selectionStart = ta.selectionEnd = start + cleaned.length;
+          ta.dispatchEvent(new Event('input', { bubbles: true }));
+          if (typeof showToast === 'function') showToast('Tidied the pasted lyrics: verse numbers and repeat marks removed');
+        });
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupLyricPasteCleaning); else setupLyricPasteCleaning();
+
     function setupKeyboardShortcuts() {
       document.addEventListener('keydown', (e) => {
         const target = e.target;
@@ -369,6 +392,7 @@
           if (navigator.clipboard?.readText) {
             navigator.clipboard.readText().then((text) => {
               if (typeof text !== 'string' || !text.length) return;
+              if (window.SP_LYRICS_CLEAN) text = window.SP_LYRICS_CLEAN.cleanPastedLyrics(text);
               const start = editor.selectionStart || 0;
               const end = editor.selectionEnd || 0;
               editor.value = editor.value.slice(0, start) + text + editor.value.slice(end);
@@ -411,18 +435,12 @@
           switchBottomNavSidebarTab(next);
           return;
         }
-        if (sidebarTab === 'bible') {
-          // Bible: up and down move through the verses, left and right through the chapters
-          if (e.key === 'ArrowDown') { e.preventDefault(); nextSlide(); }
-          if (e.key === 'ArrowUp') { e.preventDefault(); prevSlide(); }
-          if (e.key === 'ArrowRight') { e.preventDefault(); navigateSidebar(1); }
-          if (e.key === 'ArrowLeft') { e.preventDefault(); navigateSidebar(-1); }
-        } else {
-          if (e.key === 'ArrowRight') { e.preventDefault(); nextSlide(); }
-          if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
-          if (e.key === 'ArrowDown') { e.preventDefault(); navigateSidebar(1); }
-          if (e.key === 'ArrowUp') { e.preventDefault(); navigateSidebar(-1); }
-        }
+        // Bible and lyrics use the same keys: up and down move through the verses or slides,
+        // left and right through the chapters or songs
+        if (e.key === 'ArrowDown') { e.preventDefault(); nextSlide(); }
+        if (e.key === 'ArrowUp') { e.preventDefault(); prevSlide(); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); navigateSidebar(1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); navigateSidebar(-1); }
         if (e.key === 'Enter') { e.preventDefault(); projectLive(true); }
         // Number keys 1-6: set lines in main panel
         const num = parseInt(e.key, 10);
