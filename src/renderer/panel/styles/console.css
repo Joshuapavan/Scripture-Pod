@@ -2894,3 +2894,19 @@ select option, select optgroup {
 .sk-device { padding: 10px; }
 @keyframes sk-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
+
+/* ── Connected displays list (click the Display Online pill) ───────────── */
+#app-topbar #status-bar { cursor: pointer; }
+#display-list-card {
+  display: none; position: fixed; z-index: 1200; width: 320px; max-height: 70vh; overflow: auto;
+  padding: 12px; border-radius: 12px; background: var(--sp-card); border: 1px solid var(--sp-line);
+  box-shadow: 0 12px 32px rgba(0,0,0,.35); color: var(--sp-text);
+}
+#display-list-card.is-open { display: block; }
+#display-list-card h3 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+#display-list-card p { margin: 0; font-size: 12px; color: var(--sp-muted, var(--sp-text)); opacity: .75; }
+#display-list-card .display-list-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--sp-line); }
+#display-list-card .display-list-row:first-of-type { border-top: 0; }
+#display-list-card .display-list-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sp-ok); flex: 0 0 auto; }
+#display-list-card strong { display: block; font-size: 13px; font-weight: 600; }
+#display-list-card small { display: block; font-size: 11px; opacity: .7; }

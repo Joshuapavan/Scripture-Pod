@@ -50,7 +50,7 @@ pub fn local_server_info(state: &AppState) -> Value {
 
 // Lyrics sites that do not allow requests from a web page are fetched here, from the app itself.
 // Only these hosts, over https, are allowed.
-const FETCH_HOSTS: [&str; 1] = ["tamilchristiansongs.in"];
+const FETCH_HOSTS: [&str; 3] = ["tamilchristiansongs.in", "waytochurch.com", "kannadateluguchristiansongslyrics.blogspot.com"];
 
 fn fetch_text(arg: &Value) -> Value {
     let url = arg["url"].as_str().unwrap_or("");

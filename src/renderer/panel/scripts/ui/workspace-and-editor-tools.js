@@ -1984,6 +1984,74 @@
       return pages.filter(Boolean);
     }
 
+    // More Tamil and Kannada sources, so one site being down or missing a song does not end the search.
+    // waytochurch.com lists its songs by language and first letter (titles already in English letters) and
+    // each song page has an English (typed) tab. The Blogger site is searched through Blogger's public feed.
+    const looseWord = (w) => String(w || '').toLowerCase().replace(/[^a-z]/g, '').replace(/(.)\1+/g, '$1').replace(/[aeiou]/g, '');
+    function titleMatchScore(query, title) {
+      const q = String(query || '').toLowerCase().split(/\s+/).map(looseWord).filter(Boolean);
+      const t = String(title || '').toLowerCase().split(/\s+/).map(looseWord).filter(Boolean);
+      if (!q.length || !t.length) return 0;
+      let hit = 0;
+      q.forEach((w) => { if (t.some((x) => x === w || (w.length >= 3 && x.length >= 3 && (x.startsWith(w) || w.startsWith(x))))) hit++; });
+      return hit / q.length;
+    }
+    async function searchWaytochurch(query, language, limit = 3) {
+      const q = String(query || '').trim();
+      const lang = language === 'tamil' ? 'tamil' : 'kannada';
+      const letters = Array.from(new Set(q.split(/\s+/).slice(0, 2).map((w) => w.replace(/[^A-Za-z]/g, '').charAt(0)).filter(Boolean)));
+      const lists = await Promise.all(letters.flatMap((c) => Array.from(new Set([c.toUpperCase(), c.toLowerCase()]))
+        .map((l) => fetchFromSite(`https://waytochurch.com/lyrics/list/${lang}-${l}`))));
+      const seen = new Set();
+      const cands = [];
+      lists.forEach((html) => {
+        const re = /href=['"](https:\/\/waytochurch\.com\/lyrics\/song\/\d+\/[^'"]+)['"][^>]*>([^<]+)</g;
+        let m;
+        while ((m = re.exec(html))) {
+          if (seen.has(m[1])) continue;
+          seen.add(m[1]);
+          cands.push({ url: m[1], title: m[2].replace(/\s+/g, ' ').trim(), score: titleMatchScore(q, m[2]) });
+        }
+      });
+      const best = cands.filter((c) => c.score >= 0.6).sort((a, b) => b.score - a.score).slice(0, limit);
+      const pages = await Promise.all(best.map(async (c) => {
+        const html = await fetchFromSite(c.url);
+        if (!html) return null;
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const read = (box) => {
+          if (!box) return '';
+          box.querySelectorAll('br').forEach((b) => b.replaceWith('\n'));
+          return (box.textContent || '').replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+        };
+        let lyrics = read(doc.querySelector('#english'));
+        // Some songs only have the original tab: use it when it is real Tamil/Kannada script (it is then
+        // converted to typed English), not the old-font text some Kannada pages hold
+        if (lyrics.length < 20) {
+          const original = read(doc.querySelector('#original'));
+          const script = window.SP_TRANSLIT ? window.SP_TRANSLIT.detectScript(original) : 'latin';
+          lyrics = script !== 'latin' ? original : '';
+        }
+        if (lyrics.length < 20) return null;
+        return { title: c.title, artist: '', album: '', source: 'waytochurch.com', lyrics, worship: true, languageHint: lang === 'tamil' ? 'Tamil' : 'Kannada' };
+      }));
+      return pages.filter(Boolean);
+    }
+    async function searchKannadaBlog(query, limit = 3) {
+      const q = String(query || '').trim();
+      if (!q) return [];
+      const text = await fetchFromSite(`https://kannadateluguchristiansongslyrics.blogspot.com/feeds/posts/default?alt=json&max-results=${limit}&q=${encodeURIComponent(q)}`);
+      let entries = [];
+      try { entries = JSON.parse(text).feed.entry || []; } catch (e) { return []; }
+      return entries.map((e) => {
+        const doc = new DOMParser().parseFromString(`<div>${(e.content && e.content.$t) || ''}</div>`, 'text/html');
+        doc.querySelectorAll('br').forEach((b) => b.replaceWith('\n'));
+        doc.querySelectorAll('p,div').forEach((b) => b.append('\n'));
+        const lyrics = (doc.body.textContent || '').replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+        const title = String((e.title && e.title.$t) || '').replace(/\s*[-–]?\s*kannada christian song lyrics.*$/i, '').trim();
+        return lyrics.length < 20 ? null : { title: title || 'Untitled', artist: '', album: '', source: 'kannadateluguchristiansongslyrics.blogspot.com', lyrics, worship: true, languageHint: 'Kannada' };
+      }).filter(Boolean);
+    }
+
     // Optional extra sources, kept on this computer only. Genius and YouTube do not hand out lyrics,
     // so they are used to find the proper song and artist names, which are then looked up for lyrics.
     const LYRICS_KEYS_STORAGE = 'scripturePod.lyricsKeys.v1';
@@ -2066,6 +2134,15 @@
         const tamilSongs = await searchTamilChristianSongs(`${cleanTitle} ${cleanArtist}`.trim()).catch(() => []);
         collected.push(...tamilSongs);
       }
+      // More Tamil and Kannada sources, all searched at once
+      const nameQuery = `${cleanTitle} ${cleanArtist}`.trim();
+      const extra = [];
+      if (language === 'any' || language === 'tamil') extra.push(searchWaytochurch(nameQuery, 'tamil'));
+      if (language === 'any' || language === 'kannada') {
+        extra.push(searchWaytochurch(nameQuery, 'kannada'));
+        extra.push(searchKannadaBlog(nameQuery));
+      }
+      (await Promise.all(extra.map((p) => p.catch(() => [])))).forEach((list) => collected.push(...list));
       // A second public source for English songs when both the title and the artist are known
       if (cleanTitle && cleanArtist && language !== 'kannada' && language !== 'tamil') {
         const ovh = await doFetchJson(`https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`).catch(() => null);

@@ -1471,6 +1471,100 @@ ${getLtThumbCss()}
       }, 3000);
     }
 
+    // Click the Display Online pill: lists which displays are connected
+    const displayListState = { timer: null };
+    async function collectConnectedDisplays() {
+      const B = window.BSPDesktop;
+      const rows = [];
+      if (!B) return rows;
+      const safe = async (fn, fallback) => { try { return await fn(); } catch (e) { return fallback; } };
+      if (typeof B.isOutputOpen === 'function' && await safe(() => B.isOutputOpen(), false)) rows.push({ name: 'Live output window', meta: 'This computer' });
+      if (typeof B.isFeedOpen === 'function' && await safe(() => B.isFeedOpen(), false)) rows.push({ name: 'Monitor feed window', meta: 'This computer' });
+      if (typeof B.isStageOpen === 'function' && await safe(() => B.isStageOpen(), false)) rows.push({ name: 'Stage display window', meta: 'This computer' });
+      let browserCount = 0;
+      if (typeof B.listJoins === 'function') {
+        const r = await safe(() => B.listJoins(), null);
+        ((r && r.joins) || []).filter((j) => j.live && j.status === 'approved').forEach((j) => {
+          browserCount++;
+          const role = { monitor: 'Monitor', stage: 'Stage' }[j.role] || 'Live';
+          rows.push({ name: j.name || j.ip, meta: `Browser · ${role} · ${j.ip}` });
+        });
+      }
+      if (typeof B.listDevices === 'function' && typeof connectedDevices !== 'undefined') {
+        const devices = await safe(() => B.listDevices(), []);
+        (devices || []).filter((d) => connectedDevices.has(d.id)).forEach((d) => rows.push({ name: d.name || d.ip, meta: `Computer · ${d.ip}` }));
+      }
+      if (typeof B.relayClientCount === 'function') {
+        const own = typeof relaySocket !== 'undefined' && relaySocket && relaySocket.readyState === WebSocket.OPEN ? 1 : 0;
+        const other = Math.max(0, (await safe(() => B.relayClientCount(), 0)) - own - browserCount);
+        if (other > 0) rows.push({ name: other === 1 ? 'Another receiver' : `${other} other receivers`, meta: 'OBS source, monitor link or similar' });
+      }
+      return rows;
+    }
+    async function renderDisplayList() {
+      const card = document.getElementById('display-list-card');
+      if (!card || !card.classList.contains('is-open')) return;
+      const rows = await collectConnectedDisplays();
+      card.textContent = '';
+      const h = document.createElement('h3');
+      h.textContent = rows.length ? `Connected displays (${rows.length})` : 'No displays connected';
+      card.appendChild(h);
+      if (!rows.length) {
+        const p = document.createElement('p');
+        p.textContent = 'Open the output from Outputs, or open a display address in a browser.';
+        card.appendChild(p);
+      }
+      rows.forEach((r) => {
+        const row = document.createElement('div');
+        row.className = 'display-list-row';
+        const dot = document.createElement('span'); dot.className = 'display-list-dot';
+        const txt = document.createElement('div');
+        const n = document.createElement('strong'); n.textContent = r.name;
+        const m = document.createElement('small'); m.textContent = r.meta;
+        txt.append(n, m);
+        row.append(dot, txt);
+        card.appendChild(row);
+      });
+    }
+    function setDisplayListOpen(open) {
+      let card = document.getElementById('display-list-card');
+      if (!card) {
+        card = document.createElement('div');
+        card.id = 'display-list-card';
+        card.setAttribute('role', 'dialog');
+        card.setAttribute('aria-label', 'Connected displays');
+        document.body.appendChild(card);
+      }
+      card.classList.toggle('is-open', open);
+      clearInterval(displayListState.timer);
+      if (open) {
+        const bar = document.getElementById('status-bar').getBoundingClientRect();
+        card.style.top = `${Math.round(bar.bottom + 8)}px`;
+        card.style.left = `${Math.max(8, Math.min(Math.round(bar.left), window.innerWidth - 328))}px`;
+        renderDisplayList();
+        displayListState.timer = setInterval(renderDisplayList, 2000);
+      }
+    }
+    (function initDisplayList() {
+      const setup = () => {
+        const bar = document.getElementById('status-bar');
+        if (!bar) return;
+        bar.setAttribute('role', 'button');
+        bar.setAttribute('tabindex', '0');
+        bar.setAttribute('aria-haspopup', 'true');
+        const toggle = () => setDisplayListOpen(!document.getElementById('display-list-card')?.classList.contains('is-open'));
+        bar.addEventListener('click', toggle);
+        bar.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+        document.addEventListener('mousedown', (e) => {
+          const c = document.getElementById('display-list-card');
+          if (!c || !c.classList.contains('is-open') || c.contains(e.target) || e.target.closest('#status-bar')) return;
+          setDisplayListOpen(false);
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setDisplayListOpen(false); });
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup); else setup();
+    })();
+
     function showToast(msg) {
       const toast = document.getElementById('toast');
       if (!toast) return;
