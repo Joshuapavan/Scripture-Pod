@@ -1397,6 +1397,8 @@ ${getLtThumbCss()}
           desktop.sendOutputMessage(liveMsg, 'feed').catch(() => {});
           desktop.sendOutputMessage(monitorMsg, 'output').catch(() => {});
           desktop.sendOutputMessage(monitorMsg, 'stage').catch(() => {});
+        } else if (rawMsg && rawMsg.type === 'TEST_PATTERN') {
+          desktop.sendOutputMessage(rawMsg).catch(() => {});
         } else if (rawMsg && rawMsg.type === 'STAGE_CONFIG') {
           desktop.sendOutputMessage(rawMsg, 'stage').catch(() => {});
         } else if (rawMsg && rawMsg.type === 'CLOCK') {

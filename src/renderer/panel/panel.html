@@ -713,6 +713,12 @@
       </section>
       <section id="look-card" aria-labelledby="look-card-title">
         <h2 id="look-card-title">Look</h2>
+        <div class="looks-bar" id="looks-bar">
+          <select id="look-preset-select" aria-label="Saved looks" onchange="applyLookFromSelect(this)"><option value="">Saved looks…</option></select>
+          <button type="button" class="btn looks-btn" onclick="promptSavePreset()" title="Save the current look under a name">Save look</button>
+          <button type="button" class="btn looks-btn" id="look-update-btn" onclick="updateSelectedLook()" title="Replace the selected look with the current settings" disabled>Update</button>
+          <button type="button" class="btn looks-btn" id="look-delete-btn" onclick="deleteSelectedLook()" title="Delete the selected look" disabled>Delete</button>
+        </div>
         <div class="main-panel-stacks" id="panel-inline-style-34">
           <div id="panel-inline-style-35">
             <span id="panel-inline-style-36"><span data-i18n="common_lines">Lines</span></span>
@@ -908,6 +914,17 @@
             </button>
           </div>
         </div>
+        <div class="output-route" id="output-route-screens">
+          <div class="output-route-head">
+            <strong>Screens</strong>
+            <span class="output-route-kind">Setup</span>
+          </div>
+          <p class="output-route-hint">Identify shows a big number on every screen for three seconds, so you know which is which. The test pattern fills the output screens with colour bars, a grid and the safe areas, to line up a projector.</p>
+          <div class="output-route-actions">
+            <button type="button" class="btn" onclick="identifyScreens()">Identify screens</button>
+            <button type="button" class="btn" id="btn-test-pattern" aria-pressed="false" onclick="toggleTestPattern()">Show test pattern</button>
+          </div>
+        </div>
         <div class="output-route" id="output-route-phone">
           <div class="output-route-head">
             <strong>Phone remote</strong>
@@ -978,7 +995,7 @@
               <option value="monitor">Monitor (full screen, clock)</option>
             </select>
           </div>
-          <div id="network-device-list" class="network-device-list"><p class="output-route-hint">Looking for computers…</p></div>
+          <div id="network-device-list" class="network-device-list" aria-busy="true"><div class="sk-row sk-device" aria-hidden="true" style="--sk-i:0"><span class="sk sk-title" style="width:55%"></span><span class="sk sk-sub" style="width:38%"></span></div><div class="sk-row sk-device" aria-hidden="true" style="--sk-i:1"><span class="sk sk-title" style="width:68%"></span><span class="sk sk-sub" style="width:30%"></span></div></div>
           <div class="network-receiver">
             <label class="mini-toggle"><span>Receive: let other computers show their display on this one</span>
               <input type="checkbox" id="receiver-toggle" onchange="setReceiverEnabledFromUi(this.checked)"></label>
@@ -3217,7 +3234,9 @@
   <script src="./scripts/ui/app-chrome.js"></script>
   <script src="./scripts/ui/workspace-and-editor-tools.js"></script>
   <script src="./scripts/ui/app-commands-and-shortcuts.js"></script>
+  <script src="./scripts/ui/skeletons.js"></script>
   <script src="./scripts/ui/custom-shortcuts.js"></script>
+  <script src="./scripts/ui/song-history.js"></script>
   <script src="./scripts/integrations/auto-backup.js"></script>
   <script src="./scripts/integrations/update-check.js"></script>
   <script src="./scripts/integrations/phone-remote.js"></script>

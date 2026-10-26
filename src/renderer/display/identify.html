@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Screen</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #0c0d0f; color: #fff; font-family: 'Geist', system-ui, sans-serif; overflow: hidden; }
+  main { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 6px solid #3b9eff; box-sizing: border-box; }
+  #n { font-size: 150px; font-weight: 700; line-height: 1; }
+  #l { font-size: 20px; color: #a3a9b0; text-align: center; padding: 0 16px; }
+  #s { font-size: 16px; color: #3b9eff; letter-spacing: 0.14em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<main><div id="s">Screen</div><div id="n">1</div><div id="l"></div></main>
+<script>
+  const q = new URLSearchParams(location.search);
+  document.getElementById('n').textContent = q.get('n') || '1';
+  document.getElementById('l').textContent = q.get('label') || '';
+  document.getElementById('s').textContent = q.get('main') === '1' ? 'This screen has the control panel' : 'Screen';
+</script>
+</body>
+</html>

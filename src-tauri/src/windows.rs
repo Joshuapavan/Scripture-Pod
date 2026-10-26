@@ -119,6 +119,35 @@ pub fn open_remote(app: &AppHandle, url: &str) {
     if let Ok(win) = built { watch_closed(app, &win, "remote"); }
 }
 
+// "Identify screens": a small window with the screen's number on every screen for a few seconds
+pub fn identify_screens(app: &AppHandle) -> usize {
+    let list = app.available_monitors().unwrap_or_default();
+    let primary = app.primary_monitor().ok().flatten();
+    let mut labels: Vec<String> = Vec::new();
+    for (i, m) in list.iter().enumerate() {
+        let s = m.scale_factor();
+        let (mw, mh) = (m.size().width as f64 / s, m.size().height as f64 / s);
+        let (mx, my) = (m.position().x as f64 / s, m.position().y as f64 / s);
+        let (w, h) = (420.0, 300.0);
+        let label = format!("identify-{}", i);
+        if let Some(old) = app.get_webview_window(&label) { let _ = old.close(); }
+        let is_main = primary.as_ref().map(|p| p.position() == m.position() && p.size() == m.size()).unwrap_or(i == 0);
+        let name = m.name().cloned().unwrap_or_default().replace(['&', '#', '?', '+'], " ").replace(' ', "%20");
+        let query = format!("?n={}&label={}&main={}", i + 1, name, if is_main { 1 } else { 0 });
+        let built = WebviewWindowBuilder::new(app, &label, page_url("src/renderer/display/identify.html", &query))
+            .title("Screen").decorations(false).always_on_top(true).resizable(false)
+            .position(mx + (mw - w) / 2.0, my + (mh - h) / 2.0).inner_size(w, h).focused(false).build();
+        if built.is_ok() { labels.push(label); }
+    }
+    let n = labels.len();
+    let app2 = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_secs(3));
+        for l in labels { if let Some(w) = app2.get_webview_window(&l) { let _ = w.close(); } }
+    });
+    n
+}
+
 // Stage display for the worship team: an ordinary full-screen window on the chosen screen
 pub fn open_stage(app: &AppHandle, opts: &Value) {
     close(app, "stage", true);

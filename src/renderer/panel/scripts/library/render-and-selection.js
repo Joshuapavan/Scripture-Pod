@@ -115,6 +115,135 @@
       saveToStorageDebounced();
     }
 
+    // A + button under Versions on screen until three versions are showing. It offers the installed versions
+    // that are not on screen yet; when there are none left it opens Imports to add another Bible.
+    function appendAddVersionButton(bar, verKeys, onScreen) {
+      if (onScreen.length >= MAX_VERSIONS_ON_SCREEN) return;
+      const add = document.createElement('button');
+      add.type = 'button';
+      add.className = 'version-add-btn';
+      add.setAttribute('aria-haspopup', 'true');
+      add.innerHTML = `<span class="version-add-plus">+</span><span>Add a version <em>${onScreen.length} of ${MAX_VERSIONS_ON_SCREEN}</em></span>`;
+      add.onclick = (e) => {
+        e.stopPropagation();
+        const existing = document.getElementById('version-add-menu');
+        if (existing) { existing.remove(); return; }
+        const rest = verKeys.filter((v) => !onScreen.includes(v));
+        if (!rest.length) {
+          if (typeof toggleImportsPopover === 'function') toggleImportsPopover(); else if (typeof triggerImport === 'function') triggerImport();
+          showToast('Import another Bible to add it here');
+          return;
+        }
+        const menu = document.createElement('div');
+        menu.id = 'version-add-menu';
+        menu.className = 'version-add-menu';
+        rest.forEach((ver) => {
+          const item = document.createElement('button');
+          item.type = 'button';
+          item.innerHTML = `<strong>${esc(getVersionCode(ver))}</strong><span>${esc(ver)}</span>`;
+          item.onclick = () => { menu.remove(); toggleVersionOnScreen(ver); };
+          menu.appendChild(item);
+        });
+        const more = document.createElement('button');
+        more.type = 'button'; more.className = 'is-import'; more.textContent = 'Import another Bible…';
+        more.onclick = () => { menu.remove(); if (typeof toggleImportsPopover === 'function') toggleImportsPopover(); else if (typeof triggerImport === 'function') triggerImport(); };
+        menu.appendChild(more);
+        document.body.appendChild(menu);
+        const r = add.getBoundingClientRect();
+        menu.style.left = Math.round(r.left) + 'px';
+        menu.style.top = Math.round(r.bottom + 6) + 'px';
+        menu.style.minWidth = Math.round(r.width) + 'px';
+        const close = (ev) => { if (!menu.contains(ev.target)) { menu.remove(); document.removeEventListener('mousedown', close, true); } };
+        setTimeout(() => document.addEventListener('mousedown', close, true), 0);
+      };
+      bar.appendChild(add);
+    }
+
+    // Versions on screen: press an item and drag it up or down to change the order (1, 2, 3). The other items
+    // slide out of the way as you go, and the item glides into its place when you let go. A plain click still
+    // adds or removes the version. Pointer events keep this working on every system.
+    let versionDragJustEnded = false;
+    function enableVersionDragReorder(bar) {
+      const items = () => [...bar.querySelectorAll('.version-wrapper.is-on-screen')];
+      items().forEach((wrap) => {
+        wrap.style.touchAction = 'none';
+        wrap.addEventListener('pointerdown', (e) => {
+          if (e.button !== 0 || e.target.closest('.version-del')) return;
+          const list = items();
+          if (list.length < 2) return;
+          const startX = e.clientX, startY = e.clientY;
+          const rects = list.map((el) => el.getBoundingClientRect());
+          const from = list.indexOf(wrap);
+          const gap = rects.length > 1 ? Math.max(0, rects[1].top - rects[0].bottom) : 8;
+          const step = rects[from].height + gap;
+          let dragging = false, to = from, dx = 0, dy = 0, frame = 0;
+          const place = () => {
+            frame = 0;
+            wrap.style.transform = `translate(${dx}px, ${dy}px) scale(1.02)`;
+            // the slot nearest to where the item is now
+            const cy = rects[from].top + rects[from].height / 2 + dy;
+            let best = 0, bestD = Infinity;
+            rects.forEach((r, i) => { const d = Math.abs(r.top + r.height / 2 - cy); if (d < bestD) { bestD = d; best = i; } });
+            if (best === to) return;
+            to = best;
+            // the items between the old and new slot make room
+            list.forEach((el, i) => {
+              if (i === from) return;
+              let shift = 0;
+              if (to > from && i > from && i <= to) shift = -step;
+              if (to < from && i >= to && i < from) shift = step;
+              el.style.transform = shift ? `translateY(${shift}px)` : '';
+            });
+          };
+          const onMove = (ev) => {
+            dx = ev.clientX - startX; dy = ev.clientY - startY;
+            if (!dragging) {
+              if (Math.hypot(dx, dy) < 5) return;
+              dragging = true;
+              wrap.classList.add('is-dragging');
+              // the item must pass over the others, not under them: raise the row it sits in
+              if (wrap.parentElement) wrap.parentElement.classList.add('is-drag-row');
+              list.forEach((el) => { if (el !== wrap) el.classList.add('is-making-room'); });
+            }
+            if (!frame) frame = requestAnimationFrame(place);
+          };
+          const finish = (ev) => {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', finish);
+            window.removeEventListener('pointercancel', finish);
+            if (frame) { cancelAnimationFrame(frame); frame = 0; }
+            if (!dragging) return;
+            versionDragJustEnded = true;
+            setTimeout(() => { versionDragJustEnded = false; }, 0);
+            const cleanup = () => {
+              list.forEach((el) => { el.classList.remove('is-dragging', 'is-making-room', 'is-settling'); el.style.transform = ''; if (el.parentElement) el.parentElement.classList.remove('is-drag-row'); });
+            };
+            if (ev.type === 'pointercancel' || to === from) {
+              // back into place, smoothly
+              wrap.classList.add('is-settling'); wrap.style.transform = '';
+              setTimeout(cleanup, 190);
+              return;
+            }
+            // glide to the slot, then change the order (the list redraws with items already where they belong)
+            const targetShift = rects[to].top - rects[from].top;
+            wrap.classList.remove('is-dragging'); wrap.classList.add('is-settling');
+            wrap.style.transform = `translate(0px, ${targetShift}px)`;
+            setTimeout(() => {
+              const ids = getOnScreenVersionIds();
+              const [moved] = ids.splice(from, 1);
+              ids.splice(to, 0, moved);
+              list.forEach((el) => el.classList.remove('is-making-room'));
+              applyOnScreenVersions(ids);
+              cleanup();
+            }, 170);
+          };
+          window.addEventListener('pointermove', onMove);
+          window.addEventListener('pointerup', finish);
+          window.addEventListener('pointercancel', finish);
+        });
+      });
+    }
+
     function renderVersionBar() {
       const bar = document.getElementById('version-bar');
       if (!bar) return;
@@ -156,7 +285,7 @@
           btn.append(orderEl, textEl);
           btn.title = order ? `${ver} (on screen)` : `${ver}: click to show on screen`;
           btn.setAttribute('aria-pressed', order ? 'true' : 'false');
-          btn.onclick = () => toggleVersionOnScreen(ver);
+          btn.onclick = () => { if (versionDragJustEnded) return; toggleVersionOnScreen(ver); };
           const del = document.createElement('button');
           del.className = 'version-del';
           del.innerText = '\u2715';
@@ -179,6 +308,8 @@
         });
         bar.appendChild(row);
       });
+      appendAddVersionButton(bar, verKeys, onScreen);
+      enableVersionDragReorder(bar);
       updateBibleLists();
       updateDualVersionSelects();
       updateDualVersionAvailability();
@@ -482,6 +613,7 @@
         return;
       }
       // Desktop: the SQLite index answers; the list is replaced when it does
+      if (typeof showSkeleton === 'function') showSkeleton(list, 6, 'song');
       findBibleKeywordMatchesInDb(qRaw, keywordOpts).then((fromDb) => {
         if (renderSeq !== bibleSearchRenderSeq) return;
         paintBibleSearchResults(list, fromDb || findBibleKeywordMatches(qRaw, keywordOpts));

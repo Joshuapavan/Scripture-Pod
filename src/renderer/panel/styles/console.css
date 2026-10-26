@@ -2834,3 +2834,63 @@ select option, select optgroup {
 .stage-option-row input[type="range"] { width: 130px; }
 .stage-option-row output { min-width: 40px; text-align: right; font: 500 12px var(--sp-mono, ui-monospace, monospace); color: var(--sp-subtle); }
 .stage-option-row select { height: 28px; border-radius: 6px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); }
+
+.looks-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0 0 12px; }
+.looks-bar select { flex: 1; min-width: 120px; height: 32px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); font-size: 13px; }
+.looks-btn { font-size: 12px; padding: 4px 10px; }
+.looks-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ── Song history ────────────────────────────────────────────────────────── */
+.song-history { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 64px); display: flex; flex-direction: column; gap: 10px; padding: 18px 20px; }
+.song-history-head { display: flex; align-items: center; justify-content: space-between; }
+.song-history-head h3 { margin: 0; font-size: 16px; }
+.song-history-body { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 12px; min-height: 260px; max-height: 50vh; }
+.song-history-list { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.song-history-row { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 10px; border: 1px solid var(--sp-line); border-radius: 8px; background: var(--sp-inset); color: var(--sp-text); font-size: 12px; text-align: left; cursor: pointer; }
+.song-history-row span { color: var(--sp-subtle); }
+.song-history-row.is-selected { border-color: var(--sp-cue); }
+.song-history-preview { margin: 0; padding: 10px 12px; overflow: auto; border: 1px solid var(--sp-line); border-radius: 8px; background: var(--sp-card); color: var(--sp-text); font: 13px/1.5 var(--sp-mono, ui-monospace, monospace); white-space: pre-wrap; }
+.song-history-foot { display: flex; justify-content: flex-end; }
+.song-history-restore { background: var(--sp-text); color: var(--sp-ground); }
+.song-history-restore:disabled { opacity: 0.4; }
+
+/* Dragging a version to a new position in Versions on screen */
+.version-wrapper.is-on-screen { cursor: grab; user-select: none; -webkit-user-select: none; }
+.version-wrapper.is-dragging { z-index: 5; cursor: grabbing; opacity: 0.92; box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55); transition: none !important; position: relative; }
+.version-wrapper.drop-before { box-shadow: 0 -3px 0 0 var(--sp-cue); }
+.version-wrapper.drop-after { box-shadow: 0 3px 0 0 var(--sp-cue); }
+
+/* + Add a version: shown until three versions are on screen */
+.version-add-btn { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 6px; padding: 10px 12px; border-radius: 12px; border: 1px dashed var(--sp-line); background: transparent; color: var(--sp-text); font-size: 13px; cursor: pointer; text-align: left; }
+.version-add-btn:hover { background: var(--sp-inset); }
+.version-add-btn em { margin-left: 6px; font-style: normal; color: var(--sp-subtle); font-size: 12px; }
+.version-add-plus { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--sp-line); font-size: 18px; line-height: 1; color: var(--sp-subtle); }
+.version-add-menu { position: fixed; z-index: 9400; display: flex; flex-direction: column; gap: 2px; padding: 6px; max-height: 50vh; overflow-y: auto; border: 1px solid var(--sp-line); border-radius: 12px; background: var(--sp-card); box-shadow: 0 18px 48px rgba(0, 0, 0, 0.5); }
+.version-add-menu button { display: flex; flex-direction: column; align-items: flex-start; padding: 8px 10px; border: 0; border-radius: 8px; background: transparent; color: var(--sp-text); font-size: 12px; text-align: left; cursor: pointer; }
+.version-add-menu button:hover { background: var(--sp-inset); }
+.version-add-menu button span { color: var(--sp-subtle); }
+.version-add-menu .is-import { flex-direction: row; color: var(--sp-subtle); border-top: 1px solid var(--sp-line); border-radius: 0 0 8px 8px; margin-top: 4px; }
+
+/* Smooth dragging of versions on screen */
+.version-wrapper.is-on-screen { will-change: transform; }
+.version-wrapper.is-making-room, .version-wrapper.is-settling { transition: transform 170ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.version-wrapper.is-dragging { transition: none !important; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55); }
+.version-wrapper.is-making-room button, .version-wrapper.is-dragging button { pointer-events: none; }
+
+/* The item being dragged passes over the others */
+#version-bar .version-row.is-drag-row { position: relative; z-index: 60; }
+#version-bar .version-wrapper.is-dragging, #version-bar .version-wrapper.is-settling { position: relative; z-index: 61; }
+#version-bar { overflow: visible; }
+/* the row clips its children by default: the dragged item must be able to leave it */
+#version-bar .version-row.is-drag-row { overflow: visible !important; }
+
+/* ── Skeleton loading ────────────────────────────────────────────────────── */
+.sk { display: block; height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--sp-inset) 25%, var(--sp-raised, #23272c) 37%, var(--sp-inset) 63%); background-size: 400% 100%; animation: sk-shimmer 1.4s ease-in-out infinite; animation-delay: calc(var(--sk-i, 0) * 90ms); }
+.sk-title { height: 13px; }
+.sk-sub { height: 10px; margin-top: 8px; opacity: 0.8; }
+.sk-row { padding: 10px 12px; border: 1px solid var(--sp-line); border-radius: 8px; margin: 0 0 8px; background: transparent; }
+.sk-song { border: 0; border-radius: 10px; margin: 2px 8px; padding: 10px 12px; }
+.sk-palette { border: 0; border-radius: 8px; margin: 0; padding: 9px 12px; }
+.sk-device { padding: 10px; }
+@keyframes sk-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .sk { animation: none; } }

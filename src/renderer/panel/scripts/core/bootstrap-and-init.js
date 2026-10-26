@@ -690,7 +690,7 @@
       toggleOutputPopover();
     }
 
-    function applyUiSnapshot(ui) {
+    function applyUiSnapshot(ui, opts = {}) {
       if (!ui) return;
       const firstRunSetup = document.getElementById('first-run-setup');
       if (firstRunSetup) firstRunSetup.dataset.dismissed = ui.firstRunSetupDismissed === true ? 'true' : 'false';
@@ -1113,6 +1113,8 @@
       updateCustomModeAvailability();
       updateTextEditorModeAvailability();
       updateSettingsTargetControl();
+      // A saved look becomes the current look for this tab: without this the tab's old saved settings win
+      if (opts.adoptAsProfile) saveProjectionSettingsProfileForTab(getEffectiveSettingsTargetTab());
       applyProjectionSettingsProfileForTab(getEffectiveSettingsTargetTab(), { triggerChange: false });
       if (activeRatio === '16-9' && !hasBgToggle) applyLtBgDefaultForTab(sidebarTab);
       if (ui.remoteShowEnabled != null) {
@@ -3190,6 +3192,7 @@
       } else {
         presets.push(payload);
       }
+      selectedLookId = payload.id;
       renderPresetList();
       saveToStorageDebounced();
       showToast(replaceExisting ? t('preset_replaced') : t('preset_saved'));
@@ -3198,7 +3201,7 @@
     function applyPreset(id) {
       const p = presets.find(pr => pr.id === id);
       if (!p || !p.ui) return;
-      applyUiSnapshot(p.ui);
+      applyUiSnapshot(p.ui, { adoptAsProfile: true });
       renderPresetList();
       onAnyControlChange();
       showToast(t('preset_applied_named').replace('{name}', p.name));
@@ -3211,7 +3214,34 @@
       showToast(t('preset_deleted'));
     }
 
+    // Named looks: the saved presets, in a quick list at the top of the Look card
+    let selectedLookId = '';
+    function refreshLookSelect() {
+      const select = document.getElementById('look-preset-select');
+      if (!select) return;
+      select.innerHTML = '<option value="">Saved looks…</option>' + presets.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+      if (!presets.some((p) => p.id === selectedLookId)) selectedLookId = '';
+      select.value = selectedLookId;
+      ['look-update-btn', 'look-delete-btn'].forEach((id) => { const b = document.getElementById(id); if (b) b.disabled = !selectedLookId; });
+    }
+    function applyLookFromSelect(select) {
+      selectedLookId = select.value || '';
+      refreshLookSelect();
+      if (selectedLookId) applyPreset(selectedLookId);
+    }
+    function updateSelectedLook() {
+      const p = presets.find((x) => x.id === selectedLookId);
+      if (!p) return;
+      showConfirm('Update this look?', `Replace “${p.name}” with the settings you have now.`, () => savePreset(p.name, true));
+    }
+    function deleteSelectedLook() {
+      const p = presets.find((x) => x.id === selectedLookId);
+      if (!p) return;
+      showConfirm('Delete this look?', `“${p.name}” will be removed.`, () => { selectedLookId = ''; deletePreset(p.id); });
+    }
+
     function renderPresetList() {
+      refreshLookSelect();
       const list = document.getElementById('preset-list');
       if (!list) return;
       list.innerHTML = '';

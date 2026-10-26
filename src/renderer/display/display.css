@@ -1192,3 +1192,21 @@ body.stage-role, #stage-view { background: var(--stage-bg, #000); color: var(--s
 #stage-view.hide-clock #stage-clock { visibility: hidden; }
 #stage-view.hide-section #stage-section { visibility: hidden; }
 #stage-view.hide-next .stage-next-block { display: none; }
+
+/* ── Test pattern ─────────────────────────────────────────────────────────── */
+#test-pattern { position: fixed; inset: 0; z-index: 99999; background: #202020; color: #fff; font-family: system-ui, sans-serif; }
+#test-pattern[hidden] { display: none; }
+.tp-bars { position: absolute; left: 0; right: 0; top: 0; height: 26%; display: flex; }
+.tp-bars i { flex: 1; }
+.tp-grid { position: absolute; inset: 0; background-image: linear-gradient(#ffffff40 1px, transparent 1px), linear-gradient(90deg, #ffffff40 1px, transparent 1px); background-size: 10% 10%; }
+.tp-safe { position: absolute; border: 2px dashed; }
+.tp-action { inset: 5%; border-color: #ffd400; }
+.tp-title { inset: 10%; border-color: #00e0ff; }
+.tp-center { position: absolute; left: 50%; top: 58%; transform: translate(-50%, -50%); text-align: center; text-shadow: 0 2px 8px #000; }
+.tp-center span { display: block; font-size: 6vh; font-weight: 700; }
+.tp-center small { font-size: 2.2vh; opacity: 0.85; }
+.tp-corner { position: absolute; width: 5vh; height: 5vh; background: #fff; }
+.tp-corner.tl { left: 0; top: 0; clip-path: polygon(0 0, 100% 0, 0 100%); } .tp-corner.tr { right: 0; top: 0; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.tp-corner.bl { left: 0; bottom: 0; clip-path: polygon(0 0, 100% 100%, 0 100%); } .tp-corner.br { right: 0; bottom: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+body.stage-role > #test-pattern { display: block !important; }
+body.stage-role > #test-pattern[hidden] { display: none !important; }

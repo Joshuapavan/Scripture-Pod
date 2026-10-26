@@ -170,6 +170,7 @@
       if (sidebarTab === 'bible' || !currentItem) return;
       const nextText = document.getElementById('lyric-editor').value;
       const prevText = currentItem.content || currentItem.text || '';
+      if (nextText !== prevText && typeof recordSongVersion === 'function') recordSongVersion(currentItem.id, prevText);
       currentItem.content = nextText;
       currentItem.text = nextText;
       currentItem.updatedAt = Date.now();
@@ -2138,6 +2139,7 @@
       setNewSongLookupBusy(true);
       updateNewSongFetchStatus(t('new_song_searching_matches'), 'muted');
       clearNewSongLookupResults();
+      showSkeleton(document.getElementById('new-song-search-results'), 4, 'card');
       try {
         const results = await searchLyricsCatalog(title, artist, document.getElementById('new-song-lyrics-language')?.value || 'any', { worshipOnly: document.getElementById('new-song-worship-only')?.checked !== false });
         rememberLyricsTitles(results);
@@ -2168,6 +2170,9 @@
         showToast(t('new_song_lyrics_search_failed'));
       } finally {
         setNewSongLookupBusy(false);
+        // nothing to show (no matches or an error): the placeholders must not stay behind
+        const lookupHost = document.getElementById('new-song-search-results');
+        if (lookupHost && lookupHost.querySelector('.sk-row')) clearNewSongLookupResults();
         if (newSongSearchQueued) { newSongSearchQueued = false; autoFetchNewSongLyrics(); }
       }
     }
@@ -2409,6 +2414,7 @@
       }
       setAutoLyricsLookupBusy(true);
       updateAutoLyricsStatus(t('common_searching'), 'muted');
+      showSkeleton(document.getElementById('auto-lyrics-results'), 4, 'card');
       closeAutoLyricsContextMenu();
       hideAutoLyricsPreview();
       try {
@@ -2436,6 +2442,8 @@
         showToast(t('auto_lyrics_search_failed'));
       } finally {
         setAutoLyricsLookupBusy(false);
+        const autoHost = document.getElementById('auto-lyrics-results');
+        if (autoHost) autoHost.removeAttribute('aria-busy');
         if (autoLyricsSearchQueued) { autoLyricsSearchQueued = false; searchAutoLyrics(); }
       }
     }

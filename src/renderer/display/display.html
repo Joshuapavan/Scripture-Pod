@@ -35,6 +35,12 @@
     <div id="text-container" class="hardware-accelerated"></div>
   </div>
   <div id="monitor-clock" aria-hidden="true" hidden></div>
+  <div id="test-pattern" hidden aria-hidden="true">
+    <div class="tp-bars"><i style="background:#fff"></i><i style="background:#ff0"></i><i style="background:#0ff"></i><i style="background:#0f0"></i><i style="background:#f0f"></i><i style="background:#f00"></i><i style="background:#00f"></i><i style="background:#000"></i></div>
+    <div class="tp-grid"></div><div class="tp-safe tp-action"></div><div class="tp-safe tp-title"></div>
+    <div class="tp-center"><span id="tp-size">1920 × 1080</span><small>Outer box edge of the screen · 90% action safe · 80% title safe</small></div>
+    <i class="tp-corner tl"></i><i class="tp-corner tr"></i><i class="tp-corner bl"></i><i class="tp-corner br"></i>
+  </div>
   <div id="stage-view" hidden>
     <div class="stage-top"><span id="stage-title"></span><span id="stage-clock"></span></div>
     <div class="stage-label" id="stage-section">Now</div>
@@ -585,7 +591,17 @@
       };
     }
 
+    // Test pattern for lining up screens and projectors: colour bars, a grid and the safe areas
+    function showTestPattern(on) {
+      const el = document.getElementById('test-pattern');
+      if (!el) return;
+      el.hidden = !on;
+      const size = document.getElementById('tp-size');
+      if (size) size.textContent = `${window.innerWidth} × ${window.innerHeight}`;
+    }
+    window.addEventListener('resize', () => { const el = document.getElementById('test-pattern'); if (el && !el.hidden) showTestPattern(true); });
     function handleInboundMessage(d, source) {
+      if (d && d.type === 'TEST_PATTERN') { showTestPattern(!!d.on); return; }
       if (d && d.audience && d.audience !== MY_AUDIENCE) return;
       if (IS_STAGE) {
         if (d && d.type === 'RS_ENVELOPE' && d.payload) return handleInboundMessage(d.payload, source);

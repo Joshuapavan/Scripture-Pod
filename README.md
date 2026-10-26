@@ -153,6 +153,15 @@ This is a browser display, not an NDI stream.
   template** begins next week's from it.
 - **Automatic backups.** Settings, General: choose a folder (Dropbox, Drive or OneDrive gives an off-computer
   copy), how often, and how many to keep. **Back up now** runs one at once.
+- **Identify screens and test pattern.** Outputs, **Screens**: **Identify screens** puts a big number on every
+  screen for three seconds; **Show test pattern** fills the output screens with colour bars, a grid and the safe
+  areas to line up a projector.
+- **Saved looks.** At the top of the Look card: **Save look** keeps the current look under a name, and the list
+  switches between looks in one click. **Update** and **Delete** change the selected look.
+- **Song history.** In the lyrics editor, **History** lists earlier versions of the song (the newest ten are
+  kept on this computer) and restores one. A version is kept before Tidy lyrics, Clear all tags or a paste.
+- **Lyrics tools.** The tag bar in the lyrics editor also has **Tidy lyrics** (removes verse numbers and repeat
+  marks such as `1.`, `x2`, `(x4)`, `-2`) and **Clear all tags**.
 - **Update notice.** The app looks for a newer release once a day (and on **Check for updates** in Settings)
   and offers its download page. It does not install updates by itself: that needs signed builds.
 

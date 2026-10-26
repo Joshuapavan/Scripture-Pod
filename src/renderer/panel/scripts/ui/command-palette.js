@@ -138,6 +138,10 @@
             passages.push({ label: ref, detail: entry.text, meta: versionCode, run: () => openPassageFromPalette(ref) });
           });
       }
+      // Words from a verse are searched in the background: placeholders show until they arrive
+      if (activeBibleVersion && q.length >= 3 && paletteKeywordCache.hits === null && paletteKeywordCache.key === `${activeBibleVersion}\n${q}`) {
+        for (let i = 0; i < 3; i++) passages.push({ skeleton: true });
+      }
       if (passages.length) groups.push({ title: 'Passages', items: passages });
 
       const songHits = songs
@@ -192,7 +196,7 @@
       const input = document.getElementById('command-palette-input');
       if (!host || !input) return;
       const groups = buildCommandPaletteGroups(input.value);
-      commandPaletteItems = groups.flatMap(group => group.items);
+      commandPaletteItems = groups.flatMap(group => group.items).filter(item => !item.skeleton);
       commandPaletteIndex = 0;
       host.replaceChildren();
       if (!commandPaletteItems.length) {
@@ -209,6 +213,7 @@
         heading.textContent = group.title;
         host.appendChild(heading);
         group.items.forEach((item) => {
+          if (item.skeleton) { host.appendChild(buildSkeletonRows(1, 'palette')); return; }
           const index = flatIndex++;
           const row = document.createElement('button');
           row.type = 'button';

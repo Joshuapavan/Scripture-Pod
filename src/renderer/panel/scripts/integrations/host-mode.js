@@ -158,6 +158,7 @@
       if (!bridge || typeof bridge.listDevices !== 'function' || !host) return;
       let devices = [];
       try { devices = await bridge.listDevices(); } catch (e) { devices = []; }
+      if (!host.dataset.loaded) { host.dataset.loaded = '1'; host.dataset.signature = ''; }
       const codes = loadDeviceCodes();
       // keep what is being typed: only redraw when the list changed
       const signature = JSON.stringify(devices.map((d) => [d.id, d.name, d.ip, d.receiving, connectedDevices.has(d.id)]));
@@ -286,6 +287,7 @@
       const btn = document.getElementById('btn-scan-network');
       const status = document.getElementById('scan-status');
       if (btn) { btn.disabled = true; btn.textContent = 'Scanning…'; }
+      showSkeleton(document.getElementById('network-host-list'), 3, 'device');
       try { scannedHosts = await bridge.scanNetwork(); } catch (e) { scannedHosts = []; }
       if (btn) { btn.disabled = false; btn.textContent = 'Scan network for laptops'; }
       if (status) status.textContent = scannedHosts.length ? `${scannedHosts.length} found` : 'Nothing found. Make sure the laptop is awake and on this network.';
@@ -477,3 +479,16 @@
       });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderStageOptions); else renderStageOptions();
+
+    // ── Identify screens and the test pattern ───────────────────────────────────────
+    async function identifyScreens() {
+      const r = await window.BSPDesktop.identifyScreens().catch(() => null);
+      showToast(r && r.count ? `Showing a number on ${r.count} screen${r.count === 1 ? '' : 's'}` : 'No screens found');
+    }
+    let testPatternOn = false;
+    function toggleTestPattern(force) {
+      testPatternOn = typeof force === 'boolean' ? force : !testPatternOn;
+      try { broadcastMessage({ type: 'TEST_PATTERN', proto: 1, sender: 'control', ts: Date.now(), on: testPatternOn }); } catch (e) { /* not ready */ }
+      const btn = document.getElementById('btn-test-pattern');
+      if (btn) { btn.setAttribute('aria-pressed', testPatternOn ? 'true' : 'false'); btn.textContent = testPatternOn ? 'Hide test pattern' : 'Show test pattern'; }
+    }

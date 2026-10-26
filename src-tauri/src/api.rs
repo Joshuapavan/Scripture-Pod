@@ -202,6 +202,7 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "openOutput" => { windows::open_output(app, &arg); json!({"ok": true}) }
         "closeOutput" => { windows::close(app, "output", false); json!({"ok": true}) }
         "isOutputOpen" => json!(app.get_webview_window("output").is_some()),
+        "identifyScreens" => json!({"count": windows::identify_screens(app)}),
         "openStage" => { windows::open_stage(app, &arg); json!({"ok": true}) }
         "closeStage" => { windows::close(app, "stage", true); json!({"ok": true}) }
         "isStageOpen" => json!(app.get_webview_window("stage").is_some()),
