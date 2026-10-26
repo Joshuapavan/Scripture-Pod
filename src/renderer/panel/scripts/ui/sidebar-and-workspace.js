@@ -100,7 +100,7 @@
         setTimeout(() => {
           // The monitor page stays in lower-third-only mode until it is cleared, so clear it first
           try {
-            if (wasLowerThird && !(typeof getOnAirPayload === 'function' && getOnAirPayload()) && typeof clearPreviewMonitor === 'function') clearPreviewMonitor();
+            if (wasLowerThird && typeof clearPreviewMonitor === 'function') clearPreviewMonitor();
           } catch (e) { /* preview not ready */ }
           if (typeof isPreviewOnlyMode === 'function' && isPreviewOnlyMode() && currentItem && typeof renderSelectionToPreview === 'function') renderSelectionToPreview(lineCursor, { silent: true });
           else if (typeof refreshPreviewMonitor === 'function') refreshPreviewMonitor();

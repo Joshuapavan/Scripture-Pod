@@ -2783,3 +2783,9 @@ select option, select optgroup {
 .shortcut-edit-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 8px; border-radius: 6px; border: 1px solid var(--sp-line); background: var(--sp-inset); font: 500 12px var(--sp-mono, ui-monospace, monospace); }
 .shortcut-edit-chip button { border: 0; background: none; color: var(--sp-subtle); cursor: pointer; font-size: 14px; line-height: 1; }
 .shortcut-edit-add { padding: 3px 10px; border-radius: 6px; border: 1px dashed var(--sp-line); background: none; color: var(--sp-subtle); font-size: 12px; cursor: pointer; }
+
+/* ── Setlist templates ───────────────────────────────────────────────────── */
+.setlist-template-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.setlist-template-btn { font-size: 12px; }
+.setlist-template-name, .setlist-template-select { height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); font-size: 13px; }
+.setlist-template-name { min-width: 240px; }

@@ -2494,6 +2494,71 @@
       setBibleReaderView(on);
     }
 
+    // ── Saved service templates: keep a setlist and start next week's from it ─────────
+    const SERVICE_TEMPLATES_KEY = 'scripturePod.serviceTemplates.v1';
+    function loadServiceTemplates() {
+      try { const v = JSON.parse(localStorage.getItem(SERVICE_TEMPLATES_KEY) || '[]'); return Array.isArray(v) ? v : []; } catch (e) { return []; }
+    }
+    function saveServiceTemplates(list) {
+      try { localStorage.setItem(SERVICE_TEMPLATES_KEY, JSON.stringify(list.slice(0, 50))); } catch (e) { showToast('Could not save the template'); }
+    }
+    function saveSetlistAsTemplate(name) {
+      const clean = String(name || '').trim().slice(0, 60);
+      if (!clean) { showToast('Give the template a name'); return false; }
+      if (!schedule.length) { showToast('The setlist is empty'); return false; }
+      const list = loadServiceTemplates().filter((t) => t.name.toLowerCase() !== clean.toLowerCase());
+      list.unshift({ id: createId('tpl', clean), name: clean, savedAt: Date.now(), entries: JSON.parse(JSON.stringify(schedule)) });
+      saveServiceTemplates(list);
+      showToast(`Saved the template “${clean}”`);
+      return true;
+    }
+    function useServiceTemplate(id) {
+      const tpl = loadServiceTemplates().find((t) => t.id === id);
+      if (!tpl) return;
+      const apply = () => {
+        schedule = JSON.parse(JSON.stringify(tpl.entries));
+        saveState(); saveToStorageDebounced();
+        if (sidebarTab === 'schedule') renderSongs();
+        renderFocusedMainPanel();
+        showToast(`Setlist started from “${tpl.name}”`);
+      };
+      if (schedule.length && typeof showConfirm === 'function') showConfirm('Replace the setlist?', `The current setlist will be replaced by “${tpl.name}”.`, apply);
+      else apply();
+    }
+    function deleteServiceTemplate(id) {
+      saveServiceTemplates(loadServiceTemplates().filter((t) => t.id !== id));
+      renderSetlistTemplateBar();
+    }
+    function renderSetlistTemplateBar() {
+      const bar = document.getElementById('setlist-template-bar');
+      if (!bar) return;
+      bar.replaceChildren();
+      const templates = loadServiceTemplates();
+      const mk = (text, onClick, title) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'btn setlist-template-btn'; b.textContent = text; if (title) b.title = title; b.onclick = onClick; return b; };
+      const save = mk('Save as template', () => {
+        const input = document.createElement('input');
+        input.type = 'text'; input.placeholder = 'Template name, e.g. Sunday service'; input.maxLength = 60; input.className = 'setlist-template-name';
+        input.onkeydown = (e) => { if (e.key === 'Enter') { if (saveSetlistAsTemplate(input.value)) renderSetlistTemplateBar(); } if (e.key === 'Escape') renderSetlistTemplateBar(); };
+        save.replaceWith(input); input.focus();
+      }, 'Keep this setlist as a template');
+      bar.appendChild(save);
+      if (templates.length) {
+        const select = document.createElement('select');
+        select.className = 'setlist-template-select'; select.setAttribute('aria-label', 'Start from a template');
+        select.innerHTML = '<option value="">Start from a template…</option>' + templates.map((t) => `<option value="${esc(t.id)}">${esc(t.name)} (${t.entries.length})</option>`).join('');
+        select.onchange = () => { const id = select.value; select.value = ''; if (id) useServiceTemplate(id); };
+        bar.appendChild(select);
+        const del = mk('Delete a template', () => {
+          del.replaceWith(Object.assign(document.createElement('select'), {
+            className: 'setlist-template-select',
+            innerHTML: '<option value="">Choose one to delete…</option>' + templates.map((t) => `<option value="${esc(t.id)}">${esc(t.name)}</option>`).join(''),
+            onchange(ev) { if (ev.target.value) deleteServiceTemplate(ev.target.value); }
+          }));
+        }, 'Remove a saved template');
+        bar.appendChild(del);
+      }
+    }
+
     function renderFocusedMainPanel() {
       const panel = document.getElementById('focused-main-panel');
       if (!panel) return;
@@ -2550,9 +2615,11 @@
             <div class="focused-main-title">Setlist</div>
             <div class="focused-main-subtitle">${entries.length} item${entries.length === 1 ? '' : 's'}</div>
           </div>
+          <div class="setlist-template-bar" id="setlist-template-bar"></div>
           <div class="focused-main-list">${itemsHtml}</div>
         </div>
       `;
+      renderSetlistTemplateBar();
       renderSetlistNextCard();
     }
 
