@@ -2763,3 +2763,41 @@ select option, select optgroup {
 
 .lyrics-suggest { margin: 6px 0 2px; font-size: 13px; color: var(--sp-muted); }
 .lyrics-suggest button { padding: 0; border: 0; background: none; color: var(--sp-cue); font: inherit; font-weight: 600; text-decoration: underline; cursor: pointer; }
+
+/* ── Other computers ─────────────────────────────────────────────────────── */
+.network-device-list { display: flex; flex-direction: column; gap: 6px; margin: 6px 0 10px; }
+.network-device { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border: 1px solid var(--sp-line); border-radius: 10px; background: var(--sp-inset); }
+.network-device-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.network-device-info strong { font-size: 13px; color: var(--sp-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.network-device-info span { font-size: 11px; color: var(--sp-subtle); }
+.network-device-code { width: 74px; height: 30px; padding: 0 8px; border-radius: 8px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-text); font: 500 12px var(--sp-mono, ui-monospace, monospace); text-align: center; }
+.network-receiver { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px dashed var(--sp-line); }
+
+#btn-topbar-outputs.has-waiting::after { content: ""; display: inline-block; width: 8px; height: 8px; margin-left: 8px; border-radius: 50%; background: var(--sp-cue); }
+
+/* ── Shortcut settings ───────────────────────────────────────────────────── */
+.shortcut-edit-list { display: flex; flex-direction: column; margin: 10px 0 14px; border: 1px solid var(--sp-line); border-radius: 10px; overflow: hidden; }
+.shortcut-edit-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 14px; border-top: 1px solid var(--sp-line); font-size: 13px; }
+.shortcut-edit-row:first-child { border-top: 0; }
+.shortcut-edit-keys { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+.shortcut-edit-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 4px 2px 8px; border-radius: 6px; border: 1px solid var(--sp-line); background: var(--sp-inset); font: 500 12px var(--sp-mono, ui-monospace, monospace); }
+.shortcut-edit-chip button { border: 0; background: none; color: var(--sp-subtle); cursor: pointer; font-size: 14px; line-height: 1; }
+.shortcut-edit-add { padding: 3px 10px; border-radius: 6px; border: 1px dashed var(--sp-line); background: none; color: var(--sp-subtle); font-size: 12px; cursor: pointer; }
+
+/* ── Setlist templates ───────────────────────────────────────────────────── */
+.setlist-template-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; }
+.setlist-template-btn { font-size: 12px; }
+.setlist-template-name, .setlist-template-select { height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); font-size: 13px; }
+.setlist-template-name { min-width: 240px; }
+
+.auto-backup-field { display: flex; flex-direction: column; gap: 8px; padding-top: 14px; }
+.auto-backup-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; }
+.auto-backup-row input[type="text"] { flex: 1; min-width: 160px; height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background: var(--sp-inset); color: var(--sp-text); }
+.auto-backup-row select { height: 32px; border-radius: 8px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); padding: 0 8px; }
+
+#update-bar { position: fixed; z-index: 9000; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-text); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5); font-size: 13px; }
+
+.phone-remote-qr { display: block; width: 168px; height: 168px; margin: 8px auto; padding: 6px; border-radius: 10px; background: #fff; image-rendering: pixelated; }
+
+/* Long song and verse lists: rows off screen are not laid out or painted until they scroll into view */
+#song-list .song-item { content-visibility: auto; contain-intrinsic-size: auto 44px; }

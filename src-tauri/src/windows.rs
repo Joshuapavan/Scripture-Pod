@@ -67,8 +67,8 @@ pub fn emit_main(app: &AppHandle, event: &str) {
 pub fn post_to_outputs(app: &AppHandle, message: &Value, target: Option<&str>) -> bool {
     let js = format!("window.postMessage({}, '*')", message);
     let mut any = false;
-    for label in ["output", "feed"] {
-        if let Some(t) = target { if (t == "output" || t == "feed") && t != label { continue; } }
+    for label in ["output", "feed", "stage"] {
+        if let Some(t) = target { if (t == "output" || t == "feed" || t == "stage") && t != label { continue; } }
         if let Some(w) = app.get_webview_window(label) { eval(&w, &js); any = true; }
     }
     any
@@ -107,6 +107,25 @@ pub fn open_output(app: &AppHandle, opts: &Value) {
     let built = builder(app, "output", page_url(DISPLAY_PAGE, "?standalone=1&hostMode=standalone"))
         .decorations(false).transparent(true).position(x, y).inner_size(w, h).fullscreen(fullscreen).focused(true).build();
     if let Ok(win) = built { watch_closed(app, &win, "output"); }
+}
+
+// Another computer asked this one to show its display: a full screen window on this computer's screen
+pub fn open_remote(app: &AppHandle, url: &str) {
+    close(app, "remote", true);
+    let Ok(parsed) = url.parse() else { return };
+    let (x, y, w, h) = bounds(app, None);
+    let built = WebviewWindowBuilder::new(app, "remote", WebviewUrl::External(parsed))
+        .title("Scripture Pod display").decorations(false).position(x, y).inner_size(w, h).fullscreen(true).focused(true).build();
+    if let Ok(win) = built { watch_closed(app, &win, "remote"); }
+}
+
+// Stage display for the worship team: an ordinary full-screen window on the chosen screen
+pub fn open_stage(app: &AppHandle, opts: &Value) {
+    close(app, "stage", true);
+    let (x, y, w, h) = bounds(app, display_id(opts).as_deref());
+    let built = builder(app, "stage", page_url(DISPLAY_PAGE, "?standalone=1&hostMode=standalone&role=stage"))
+        .title("Scripture Pod stage").decorations(false).position(x, y).inner_size(w, h).fullscreen(true).focused(true).build();
+    if let Ok(win) = built { watch_closed(app, &win, "stage"); }
 }
 
 pub fn open_feed(app: &AppHandle, opts: &Value) {

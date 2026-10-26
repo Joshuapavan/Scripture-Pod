@@ -99,6 +99,31 @@ commit that edits a file in `.github/workflows`, so such a push builds but publi
 - **Browser source:** the app serves the display page on your network. In OBS add a Browser
   Source with the URL from **Settings, Host Mode, LAN Display URL**.
 
+### Show the display on any laptop (no install)
+
+The other laptop only needs a browser. In **Outputs**, **Any laptop with a browser**:
+
+1. Choose **Show as**: Live display (lower third, transparent) or Monitor (full screen, clock).
+2. Press **Scan network for laptops** and press **Use this laptop** next to the one you want.
+3. On that laptop open the address shown, for example `http://192.168.1.20:8087/display.html`
+   (`/monitor.html` opens it as a Monitor). The display starts by itself.
+
+A laptop that opens the address without being picked waits on a "Waiting to be allowed" page, and
+**Allow** / **Deny** buttons appear in Outputs (the Outputs button shows a dot). **Disconnect** or **Stop**
+ends it. Only laptops you allow can connect, and only to the display. Port `8087` (and `5510`, `5511`)
+must be allowed through the firewall, and both laptops must be on the same network.
+
+### Show the display on another Scripture Pod computer
+
+Open **Outputs**, **Other computers**. Computers on the same network that run Scripture Pod are
+listed. On the other computer, switch on **Receive** (Outputs, Other computers) and read its pairing
+code. Back on the controlling computer, type that code, pick **Live display** or **Monitor**, and press
+**Connect**: the other computer opens this computer's display page full screen. **Disconnect**, or
+**Stop showing the display here** on the other computer, closes it. Receive is off until you switch it
+on, the code changes on every launch, and only this computer's own display page can be opened.
+Computers find each other with small broadcasts on UDP port `5530`; allow it, `5510` and `5511`
+through the firewall. Guest Wi-Fi or router "client isolation" blocks the broadcasts.
+
 ### Display on another computer
 
 1. In **Settings, Host Mode**, choose **WebSocket Relay**.
@@ -113,6 +138,23 @@ one (set `SCRIPTURE_POD_HTTP_PORT` and `SCRIPTURE_POD_RELAY_PORT` to choose your
 Links contain a per-launch access token. Treat them like passwords and re-copy them after a
 restart. RemoteShow QR codes are generated on the computer and never sent to a QR service.
 This is a browser display, not an NDI stream.
+
+## Everyday tools
+
+- **Stage display.** Outputs, **Stage display** opens a full-screen window for the worship team with the
+  words on screen now, the next slide and the time. Any laptop can show it too: pick **Stage display** under
+  **Show as** in **Any laptop with a browser**.
+- **Phone remote.** Outputs, **Phone remote**: switch it on and scan the code with a phone on the same
+  network. The phone gets Next, Previous, Go live, Clear and Preview, and shows what is on screen. Anyone
+  with the link can control the service, so switch it off when you are done.
+- **Shortcuts and clicker.** Settings, **Shortcuts**: add your own keys for the main actions. A presentation
+  clicker works as it is: Page Down and Page Up move through slides, "." or B clears the screen.
+- **Service templates.** In the Setlist, **Save as template** keeps the current setlist; **Start from a
+  template** begins next week's from it.
+- **Automatic backups.** Settings, General: choose a folder (Dropbox, Drive or OneDrive gives an off-computer
+  copy), how often, and how many to keep. **Back up now** runs one at once.
+- **Update notice.** The app looks for a newer release once a day (and on **Check for updates** in Settings)
+  and offers its download page. It does not install updates by itself: that needs signed builds.
 
 ## Backup and restore
 

@@ -1317,6 +1317,25 @@ ${getLtThumbCss()}
       return msg;
     }
 
+    // What the worship team's stage screen shows: the slide on screen now, the one after it, and where we are
+    function buildStageInfo(item, cursor, linesOverride, page) {
+      try {
+        const isBible = !!(livePointer && livePointer.kind === 'bible');
+        const pages = getPagesFromItem(item, isBible, linesOverride) || [];
+        const plain = (html) => { const d = document.createElement('div'); d.innerHTML = String(html || ''); return (d.innerText || d.textContent || '').replace(/[ \t]+\n/g, '\n').trim(); };
+        const cur = pages[cursor] || page || null;
+        const next = pages[cursor + 1] || null;
+        return {
+          title: (item && item.title) || '',
+          ref: isBible && cur ? getBibleRefForPage(item, cur.raw, cur.verseCount) : '',
+          section: cur && cur.tag ? String(cur.tag) : '',
+          current: plain(cur && cur.text),
+          next: plain(next && next.text),
+          position: `${Math.min(pages.length, cursor + 1)}/${pages.length}`
+        };
+      } catch (e) { return null; }
+    }
+
     function broadcastMessage(rawMsg) {
       // Live display (stream feed, display link, Program): lyrics as a lower third on a transparent page.
       // Monitor feeds (HDMI main screen, monitor link, Preview): lyrics full screen, with the clock.
@@ -1341,6 +1360,7 @@ ${getLtThumbCss()}
           // The stream feed is the live output; the HDMI main screen is a monitor
           desktop.sendOutputMessage(liveMsg, 'feed').catch(() => {});
           desktop.sendOutputMessage(monitorMsg, 'output').catch(() => {});
+          desktop.sendOutputMessage(monitorMsg, 'stage').catch(() => {});
         } else if (rawMsg && rawMsg.type === 'CLOCK') {
           desktop.sendOutputMessage(monitorMsg, 'output').catch(() => {});
         }
@@ -2168,6 +2188,7 @@ ${getLtThumbCss()}
         bibleRef: livePointer.kind === 'bible' ? getBibleRefForPage(liveItem, p.raw, p.verseCount) : '',
         bibleVersion: (showVersion && livePointer.kind === 'bible') ? bibleVer : '',
         verseCount: p.verseCount || 0,
+        stage: buildStageInfo(liveItem, liveLineCursor, effectiveLiveLinesPerPage, p),
         lineCount: (p.raw || "").split('\n').length,
         autoAdjustLtHeight: autoAdjustLtHeight,
         hAlignFull: fullHAlign,

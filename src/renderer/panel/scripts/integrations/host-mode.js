@@ -143,3 +143,272 @@
     }
 
 
+
+    // ── Other computers on the network ────────────────────────────────────────
+    // Computers running Scripture Pod show up here (found by their beacons). Connecting asks one to open this
+    // computer's display page full screen; it only accepts when "Receive" is on and the pairing code matches.
+    const DEVICE_CODES_KEY = 'scripturePod.deviceCodes.v1';
+    const connectedDevices = new Set();
+    function loadDeviceCodes() { try { return JSON.parse(localStorage.getItem(DEVICE_CODES_KEY) || '{}'); } catch (e) { return {}; } }
+    function saveDeviceCode(id, code) { const all = loadDeviceCodes(); all[id] = code; try { localStorage.setItem(DEVICE_CODES_KEY, JSON.stringify(all)); } catch (e) { /* storage unavailable */ } }
+
+    async function refreshNetworkDevices() {
+      const bridge = window.BSPDesktop;
+      const host = document.getElementById('network-device-list');
+      if (!bridge || typeof bridge.listDevices !== 'function' || !host) return;
+      let devices = [];
+      try { devices = await bridge.listDevices(); } catch (e) { devices = []; }
+      const codes = loadDeviceCodes();
+      // keep what is being typed: only redraw when the list changed
+      const signature = JSON.stringify(devices.map((d) => [d.id, d.name, d.ip, d.receiving, connectedDevices.has(d.id)]));
+      if (host.dataset.signature !== signature) {
+        host.dataset.signature = signature;
+        host.replaceChildren();
+        if (!devices.length) {
+          const p = document.createElement('p');
+          p.className = 'output-route-hint';
+          p.textContent = 'No other computers found yet. Open Scripture Pod on another computer on this network.';
+          host.appendChild(p);
+        }
+        devices.forEach((d) => {
+          const row = document.createElement('div');
+          row.className = 'network-device';
+          const info = document.createElement('div');
+          info.className = 'network-device-info';
+          const name = document.createElement('strong'); name.textContent = d.name || d.ip;
+          const meta = document.createElement('span');
+          meta.textContent = `${d.ip} · ${connectedDevices.has(d.id) ? 'Connected' : (d.receiving ? 'Ready to receive' : 'Receive is off')}`;
+          info.append(name, meta);
+          const code = document.createElement('input');
+          code.type = 'text'; code.inputMode = 'numeric'; code.maxLength = 6; code.placeholder = 'Code';
+          code.className = 'network-device-code'; code.value = codes[d.id] || '';
+          code.oninput = () => saveDeviceCode(d.id, code.value.trim());
+          const btn = document.createElement('button');
+          btn.type = 'button'; btn.className = 'btn';
+          const connected = connectedDevices.has(d.id);
+          btn.textContent = connected ? 'Disconnect' : 'Connect';
+          btn.onclick = () => (connected ? disconnectNetworkDevice(d.id, code.value.trim()) : connectNetworkDevice(d.id, code.value.trim()));
+          row.append(info, code, btn);
+          host.appendChild(row);
+        });
+      }
+      // a computer that left the network is no longer connected
+      [...connectedDevices].forEach((id) => { if (!devices.some((d) => d.id === id)) connectedDevices.delete(id); });
+      refreshReceiverUi();
+    }
+
+    async function connectNetworkDevice(id, code) {
+      const role = document.getElementById('device-role')?.value || 'live';
+      if (!code) { showToast('Enter the pairing code shown on that computer'); return; }
+      saveDeviceCode(id, code);
+      const result = await window.BSPDesktop.connectDevice({ id, code, role });
+      if (result && result.ok) { connectedDevices.add(id); showToast('Connected: the display is open on that computer'); }
+      else showToast((result && result.error) || 'Could not connect');
+      const host = document.getElementById('network-device-list'); if (host) host.dataset.signature = '';
+      refreshNetworkDevices();
+    }
+
+    async function disconnectNetworkDevice(id, code) {
+      const result = await window.BSPDesktop.disconnectDevice({ id, code });
+      connectedDevices.delete(id);
+      if (!(result && result.ok)) showToast((result && result.error) || 'Could not reach that computer');
+      const host = document.getElementById('network-device-list'); if (host) host.dataset.signature = '';
+      refreshNetworkDevices();
+    }
+
+    async function refreshReceiverUi() {
+      const bridge = window.BSPDesktop;
+      if (!bridge || typeof bridge.getReceiver !== 'function') return;
+      const r = await bridge.getReceiver().catch(() => null);
+      if (!r) return;
+      const toggle = document.getElementById('receiver-toggle'); if (toggle) toggle.checked = !!r.enabled;
+      const nameEl = document.getElementById('receiver-name'); if (nameEl && document.activeElement !== nameEl) nameEl.value = r.name || '';
+      const codeEl = document.getElementById('receiver-code'); if (codeEl) codeEl.value = r.enabled ? r.code : 'Switch Receive on to show the code';
+      const stop = document.getElementById('receiver-stop'); if (stop) stop.hidden = !r.enabled;
+    }
+
+    async function setReceiverEnabledFromUi(on) {
+      const name = document.getElementById('receiver-name')?.value || '';
+      await window.BSPDesktop.setReceiver({ enabled: !!on, name });
+      refreshReceiverUi();
+    }
+
+    async function stopReceivedDisplay() {
+      await window.BSPDesktop.closeRemote();
+      showToast('The display on this computer is closed');
+    }
+
+    (function initNetworkDevices() {
+      const start = () => {
+        try { const role = localStorage.getItem('scripturePod.deviceRole.v1'); const sel = document.getElementById('device-role'); if (role && sel) sel.value = role; } catch (e) { /* storage unavailable */ }
+        refreshNetworkDevices();
+        setInterval(() => { if (document.getElementById('outputs-card')?.classList.contains('is-open')) refreshNetworkDevices(); }, 2500);
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+    })();
+
+    // ── Any laptop with a browser: pick it here, open the address there ─────────────
+    const HOST_LABELS_KEY = 'scripturePod.hostLabels.v1';
+    function loadHostLabels() { try { return JSON.parse(localStorage.getItem(HOST_LABELS_KEY) || '{}'); } catch (e) { return {}; } }
+    function saveHostLabel(ip, label) {
+      const all = loadHostLabels();
+      if (label) all[ip] = label; else delete all[ip];
+      try { localStorage.setItem(HOST_LABELS_KEY, JSON.stringify(all)); } catch (e) { /* storage unavailable */ }
+    }
+    let scannedHosts = [];
+    let browserDisplayInfo = null;
+    const browserRole = () => document.getElementById('browser-role')?.value || 'live';
+
+    function browserDisplayUrlFor(info, role) {
+      if (!info) return '';
+      const list = role === 'monitor' ? info.monitorUrls : (role === 'stage' ? info.stageUrls : info.urls);
+      const chosen = (typeof localServerInfo !== 'undefined' && localServerInfo && localServerInfo.preferredHost) || '';
+      return (list || []).find((u) => chosen && u.includes(`//${chosen}:`)) || (list || [])[0] || '';
+    }
+    async function refreshBrowserDisplay() {
+      const bridge = window.BSPDesktop;
+      if (!bridge || typeof bridge.getBrowserDisplay !== 'function') return;
+      browserDisplayInfo = await bridge.getBrowserDisplay().catch(() => null);
+      const el = document.getElementById('browser-display-url');
+      if (el) el.value = browserDisplayUrlFor(browserDisplayInfo, browserRole());
+      renderNetworkHosts();
+      refreshBrowserJoins();
+    }
+    async function copyBrowserDisplayUrl() {
+      const url = document.getElementById('browser-display-url')?.value || '';
+      if (!url) return;
+      try { await window.BSPDesktop.copyText(url); showToast('Address copied'); } catch (e) { showToast('Could not copy'); }
+    }
+
+    async function scanNetworkHosts() {
+      const bridge = window.BSPDesktop;
+      if (!bridge || typeof bridge.scanNetwork !== 'function') return;
+      const btn = document.getElementById('btn-scan-network');
+      const status = document.getElementById('scan-status');
+      if (btn) { btn.disabled = true; btn.textContent = 'Scanning…'; }
+      try { scannedHosts = await bridge.scanNetwork(); } catch (e) { scannedHosts = []; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Scan network for laptops'; }
+      if (status) status.textContent = scannedHosts.length ? `${scannedHosts.length} found` : 'Nothing found. Make sure the laptop is awake and on this network.';
+      renderNetworkHosts();
+    }
+
+    function renderNetworkHosts() {
+      const host = document.getElementById('network-host-list');
+      if (!host) return;
+      host.replaceChildren();
+      const url = browserDisplayUrlFor(browserDisplayInfo, browserRole());
+      scannedHosts.forEach((h) => {
+        const row = document.createElement('div');
+        row.className = 'network-device';
+        const info = document.createElement('div');
+        info.className = 'network-device-info';
+        const labels = loadHostLabels();
+        const shown = labels[h.ip] || h.name || 'Unknown device';
+        const name = document.createElement('strong');
+        name.textContent = shown;
+        name.title = 'Click to give this device a name you will recognise';
+        name.style.cursor = 'text';
+        name.onclick = () => {
+          const input = document.createElement('input');
+          input.type = 'text'; input.value = labels[h.ip] || (h.name || ''); input.maxLength = 40; input.placeholder = 'Name this device';
+          input.className = 'network-device-code'; input.style.width = '100%'; input.style.textAlign = 'left';
+          const save = () => { saveHostLabel(h.ip, input.value.trim()); renderNetworkHosts(); };
+          input.onblur = save;
+          input.onkeydown = (e) => { if (e.key === 'Enter') input.blur(); if (e.key === 'Escape') { input.onblur = null; renderNetworkHosts(); } };
+          name.replaceWith(input); input.focus(); input.select();
+        };
+        const meta = document.createElement('span');
+        meta.textContent = h.selected ? `${h.ip} · Picked: open ${url} on it` : h.ip;
+        info.append(name, meta);
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'btn';
+        btn.textContent = h.selected ? 'Stop' : 'Use this laptop';
+        btn.onclick = async () => {
+          const r = await window.BSPDesktop.allowIp({ ip: h.ip, role: browserRole(), allow: !h.selected });
+          if (r && r.error) { showToast(r.error); return; }
+          h.selected = !h.selected;
+          if (h.selected) showToast(`Open ${url} in the browser on ${loadHostLabels()[h.ip] || h.name || h.ip}`);
+          renderNetworkHosts(); refreshBrowserJoins();
+        };
+        row.append(info, btn);
+        host.appendChild(row);
+      });
+    }
+
+    async function refreshBrowserJoins() {
+      const bridge = window.BSPDesktop;
+      const host = document.getElementById('browser-join-list');
+      if (!bridge || typeof bridge.listJoins !== 'function' || !host) return;
+      const data = await bridge.listJoins().catch(() => null);
+      if (!data) return;
+      const joins = (data.joins || []).filter((j) => j.status === 'pending' || (j.status === 'approved' && j.live));
+      const signature = JSON.stringify(joins.map((j) => [j.sid, j.status, j.role, j.live]));
+      if (host.dataset.signature === signature) return;
+      host.dataset.signature = signature;
+      host.replaceChildren();
+      joins.forEach((j) => {
+        const row = document.createElement('div');
+        row.className = 'network-device';
+        const info = document.createElement('div');
+        info.className = 'network-device-info';
+        const name = document.createElement('strong'); name.textContent = loadHostLabels()[j.ip] || j.name || j.ip;
+        const meta = document.createElement('span');
+        meta.textContent = `${j.ip}${loadHostLabels()[j.ip] && j.name ? ' · ' + j.name : ''} · ${j.status === 'pending' ? 'Waiting to be allowed' : 'Showing the ' + (j.role === 'monitor' ? 'monitor' : 'live display')}`;
+        info.append(name, meta);
+        row.appendChild(info);
+        const act = (label, action) => {
+          const b = document.createElement('button'); b.type = 'button'; b.className = 'btn'; b.textContent = label;
+          b.onclick = async () => { await window.BSPDesktop.decideJoin({ sid: j.sid, action, role: browserRole() }); host.dataset.signature = ''; refreshBrowserJoins(); };
+          row.appendChild(b);
+        };
+        if (j.status === 'pending') { act('Allow', 'approve'); act('Deny', 'deny'); } else act('Disconnect', 'revoke');
+        host.appendChild(row);
+      });
+    }
+
+    (function initBrowserDisplay() {
+      const start = () => {
+        try { const r = localStorage.getItem('scripturePod.browserRole.v1'); const sel = document.getElementById('browser-role'); if (r && sel) sel.value = r; } catch (e) { /* storage unavailable */ }
+        refreshBrowserDisplay();
+        setInterval(() => { if (document.getElementById('outputs-card')?.classList.contains('is-open')) refreshBrowserJoins(); }, 2000);
+        // a laptop waiting to be allowed tells you without opening Outputs
+        setInterval(async () => {
+          try {
+            const data = await window.BSPDesktop.listJoins();
+            const waiting = (data.joins || []).filter((j) => j.status === 'pending' && j.live).length;
+            const btn = document.getElementById('btn-topbar-outputs');
+            if (btn) btn.classList.toggle('has-waiting', waiting > 0);
+          } catch (e) { /* bridge unavailable */ }
+        }, 4000);
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+    })();
+
+    // ── Stage display window on a screen of this computer ───────────────────────────
+    async function refreshStageDisplayUi() {
+      const bridge = window.BSPDesktop;
+      const btn = document.getElementById('btn-stage-display');
+      const select = document.getElementById('stage-display-screen');
+      if (!bridge || typeof bridge.isStageOpen !== 'function' || !btn) return;
+      const open = await bridge.isStageOpen().catch(() => false);
+      btn.textContent = open ? 'Close stage display' : 'Open stage display';
+      if (select && !select.options.length && typeof bridge.getDisplays === 'function') {
+        const displays = await bridge.getDisplays().catch(() => []);
+        select.innerHTML = displays.map((d, i) => `<option value="${d.id}">${d.label || 'Screen ' + (i + 1)} (${d.width}×${d.height})${d.isPrimary ? ' · main' : ''}</option>`).join('');
+        const external = displays.find((d) => !d.isInternal && !d.isPrimary);
+        if (external) select.value = external.id;
+      }
+    }
+    async function toggleStageDisplay() {
+      const bridge = window.BSPDesktop;
+      if (!bridge) return;
+      if (await bridge.isStageOpen().catch(() => false)) await bridge.closeStage();
+      else {
+        await bridge.openStage({ displayId: document.getElementById('stage-display-screen')?.value || '' });
+        // a stage screen opened mid-service shows what is on air straight away
+        setTimeout(() => { try { if (typeof sendSyncState === 'function') sendSyncState(); } catch (e) { /* nothing live */ } }, 900);
+      }
+      setTimeout(refreshStageDisplayUi, 500);
+    }
+    setInterval(() => { if (document.getElementById('outputs-card')?.classList.contains('is-open')) refreshStageDisplayUi(); }, 2500);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refreshStageDisplayUi); else refreshStageDisplayUi();
