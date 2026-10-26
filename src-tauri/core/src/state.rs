@@ -1,11 +1,49 @@
 use crate::search;
 use rand::RngCore;
-use std::{collections::HashMap, path::PathBuf, sync::{atomic::AtomicU16, Arc, Mutex}};
+use std::{collections::HashMap, path::PathBuf, sync::{atomic::{AtomicBool, AtomicU16}, Arc, Mutex}, time::Instant};
 
 pub const DISPLAY_PAGE: &str = "src/renderer/display/display.html";
 pub const PANEL_PAGE: &str = "src/renderer/panel/panel.html";
 
+// Another computer running Scripture Pod on the same network, seen in its beacons
+#[derive(Clone)]
+pub struct Peer {
+    pub id: String,
+    pub name: String,
+    pub ip: String,
+    pub port: u16,
+    pub receiving: bool,
+    pub last_seen: Instant,
+}
+
+// A browser on another computer that opened the display address (no app needed there)
+#[derive(Clone)]
+pub struct Join {
+    pub sid: String,
+    pub ip: String,
+    pub name: String,
+    pub status: String, // pending | approved | denied | revoked
+    pub role: String,   // live | monitor
+    pub at: Instant,
+    pub seen: Instant,
+}
+
+pub type Joins = Arc<Mutex<HashMap<String, Join>>>;
+
+// Called when another computer asks this one to show its display (Some(url)) or to stop (None)
+pub type ConnectHandler = Arc<dyn Fn(Option<String>) + Send + Sync>;
+
 pub struct AppState {
+    pub instance_id: String,
+    pub device_name: Mutex<String>,
+    pub receiver_enabled: AtomicBool,
+    pub pair_code: String,
+    pub peers: Mutex<HashMap<String, Peer>>,
+    pub browser_port: AtomicU16,
+    pub joins: Joins,
+    // Computers picked in the controlling app: their browser is let in without asking, as this role
+    pub allowed_ips: Mutex<HashMap<String, String>>,
+    pub on_connect: Mutex<Option<ConnectHandler>>,
     pub root: PathBuf,
     pub db: Mutex<rusqlite::Connection>,
     pub relay: Arc<crate::relay::Relay>,
@@ -19,6 +57,15 @@ pub struct AppState {
 impl AppState {
     pub fn new(root: PathBuf, data_dir: PathBuf) -> Self {
         AppState {
+            instance_id: random_hex(6),
+            device_name: Mutex::new(String::new()),
+            receiver_enabled: AtomicBool::new(false),
+            pair_code: format!("{:06}", rand::random::<u32>() % 1_000_000),
+            peers: Mutex::new(HashMap::new()),
+            browser_port: AtomicU16::new(0),
+            joins: Arc::new(Mutex::new(HashMap::new())),
+            allowed_ips: Mutex::new(HashMap::new()),
+            on_connect: Mutex::new(None),
             root,
             db: Mutex::new(search::open(&data_dir.join("bible-search.sqlite"))),
             relay: Arc::new(crate::relay::Relay::default()),

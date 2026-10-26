@@ -109,6 +109,16 @@ pub fn open_output(app: &AppHandle, opts: &Value) {
     if let Ok(win) = built { watch_closed(app, &win, "output"); }
 }
 
+// Another computer asked this one to show its display: a full screen window on this computer's screen
+pub fn open_remote(app: &AppHandle, url: &str) {
+    close(app, "remote", true);
+    let Ok(parsed) = url.parse() else { return };
+    let (x, y, w, h) = bounds(app, None);
+    let built = WebviewWindowBuilder::new(app, "remote", WebviewUrl::External(parsed))
+        .title("Scripture Pod display").decorations(false).position(x, y).inner_size(w, h).fullscreen(true).focused(true).build();
+    if let Ok(win) = built { watch_closed(app, &win, "remote"); }
+}
+
 pub fn open_feed(app: &AppHandle, opts: &Value) {
     close(app, "feed", true);
     let (x, y, w, h) = bounds(app, display_id(opts).as_deref());

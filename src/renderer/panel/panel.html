@@ -904,6 +904,53 @@
             </button>
           </div>
         </div>
+        <div class="output-route" id="output-route-browser">
+          <div class="output-route-head">
+            <strong>Any laptop with a browser</strong>
+            <span class="output-route-kind">No install needed</span>
+          </div>
+          <p class="output-route-hint">Pick a laptop below, then open this address in its browser. It starts showing the display as soon as it is picked here.</p>
+          <div class="program-display-link-row">
+            <label for="browser-display-url">Address</label>
+            <input type="text" id="browser-display-url" readonly>
+            <button type="button" class="btn" onclick="copyBrowserDisplayUrl()" title="Copy the address" aria-label="Copy the address"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+          </div>
+          <div class="program-display-link-row">
+            <label for="browser-role">Show as</label>
+            <select id="browser-role" onchange="try{localStorage.setItem('scripturePod.browserRole.v1',this.value)}catch(e){};refreshBrowserDisplay()">
+              <option value="live">Live display (lower third, transparent)</option>
+              <option value="monitor">Monitor (full screen, clock)</option>
+            </select>
+          </div>
+          <div class="output-route-actions">
+            <button type="button" class="btn" id="btn-scan-network" onclick="scanNetworkHosts()">Scan network for laptops</button>
+            <span id="scan-status" class="output-route-hint"></span>
+          </div>
+          <div id="network-host-list" class="network-device-list"></div>
+          <div id="browser-join-list" class="network-device-list"></div>
+        </div>
+        <div class="output-route" id="output-route-devices">
+          <div class="output-route-head">
+            <strong>Another Scripture Pod computer</strong>
+            <span class="output-route-kind">App installed there</span>
+          </div>
+          <p class="output-route-hint">Computers on this network that run Scripture Pod are listed here. Switch on "Receive" on the other computer, enter its pairing code, then connect: it opens the display full screen.</p>
+          <div class="program-display-link-row">
+            <label for="device-role">Show as</label>
+            <select id="device-role" onchange="try{localStorage.setItem('scripturePod.deviceRole.v1',this.value)}catch(e){}">
+              <option value="live">Live display (lower third, transparent)</option>
+              <option value="monitor">Monitor (full screen, clock)</option>
+            </select>
+          </div>
+          <div id="network-device-list" class="network-device-list"><p class="output-route-hint">Looking for computers…</p></div>
+          <div class="network-receiver">
+            <label class="mini-toggle"><span>Receive: let other computers show their display on this one</span>
+              <input type="checkbox" id="receiver-toggle" onchange="setReceiverEnabledFromUi(this.checked)"></label>
+            <div class="program-display-link-row"><label for="receiver-name">Name</label><input type="text" id="receiver-name" maxlength="60" onchange="setReceiverEnabledFromUi(document.getElementById('receiver-toggle').checked)"></div>
+            <div class="program-display-link-row"><label>Pairing code</label><input type="text" id="receiver-code" readonly></div>
+            <button type="button" class="btn" id="receiver-stop" onclick="stopReceivedDisplay()" hidden>Stop showing the display here</button>
+          </div>
+        </div>
       </section>
       <div class="program-display-footer">
         <div class="program-display-route-status">
@@ -1016,6 +1063,7 @@
         </section>
         <section>
           <h4>Around the app</h4>
+          <div class="shortcut-row"><span>Presentation clicker: next / previous slide</span><kbd>Page Down · Page Up</kbd></div>
           <div class="shortcut-row"><span>Switch Bible, Lyrics and Setlist</span><kbd>Tab · ⇧ Tab</kbd></div>
           <div class="shortcut-row"><span>Show or hide the sidebar</span><kbd>S · ⌘ B</kbd></div>
           <div class="shortcut-row"><span>Open Imports</span><kbd>I</kbd></div>
@@ -1082,6 +1130,10 @@
           <div class="sm-sidebar-item" data-sm-tab="presets" onclick="switchSettingsTab('presets')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
             <span data-i18n="settings_presets">General</span>
+          </div>
+          <div class="sm-sidebar-item" data-sm-tab="shortcuts" onclick="switchSettingsTab('shortcuts')">
+            <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+            <span>Shortcuts</span>
           </div>
           <div class="sm-sidebar-item" data-sm-tab="feedback" onclick="switchSettingsTab('feedback')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>
@@ -1884,6 +1936,14 @@
               <button class="btn" id="panel-inline-style-162" onclick="confirmReset()">⚠️ <span data-i18n="settings_reset_plugin">Reset Plugin</span></button>
             </div>
             <input type="file" id="backup-import-file" accept=".json"  onchange="handleBackupImport(this)">
+          </div>
+        </div>
+        <div class="sm-tab-panel" data-sm-panel="shortcuts">
+          <div class="sm-panel-title">Shortcuts</div>
+          <div class="settings-category-content">
+            <p class="output-route-hint">Extra keys for the main actions, on top of the built-in ones (see the keyboard shortcuts window, press ?). A presentation clicker works out of the box: Page Down and Page Up move through slides, and "." or B clears the screen. A key can belong to one action only.</p>
+            <div id="shortcut-settings-list" class="shortcut-edit-list"></div>
+            <button type="button" class="btn" onclick="resetCustomShortcuts()">Reset to defaults</button>
           </div>
         </div>
         <div class="sm-tab-panel" data-sm-panel="feedback">
@@ -3103,6 +3163,7 @@
   <script src="./scripts/ui/app-chrome.js"></script>
   <script src="./scripts/ui/workspace-and-editor-tools.js"></script>
   <script src="./scripts/ui/app-commands-and-shortcuts.js"></script>
+  <script src="./scripts/ui/custom-shortcuts.js"></script>
   <script src="./scripts/ui/command-palette.js"></script>
   <script src="./scripts/core/settings-and-controls.js"></script>
   <script src="./scripts/ui/sidebar-and-workspace.js"></script>

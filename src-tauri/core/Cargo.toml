@@ -11,3 +11,4 @@ serde_json = "1"
 rand = "0.8"
 rusqlite = { version = "0.32", features = ["bundled"] }
 unicode-normalization = "0.1"
+if-addrs = "0.13"

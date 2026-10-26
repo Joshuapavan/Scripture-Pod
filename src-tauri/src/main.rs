@@ -3,6 +3,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod api;
+mod names;
 mod windows;
 
 use sp_core::{relay, server, state::*};
@@ -51,11 +52,28 @@ fn main() {
             let data_dir = app.path().app_data_dir().unwrap_or_else(|_| PathBuf::from("."));
             let state = Arc::new(AppState::new(app_root(app), data_dir));
             let http = env_port("SCRIPTURE_POD_HTTP_PORT", 5510);
+            let browser_port = env_port("SCRIPTURE_POD_BROWSER_PORT", 8087);
             let relay_port = env_port("SCRIPTURE_POD_RELAY_PORT", 5511);
             server::start(state.clone(), http);
+            server::start_browser(state.clone(), browser_port);
+            { // a browser that joined through the display address may connect to the relay once it is approved
+                let joins = state.joins.clone();
+                state.relay.set_sid_check(Arc::new(move |sid: &str| joins.lock().unwrap().get(sid).map(|j| j.status == "approved").unwrap_or(false)));
+            }
             if let Some(p) = relay::start(state.relay.clone(), state.token.clone(), relay_port) { state.relay_port.store(p, Ordering::SeqCst); }
             #[cfg(any(debug_assertions, feature = "harness"))]
             println!("Scripture Pod display URL: {}", api::local_server_info(&state)["displayUrl"].as_str().unwrap_or(""));
+            // Other computers: a name for this one, a handler for "show your display here", and the beacons
+            let name = std::process::Command::new("hostname").output().ok()
+                .and_then(|o| String::from_utf8(o.stdout).ok()).map(|s| s.trim().trim_end_matches(".local").to_string())
+                .filter(|s| !s.is_empty()).unwrap_or_else(|| "Scripture Pod".to_string());
+            *state.device_name.lock().unwrap() = name;
+            let handle_for_remote = app.handle().clone();
+            *state.on_connect.lock().unwrap() = Some(Arc::new(move |url: Option<String>| match url {
+                Some(u) => windows::open_remote(&handle_for_remote, &u),
+                None => windows::close(&handle_for_remote, "remote", false),
+            }));
+            sp_core::discovery::start(state.clone());
             app.manage(state.clone());
             app.manage(Arc::new(windows::SilentClose::default()));
             windows::open_main(app.handle());
