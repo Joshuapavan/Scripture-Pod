@@ -2825,3 +2825,12 @@ select option, select optgroup {
 .lt-designer-save { background: var(--sp-text); color: var(--sp-ground); }
 
 .section-tag-chip.is-tidy { margin-left: auto; border-style: solid; color: var(--sp-text); }
+
+.stage-options { margin-top: 8px; font-size: 13px; }
+.stage-options summary { cursor: pointer; color: var(--sp-text); padding: 4px 0; }
+.stage-options-grid { display: flex; flex-direction: column; gap: 6px; margin: 8px 0 10px; }
+.stage-option-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 8px; }
+.stage-option-row.is-check { grid-template-columns: auto 1fr; }
+.stage-option-row input[type="range"] { width: 130px; }
+.stage-option-row output { min-width: 40px; text-align: right; font: 500 12px var(--sp-mono, ui-monospace, monospace); color: var(--sp-subtle); }
+.stage-option-row select { height: 28px; border-radius: 6px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); }

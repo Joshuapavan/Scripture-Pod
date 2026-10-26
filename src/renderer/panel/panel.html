@@ -933,6 +933,11 @@
             <button type="button" class="btn" id="btn-stage-display" onclick="toggleStageDisplay()">Open stage display</button>
             <select id="stage-display-screen" aria-label="Screen for the stage display"></select>
           </div>
+          <details class="stage-options" id="stage-options">
+            <summary>Customise the stage display</summary>
+            <div class="stage-options-grid" id="stage-options-grid"></div>
+            <button type="button" class="btn" onclick="resetStageConfig()">Reset to defaults</button>
+          </details>
         </div>
         <div class="output-route" id="output-route-browser">
           <div class="output-route-head">

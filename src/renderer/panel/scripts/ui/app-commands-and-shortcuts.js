@@ -123,15 +123,29 @@
         bar.innerHTML = '<span class="section-tag-label">Tag selection as</span>' +
           SECTION_TAG_KINDS.map((k) => `<button type="button" class="section-tag-chip" data-kind="${k.kind}">${k.kind}</button>`).join('') +
           '<button type="button" class="section-tag-chip is-clear" data-kind="">Remove tag</button>' +
+          '<button type="button" class="section-tag-chip is-clear" data-clearall="1" title="Remove every [Verse], [Chorus] … tag from these lyrics">Clear all tags</button>' +
           '<button type="button" class="section-tag-chip is-tidy" data-tidy="1" title="Remove verse numbers and repeat marks (1., x2, (x4), xn, -2) from these lyrics">Tidy lyrics</button>';
         bar.addEventListener('mousedown', (e) => { if (e.target.closest('.section-tag-chip')) e.preventDefault(); }); // keep the text selection
         bar.addEventListener('click', (e) => {
           const chip = e.target.closest('.section-tag-chip');
           if (!chip) return;
           if (chip.dataset.tidy) { tidyLyricsInTextarea(target); return; }
+          if (chip.dataset.clearall) { clearAllLyricsTags(target); return; }
           tagLyricsSection(target, chip.dataset.kind);
         });
       });
+    }
+
+    // Removes every [Verse 1], [Chorus] … tag line from a lyrics box; the words and the blank lines between verses stay
+    function clearAllLyricsTags(textareaId) {
+      const ta = document.getElementById(textareaId);
+      if (!ta) return;
+      const lines = ta.value.split('\n');
+      const kept = lines.filter((l) => !SECTION_HEADER_RE.test(l));
+      if (kept.length === lines.length) { showToast('There are no tags to clear'); return; }
+      ta.value = kept.join('\n').replace(/\n{3,}/g, '\n\n').replace(/^\n+/, '');
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      showToast(`Cleared ${lines.length - kept.length} tag${lines.length - kept.length === 1 ? '' : 's'}`);
     }
 
     // Removes verse numbers and repeat marks from the whole text of a lyrics box (the saved song follows)

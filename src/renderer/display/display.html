@@ -204,24 +204,64 @@
     const IS_STAGE = new URLSearchParams(window.location.search).get('role') === 'stage';
     const MY_AUDIENCE = (IS_MONITOR_FEED || IS_STAGE) ? 'monitor' : 'live';
     let stageClock = { format: '12' };
+    // What the stage screen shows and how big, set from the panel (Outputs, Stage display, Customise)
+    let stageConfig = { currentSize: 100, nextSize: 100, showTitle: true, showSection: true, showClock: true, showNext: true,
+      fullVerse: true, dimOthers: true, align: 'left', uppercase: false, font: 'Geist', textColor: '#ffffff', bgColor: '#000000', accent: '#3b9eff' };
+    let lastStageInfo = null;
+    function applyStageConfig(cfg) {
+      stageConfig = { ...stageConfig, ...(cfg || {}) };
+      const v = document.getElementById('stage-view');
+      if (!v) return;
+      const num = (x, lo, hi, d) => { const n = Number(x); return isNaN(n) ? d : Math.max(lo, Math.min(hi, n)); };
+      v.style.setProperty('--stage-cur', String(num(stageConfig.currentSize, 40, 250, 100) / 100));
+      v.style.setProperty('--stage-next', String(num(stageConfig.nextSize, 40, 250, 100) / 100));
+      v.style.setProperty('--stage-fg', /^#[0-9a-f]{6}$/i.test(stageConfig.textColor) ? stageConfig.textColor : '#ffffff');
+      v.style.setProperty('--stage-bg', /^#[0-9a-f]{6}$/i.test(stageConfig.bgColor) ? stageConfig.bgColor : '#000000');
+      v.style.setProperty('--stage-accent', /^#[0-9a-f]{6}$/i.test(stageConfig.accent) ? stageConfig.accent : '#3b9eff');
+      v.style.setProperty('--stage-dim', stageConfig.dimOthers ? '0.45' : '1');
+      v.style.setProperty('--stage-font', { Geist: "'Geist',system-ui,sans-serif", Montserrat: "'Montserrat',sans-serif", 'Source Serif 4': "'Source Serif 4',Georgia,serif", Arial: 'Arial,sans-serif', Impact: 'Impact,sans-serif' }[stageConfig.font] || "'Geist',system-ui,sans-serif");
+      v.dataset.align = ['left', 'center', 'right'].includes(stageConfig.align) ? stageConfig.align : 'left';
+      v.classList.toggle('hide-title', !stageConfig.showTitle);
+      v.classList.toggle('hide-section', !stageConfig.showSection);
+      v.classList.toggle('hide-clock', !stageConfig.showClock);
+      v.classList.toggle('hide-next', !stageConfig.showNext);
+      v.classList.toggle('is-upper', !!stageConfig.uppercase);
+      document.body.style.background = v.style.getPropertyValue('--stage-bg');
+      renderStageView(lastStageInfo);
+    }
     function paintStageClock() {
       const el = document.getElementById('stage-clock');
       if (el) el.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: stageClock.format !== '24' }).replace(/^0/, '');
     }
     function renderStageView(info) {
+      lastStageInfo = info;
       const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text || ''; };
       const s = info || {};
       set('stage-title', [s.title, s.ref].filter(Boolean).join(' · '));
       set('stage-section', s.section ? `Now · ${s.section}` : (s.current ? 'Now' : ''));
-      set('stage-current', s.current);
-      set('stage-next', s.next);
+      const cur = document.getElementById('stage-current');
+      if (cur) {
+        cur.textContent = '';
+        if (Array.isArray(s.lines) && s.lines.length) {
+          // the whole verse (or only the lines on the main screen): those lines are bright, the rest dimmer
+          s.lines.forEach((line, i) => {
+            const onScreen = i >= s.activeStart && i <= s.activeEnd;
+            if (!stageConfig.fullVerse && !onScreen) return;
+            const row = document.createElement('div');
+            row.className = 'stage-line' + (i >= s.activeStart && i <= s.activeEnd ? ' is-active' : '');
+            row.textContent = line;
+            cur.appendChild(row);
+          });
+        } else cur.textContent = s.current || '';
+      }
+      set('stage-next', s.next ? (s.nextSection ? `${s.nextSection}\n${s.next}` : s.next) : '');
       const nextBlock = document.querySelector('.stage-next-block');
       if (nextBlock) nextBlock.style.visibility = s.next ? 'visible' : 'hidden';
     }
     if (IS_STAGE) {
       document.body.classList.add('stage-role');
       document.getElementById('stage-view').hidden = false;
-      paintStageClock(); setInterval(paintStageClock, 1000);
+      paintStageClock(); setInterval(paintStageClock, 1000); applyStageConfig({});
     }
     // Stream feed over a cable: fill transparent areas with a key colour
     const KEY_BACKGROUND = { black: '#000000', green: '#00B140' }[new URLSearchParams(window.location.search).get('keyBg')] || '';
@@ -553,6 +593,7 @@
         else if (d && d.type === 'SYNC_STATE') renderStageView(d.state && d.state.kind === 'update' && d.state.payload ? d.state.payload.stage : null);
         else if (d && d.type === 'CLEAR') renderStageView(null);
         else if (d && d.type === 'CLOCK' && d.format) { stageClock.format = d.format; paintStageClock(); }
+        else if (d && d.type === 'STAGE_CONFIG') { stageClock.format = d.config && d.config.clock24 ? '24' : '12'; paintStageClock(); applyStageConfig(d.config); }
         else if (d && d.type === 'PING') { if (source === 'relay') relaySend({ type: 'PONG' }); }
         return;
       }

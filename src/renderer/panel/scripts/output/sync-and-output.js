@@ -1061,6 +1061,7 @@ ${getLtThumbCss()}
 
     function sendSyncState(opts = {}) {
       if (typeof sendMonitorClock === 'function') setTimeout(sendMonitorClock, 0);
+      if (typeof sendStageConfig === 'function') setTimeout(sendStageConfig, 0);
       // Only what is on air goes out: a verse left over from an earlier session (or from
       // before the versions on screen changed) must not appear when a display connects
       const onAir = typeof getOnAirPayload === 'function' ? getOnAirPayload() : (lastLiveState && lastLiveState.kind === 'update' ? lastLiveState.payload : null);
@@ -1343,18 +1344,31 @@ ${getLtThumbCss()}
     function buildStageInfo(item, cursor, linesOverride, page) {
       try {
         const isBible = !!(livePointer && livePointer.kind === 'bible');
-        const pages = getPagesFromItem(item, isBible, linesOverride) || [];
         const plain = (html) => { const d = document.createElement('div'); d.innerHTML = String(html || ''); return (d.innerText || d.textContent || '').replace(/[ \t]+\n/g, '\n').trim(); };
+        const pages = getPagesFromItem(item, isBible, linesOverride) || [];
         const cur = pages[cursor] || page || null;
-        const next = pages[cursor + 1] || null;
-        return {
+        const base = {
           title: (item && item.title) || '',
           ref: isBible && cur ? getBibleRefForPage(item, cur.raw, cur.verseCount) : '',
           section: cur && cur.tag ? String(cur.tag) : '',
-          current: plain(cur && cur.text),
-          next: plain(next && next.text),
           position: `${Math.min(pages.length, cursor + 1)}/${pages.length}`
         };
+        // The stage screen shows the whole verse or section, not just the lines on the main screen:
+        // the lines on air are bright, the rest of the section is dimmer, and the next section is shown below
+        if (!isBible && cur) {
+          const sections = getPagesFromItem(item, false, 9999) || [];
+          const curRows = String(cur.raw || '').split('\n').filter((l) => l.trim());
+          const idx = sections.findIndex((s) => s.tag === cur.tag && String(s.raw || '').includes(curRows.join('\n')));
+          if (idx >= 0) {
+            const rows = String(sections[idx].raw || '').split('\n').filter((l) => l.trim());
+            const start = Math.max(0, rows.findIndex((_, k) => rows.slice(k, k + curRows.length).join('\n') === curRows.join('\n')));
+            const next = sections[idx + 1] || null;
+            return { ...base, current: rows.join('\n'), lines: rows, activeStart: start, activeEnd: start + curRows.length - 1,
+              next: plain(next && next.text), nextSection: next && next.tag ? String(next.tag) : '' };
+          }
+        }
+        const nextPage = pages[cursor + 1] || null;
+        return { ...base, current: plain(cur && cur.text), next: plain(nextPage && nextPage.text) };
       } catch (e) { return null; }
     }
 
@@ -1383,6 +1397,8 @@ ${getLtThumbCss()}
           desktop.sendOutputMessage(liveMsg, 'feed').catch(() => {});
           desktop.sendOutputMessage(monitorMsg, 'output').catch(() => {});
           desktop.sendOutputMessage(monitorMsg, 'stage').catch(() => {});
+        } else if (rawMsg && rawMsg.type === 'STAGE_CONFIG') {
+          desktop.sendOutputMessage(rawMsg, 'stage').catch(() => {});
         } else if (rawMsg && rawMsg.type === 'CLOCK') {
           desktop.sendOutputMessage(monitorMsg, 'output').catch(() => {});
         }

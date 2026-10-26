@@ -412,3 +412,68 @@
     }
     setInterval(() => { if (document.getElementById('outputs-card')?.classList.contains('is-open')) refreshStageDisplayUi(); }, 2500);
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refreshStageDisplayUi); else refreshStageDisplayUi();
+
+    // ── Stage display options: size and contents ──────────────────────────────────
+    const STAGE_CONFIG_KEY = 'scripturePod.stageConfig.v1';
+    const STAGE_CONFIG_DEFAULTS = { currentSize: 100, nextSize: 100, showTitle: true, showSection: true, showClock: true, showNext: true,
+      fullVerse: true, dimOthers: true, align: 'left', uppercase: false, clock24: false, font: 'Geist', textColor: '#ffffff', bgColor: '#000000', accent: '#3b9eff' };
+    const STAGE_CONFIG_FIELDS = [
+      { key: 'currentSize', label: 'Words size', type: 'range', min: 50, max: 200, unit: '%' },
+      { key: 'nextSize', label: 'Next slide size', type: 'range', min: 50, max: 200, unit: '%' },
+      { key: 'fullVerse', label: 'Show the whole verse (off: only the lines on the main screen)', type: 'check' },
+      { key: 'dimOthers', label: 'Dim the lines that are not on the main screen', type: 'check' },
+      { key: 'showNext', label: 'Show the next section', type: 'check' },
+      { key: 'showSection', label: 'Show the section name', type: 'check' },
+      { key: 'showTitle', label: 'Show the song title or verse reference', type: 'check' },
+      { key: 'showClock', label: 'Show the clock', type: 'check' },
+      { key: 'clock24', label: '24-hour clock', type: 'check' },
+      { key: 'uppercase', label: 'ALL CAPITALS', type: 'check' },
+      { key: 'align', label: 'Alignment', type: 'select', options: ['left', 'center', 'right'] },
+      { key: 'font', label: 'Font', type: 'select', options: ['Geist', 'Montserrat', 'Source Serif 4', 'Arial', 'Impact'] },
+      { key: 'textColor', label: 'Text colour', type: 'color' },
+      { key: 'bgColor', label: 'Background colour', type: 'color' },
+      { key: 'accent', label: 'Label colour', type: 'color' }
+    ];
+    function getStageConfig() {
+      try { return { ...STAGE_CONFIG_DEFAULTS, ...(JSON.parse(localStorage.getItem(STAGE_CONFIG_KEY) || '{}')) }; } catch (e) { return { ...STAGE_CONFIG_DEFAULTS }; }
+    }
+    function sendStageConfig() {
+      try { broadcastMessage({ type: 'STAGE_CONFIG', proto: 1, sender: 'control', ts: Date.now(), config: getStageConfig() }); } catch (e) { /* not ready */ }
+    }
+    function setStageConfigValue(key, value) {
+      const cfg = getStageConfig();
+      cfg[key] = value;
+      try { localStorage.setItem(STAGE_CONFIG_KEY, JSON.stringify(cfg)); } catch (e) { /* storage unavailable */ }
+      sendStageConfig();
+    }
+    function resetStageConfig() {
+      try { localStorage.removeItem(STAGE_CONFIG_KEY); } catch (e) { /* storage unavailable */ }
+      renderStageOptions();
+      sendStageConfig();
+    }
+    function renderStageOptions() {
+      const grid = document.getElementById('stage-options-grid');
+      if (!grid) return;
+      const cfg = getStageConfig();
+      grid.replaceChildren();
+      STAGE_CONFIG_FIELDS.forEach((f) => {
+        const row = document.createElement('label');
+        row.className = 'stage-option-row' + (f.type === 'check' ? ' is-check' : '');
+        const text = document.createElement('span'); text.textContent = f.label;
+        let input;
+        if (f.type === 'select') { input = document.createElement('select'); f.options.forEach((o) => { const opt = document.createElement('option'); opt.value = o; opt.textContent = o; input.appendChild(opt); }); input.value = cfg[f.key]; }
+        else if (f.type === 'check') { input = document.createElement('input'); input.type = 'checkbox'; input.checked = !!cfg[f.key]; }
+        else { input = document.createElement('input'); input.type = f.type; if (f.type === 'range') { input.min = f.min; input.max = f.max; input.step = 5; } input.value = cfg[f.key]; }
+        let readout = null;
+        if (f.type === 'range') { readout = document.createElement('output'); readout.textContent = cfg[f.key] + f.unit; }
+        const apply = () => {
+          const value = f.type === 'check' ? input.checked : (f.type === 'range' ? Number(input.value) : input.value);
+          if (readout) readout.textContent = value + f.unit;
+          setStageConfigValue(f.key, value);
+        };
+        input.addEventListener('input', apply); input.addEventListener('change', apply);
+        if (f.type === 'check') row.append(input, text); else { row.append(text, input); if (readout) row.appendChild(readout); }
+        grid.appendChild(row);
+      });
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderStageOptions); else renderStageOptions();
