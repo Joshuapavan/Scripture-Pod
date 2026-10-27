@@ -47,10 +47,10 @@
       if (typeof bgWall !== 'undefined' && B && B.isWallOpen) {
         let wallOpen = false;
         try { wallOpen = !!(await B.isWallOpen()); } catch (e) { /* bridge unavailable */ }
-        const playing = typeof loadBgVideos === 'function' ? loadBgVideos().find((x) => x.id === bgWall.playingId) : null;
+        const playing = bgWall.playingName ? { name: bgWall.playingName } : null;
         displays.push({ key: 'w:wall', kind: 'wall', thumb: 'wall', role: 'wall', name: 'Background wall', where: 'This computer', open: wallOpen,
           screenId: bgWall.screenId, screenLabel: wallOpen ? labelOf(bgWall.screenId) : '', blank: wallOpen && !!bgWall.blank,
-          videoUrl: wallOpen ? bgWall.url : '', showing: playing ? playing.name : '', canBlank: true, canClose: true });
+          videoUrl: wallOpen ? bgWall.url : '', showing: playing ? playing.name : '', canBlank: true, canClose: true, canMove: true });
       }
       rows.filter((r) => !String(r.key || '').startsWith('w:')).forEach((r) => {
         displays.push({ key: r.key || ('o:' + r.name), kind: r.kind || 'other', thumb: r.key ? ({ monitor: 'monitor', stage: 'stage' }[r.role] || 'live') : '', role: r.role || 'live', name: r.name, where: r.meta, open: true,
@@ -151,6 +151,7 @@
         if (a.key === 'w:wall') {
           if (a.action === 'blank' && typeof toggleBgWallBlank === 'function') { if (!!bgWall.blank !== !!a.on) await toggleBgWallBlank(); }
           else if (a.action === 'close' && typeof stopBgWall === 'function') await stopBgWall();
+          else if (a.action === 'move' && typeof setBgWallScreen === 'function') await setBgWallScreen(String(a.screenId));
           setTimeout(refreshDisplaysView, 300);
           return;
         }

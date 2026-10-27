@@ -1494,6 +1494,10 @@ ${getLtThumbCss()}
       if (typeof B.isOutputOpen === 'function' && await safe(() => B.isOutputOpen(), false)) rows.push({ key: 'w:output', label: 'output', name: 'Main screen window', meta: 'This computer', close: () => B.closeOutput() });
       if (typeof B.isFeedOpen === 'function' && await safe(() => B.isFeedOpen(), false)) rows.push({ key: 'w:feed', label: 'feed', name: 'Stream feed window', meta: 'This computer', close: () => B.closeFeed() });
       if (typeof B.isStageOpen === 'function' && await safe(() => B.isStageOpen(), false)) rows.push({ key: 'w:stage', label: 'stage', name: 'Stage display window', meta: 'This computer', close: () => B.closeStage() });
+      // The background wall (looping video), with the name of what is playing
+      if (typeof B.isWallOpen === 'function' && await safe(() => B.isWallOpen(), false)) {
+        rows.push({ key: 'w:wall', label: 'wall', name: 'Background wall', meta: typeof bgWall !== 'undefined' && bgWall.playingName ? bgWall.playingName : 'This computer', close: () => stopBgWall() });
+      }
       let browserCount = 0;
       if (typeof B.listJoins === 'function') {
         const r = await safe(() => B.listJoins(), null);
@@ -1517,6 +1521,8 @@ ${getLtThumbCss()}
     // Screens blacked out one by one: a window gets the message directly, a browser display by its session id
     const blankedDisplays = new Set();
     function setDisplayBlank(row, on) {
+      // The wall has its own window and its own blank state
+      if (row.label === 'wall' && typeof toggleBgWallBlank === 'function') { if (!!bgWall.blank !== !!on) toggleBgWallBlank(); return; }
       if (on) blankedDisplays.add(row.key); else blankedDisplays.delete(row.key);
       const msg = { type: 'BLANK_SCREEN', proto: 1, sender: 'control', ts: Date.now(), on: !!on };
       if (row.label && window.BSPDesktop && typeof window.BSPDesktop.sendOutputMessage === 'function') {
@@ -1539,6 +1545,7 @@ ${getLtThumbCss()}
     }
     async function moveOutputToScreen(slot, screenId) {
       const B = window.BSPDesktop;
+      if (slot.isWall) { if (screenId) { await setBgWallScreen(screenId); showToast(slot.name + ' moved'); } return; }
       if (!B || typeof B[slot.open] !== 'function' || !screenId) return;
       const sel = document.getElementById(slot.select);
       if (sel) { sel.value = screenId; sel.dispatchEvent(new Event('change', { bubbles: true })); }
@@ -1556,6 +1563,12 @@ ${getLtThumbCss()}
         let open = false;
         try { open = typeof B[slot.isOpen] === 'function' ? !!(await B[slot.isOpen]()) : false; } catch (e) { /* bridge unavailable */ }
         slots.push({ slot, open, screenId: slotScreenId(slot) });
+      }
+      // The background wall can be moved too
+      if (typeof bgWall !== 'undefined' && typeof B.isWallOpen === 'function') {
+        let wallOpen = false;
+        try { wallOpen = !!(await B.isWallOpen()); } catch (e) { /* bridge unavailable */ }
+        slots.push({ slot: { label: 'wall', name: 'Background wall', isWall: true }, open: wallOpen, screenId: String(bgWall.screenId || '') });
       }
       return { screens, slots };
     }
@@ -1621,7 +1634,8 @@ ${getLtThumbCss()}
       if (card.contains(document.activeElement) && document.activeElement.tagName === 'SELECT') return;
       const rows = await collectConnectedDisplays();
       const screenData = await collectScreenSection();
-      const sig = JSON.stringify([rows.map((r) => [r.key, r.name, r.meta, blankedDisplays.has(r.key)]), screenData && [screenData.screens.map((x) => x.id), screenData.slots.map((x) => [x.open, x.screenId])]]);
+      const isBlanked = (r) => (r.key === 'w:wall' ? !!(typeof bgWall !== 'undefined' && bgWall.blank) : blankedDisplays.has(r.key));
+      const sig = JSON.stringify([rows.map((r) => [r.key, r.name, r.meta, isBlanked(r)]), screenData && [screenData.screens.map((x) => x.id), screenData.slots.map((x) => [x.open, x.screenId])]]);
       if (card.dataset.sig === sig) return;
       card.dataset.sig = sig;
       card.textContent = '';
@@ -1645,7 +1659,7 @@ ${getLtThumbCss()}
         if (r.key) {
           const actions = document.createElement('div');
           actions.className = 'display-list-actions';
-          const blanked = blankedDisplays.has(r.key);
+          const blanked = isBlanked(r);
           const blank = document.createElement('button');
           blank.type = 'button';
           blank.textContent = blanked ? 'Show' : 'Blank';

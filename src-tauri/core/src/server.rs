@@ -41,23 +41,60 @@ fetch("/__join",{method:"POST",body:JSON.stringify({name:name(),role:role})}).th
 const REMOTE_ACTIONS: [&str; 8] = ["goLive", "preview", "clear", "nextSlide", "prevSlide", "nextItem", "prevItem", "clearAll"];
 
 const REMOTE_PAGE: &str = r##"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Scripture Pod remote</title>
-<style>*{box-sizing:border-box}html,body{height:100%;margin:0;background:#0c0d0f;color:#edeef0;font:16px system-ui,sans-serif;-webkit-user-select:none;user-select:none}
-main{min-height:100%;display:flex;flex-direction:column;gap:12px;padding:14px;max-width:560px;margin:0 auto}
-.now{border:1px solid #23272c;border-radius:14px;padding:14px;background:#131518}.tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#8b9299;margin-bottom:6px}
-#cur{font-size:20px;line-height:1.3;white-space:pre-line;max-height:34vh;overflow:auto}#nxt{margin-top:10px;font-size:15px;color:#a3a9b0;white-space:pre-line;max-height:16vh;overflow:auto}
-.live{display:inline-block;padding:2px 8px;border-radius:6px;background:#e5372a;font-size:12px;font-weight:700;margin-left:8px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}button{height:64px;border-radius:14px;border:1px solid #2e3339;background:#181b1f;color:#edeef0;font-size:17px;font-weight:600}
-button:active{background:#23272c}.go{grid-column:1/3;background:#e5372a;border-color:#e5372a;height:76px;font-size:20px}.msg{text-align:center;color:#8b9299;font-size:13px;min-height:18px}</style></head>
-<body><main><div class="now"><div class="tag"><span id="ttl">Scripture Pod</span><span id="lv" class="live" hidden>LIVE</span></div><div id="cur">Connecting…</div><div id="nxt"></div></div>
-<div class="grid"><button data-a="prevSlide">◀ Previous</button><button data-a="nextSlide">Next ▶</button><button class="go" data-a="goLive">Go live</button>
-<button data-a="clear">Clear</button><button data-a="preview">Preview only</button><button data-a="prevItem">Previous song</button><button data-a="nextItem">Next song</button></div><div class="msg" id="msg"></div></main>
+<style>*{box-sizing:border-box}html,body{min-height:100%;margin:0;background:#0c0d0f;color:#edeef0;font:16px system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+main{min-height:100%;display:flex;flex-direction:column;gap:10px;padding:12px;max-width:560px;margin:0 auto}
+.tabs{display:flex;gap:6px}.tabs button{flex:1;height:40px;border-radius:999px;font-size:14px}.tabs button.on{background:#edeef0;color:#0c0d0f;border-color:#edeef0}
+.card{border:1px solid #23272c;border-radius:14px;padding:10px;background:#131518}.tag{display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8b9299;margin-bottom:8px}
+.tag b{color:#edeef0;letter-spacing:0;text-transform:none;font-size:14px;font-weight:600;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill{padding:2px 8px;border-radius:6px;background:#2e3339;font-size:11px;font-weight:700;color:#edeef0;letter-spacing:.04em}.pill.live{background:#e5372a}.pill.cue{background:#2f7de1}
+.feed{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;background:#000;border:1px solid #23272c}
+.feed .txt{position:absolute;left:0;right:0;padding:4%;text-align:center;white-space:pre-line;line-height:1.25;overflow:hidden;font-size:calc(var(--w,320px)*.052)}
+.feed.full .txt{top:0;bottom:0;display:flex;align-items:center;justify-content:center}.feed.lt .txt{bottom:0;background:rgba(0,0,0,.55)}
+.feed .none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6c737b;font-size:13px}.feed .none[hidden]{display:none}
+#nxt{margin-top:8px;font-size:13px;color:#a3a9b0;white-space:pre-line;max-height:9vh;overflow:hidden}
+#slides{max-height:24vh;overflow:auto;display:flex;flex-direction:column;gap:4px;-webkit-user-select:none;-webkit-overflow-scrolling:touch}
+.sl{flex:0 0 auto;display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border-radius:10px;border:1px solid #23272c;background:#181b1f;font-size:14px;line-height:1.3;text-align:left;color:#edeef0;height:auto;min-height:0;font-weight:500}
+.sl.cur{border-color:#edeef0}.sl.air{border-color:#e5372a;background:#221416}.sl i{font-style:normal;color:#8b9299;min-width:34px;font-size:11px;text-transform:uppercase;padding-top:2px}
+.dock{position:sticky;bottom:0;z-index:5;background:linear-gradient(#0c0d0f00,#0c0d0f 14px);padding:14px 0 max(8px,env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}button{touch-action:manipulation;-webkit-tap-highlight-color:transparent;height:58px;border-radius:14px;border:1px solid #2e3339;background:#181b1f;color:#edeef0;font-size:16px;font-weight:600}
+button:active{background:#23272c}.go{grid-column:1/3;background:#e5372a;border-color:#e5372a;height:70px;font-size:20px}
+.ref{display:flex;gap:6px}.ref input{flex:1;min-width:0;height:48px;border-radius:12px;border:1px solid #2e3339;background:#101215;color:#edeef0;font-size:16px;padding:0 12px;-webkit-user-select:text;user-select:text}.ref button{height:48px;width:52px;font-size:15px}
+.msg{text-align:center;color:#8b9299;font-size:13px;min-height:18px}
+@media (max-height:760px){button{height:48px;font-size:15px}.go{height:56px}.tabs button{height:38px}}</style></head>
+<body><main>
+<div class="tabs"><button data-t="bible">Bible</button><button data-t="songs">Lyrics</button><button data-t="schedule">Setlist</button></div>
+<div class="card"><div class="tag"><b id="ttl">Scripture Pod</b><span id="lv" class="pill" hidden></span></div>
+<div class="feed" id="feed"><div class="none" id="none">Connecting…</div><div class="txt" id="ftxt"></div></div><div id="nxt"></div></div>
+<div class="card" id="slcard" hidden><div class="tag"><b id="sttl">Slides</b></div><div id="slides"></div></div>
+<div class="ref"><input id="ri" type="text" placeholder="Say or type: john three sixteen" autocomplete="off" autocapitalize="off" enterkeyhint="go"><button id="rm" hidden title="Speak">🎤</button><button id="rg">Open</button></div>
+<div class="msg" id="msg"></div>
+<div class="dock"><div class="grid"><button data-a="prevSlide">◀ Previous</button><button data-a="nextSlide">Next ▶</button><button class="go" data-a="goLive">Go live</button>
+<button data-a="clear">Clear</button><button data-a="preview">Preview only</button><button data-a="prevItem">Previous song</button><button data-a="nextItem">Next song</button></div></div></main>
 <script>
-(function(){var key=new URLSearchParams(location.search).get("k")||"";
-function msg(t){document.getElementById("msg").textContent=t||""}
-function paint(s){document.getElementById("ttl").textContent=s.title||"Scripture Pod";document.getElementById("cur").textContent=s.current||(s.live?"":"Nothing on screen");document.getElementById("nxt").textContent=s.next?"Next: "+s.next:"";document.getElementById("lv").hidden=!s.live}
-function poll(){fetch("/__remote/state?k="+encodeURIComponent(key)).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(s){paint(s);msg("")}).catch(function(){msg("Not connected: check the link and that the remote is switched on")})}
-document.querySelectorAll("button[data-a]").forEach(function(b){b.addEventListener("click",function(){if(navigator.vibrate)navigator.vibrate(20);fetch("/__remote?k="+encodeURIComponent(key),{method:"POST",body:JSON.stringify({action:b.dataset.a})}).then(function(){setTimeout(poll,250)}).catch(function(){msg("Could not send")})})});
-poll();setInterval(poll,1200);})();
+(function(){var key=new URLSearchParams(location.search).get("k")||"";var $=function(i){return document.getElementById(i)};
+function msg(t){$("msg").textContent=t||""}
+function send(o){if(navigator.vibrate)navigator.vibrate(20);return fetch("/__remote?k="+encodeURIComponent(key),{method:"POST",body:JSON.stringify(o)}).then(function(){setTimeout(poll,250)}).catch(function(){msg("Could not send")})}
+function box(){var f=$("feed");f.style.setProperty("--w",f.clientWidth+"px")}
+function paintFeed(s){var f=s.live?s.feed:s.cued;var tag=$("lv");
+if(s.live){tag.hidden=false;tag.textContent="LIVE";tag.className="pill live"}else if(s.cued){tag.hidden=false;tag.textContent="CUED";tag.className="pill cue"}else tag.hidden=true;
+var feed=$("feed"),txt=$("ftxt");box();
+if(!f||!f.text){txt.textContent="";feed.className="feed";feed.style.background="#000";$("none").hidden=false;$("none").textContent=s.live?"On air":"Nothing on screen";return}
+$("none").hidden=true;feed.className="feed "+(f.mode==="lt"?"lt":"full");feed.style.background=f.mode==="lt"?"repeating-conic-gradient(#2a2c31 0% 25%,#1b1c20 0% 50%) 0 0/14px 14px":(f.bg||"#000");
+txt.style.color=f.color||"#fff";txt.style.fontFamily=f.font||"inherit";txt.textContent=(f.ref?f.ref+"\n":"")+f.text}
+function paintSlides(s){var card=$("slcard"),box2=$("slides");var list=s.slides||[];card.hidden=!list.length;if(!list.length)return;
+$("sttl").textContent=s.itemTitle||"Slides";var sig=JSON.stringify([list,s.cursor,s.liveIndex]);if(box2.dataset.sig===sig)return;box2.dataset.sig=sig;box2.textContent="";
+list.forEach(function(x,i){var b=document.createElement("button");b.className="sl"+(i===s.cursor?" cur":"")+(s.live&&i===s.liveIndex?" air":"");var t=document.createElement("i");t.textContent=x.tag||String(i+1);var p=document.createElement("span");p.textContent=x.t;b.appendChild(t);b.appendChild(p);b.addEventListener("click",function(){send({action:"goto",index:i})});box2.appendChild(b)});
+var cur=box2.querySelector(".cur");if(cur&&cur.scrollIntoView)cur.scrollIntoView({block:"nearest"})}
+function paint(s){$("ttl").textContent=s.title||"Scripture Pod";$("nxt").textContent=s.next?"Next: "+s.next:"";
+document.querySelectorAll(".tabs button").forEach(function(b){b.className=b.dataset.t===s.section?"on":""});paintFeed(s);paintSlides(s);msg(s.refResult||"")}
+function poll(){fetch("/__remote/state?k="+encodeURIComponent(key)).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(s){paint(s)}).catch(function(){msg("Not connected: check the link and that the remote is switched on")})}
+document.querySelectorAll("button[data-a]").forEach(function(b){b.addEventListener("click",function(){send({action:b.dataset.a})})});
+document.querySelectorAll(".tabs button").forEach(function(b){b.addEventListener("click",function(){send({action:"tab",value:b.dataset.t})})});
+function openRef(){var v=$("ri").value.trim();if(!v)return;msg("Opening…");send({action:"ref",text:v});$("ri").blur()}
+$("rg").addEventListener("click",openRef);$("ri").addEventListener("keydown",function(e){if(e.key==="Enter")openRef()});
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+if(SR&&window.isSecureContext){var mic=$("rm");mic.hidden=false;mic.addEventListener("click",function(){var r=new SR();r.lang=navigator.language||"en-US";r.onresult=function(e){$("ri").value=e.results[0][0].transcript;openRef()};r.onerror=function(){msg("Could not hear that: use the keyboard microphone instead")};try{r.start();msg("Listening…")}catch(x){}})}
+window.addEventListener("resize",box);poll();setInterval(poll,1200);})();
 </script></body></html>"##;
 
 // The phone remote: a page, its state, and commands that the panel picks up. Off until switched on, key required.
@@ -69,12 +106,21 @@ fn remote_request(mut req: tiny_http::Request, state: &AppState, path: &str, que
     if !state.remote_enabled.load(Ordering::SeqCst) || !key_ok { return { let _ = req.respond(json(403, r#"{"error":"Not allowed"}"#.into())); }; }
     if path == "/__remote/state" { let body = state.remote_state.lock().unwrap().clone(); return { let _ = req.respond(json(200, body)); }; }
     let mut body = String::new();
-    let _ = req.as_reader().take(512).read_to_string(&mut body);
+    let _ = req.as_reader().take(1024).read_to_string(&mut body);
     let v: serde_json::Value = serde_json::from_str(&body).unwrap_or(serde_json::Value::Null);
     let action = v["action"].as_str().unwrap_or("");
-    if !REMOTE_ACTIONS.contains(&action) { return { let _ = req.respond(json(400, r#"{"error":"Unknown action"}"#.into())); }; }
+    // Plain actions, or one with a value: a slide to jump to, a section to open, a Bible reference to look up
+    let entry: Option<String> = if REMOTE_ACTIONS.contains(&action) { Some(action.to_string()) }
+        else if action == "goto" { v["index"].as_u64().filter(|i| *i < 2000).map(|i| format!("goto:{}", i)) }
+        else if action == "tab" { v["value"].as_str().filter(|t| ["bible", "songs", "schedule"].contains(t)).map(|t| format!("tab:{}", t)) }
+        else if action == "ref" {
+            let t: String = v["text"].as_str().unwrap_or("").chars().filter(|c| c.is_alphanumeric() || " :.'-".contains(*c)).take(80).collect();
+            let t = t.trim().to_string();
+            if t.is_empty() { None } else { Some(format!("ref:{}", t)) }
+        } else { None };
+    let Some(entry) = entry else { return { let _ = req.respond(json(400, r#"{"error":"Unknown action"}"#.into())); }; };
     let mut q = state.remote_queue.lock().unwrap();
-    if q.len() < 20 { q.push(action.to_string()); }
+    if q.len() < 20 { q.push(entry); }
     drop(q);
     let _ = req.respond(json(200, r#"{"ok":true}"#.into()));
 }

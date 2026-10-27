@@ -2826,6 +2826,13 @@ body.background-workspace-active #main { flex: 1 1 auto !important; width: auto 
 #background-view .bg-btn:hover { border-color: var(--sp-text); }
 #background-view .bg-btn.is-primary { background: var(--sp-text); color: var(--sp-ground); border-color: transparent; }
 #background-view .bg-btn.is-stop { border-color: #e5372a; color: #e5372a; }
+#background-view .bg-note { color: var(--sp-subtle); font-size: 12px; }
+#background-view .bg-auto { font-size: 12px; color: var(--sp-subtle); display: flex; align-items: center; gap: 6px; }
+#background-view .bg-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+#background-view .bg-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 4px 3px 10px; border: 1px solid var(--sp-line); border-radius: 999px; font-size: 12px; }
+#background-view .bg-chip i { font-style: normal; color: var(--sp-subtle); font-size: 11px; }
+#background-view .bg-btn.is-tiny { padding: 0 7px; min-width: 22px; height: 22px; font-size: 11px; border-radius: 6px; }
+#background-view .bg-card-actions { flex-wrap: wrap; }
 #background-view .bg-lib-head { display: flex; align-items: center; justify-content: space-between; }
 #background-view .bg-lib-head h2 { margin: 0; font-size: 14px; font-weight: 600; }
 #background-view .bg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }

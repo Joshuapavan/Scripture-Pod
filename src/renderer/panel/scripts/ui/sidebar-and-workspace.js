@@ -33,6 +33,31 @@
       });
     }
 
+    // ⌘1…9 (Ctrl on Windows and Linux) open the sections in the order the tabs sit in the top bar, so a section
+    // that is added later gets the next number without anything else being changed.
+    function getSectionTabs() {
+      return Array.from(document.querySelectorAll('#app-topbar .sidebar-tabs .tab')).filter((t) => t.offsetParent !== null || t.getClientRects().length);
+    }
+    function labelSectionShortcuts() {
+      getSectionTabs().forEach((tab, i) => {
+        if (i > 8) return;
+        const name = (tab.textContent || '').trim() || 'Section';
+        tab.title = `${name} (${/Mac|iPhone|iPad/i.test(navigator.platform) ? '⌘' : 'Ctrl+'}${i + 1})`;
+        tab.setAttribute('aria-keyshortcuts', `Meta+${i + 1} Control+${i + 1}`);
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return;
+      const m = /^Digit([1-9])$/.exec(e.code || '') || /^([1-9])$/.exec(e.key || '');
+      if (!m) return;
+      const tab = getSectionTabs()[Number(m[1]) - 1];
+      if (!tab) return;
+      e.preventDefault();
+      tab.click();
+    }, true);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', labelSectionShortcuts); else labelSectionShortcuts();
+    setTimeout(labelSectionShortcuts, 1500);
+
     function switchBottomNavSidebarTab(tab) {
       setSidebarTab(tab);
       updateBottomNavSidebarButtons(tab);

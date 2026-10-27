@@ -192,8 +192,11 @@ pub fn open_wall(app: &AppHandle, opts: &Value) {
     close(app, "wall", true);
     let (x, y, w, h) = bounds(app, display_id(opts).as_deref());
     let fit = if opts["fit"].as_str() == Some("contain") { "contain" } else { "cover" };
-    let src: String = opts["url"].as_str().unwrap_or("").chars().filter(|c| c.is_ascii_alphanumeric() || ":/._-".contains(*c)).collect();
-    let query = format!("?fit={}&src={}", fit, src);
+    // One address, or several separated by commas (a playlist)
+    let list = opts["urls"].as_array().map(|a| a.iter().filter_map(|u| u.as_str()).collect::<Vec<_>>().join(",")).unwrap_or_else(|| opts["url"].as_str().unwrap_or("").to_string());
+    let src: String = list.chars().filter(|c| c.is_ascii_alphanumeric() || ":/._-,".contains(*c)).collect();
+    let fade = opts["fade"].as_f64().unwrap_or(0.0).clamp(0.0, 5.0);
+    let query = format!("?fit={}&fade={}&src={}", fit, fade, src);
     let _ = builder(app, "wall", page_url("src/renderer/wall/wall.html", &query))
         .title("Scripture Pod background").decorations(false).position(x, y).inner_size(w, h).fullscreen(true).focused(false).build();
 }

@@ -6,35 +6,75 @@
 <title>Scripture Pod background</title>
 <style>
   html, body { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; cursor: none; }
-  video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+  video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; opacity: 0; transition: opacity var(--fade, 0s) linear; }
   html.sp-blank video { visibility: hidden; }
 </style>
 </head>
 <body>
-<video id="v" muted loop autoplay playsinline disablepictureinpicture></video>
+<video id="a" muted playsinline disablepictureinpicture></video>
+<video id="b" muted playsinline disablepictureinpicture></video>
 <script>
-  // Background wall: one looping video, always silent. The panel changes the video or fit by message.
-  var v = document.getElementById('v');
+  // Background wall: a list of videos played in order and looped, always silent. With two or more videos each one
+  // fades into the next. The panel changes the list, the fit or the fade by message.
+  var A = document.getElementById('a'), B = document.getElementById('b');
   var q = new URLSearchParams(location.search);
-  function setFit(fit) { v.style.objectFit = fit === 'contain' ? 'contain' : 'cover'; }
-  function play(url, fit) {
-    setFit(fit);
-    if (!url) { v.removeAttribute('src'); v.load(); return; }
-    if (v.src !== url) { v.src = url; }
-    v.muted = true; v.loop = true;
-    var p = v.play(); if (p && p.catch) p.catch(function () {});
+  var urls = [], idx = 0, fade = 0, cur = A, switching = false;
+
+  function setFit(fit) { A.style.objectFit = B.style.objectFit = fit === 'contain' ? 'contain' : 'cover'; }
+  function setFade(sec) { fade = Math.max(0, Math.min(5, Number(sec) || 0)); document.documentElement.style.setProperty('--fade', fade + 's'); }
+  function play(el) { el.muted = true; var p = el.play(); if (p && p.catch) p.catch(function () {}); }
+
+  function next() {
+    if (switching || urls.length < 2) return;
+    switching = true;
+    idx = (idx + 1) % urls.length;
+    var from = cur, to = cur === A ? B : A;
+    to.src = urls[idx];
+    to.currentTime = 0;
+    play(to);
+    to.style.opacity = 1;
+    from.style.opacity = 0;
+    setTimeout(function () { from.pause(); cur = to; switching = false; }, fade * 1000 + 60);
   }
+
+  function watch(el) {
+    el.addEventListener('timeupdate', function () {
+      if (el === cur && urls.length > 1 && fade > 0 && el.duration && el.currentTime >= el.duration - fade) next();
+    });
+    el.addEventListener('ended', function () {
+      if (el !== cur) return;
+      if (urls.length > 1) next(); else { el.currentTime = 0; play(el); }
+    });
+    el.addEventListener('error', function () {
+      // A video that cannot be read is skipped, or retried when it is the only one
+      setTimeout(function () { if (el !== cur || !el.src) return; if (urls.length > 1) next(); else { el.load(); play(el); } }, 3000);
+    });
+  }
+  watch(A); watch(B);
+
+  function start(list, fit, fadeSec) {
+    urls = (list || []).filter(Boolean);
+    idx = 0; switching = false;
+    setFit(fit); setFade(fadeSec);
+    A.pause(); B.pause();
+    B.style.opacity = 0; B.removeAttribute('src');
+    cur = A;
+    if (!urls.length) { A.style.opacity = 0; A.removeAttribute('src'); A.load(); return; }
+    A.loop = urls.length === 1;
+    A.src = urls[0];
+    A.style.opacity = 1;
+    play(A);
+  }
+
   window.addEventListener('message', function (e) {
     var d = e.data;
     if (!d || typeof d !== 'object') return;
-    if (d.type === 'WALL_SRC') play(d.url, d.fit);
+    if (d.type === 'WALL_SRC') start(d.urls || (d.url ? [d.url] : []), d.fit, d.fade);
     else if (d.type === 'WALL_FIT') setFit(d.fit);
-    else if (d.type === 'WALL_STOP') play('', d.fit);
+    else if (d.type === 'WALL_STOP') start([], d.fit, 0);
     else if (d.type === 'BLANK_SCREEN') document.documentElement.classList.toggle('sp-blank', !!d.on);
   });
-  v.addEventListener('ended', function () { v.currentTime = 0; v.play().catch(function () {}); });
-  v.addEventListener('error', function () { setTimeout(function () { if (v.src) { v.load(); v.play().catch(function () {}); } }, 3000); });
-  play(q.get('src'), q.get('fit'));
+  start((q.get('src') || '').split(',').filter(Boolean), q.get('fit'), q.get('fade'));
 </script>
 </body>
 </html>
