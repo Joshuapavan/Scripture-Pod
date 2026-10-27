@@ -1208,6 +1208,7 @@
           await flushAppState();
         }
         await importBundledChurchLogo();
+        if (typeof addBundledSavedNames === 'function') addBundledSavedNames();
         const bundledBackgroundUrl = document.getElementById('bg-video-url');
         const bundledBackgroundSource = document.getElementById('bg-video-source');
         if (bundledBackgroundUrl && bundledBackgroundSource && typeof setBgTypePicker === 'function') {

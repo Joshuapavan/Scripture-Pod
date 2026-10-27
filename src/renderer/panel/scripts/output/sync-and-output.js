@@ -671,6 +671,19 @@ ${getLtThumbCss()}
       renderSavedNames();
     }
 
+    // The ACI bundle brings its pastors along, so the Overlays tab has them from the start
+    const BUNDLED_SAVED_NAMES = [
+      { name: 'PS. Samson Arthur Paul', role: 'Senior Pastor' },
+      { name: 'Sis. Shiby Samson', role: 'Pastor' }
+    ];
+    function addBundledSavedNames() {
+      const existing = readSavedNames();
+      const missing = BUNDLED_SAVED_NAMES.filter((b) => !existing.some((p) => p.name === b.name));
+      if (!missing.length) return;
+      writeSavedNames([...missing, ...existing]);
+      renderSavedNames();
+    }
+
     let savedNamesQuery = '';
 
     function setSavedNamesQuery(value) {

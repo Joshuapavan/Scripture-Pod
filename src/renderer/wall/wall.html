@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scripture Pod background</title>
+<style>
+  html, body { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; cursor: none; }
+  video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+  html.sp-blank video { visibility: hidden; }
+</style>
+</head>
+<body>
+<video id="v" muted loop autoplay playsinline disablepictureinpicture></video>
+<script>
+  // Background wall: one looping video, always silent. The panel changes the video or fit by message.
+  var v = document.getElementById('v');
+  var q = new URLSearchParams(location.search);
+  function setFit(fit) { v.style.objectFit = fit === 'contain' ? 'contain' : 'cover'; }
+  function play(url, fit) {
+    setFit(fit);
+    if (!url) { v.removeAttribute('src'); v.load(); return; }
+    if (v.src !== url) { v.src = url; }
+    v.muted = true; v.loop = true;
+    var p = v.play(); if (p && p.catch) p.catch(function () {});
+  }
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (!d || typeof d !== 'object') return;
+    if (d.type === 'WALL_SRC') play(d.url, d.fit);
+    else if (d.type === 'WALL_FIT') setFit(d.fit);
+    else if (d.type === 'WALL_STOP') play('', d.fit);
+    else if (d.type === 'BLANK_SCREEN') document.documentElement.classList.toggle('sp-blank', !!d.on);
+  });
+  v.addEventListener('ended', function () { v.currentTime = 0; v.play().catch(function () {}); });
+  v.addEventListener('error', function () { setTimeout(function () { if (v.src) { v.load(); v.play().catch(function () {}); } }, 3000); });
+  play(q.get('src'), q.get('fit'));
+</script>
+</body>
+</html>

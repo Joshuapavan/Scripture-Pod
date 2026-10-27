@@ -187,6 +187,25 @@ pub fn open_stage(app: &AppHandle, opts: &Value) {
     if let Ok(win) = built { watch_closed(app, &win, "stage"); }
 }
 
+// The background wall: a full screen window that only plays the chosen video, looping and silent
+pub fn open_wall(app: &AppHandle, opts: &Value) {
+    close(app, "wall", true);
+    let (x, y, w, h) = bounds(app, display_id(opts).as_deref());
+    let fit = if opts["fit"].as_str() == Some("contain") { "contain" } else { "cover" };
+    let src: String = opts["url"].as_str().unwrap_or("").chars().filter(|c| c.is_ascii_alphanumeric() || ":/._-".contains(*c)).collect();
+    let query = format!("?fit={}&src={}", fit, src);
+    let _ = builder(app, "wall", page_url("src/renderer/wall/wall.html", &query))
+        .title("Scripture Pod background").decorations(false).position(x, y).inner_size(w, h).fullscreen(true).focused(false).build();
+}
+
+// A message from the panel into any window
+pub fn post_to_window(app: &AppHandle, label: &str, message: &Value) -> bool {
+    match app.get_webview_window(label) {
+        Some(w) => { eval(&w, &format!("window.postMessage({}, '*')", message)); true }
+        None => false,
+    }
+}
+
 pub fn open_feed(app: &AppHandle, opts: &Value) {
     close(app, "feed", true);
     let (x, y, w, h) = bounds(app, display_id(opts).as_deref());

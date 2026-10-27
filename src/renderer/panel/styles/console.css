@@ -2795,6 +2795,48 @@ select option, select optgroup {
 .auto-backup-row input[type="text"] { flex: 1; min-width: 160px; height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background: var(--sp-inset); color: var(--sp-text); }
 .auto-backup-row select { height: 32px; border-radius: 8px; border: 1px solid var(--sp-line); background-color: var(--sp-inset); color: var(--sp-text); padding: 0 8px; }
 
+/* ── Background workspace ─────────────────────────────────────────────────── */
+#background-workspace { display: none; }
+body.background-workspace-active #background-workspace {
+  display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 22px 28px 28px; background: var(--sp-ground);
+}
+body.background-workspace-active #sidebar,
+body.background-workspace-active #sidebar-width-handle,
+body.background-workspace-active #sidebar-resize-handle,
+body.background-workspace-active #program-display-panel,
+body.background-workspace-active #program-width-handle,
+body.background-workspace-active #editor-container,
+body.background-workspace-active #focused-main-panel,
+body.background-workspace-active #focused-editor-banner,
+body.background-workspace-active #main .header-toolbar,
+body.background-workspace-active #main .live-controls,
+body.background-workspace-active #workspace-height-handle { display: none !important; }
+body.background-workspace-active #left-workspace,
+body.background-workspace-active #main { flex: 1 1 auto !important; width: auto !important; max-width: none !important; }
+#background-view { display: flex; flex-direction: column; gap: 18px; color: var(--sp-text); font-size: 13px; }
+#background-view .bg-head h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+#background-view .bg-head p { margin: 0; color: var(--sp-subtle); }
+#background-view .bg-wall { background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+#background-view .bg-wall-top { display: flex; align-items: center; gap: 10px; }
+#background-view .bg-pill { padding: 2px 9px; border-radius: 999px; border: 1px solid var(--sp-line); font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--sp-subtle); }
+#background-view .bg-pill.is-on { background: var(--sp-ok); border-color: transparent; color: #fff; }
+#background-view .bg-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+#background-view select { background: var(--sp-card); color: var(--sp-text); border: 1px solid var(--sp-line); border-radius: 8px; padding: 5px 8px; font-size: 12px; max-width: 260px; }
+#background-view .bg-btn { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-text); font: 600 12px system-ui, sans-serif; cursor: pointer; }
+#background-view .bg-btn:hover { border-color: var(--sp-text); }
+#background-view .bg-btn.is-primary { background: var(--sp-text); color: var(--sp-ground); border-color: transparent; }
+#background-view .bg-btn.is-stop { border-color: #e5372a; color: #e5372a; }
+#background-view .bg-lib-head { display: flex; align-items: center; justify-content: space-between; }
+#background-view .bg-lib-head h2 { margin: 0; font-size: 14px; font-weight: 600; }
+#background-view .bg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+#background-view .bg-card { background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+#background-view .bg-card.is-playing { border-color: var(--sp-ok); }
+#background-view .bg-thumb { aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; color: var(--sp-subtle); font-size: 12px; }
+#background-view .bg-thumb video { width: 100%; height: 100%; object-fit: cover; }
+#background-view .bg-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#background-view .bg-card-actions { display: flex; gap: 6px; }
+#background-view .bg-empty { grid-column: 1 / -1; padding: 22px; border: 1px dashed var(--sp-line); border-radius: 12px; text-align: center; color: var(--sp-subtle); }
+
 #update-bar { position: fixed; z-index: 9000; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-text); box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5); font-size: 13px; }
 
 .phone-remote-qr { display: block; width: 168px; height: 168px; margin: 8px auto; padding: 6px; border-radius: 10px; background: #fff; image-rendering: pixelated; }

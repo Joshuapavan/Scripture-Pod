@@ -206,6 +206,18 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "openStage" => { windows::open_stage(app, &arg); json!({"ok": true}) }
         "closeStage" => { windows::close(app, "stage", true); json!({"ok": true}) }
         "isStageOpen" => json!(app.get_webview_window("stage").is_some()),
+        // Background wall: a looping silent video on its own screen (an LED wall behind the stage, say)
+        "pickVideoFiles" => {
+            let picked = app.dialog().file().set_title("Choose background videos").add_filter("Video", &["mp4", "m4v", "mov", "webm", "mkv", "ogv"]).blocking_pick_files();
+            let files: Vec<Value> = picked.unwrap_or_default().into_iter().filter_map(|f| f.into_path().ok())
+                .map(|p| json!({"path": p.to_string_lossy(), "name": p.file_stem().map(|n| n.to_string_lossy().to_string()).unwrap_or_default()})).collect();
+            json!({"files": files})
+        }
+        "registerMediaFile" => register_media_file(state, arg["path"].as_str().unwrap_or("")),
+        "openWall" => { windows::open_wall(app, &arg); json!({"ok": true}) }
+        "closeWall" => { windows::close(app, "wall", true); json!({"ok": true}) }
+        "isWallOpen" => json!(app.get_webview_window("wall").is_some()),
+        "sendToWall" => json!({"ok": windows::post_to_window(app, "wall", &arg)}),
         "openDisplays" => { windows::open_displays(app, &arg); json!({"ok": true}) }
         "closeDisplays" => { windows::close(app, "displays", true); json!({"ok": true}) }
         "isDisplaysOpen" => json!(app.get_webview_window("displays").is_some()),
@@ -444,6 +456,18 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "outputReady" => { if label == "output" || label == "feed" { windows::emit_main(app, "output-ready"); } json!(true) }
         _ => err("unknown call"),
     }
+}
+
+// A video that stays where it is on disk: it is served to the wall window by the local server
+fn register_media_file(state: &Arc<AppState>, path: &str) -> Value {
+    let p = PathBuf::from(path);
+    let ext = p.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
+    let mime = match ext.as_str() { "mp4" | "m4v" => "video/mp4", "mov" => "video/quicktime", "webm" => "video/webm", "mkv" => "video/x-matroska", "ogv" => "video/ogg", _ => return json!({"error": "Only video files can be used"}) };
+    if !p.is_file() { return json!({"error": "That video was moved or deleted"}); }
+    let existing = state.media.lock().unwrap().iter().find(|(_, (q, _))| *q == p).map(|(k, _)| k.clone());
+    let id = existing.unwrap_or_else(|| { let id = uuid_v4(); state.media.lock().unwrap().insert(id.clone(), (p.clone(), mime.to_string())); id });
+    let host = local_server_info(state)["preferredHost"].as_str().unwrap_or("127.0.0.1").to_string();
+    json!({"url": format!("http://{}:{}/background-media/{}", host, state.http_port.load(Ordering::SeqCst), id)})
 }
 
 fn cache_media(app: &AppHandle, state: &Arc<AppState>, data_url: &str) -> Value {

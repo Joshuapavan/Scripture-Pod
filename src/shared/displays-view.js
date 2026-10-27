@@ -15,6 +15,7 @@
     stage: 'Stage: current and next with the clock',
     live: 'Live: lower third on a transparent page',
     monitor: 'Monitor: full screen with the clock',
+    wall: 'Background: a looping video, no sound',
     program: 'Program: what is on air, shown in the app',
     preview: 'Preview: what is cued next, not on air'
   };
@@ -24,6 +25,11 @@
     var how = HOW[(d.kind === 'program' || d.kind === 'preview') ? d.kind : (d.role || d.kind)] || 'Output';
     // The Bible has no clock on a monitor, and stage shows its own view
     if ((d.role === 'monitor' || d.kind === 'main') && onAir && onAir.kind === 'bible') how = 'Monitor: full screen, no clock for the Bible';
+    // The background wall plays its own video whatever is on air
+    if (d.kind === 'wall') {
+      var wallStatus = !d.open ? 'off' : (d.blank ? 'blank' : 'live');
+      return { status: wallStatus, how: HOW.wall, showing: wallStatus === 'live' ? String(d.showing || 'Video').slice(0, 90) : '' };
+    }
     if (d.kind === 'preview') {
       return { status: d.cued ? 'preview' : 'clear', how: HOW.preview, showing: d.cued ? String(d.showing || '').replace(/\s+/g, ' ').trim().slice(0, 90) : '' };
     }
@@ -141,7 +147,16 @@
     var st = state(rootEl);
     var box = el('div', 'dv-thumb' + (d.thumb === 'live' ? ' is-live' : ''));
     if (status === 'off') { box.appendChild(el('div', 'dv-shade is-off', 'Not open')); return box; }
-    if (d.thumb === 'stage') {
+    if (d.thumb === 'wall') {
+      // The wall's own video, muted, in the same loop
+      if (d.videoUrl) {
+        var wv = document.createElement('video');
+        wv.muted = true; wv.loop = true; wv.autoplay = true; wv.playsInline = true; wv.src = d.videoUrl;
+        wv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover';
+        box.appendChild(wv);
+        var pp = wv.play(); if (pp && pp.catch) pp.catch(function () {});
+      }
+    } else if (d.thumb === 'stage') {
       var sb = el('div', 'dv-stage');
       paintStage(sb, st.feeds.stage && st.feeds.stage.stage);
       box.appendChild(sb);

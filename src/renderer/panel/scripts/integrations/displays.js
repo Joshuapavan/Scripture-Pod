@@ -43,6 +43,15 @@
           open: !!row, screenId, screenLabel: row ? labelOf(screenId) : '', blank: blankedDisplays.has('w:' + slot.label),
           canBlank: true, canClose: true, canMove: true });
       }
+      // The background wall (a looping silent video on its own screen)
+      if (typeof bgWall !== 'undefined' && B && B.isWallOpen) {
+        let wallOpen = false;
+        try { wallOpen = !!(await B.isWallOpen()); } catch (e) { /* bridge unavailable */ }
+        const playing = typeof loadBgVideos === 'function' ? loadBgVideos().find((x) => x.id === bgWall.playingId) : null;
+        displays.push({ key: 'w:wall', kind: 'wall', thumb: 'wall', role: 'wall', name: 'Background wall', where: 'This computer', open: wallOpen,
+          screenId: bgWall.screenId, screenLabel: wallOpen ? labelOf(bgWall.screenId) : '', blank: wallOpen && !!bgWall.blank,
+          videoUrl: wallOpen ? bgWall.url : '', showing: playing ? playing.name : '', canBlank: true, canClose: true });
+      }
       rows.filter((r) => !String(r.key || '').startsWith('w:')).forEach((r) => {
         displays.push({ key: r.key || ('o:' + r.name), kind: r.kind || 'other', thumb: r.key ? ({ monitor: 'monitor', stage: 'stage' }[r.role] || 'live') : '', role: r.role || 'live', name: r.name, where: r.meta, open: true,
           blank: blankedDisplays.has(r.key), canBlank: !!r.key, canClose: typeof r.close === 'function', closeLabel: r.closeLabel });
@@ -125,7 +134,7 @@
 
     function openDisplaysWorkspace() {
       document.body.classList.add('displays-workspace-active');
-      document.body.classList.remove('overlays-workspace-active');
+      document.body.classList.remove('overlays-workspace-active', 'background-workspace-active');
       document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-displays'));
       if (typeof updateBottomNavSidebarButtons === 'function') updateBottomNavSidebarButtons('displays');
       refreshDisplaysView();
@@ -138,6 +147,13 @@
         if (a.action === 'ready') { displaysPopoutOpen = true; popoutThumbSent = false; lastPopoutFeedKey = ''; await refreshDisplaysView(); return; }
         if (a.action === 'identify') { if (window.BSPDesktop.identifyScreens) window.BSPDesktop.identifyScreens(); return; }
         if (a.action === 'popout') { await openDisplaysWindow(); return; }
+        // The background wall has its own window
+        if (a.key === 'w:wall') {
+          if (a.action === 'blank' && typeof toggleBgWallBlank === 'function') { if (!!bgWall.blank !== !!a.on) await toggleBgWallBlank(); }
+          else if (a.action === 'close' && typeof stopBgWall === 'function') await stopBgWall();
+          setTimeout(refreshDisplaysView, 300);
+          return;
+        }
         const rows = await collectConnectedDisplays();
         const row = rows.find((r) => r.key === a.key);
         const slot = OUTPUT_SLOTS.find((x) => 'w:' + x.label === a.key);
