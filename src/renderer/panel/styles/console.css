@@ -2929,8 +2929,6 @@ body[data-sidebar-tab="bible"] #sidebar > #lt-version-row { display: flex; }
 #display-list-card .display-list-move { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 0; font-size: 12px; }
 #display-list-card .display-list-move select { max-width: 170px; background: var(--sp-card); color: var(--sp-text); border: 1px solid var(--sp-line); border-radius: 8px; padding: 4px 6px; font-size: 12px; }
 #display-list-card .display-list-identify { margin-top: 8px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-text); font-size: 11px; font-weight: 600; cursor: pointer; }
-.command-palette-mic { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-text); cursor: pointer; }
-.command-palette-mic.is-listening { background: var(--sp-danger, #e5372a); color: #fff; border-color: transparent; }
 
 /* ── Displays workspace ───────────────────────────────────────────────────── */
 #displays-workspace { display: none; }

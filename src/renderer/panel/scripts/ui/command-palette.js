@@ -276,33 +276,6 @@
       if (!input || input.dataset.bound) return;
       input.dataset.bound = '1';
       input.addEventListener('input', renderCommandPaletteResults);
-      // Speak a reference when the browser engine can listen (a microphone button appears next to the box)
-      const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const row = input.closest('.command-palette-input-row');
-      if (Recognition && row && !row.querySelector('.command-palette-mic')) {
-        const mic = document.createElement('button');
-        mic.type = 'button';
-        mic.className = 'command-palette-mic';
-        mic.title = 'Say a reference, for example "John three sixteen"';
-        mic.setAttribute('aria-label', 'Speak a reference');
-        mic.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v4"/></svg>';
-        let rec = null;
-        mic.addEventListener('click', () => {
-          if (rec) { try { rec.stop(); } catch (e) { /* already stopped */ } return; }
-          rec = new Recognition();
-          rec.lang = navigator.language || 'en-US';
-          rec.interimResults = true;
-          rec.onresult = (ev) => {
-            input.value = Array.from(ev.results).map((r) => r[0].transcript).join(' ');
-            renderCommandPaletteResults();
-          };
-          rec.onend = () => { rec = null; mic.classList.remove('is-listening'); input.focus(); };
-          rec.onerror = () => { showToast('The microphone could not be used'); };
-          mic.classList.add('is-listening');
-          try { rec.start(); } catch (e) { rec = null; mic.classList.remove('is-listening'); }
-        });
-        row.appendChild(mic);
-      }
       // "psalms 23" + Space becomes "psalms 23:", as in the library search
       input.addEventListener('keydown', e => handleBibleSpaceToColon(e, renderCommandPaletteResults, true));
       input.addEventListener('keydown', (e) => {
