@@ -553,6 +553,7 @@
         liveRatio = r;
       }
 
+      if (typeof syncOneVersionMode === 'function') syncOneVersionMode();
       handleDualFontOverrideState();
       syncBgOpacitySlider();
       updateSongTextTransformControl();

@@ -79,7 +79,7 @@
       embeddedProgramDisplayReady = false;
       frame.dataset.previewDocument = '1';
       frame.removeAttribute('src');
-      frame.srcdoc = buildStandaloneDisplayHtml({ preview: true });
+      frame.srcdoc = buildStandaloneDisplayHtml({ preview: true, animate: true });
 
       // Projection streaming now captures from the Program Display directly,
       // so source switching is handled automatically. This call is a no-op
@@ -435,6 +435,7 @@
     function buildStandaloneDisplayHtml(opts = {}) {
       const channelLiteral = JSON.stringify(CHANNEL_NAME);
       const isPreviewLiteral = opts.preview ? 'true' : 'false';
+      const animateLiteral = opts.animate ? 'true' : 'false';
       return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -461,6 +462,10 @@
         background: radial-gradient(circle at 70% 65%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 55%);
         animation: bg-glow-in 2.4s ease-out both, bg-glow 14s ease-in-out 2.4s infinite alternate;
     }
+    @keyframes fx-fade { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes fx-zoom { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .fx-fade { animation: fx-fade var(--fx-dur, 0.8s) cubic-bezier(0.4, 0, 0.2, 1) both; }
+    .fx-zoom { animation: fx-zoom var(--fx-dur, 0.8s) cubic-bezier(0.4, 0, 0.2, 1) both; }
     @keyframes bg-settle { from { transform: translate(0, 0) scale(1.7); opacity: 0; } to { transform: translate(-4%, -3%) scale(1.2) rotate(0deg); opacity: 1; } }
     @keyframes bg-drift { from { transform: translate(-4%, -3%) scale(1.2) rotate(0deg); } to { transform: translate(5%, 4%) scale(1.38) rotate(7deg); } }
     @keyframes bg-glow-in { from { opacity: 0; transform: translate(-8%, 6%); } to { opacity: 1; transform: translate(0, 0); } }
@@ -620,6 +625,7 @@
     (function () {
       const CHANNEL_NAME = ${channelLiteral};
       const IS_PREVIEW = ${isPreviewLiteral};
+      const FX_ENABLED = ${animateLiteral};
       const channel = IS_PREVIEW ? null : new BroadcastChannel(CHANNEL_NAME);
       const bg = document.getElementById('bg');
       const bgVideo = document.getElementById('bg-video');
@@ -831,6 +837,52 @@
         }
       }
 
+      // The FX card's Transition and Duration (fade, zoom, type-on) played on the monitor, like the real output
+      let fxKey = '';
+      let fxTimer = 0;
+      function playTextTransition(el, data) {
+        if (!FX_ENABLED) return;
+        const text = String(data.text || '');
+        const type = String(data.transitionType || 'fade').toLowerCase();
+        const dur = Math.max(0.1, Math.min(10, Number(data.transitionDuration) || 0.8));
+        const key = type + '|' + dur + '|' + text;
+        if (key === fxKey) return;
+        fxKey = key;
+        clearInterval(fxTimer);
+        el.classList.remove('fx-fade', 'fx-zoom');
+        el.style.setProperty('--fx-dur', dur + 's');
+        void el.offsetWidth;
+        if (type === 'zoom' || type === 'zoom-type') el.classList.add('fx-zoom');
+        else if (type === 'fade') el.classList.add('fx-fade');
+        if (type !== 'type' && type !== 'zoom-type') return;
+        // Type-on: hide every letter, then show them one after another across the duration
+        const letters = [];
+        const walk = function (node) {
+          Array.prototype.slice.call(node.childNodes).forEach(function (child) {
+            if (child.nodeType === 3) {
+              const frag = document.createDocumentFragment();
+              child.nodeValue.split('').forEach(function (ch) {
+                const span = document.createElement('span');
+                span.textContent = ch;
+                span.style.visibility = 'hidden';
+                if (ch.trim()) letters.push(span);
+                frag.appendChild(span);
+              });
+              node.replaceChild(frag, child);
+            } else if (child.nodeType === 1) walk(child);
+          });
+        };
+        walk(el);
+        if (!letters.length) return;
+        const started = performance.now();
+        let shown = 0;
+        fxTimer = setInterval(function () {
+          const target = Math.min(letters.length, Math.ceil(((performance.now() - started) / (dur * 1000)) * letters.length));
+          while (shown < target) { letters[shown].style.visibility = 'visible'; shown++; }
+          if (shown >= letters.length) clearInterval(fxTimer);
+        }, 30);
+      }
+
       function applyUpdate(data) {
         if (!data || typeof data !== 'object') return;
         const sourceData = data;
@@ -899,8 +951,10 @@
         setModeAndLayout(data);
         if (String(data.mode || 'full') === 'full') {
           fullText.innerHTML = data.text || '';
+          playTextTransition(fullText, data);
         } else {
           ltText.innerHTML = data.text || '';
+          playTextTransition(ltText, data);
         }
       }
 

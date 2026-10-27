@@ -42,6 +42,7 @@
     // the last Bible/Lyrics/Setlist library while the lower-third controls fill
     // the workspace. Any setSidebarTab() call leaves it.
     function openOverlaysWorkspace() {
+      document.body.classList.remove('displays-workspace-active');
       document.body.classList.add('overlays-workspace-active');
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-overlays'));
       updateBottomNavSidebarButtons('overlays');
@@ -106,7 +107,7 @@
           else if (typeof refreshPreviewMonitor === 'function') refreshPreviewMonitor();
         }, 250);
       }
-      document.body.classList.remove('overlays-workspace-active');
+      document.body.classList.remove('overlays-workspace-active', 'displays-workspace-active');
       const prevTab = sidebarTab;
       saveProjectionSettingsProfileForTab(getEffectiveSettingsTargetTab());
       const useFocusedWorkspaceControls = isFocusedWorkspaceMode();

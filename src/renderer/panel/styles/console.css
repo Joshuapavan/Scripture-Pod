@@ -2910,3 +2910,43 @@ select option, select optgroup {
 #display-list-card .display-list-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sp-ok); flex: 0 0 auto; }
 #display-list-card strong { display: block; font-size: 13px; font-weight: 600; }
 #display-list-card small { display: block; font-size: 11px; opacity: .7; }
+
+/* Lower third: one Bible version at a time */
+.lt-version-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 12px 8px; font-size: 12px; color: var(--sp-text); }
+.lt-version-row label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.lt-next-version-btn { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-text); font-size: 11px; font-weight: 600; cursor: pointer; }
+.lt-next-version-btn[hidden] { display: none; }
+.lt-next-version-btn:hover { border-color: var(--sp-accent, var(--sp-text)); }
+#sidebar > #lt-version-row { order: 4; display: none; }
+body[data-sidebar-tab="bible"] #sidebar > #lt-version-row { display: flex; }
+#display-list-card .display-list-row > div:nth-child(2) { flex: 1 1 auto; min-width: 0; }
+#display-list-card .display-list-actions { display: flex; gap: 6px; flex: 0 0 auto; }
+#display-list-card .display-list-actions button { padding: 3px 9px; border-radius: 999px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-text); font-size: 11px; font-weight: 600; cursor: pointer; }
+#display-list-card .display-list-actions button:hover { border-color: var(--sp-text); }
+#display-list-card .display-list-screens { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--sp-line); }
+#display-list-card .display-list-screens h3 { margin: 6px 0; }
+#display-list-card .display-list-dot.is-screen { background: var(--sp-subtle, #888); }
+#display-list-card .display-list-move { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 0; font-size: 12px; }
+#display-list-card .display-list-move select { max-width: 170px; background: var(--sp-card); color: var(--sp-text); border: 1px solid var(--sp-line); border-radius: 8px; padding: 4px 6px; font-size: 12px; }
+#display-list-card .display-list-identify { margin-top: 8px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-text); font-size: 11px; font-weight: 600; cursor: pointer; }
+.command-palette-mic { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-text); cursor: pointer; }
+.command-palette-mic.is-listening { background: var(--sp-danger, #e5372a); color: #fff; border-color: transparent; }
+
+/* ── Displays workspace ───────────────────────────────────────────────────── */
+#displays-workspace { display: none; }
+body.displays-workspace-active #displays-workspace {
+  display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 22px 28px 28px; background: var(--sp-ground);
+}
+body.displays-workspace-active #sidebar,
+body.displays-workspace-active #sidebar-width-handle,
+body.displays-workspace-active #sidebar-resize-handle,
+body.displays-workspace-active #program-display-panel,
+body.displays-workspace-active #program-width-handle,
+body.displays-workspace-active #editor-container,
+body.displays-workspace-active #focused-main-panel,
+body.displays-workspace-active #focused-editor-banner,
+body.displays-workspace-active #main .header-toolbar,
+body.displays-workspace-active #main .live-controls,
+body.displays-workspace-active #workspace-height-handle { display: none !important; }
+body.displays-workspace-active #left-workspace,
+body.displays-workspace-active #main { flex: 1 1 auto !important; width: auto !important; max-width: none !important; }

@@ -74,6 +74,34 @@ pub fn post_to_outputs(app: &AppHandle, message: &Value, target: Option<&str>) -
     any
 }
 
+// The Displays view as its own window: it can be dragged to, or opened on, another monitor
+pub fn open_displays(app: &AppHandle, opts: &Value) {
+    let on_screen = display_id(opts);
+    if let Some(win) = app.get_webview_window("displays") {
+        if on_screen.is_some() { let (x, y, _, _) = bounds(app, on_screen.as_deref()); let _ = win.set_position(tauri::LogicalPosition::new(x + 40.0, y + 40.0)); }
+        let _ = win.show();
+        let _ = win.set_focus();
+        return;
+    }
+    let mut b = builder(app, "displays", page_url("src/renderer/displays/displays.html", ""))
+        .title("Scripture Pod displays").inner_size(640.0, 760.0).min_inner_size(360.0, 360.0).resizable(true).focused(true);
+    if on_screen.is_some() { let (x, y, _, _) = bounds(app, on_screen.as_deref()); b = b.position(x + 40.0, y + 40.0); }
+    let _ = b.build();
+}
+
+// A message from the panel into the Displays window
+pub fn post_to_displays(app: &AppHandle, message: &Value) -> bool {
+    match app.get_webview_window("displays") {
+        Some(w) => { eval(&w, &format!("window.postMessage({}, '*')", message)); true }
+        None => false,
+    }
+}
+
+// An action from the Displays window to the panel
+pub fn displays_action(app: &AppHandle, action: &Value) {
+    if let Some(w) = app.get_webview_window("main") { eval(&w, &format!("window.__spDisplaysAction&&window.__spDisplaysAction({})", action)); }
+}
+
 pub fn close(app: &AppHandle, label: &str, silent: bool) {
     if let Some(w) = app.get_webview_window(label) {
         if silent { let _ = app.state::<std::sync::Arc<SilentClose>>().0.lock().map(|mut s| s.push(label.to_string())); }
@@ -98,6 +126,8 @@ pub fn open_output(app: &AppHandle, opts: &Value) {
     let (x, y, w, h) = bounds(app, display_id(opts).as_deref());
     let fullscreen = opts["fullscreen"].as_bool().unwrap_or(false) || opts["requestFullscreen"].as_bool().unwrap_or(false);
     if let Some(win) = app.get_webview_window("output") {
+        // A full screen window stays on its screen until it leaves full screen, so moving it starts there
+        let _ = win.set_fullscreen(false);
         let _ = win.set_position(tauri::LogicalPosition::new(x, y));
         let _ = win.set_size(tauri::LogicalSize::new(w, h));
         if fullscreen { let _ = win.set_fullscreen(true); }

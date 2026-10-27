@@ -12,12 +12,14 @@
       { id: 'prevSlide', label: 'Previous slide or verse', run: () => prevSlide() },
       { id: 'nextItem', label: 'Next song or chapter', run: () => navigateSidebar(1) },
       { id: 'prevItem', label: 'Previous song or chapter', run: () => navigateSidebar(-1) },
+      { id: 'nextVersion', label: 'Switch Bible version in the lower third', run: () => cycleLiveBibleVersion(1) },
       { id: 'toggleSidebar', label: 'Show or hide the sidebar', run: () => toggleSidebar() }
     ];
     const DEFAULT_EXTRA_SHORTCUTS = {
       nextSlide: ['PageDown'],
       prevSlide: ['PageUp'],
-      clear: ['.', 'B']
+      clear: ['.', 'B'],
+      nextVersion: ['V']
     };
     const SHORTCUTS_STORAGE_KEY = 'scripturePod.shortcuts.v1';
 

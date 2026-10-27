@@ -1210,3 +1210,7 @@ body.stage-role, #stage-view { background: var(--stage-bg, #000); color: var(--s
 .tp-corner.bl { left: 0; bottom: 0; clip-path: polygon(0 0, 100% 100%, 0 100%); } .tp-corner.br { right: 0; bottom: 0; clip-path: polygon(100% 0, 100% 100%, 0 100%); }
 body.stage-role > #test-pattern { display: block !important; }
 body.stage-role > #test-pattern[hidden] { display: none !important; }
+
+/* Blanked from the Display list */
+html.sp-blank body { visibility: hidden !important; }
+html.sp-blank-black { background: #000 !important; }

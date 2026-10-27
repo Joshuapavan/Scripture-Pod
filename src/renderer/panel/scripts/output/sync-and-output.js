@@ -1478,21 +1478,21 @@ ${getLtThumbCss()}
       const rows = [];
       if (!B) return rows;
       const safe = async (fn, fallback) => { try { return await fn(); } catch (e) { return fallback; } };
-      if (typeof B.isOutputOpen === 'function' && await safe(() => B.isOutputOpen(), false)) rows.push({ name: 'Live output window', meta: 'This computer' });
-      if (typeof B.isFeedOpen === 'function' && await safe(() => B.isFeedOpen(), false)) rows.push({ name: 'Monitor feed window', meta: 'This computer' });
-      if (typeof B.isStageOpen === 'function' && await safe(() => B.isStageOpen(), false)) rows.push({ name: 'Stage display window', meta: 'This computer' });
+      if (typeof B.isOutputOpen === 'function' && await safe(() => B.isOutputOpen(), false)) rows.push({ key: 'w:output', label: 'output', name: 'Main screen window', meta: 'This computer', close: () => B.closeOutput() });
+      if (typeof B.isFeedOpen === 'function' && await safe(() => B.isFeedOpen(), false)) rows.push({ key: 'w:feed', label: 'feed', name: 'Stream feed window', meta: 'This computer', close: () => B.closeFeed() });
+      if (typeof B.isStageOpen === 'function' && await safe(() => B.isStageOpen(), false)) rows.push({ key: 'w:stage', label: 'stage', name: 'Stage display window', meta: 'This computer', close: () => B.closeStage() });
       let browserCount = 0;
       if (typeof B.listJoins === 'function') {
         const r = await safe(() => B.listJoins(), null);
         ((r && r.joins) || []).filter((j) => j.live && j.status === 'approved').forEach((j) => {
           browserCount++;
           const role = { monitor: 'Monitor', stage: 'Stage' }[j.role] || 'Live';
-          rows.push({ name: j.name || j.ip, meta: `Browser · ${role} · ${j.ip}` });
+          rows.push({ key: 'b:' + j.sid, sid: j.sid, kind: 'browser', role: j.role || 'live', name: j.name || j.ip, meta: `Browser · ${role} · ${j.ip}`, close: () => B.decideJoin({ sid: j.sid, action: 'revoke' }), closeLabel: 'Disconnect' });
         });
       }
       if (typeof B.listDevices === 'function' && typeof connectedDevices !== 'undefined') {
         const devices = await safe(() => B.listDevices(), []);
-        (devices || []).filter((d) => connectedDevices.has(d.id)).forEach((d) => rows.push({ name: d.name || d.ip, meta: `Computer · ${d.ip}` }));
+        (devices || []).filter((d) => connectedDevices.has(d.id)).forEach((d) => rows.push({ key: 'c:' + d.id, kind: 'computer', name: d.name || d.ip, meta: `Computer · ${d.ip}`, close: () => disconnectNetworkDevice(d.id, (loadDeviceCodes()[d.id]) || ''), closeLabel: 'Disconnect' }));
       }
       if (typeof B.relayClientCount === 'function') {
         const own = typeof relaySocket !== 'undefined' && relaySocket && relaySocket.readyState === WebSocket.OPEN ? 1 : 0;
@@ -1501,10 +1501,116 @@ ${getLtThumbCss()}
       }
       return rows;
     }
+    // Screens blacked out one by one: a window gets the message directly, a browser display by its session id
+    const blankedDisplays = new Set();
+    function setDisplayBlank(row, on) {
+      if (on) blankedDisplays.add(row.key); else blankedDisplays.delete(row.key);
+      const msg = { type: 'BLANK_SCREEN', proto: 1, sender: 'control', ts: Date.now(), on: !!on };
+      if (row.label && window.BSPDesktop && typeof window.BSPDesktop.sendOutputMessage === 'function') {
+        window.BSPDesktop.sendOutputMessage(msg, row.label).catch(() => {});
+      } else if (row.sid) {
+        relaySend({ ...msg, sid: row.sid });
+      }
+    }
+    // Which screen each output is on, and moving one output to another screen without touching the rest
+    const OUTPUT_SLOTS = [
+      { label: 'output', name: 'Main screen', open: 'openOutput', isOpen: 'isOutputOpen', select: 'output-screen-select', extra: { fullscreen: true } },
+      { label: 'feed', name: 'Stream feed', open: 'openFeed', isOpen: 'isFeedOpen', select: 'stream-feed-display', extra: {} },
+      { label: 'stage', name: 'Stage display', open: 'openStage', isOpen: 'isStageOpen', select: 'stage-display-screen', extra: {} }
+    ];
+    function slotScreenId(slot) {
+      const rec = screenWatch.opened[slot.label];
+      if (rec && rec.arg && rec.arg.displayId != null && rec.arg.displayId !== '') return String(rec.arg.displayId);
+      const sel = document.getElementById(slot.select);
+      return sel && sel.value && sel.value !== 'auto' ? String(sel.value) : '';
+    }
+    async function moveOutputToScreen(slot, screenId) {
+      const B = window.BSPDesktop;
+      if (!B || typeof B[slot.open] !== 'function' || !screenId) return;
+      const sel = document.getElementById(slot.select);
+      if (sel) { sel.value = screenId; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+      const keep = (screenWatch.opened[slot.label] && screenWatch.opened[slot.label].arg) || {};
+      await B[slot.open]({ ...slot.extra, ...keep, displayId: screenId });
+      showToast(slot.name + ' moved');
+    }
+    async function collectScreenSection() {
+      const B = window.BSPDesktop;
+      if (!B || typeof B.getDisplays !== 'function') return null;
+      let screens = [];
+      try { screens = (await B.getDisplays()) || []; } catch (e) { return null; }
+      const slots = [];
+      for (const slot of OUTPUT_SLOTS) {
+        let open = false;
+        try { open = typeof B[slot.isOpen] === 'function' ? !!(await B[slot.isOpen]()) : false; } catch (e) { /* bridge unavailable */ }
+        slots.push({ slot, open, screenId: slotScreenId(slot) });
+      }
+      return { screens, slots };
+    }
+    function renderScreenSection(card, data) {
+      if (!data || !data.screens.length) return;
+      const wrap = document.createElement('div');
+      wrap.className = 'display-list-screens';
+      const h = document.createElement('h3');
+      h.textContent = 'Screens';
+      wrap.appendChild(h);
+      data.screens.forEach((scr, i) => {
+        const row = document.createElement('div');
+        row.className = 'display-list-row';
+        const dot = document.createElement('span'); dot.className = 'display-list-dot is-screen';
+        const txt = document.createElement('div');
+        const n = document.createElement('strong');
+        n.textContent = scr.label || ('Screen ' + (i + 1));
+        const on = data.slots.filter((x) => x.open && x.screenId === String(scr.id)).map((x) => x.slot.name);
+        const m = document.createElement('small');
+        m.textContent = `${scr.width}×${scr.height}${scr.isPrimary ? ' · Main' : ''}${scr.isInternal ? ' · Built-in' : ''} · ${on.length ? on.join(', ') : 'nothing on it'}`;
+        txt.append(n, m);
+        row.append(dot, txt);
+        wrap.appendChild(row);
+      });
+      const h2 = document.createElement('h3');
+      h2.textContent = 'Move an output';
+      wrap.appendChild(h2);
+      data.slots.forEach(({ slot, open, screenId }) => {
+        const row = document.createElement('div');
+        row.className = 'display-list-move';
+        const lab = document.createElement('span');
+        lab.textContent = slot.name + (open ? '' : ' (off)');
+        const sel = document.createElement('select');
+        const blank = document.createElement('option');
+        blank.value = '';
+        blank.textContent = open ? 'Choose screen…' : 'Open on…';
+        sel.appendChild(blank);
+        data.screens.forEach((scr, i) => {
+          const o = document.createElement('option');
+          o.value = String(scr.id);
+          o.textContent = scr.label || ('Screen ' + (i + 1));
+          sel.appendChild(o);
+        });
+        sel.value = open ? screenId : '';
+        sel.onchange = async () => { if (sel.value) { await moveOutputToScreen(slot, sel.value); setTimeout(renderDisplayList, 400); } };
+        row.append(lab, sel);
+        wrap.appendChild(row);
+      });
+      if (typeof window.BSPDesktop.identifyScreens === 'function') {
+        const id = document.createElement('button');
+        id.type = 'button';
+        id.className = 'display-list-identify';
+        id.textContent = 'Identify screens';
+        id.onclick = () => window.BSPDesktop.identifyScreens();
+        wrap.appendChild(id);
+      }
+      card.appendChild(wrap);
+    }
     async function renderDisplayList() {
       const card = document.getElementById('display-list-card');
       if (!card || !card.classList.contains('is-open')) return;
+      // Leave a menu alone while it is being used
+      if (card.contains(document.activeElement) && document.activeElement.tagName === 'SELECT') return;
       const rows = await collectConnectedDisplays();
+      const screenData = await collectScreenSection();
+      const sig = JSON.stringify([rows.map((r) => [r.key, r.name, r.meta, blankedDisplays.has(r.key)]), screenData && [screenData.screens.map((x) => x.id), screenData.slots.map((x) => [x.open, x.screenId])]]);
+      if (card.dataset.sig === sig) return;
+      card.dataset.sig = sig;
       card.textContent = '';
       const h = document.createElement('h3');
       h.textContent = rows.length ? `Connected displays (${rows.length})` : 'No displays connected';
@@ -1523,8 +1629,28 @@ ${getLtThumbCss()}
         const m = document.createElement('small'); m.textContent = r.meta;
         txt.append(n, m);
         row.append(dot, txt);
+        if (r.key) {
+          const actions = document.createElement('div');
+          actions.className = 'display-list-actions';
+          const blanked = blankedDisplays.has(r.key);
+          const blank = document.createElement('button');
+          blank.type = 'button';
+          blank.textContent = blanked ? 'Show' : 'Blank';
+          blank.title = blanked ? 'Show this screen again' : 'Black out just this screen';
+          blank.onclick = () => { setDisplayBlank(r, !blanked); renderDisplayList(); };
+          actions.appendChild(blank);
+          if (typeof r.close === 'function') {
+            const close = document.createElement('button');
+            close.type = 'button';
+            close.textContent = r.closeLabel || 'Close';
+            close.onclick = async () => { try { await r.close(); } catch (e) { /* already gone */ } blankedDisplays.delete(r.key); setTimeout(renderDisplayList, 300); };
+            actions.appendChild(close);
+          }
+          row.appendChild(actions);
+        }
         card.appendChild(row);
       });
+      renderScreenSection(card, screenData);
     }
     function setDisplayListOpen(open) {
       let card = document.getElementById('display-list-card');
@@ -1536,6 +1662,7 @@ ${getLtThumbCss()}
         document.body.appendChild(card);
       }
       card.classList.toggle('is-open', open);
+      delete card.dataset.sig;
       clearInterval(displayListState.timer);
       if (open) {
         const bar = document.getElementById('status-bar').getBoundingClientRect();
@@ -1564,6 +1691,68 @@ ${getLtThumbCss()}
       };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setup); else setup();
     })();
+
+    // When a screen drops: the window on it is closed (so the show never lands on the wrong screen), the
+    // operator is told, and the window comes back by itself when the screen does. Browser displays are reported too.
+    const screenWatch = { opened: {}, dropped: {}, browsers: {}, busy: false };
+    (function wrapScreenWindows() {
+      const B = window.BSPDesktop;
+      if (!B) return;
+      [['openOutput', 'closeOutput', 'output'], ['openFeed', 'closeFeed', 'feed'], ['openStage', 'closeStage', 'stage']].forEach(([open, close, label]) => {
+        if (typeof B[open] === 'function') {
+          const original = B[open].bind(B);
+          B[open] = (arg) => { screenWatch.opened[label] = { open, arg: arg || {} }; delete screenWatch.dropped[label]; return original(arg); };
+        }
+        if (typeof B[close] === 'function') {
+          const original = B[close].bind(B);
+          B[close] = (arg) => { if (!screenWatch.closingForDrop) { delete screenWatch.opened[label]; delete screenWatch.dropped[label]; } return original(arg); };
+        }
+      });
+    })();
+    const SCREEN_LABELS = { output: 'Live output', feed: 'Monitor feed', stage: 'Stage display' };
+    async function checkScreens() {
+      const B = window.BSPDesktop;
+      if (!B || screenWatch.busy || typeof B.getDisplays !== 'function') return;
+      screenWatch.busy = true;
+      try {
+        const screens = await B.getDisplays();
+        const ids = new Set((screens || []).map((d) => String(d.id)));
+        const isOpen = { output: B.isOutputOpen, feed: B.isFeedOpen, stage: B.isStageOpen };
+        for (const label of Object.keys(screenWatch.opened)) {
+          const rec = screenWatch.opened[label];
+          const want = rec.arg && rec.arg.displayId != null && rec.arg.displayId !== '' ? String(rec.arg.displayId) : '';
+          if (!want || want === 'auto') continue;
+          const present = ids.has(want);
+          const open = typeof isOpen[label] === 'function' ? await isOpen[label].call(B) : false;
+          if (open && !present) {
+            screenWatch.closingForDrop = true;
+            try { await B[rec.open === 'openOutput' ? 'closeOutput' : rec.open === 'openFeed' ? 'closeFeed' : 'closeStage'](); } finally { screenWatch.closingForDrop = false; }
+            screenWatch.dropped[label] = rec;
+            showToast(SCREEN_LABELS[label] + ': that screen was disconnected. It reopens when the screen is back.');
+          } else if (!open && present && screenWatch.dropped[label]) {
+            const again = screenWatch.dropped[label];
+            delete screenWatch.dropped[label];
+            await B[again.open](again.arg);
+            showToast(SCREEN_LABELS[label] + ': the screen is back, reopened.');
+          }
+        }
+        if (typeof B.listJoins === 'function') {
+          const r = await B.listJoins();
+          const seen = {};
+          ((r && r.joins) || []).filter((j) => j.status === 'approved').forEach((j) => {
+            seen[j.sid] = true;
+            const was = screenWatch.browsers[j.sid];
+            const name = j.name || j.ip;
+            if (was && was.live && !j.live) showToast('Browser display lost: ' + name);
+            else if (was && !was.live && j.live) showToast('Browser display back: ' + name);
+            screenWatch.browsers[j.sid] = { live: !!j.live, name };
+          });
+          Object.keys(screenWatch.browsers).forEach((sid) => { if (!seen[sid]) delete screenWatch.browsers[sid]; });
+        }
+      } catch (e) { /* the app bridge is not ready */ }
+      screenWatch.busy = false;
+    }
+    setInterval(checkScreens, 4000);
 
     function showToast(msg) {
       const toast = document.getElementById('toast');

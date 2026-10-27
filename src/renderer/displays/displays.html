@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scripture Pod displays</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { margin: 0; background: #0f1012; min-height: 100%; }
+  body { padding: 20px; box-sizing: border-box; }
+  #waiting { color: #8b8e97; font: 13px system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<div id="displays-root"><div id="waiting">Waiting for Scripture Pod…</div></div>
+<script src="../../shared/displays-view.js"></script>
+<script>
+  // The panel sends a snapshot every second or so; actions go back to the panel through the app
+  var rootEl = document.getElementById('displays-root');
+  var latest = null, thumbHtml = '', act = function (a) { window.BSPDesktop.displaysAction(a).catch(function () {}); };
+  function draw() { if (latest) SP_DISPLAYS_VIEW.render(rootEl, latest, { act: act, thumbHtml: thumbHtml }); }
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (!d || typeof d !== 'object') return;
+    if (d.type === 'DISPLAYS_THUMBHTML') { thumbHtml = d.html || ''; draw(); }
+    else if (d.type === 'DISPLAYS_SNAPSHOT') { latest = d.snapshot; draw(); }
+    else if (d.type === 'DISPLAYS_FEEDS') SP_DISPLAYS_VIEW.setFeeds(rootEl, d.feeds);
+  });
+  window.addEventListener('DOMContentLoaded', function () { window.BSPDesktop.displaysAction({ action: 'ready' }).catch(function () {}); });
+  setInterval(function () { if (document.getElementById('waiting')) window.BSPDesktop.displaysAction({ action: 'ready' }).catch(function () {}); }, 1500);
+</script>
+</body>
+</html>

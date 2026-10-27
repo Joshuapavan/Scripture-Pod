@@ -602,6 +602,14 @@
     window.addEventListener('resize', () => { const el = document.getElementById('test-pattern'); if (el && !el.hidden) showTestPattern(true); });
     function handleInboundMessage(d, source) {
       if (d && d.type === 'TEST_PATTERN') { showTestPattern(!!d.on); return; }
+      // Blank this one screen from the Display list: monitors go black, the live (transparent) display goes empty
+      if (d && d.type === 'BLANK_SCREEN') {
+        const mySid = new URLSearchParams(window.location.search).get('sid') || '';
+        if (d.sid && d.sid !== mySid) return;
+        document.documentElement.classList.toggle('sp-blank', !!d.on);
+        document.documentElement.classList.toggle('sp-blank-black', !!d.on && MY_AUDIENCE === 'monitor');
+        return;
+      }
       if (d && d.audience && d.audience !== MY_AUDIENCE) return;
       if (IS_STAGE) {
         if (d && d.type === 'RS_ENVELOPE' && d.payload) return handleInboundMessage(d.payload, source);

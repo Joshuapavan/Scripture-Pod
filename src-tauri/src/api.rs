@@ -206,6 +206,11 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "openStage" => { windows::open_stage(app, &arg); json!({"ok": true}) }
         "closeStage" => { windows::close(app, "stage", true); json!({"ok": true}) }
         "isStageOpen" => json!(app.get_webview_window("stage").is_some()),
+        "openDisplays" => { windows::open_displays(app, &arg); json!({"ok": true}) }
+        "closeDisplays" => { windows::close(app, "displays", true); json!({"ok": true}) }
+        "isDisplaysOpen" => json!(app.get_webview_window("displays").is_some()),
+        "sendToDisplays" => json!({"ok": windows::post_to_displays(app, &arg)}),
+        "displaysAction" => { windows::displays_action(app, &arg); json!({"ok": true}) }
         "openFeed" => { windows::open_feed(app, &arg); json!({"ok": true}) }
         "closeFeed" => { windows::close(app, "feed", true); json!({"ok": true}) }
         "relayClientCount" => json!(state.relay.client_count()),

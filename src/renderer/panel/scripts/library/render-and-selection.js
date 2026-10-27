@@ -69,10 +69,66 @@
       if (!dualVersionSecondaryId && dualVersionTertiaryId) { dualVersionSecondaryId = dualVersionTertiaryId; dualVersionTertiaryId = null; }
     }
 
+    // Lower third: show the verse in one version at a time and switch between the chosen versions/languages.
+    // The chosen versions are kept in oneVersionPool; only one of them is the on-screen version while it is active.
+    const ONE_VERSION_STORAGE = 'scripturePod.ltOneVersion.v1';
+    let oneVersionFlag = false;
+    let oneVersionPool = [];
+    try { oneVersionFlag = localStorage.getItem(ONE_VERSION_STORAGE) === '1'; } catch (e) { /* storage unavailable */ }
+    function isOneVersionActive() { return oneVersionFlag && activeRatio === '16-9' && sidebarTab === 'bible'; }
+
     function getOnScreenVersionIds() {
+      if (isOneVersionActive()) {
+        const pool = oneVersionPool.filter((id, i) => id && bibles[id] && oneVersionPool.indexOf(id) === i);
+        if (pool.includes(activeBibleVersion)) return pool;
+      }
       const ids = [activeBibleVersion];
       if (dualVersionModeEnabled) ids.push(dualVersionSecondaryId, dualVersionTertiaryId);
       return ids.filter((id, i) => id && bibles[id] && ids.indexOf(id) === i);
+    }
+
+    function updateOneVersionControls() {
+      const toggle = document.getElementById('lt-one-version-toggle');
+      if (toggle) toggle.checked = oneVersionFlag;
+      const next = document.getElementById('lt-next-version-btn');
+      if (next) {
+        const pool = oneVersionFlag ? oneVersionPool : getOnScreenVersionIds();
+        next.hidden = !(oneVersionFlag && pool.length > 1);
+        const upcoming = pool.length > 1 ? pool[(Math.max(0, pool.indexOf(activeBibleVersion)) + 1) % pool.length] : '';
+        next.title = upcoming ? `Switch to ${getVersionCode(upcoming)}` : 'Switch version';
+        const label = next.querySelector('span');
+        if (label) label.textContent = upcoming ? getVersionCode(upcoming) : 'Next';
+      }
+    }
+
+    function setOneVersionFlag(on) {
+      const wasActive = isOneVersionActive();
+      const ids = getOnScreenVersionIds();
+      oneVersionFlag = !!on;
+      try { localStorage.setItem(ONE_VERSION_STORAGE, oneVersionFlag ? '1' : '0'); } catch (e) { /* storage unavailable */ }
+      if (oneVersionFlag) oneVersionPool = ids.slice(0, MAX_VERSIONS_ON_SCREEN);
+      else if (wasActive) { applyOnScreenVersions(oneVersionPool.length ? oneVersionPool : ids); return; }
+      applyOnScreenVersions(oneVersionFlag ? oneVersionPool : ids);
+      updateOneVersionControls();
+    }
+
+    // Switch the lower third to the next version in the chosen list (key V)
+    function cycleLiveBibleVersion(step = 1) {
+      if (!oneVersionFlag || oneVersionPool.length < 2) { showToast('Turn on "one version at a time" and pick two or more versions'); return; }
+      const at = Math.max(0, oneVersionPool.indexOf(activeBibleVersion));
+      const next = oneVersionPool[(at + step + oneVersionPool.length) % oneVersionPool.length];
+      // Switching here always updates what is live, whatever the version-switch setting says
+      const keepSetting = versionSwitchUpdatesLive;
+      versionSwitchUpdatesLive = true;
+      try { changeActiveBibleVersionNow(next); } finally { versionSwitchUpdatesLive = keepSetting; }
+      applyOnScreenVersions(oneVersionPool);
+    }
+    // The ratio changes which versions are on screen, so re-apply the choice
+    function syncOneVersionMode() {
+      if (!oneVersionFlag || !oneVersionPool.length) { updateOneVersionControls(); return; }
+      const keepSetting = versionSwitchUpdatesLive;
+      versionSwitchUpdatesLive = true;
+      try { applyOnScreenVersions(oneVersionPool); } finally { versionSwitchUpdatesLive = keepSetting; }
     }
 
     // Versions on screen: click a row to add it (up to 3) or take it off. The
@@ -99,6 +155,13 @@
 
     // ids[0] is primary, ids[1] and ids[2] fill the secondary and tertiary slots
     function applyOnScreenVersions(ids) {
+      if (oneVersionFlag) {
+        oneVersionPool = ids.filter((id) => id && bibles[id]).slice(0, MAX_VERSIONS_ON_SCREEN);
+        if (isOneVersionActive() && oneVersionPool.length) {
+          // Only one of the chosen versions is on screen: the current one, or the first
+          ids = [oneVersionPool.includes(activeBibleVersion) ? activeBibleVersion : oneVersionPool[0]];
+        }
+      }
       const [primary, secondary = null, tertiary = null] = ids;
       if (primary && primary !== activeBibleVersion) {
         // changeActiveBibleVersion keeps the passage when the primary changes
@@ -109,6 +172,7 @@
       setDualVersionSecondaryId(secondary, { silent: true });
       setDualVersionTertiaryId(tertiary, { silent: true });
       renderVersionBar();
+      updateOneVersionControls();
       if (typeof onAnyControlChange === 'function') onAnyControlChange();
       if (isLive) scheduleLiveUpdate();
       schedulePreviewMonitorRefresh();
@@ -1190,7 +1254,30 @@
       try {
         for (const file of input.files) {
           const name = file.name.toLowerCase();
-          const text = await file.text();
+          const isDocx = name.endsWith('.docx');
+          const text = isDocx ? '' : await file.text();
+          // Songs saved by other apps: OpenLyrics/OpenSong (.xml), ProPresenter 6 (.pro6), Rich Text (.rtf), Word (.docx)
+          const songFile = window.SP_SONG_IMPORT
+            ? (isDocx
+              ? await window.SP_SONG_IMPORT.docxToText(await file.arrayBuffer()).then((body) => (body ? { title: file.name.replace(/\.[^.]+$/, ''), content: body } : null)).catch(() => null)
+              : window.SP_SONG_IMPORT.parseSongFile(file.name, text))
+            : null;
+          if (songFile) {
+            const newSong = {
+              id: createId('song', songFile.title),
+              title: songFile.title,
+              content: songFile.content,
+              text: songFile.content,
+              searchableText: normalizeSearchText(`${songFile.title}\n${songFile.content}`),
+              createdAt: Date.now(),
+              updatedAt: Date.now()
+            };
+            songs.push(newSong);
+            idbPut(STORE_SONGS, buildSongRecord(newSong, { isNew: true })).catch(() => {});
+            importedCount += 1;
+            continue;
+          }
+          if (isDocx) { skippedUnsupported += 1; continue; }
           if (name.endsWith('.xml')) {
             const xml = new DOMParser().parseFromString(text, "text/xml");
             const bibleRoot = xml.querySelector('bible');

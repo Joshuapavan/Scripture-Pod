@@ -732,7 +732,7 @@
         bible_version_imported: "Bible version imported",
         bible_import_persist_failed: "Bible import failed to persist",
         import_failed: "Import failed",
-        import_skipped_unsupported: "Skipped {count} unsupported file(s). Only .txt and .xml are allowed.",
+        import_skipped_unsupported: "Skipped {count} unsupported file(s). Allowed: .txt, .xml, .pro6, .rtf and .docx.",
         import_file_imported: "File imported",
         import_files_imported: "{count} files imported",
         backup_json_title: "Backup JSON ({filename})",
