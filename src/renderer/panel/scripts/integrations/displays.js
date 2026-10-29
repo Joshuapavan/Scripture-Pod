@@ -41,6 +41,7 @@
         const screenId = slotScreenId(slot);
         displays.push({ key: 'w:' + slot.label, kind: slot.label === 'output' ? 'main' : slot.label, thumb: { output: 'monitor', feed: 'live', stage: 'stage' }[slot.label], role: roleOf[slot.label], name: slot.name, where: 'This computer',
           open: !!row, screenId, screenLabel: row ? labelOf(screenId) : '', blank: blankedDisplays.has('w:' + slot.label),
+          mediaName: slot.label === 'feed' && typeof streamMedia !== 'undefined' ? streamMedia.playingName : '',
           canBlank: true, canClose: true, canMove: true });
       }
       // The background wall (a looping silent video on its own screen)
@@ -48,7 +49,7 @@
         let wallOpen = false;
         try { wallOpen = !!(await B.isWallOpen()); } catch (e) { /* bridge unavailable */ }
         const playing = bgWall.playingName ? { name: bgWall.playingName } : null;
-        displays.push({ key: 'w:wall', kind: 'wall', thumb: 'wall', role: 'wall', name: 'Background wall', where: 'This computer', open: wallOpen,
+        displays.push({ key: 'w:wall', kind: 'wall', thumb: 'wall', role: 'wall', name: 'Wall/LED', where: 'This computer', open: wallOpen,
           screenId: bgWall.screenId, screenLabel: wallOpen ? labelOf(bgWall.screenId) : '', blank: wallOpen && !!bgWall.blank,
           videoUrl: wallOpen ? bgWall.url : '', showing: playing ? playing.name : '', canBlank: true, canClose: true, canMove: true });
       }
@@ -56,7 +57,9 @@
         displays.push({ key: r.key || ('o:' + r.name), kind: r.kind || 'other', thumb: r.key ? ({ monitor: 'monitor', stage: 'stage' }[r.role] || 'live') : '', role: r.role || 'live', name: r.name, where: r.meta, open: true,
           blank: blankedDisplays.has(r.key), canBlank: !!r.key, canClose: typeof r.close === 'function', closeLabel: r.closeLabel });
       });
-      return { onAir, previewOnly: typeof isPreviewOnlyMode === 'function' && isPreviewOnlyMode(), screens, displays };
+      // The keys that open each section, in the order of the tabs, and whether the service lock is on
+      const sectionKeys = typeof getSectionTabs === 'function' ? getSectionTabs().slice(0, 9).map((t, i) => ({ n: i + 1, name: (t.textContent || '').trim() })) : [];
+      return { onAir, previewOnly: typeof isPreviewOnlyMode === 'function' && isPreviewOnlyMode(), screens, displays, sectionKeys, locked: typeof serviceLockOn === 'function' && serviceLockOn() };
     }
 
     // What each kind of display is projecting right now, as the payload its page would receive
@@ -134,7 +137,7 @@
 
     function openDisplaysWorkspace() {
       document.body.classList.add('displays-workspace-active');
-      document.body.classList.remove('overlays-workspace-active', 'background-workspace-active');
+      document.body.classList.remove('overlays-workspace-active', 'background-workspace-active', 'media-workspace-active');
       document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-displays'));
       if (typeof updateBottomNavSidebarButtons === 'function') updateBottomNavSidebarButtons('displays');
       refreshDisplaysView();
@@ -162,8 +165,7 @@
           const target = row || (slot ? { key: a.key, label: slot.label } : null);
           if (target) setDisplayBlank(target, !!a.on);
         } else if (a.action === 'close' && row && typeof row.close === 'function') {
-          await row.close();
-          blankedDisplays.delete(a.key);
+          confirmIfLocked('Close ' + row.name + '?', 'It stops showing on that screen.', async () => { await row.close(); blankedDisplays.delete(a.key); setTimeout(refreshDisplaysView, 300); });
         } else if (a.action === 'move' && slot) {
           await moveOutputToScreen(slot, String(a.screenId));
         }

@@ -2997,3 +2997,70 @@ body.displays-workspace-active #main .live-controls,
 body.displays-workspace-active #workspace-height-handle { display: none !important; }
 body.displays-workspace-active #left-workspace,
 body.displays-workspace-active #main { flex: 1 1 auto !important; width: auto !important; max-width: none !important; }
+
+/* ── Service lock button ─────────────────────────────────────────────────── */
+#btn-service-lock.is-locked { background: var(--sp-text); color: var(--sp-ground); border-color: transparent; }
+#btn-service-lock svg { width: 16px; height: 16px; }
+
+/* Pop-ups: a visible focus ring while moving with the keyboard */
+.modal-overlay button:focus-visible, .modal-overlay select:focus-visible, .modal-overlay input:focus-visible {
+  outline: 2px solid var(--sp-text); outline-offset: 2px;
+}
+
+/* ── Media workspace ───────────────────────────────────────────────────────── */
+#media-workspace { display: none; }
+body.media-workspace-active #media-workspace {
+  display: block; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 22px 28px 28px; background: var(--sp-ground);
+}
+body.media-workspace-active #sidebar,
+body.media-workspace-active #sidebar-width-handle,
+body.media-workspace-active #sidebar-resize-handle,
+body.media-workspace-active #program-display-panel,
+body.media-workspace-active #program-width-handle,
+body.media-workspace-active #editor-container,
+body.media-workspace-active #focused-main-panel,
+body.media-workspace-active #focused-editor-banner,
+body.media-workspace-active #main .header-toolbar,
+body.media-workspace-active #main .live-controls,
+body.media-workspace-active #workspace-height-handle { display: none !important; }
+body.media-workspace-active #left-workspace,
+body.media-workspace-active #main { flex: 1 1 auto !important; width: auto !important; max-width: none !important; }
+#media-view { display: flex; flex-direction: column; gap: 16px; color: var(--sp-text); font-size: 13px; }
+#media-view .md-head h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+#media-view .md-head p { margin: 0; color: var(--sp-subtle); }
+#media-view .md-bar, #media-view .md-add { background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+#media-view .md-add { flex-direction: row; flex-wrap: wrap; align-items: center; }
+#media-view .md-now { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+#media-view .md-now-item { display: flex; align-items: center; gap: 8px; min-width: 0; }
+#media-view .md-now-item strong { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#media-view .md-pill { padding: 2px 9px; border-radius: 999px; border: 1px solid var(--sp-line); font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--sp-subtle); flex: 0 0 auto; }
+#media-view .md-pill.is-on { background: #e5372a; border-color: transparent; color: #fff; }
+#media-view .md-opts { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+#media-view .md-check { display: inline-flex; align-items: center; gap: 4px; }
+#media-view select, #media-view input[type="text"] { background: var(--sp-card); color: var(--sp-text); border: 1px solid var(--sp-line); border-radius: 8px; padding: 6px 9px; font-size: 12px; }
+#media-view .md-add input[type="text"] { min-width: 160px; flex: 1 1 180px; }
+#media-view .md-btn { padding: 5px 12px; border-radius: 999px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-text); font: 600 12px system-ui, sans-serif; cursor: pointer; }
+#media-view .md-btn:hover { border-color: var(--sp-text); }
+#media-view .md-btn.is-primary { background: var(--sp-text); color: var(--sp-ground); border-color: transparent; }
+#media-view .md-btn.is-stop { border-color: #e5372a; color: #e5372a; }
+#media-view .md-btn.is-tiny { padding: 2px 8px; font-size: 11px; }
+#media-view .md-group { margin: 6px 0 0; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--sp-subtle); }
+#media-view .md-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+#media-view .md-card { background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+#media-view .md-card.is-playing { border-color: #e5372a; }
+#media-view .md-thumb { position: relative; aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; color: var(--sp-subtle); font-size: 12px; }
+#media-view .md-thumb video { width: 100%; height: 100%; object-fit: cover; }
+#media-view .md-name-row { display: flex; align-items: baseline; gap: 8px; }
+#media-view .md-name { font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#media-view .md-kind { font-size: 11px; color: var(--sp-subtle); flex: 0 0 auto; }
+#media-view .md-card-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+#media-view .md-card-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+#media-view .md-empty { padding: 22px; border: 1px dashed var(--sp-line); border-radius: 12px; text-align: center; color: var(--sp-subtle); }
+#media-view .md-tag { position: absolute; left: 8px; top: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0,0,0,.65); border: 1px solid rgba(255,255,255,.25); color: #fff; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+#media-view .md-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+
+/* ── Moving sections (drag a tab in the top bar) ───────────────────────────── */
+#app-topbar .sidebar-tabs .tab.is-dragging { opacity: .45; }
+#app-topbar .sidebar-tabs .tab.drop-before { box-shadow: inset 3px 0 0 var(--sp-text); }
+#app-topbar .sidebar-tabs .tab.drop-after { box-shadow: inset -3px 0 0 var(--sp-text); }
+#media-view .md-hint { font-size: 12px; color: var(--sp-subtle); }

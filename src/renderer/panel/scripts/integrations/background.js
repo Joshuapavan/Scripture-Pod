@@ -188,8 +188,8 @@
       const btn = (label, title, fn, cls) => { const b = mk('button', 'bg-btn' + (cls ? ' ' + cls : ''), label); b.type = 'button'; if (title) b.title = title; b.onclick = fn; return b; };
       host.textContent = '';
       const head = mk('div', 'bg-head');
-      head.appendChild(mk('h1', '', 'Background'));
-      head.appendChild(mk('p', '', 'Videos that play on a screen of their own, looping and without sound. Use them for an LED wall behind the stage.'));
+      head.appendChild(mk('h1', '', 'Wall/LED'));
+      head.appendChild(mk('p', '', 'Videos that play on a screen of their own, looping and without sound: an LED wall or screen behind the stage. Anything you send to the wall from the Media tab shows here too.'));
       host.appendChild(head);
 
       // Wall controls
@@ -294,7 +294,7 @@
     }
 
     function openBackgroundWorkspace() {
-      document.body.classList.remove('overlays-workspace-active', 'displays-workspace-active');
+      document.body.classList.remove('overlays-workspace-active', 'displays-workspace-active', 'media-workspace-active');
       document.body.classList.add('background-workspace-active');
       document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.id === 'tab-background'));
       if (typeof updateBottomNavSidebarButtons === 'function') updateBottomNavSidebarButtons('background');

@@ -13,20 +13,26 @@
       { id: 'nextItem', label: 'Next song or chapter', run: () => navigateSidebar(1) },
       { id: 'prevItem', label: 'Previous song or chapter', run: () => navigateSidebar(-1) },
       { id: 'nextVersion', label: 'Switch Bible version in the lower third', run: () => cycleLiveBibleVersion(1) },
+      { id: 'toggleLock', label: 'Turn the service lock on or off', run: () => toggleServiceLock() },
       { id: 'toggleSidebar', label: 'Show or hide the sidebar', run: () => toggleSidebar() }
     ];
     const DEFAULT_EXTRA_SHORTCUTS = {
       nextSlide: ['PageDown'],
       prevSlide: ['PageUp'],
       clear: ['.', 'B'],
-      nextVersion: ['V']
+      nextVersion: ['V'],
+      toggleLock: ['Cmd+L', 'Ctrl+L']
     };
     const SHORTCUTS_STORAGE_KEY = 'scripturePod.shortcuts.v1';
 
     function loadCustomShortcuts() {
       try {
         const saved = JSON.parse(localStorage.getItem(SHORTCUTS_STORAGE_KEY) || 'null');
-        if (saved && typeof saved === 'object') return saved;
+        if (saved && typeof saved === 'object') {
+          // Keys for actions added since the list was saved come in with their defaults
+          Object.keys(DEFAULT_EXTRA_SHORTCUTS).forEach((id) => { if (!(id in saved)) saved[id] = DEFAULT_EXTRA_SHORTCUTS[id].slice(); });
+          return saved;
+        }
       } catch (e) { /* storage unavailable */ }
       return JSON.parse(JSON.stringify(DEFAULT_EXTRA_SHORTCUTS));
     }

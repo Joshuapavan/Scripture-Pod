@@ -42,9 +42,25 @@
       getSectionTabs().forEach((tab, i) => {
         if (i > 8) return;
         const name = (tab.textContent || '').trim() || 'Section';
-        tab.title = `${name} (${/Mac|iPhone|iPad/i.test(navigator.platform) ? '⌘' : 'Ctrl+'}${i + 1})`;
+        tab.title = `${name} (${/Mac|iPhone|iPad/i.test(navigator.platform) ? '⌘' : 'Ctrl+'}${i + 1}). Drag to move, or Alt+Left / Alt+Right.`;
         tab.setAttribute('aria-keyshortcuts', `Meta+${i + 1} Control+${i + 1}`);
       });
+      // The shortcuts window lists the same keys, one row per section, in the same order
+      const rows = document.getElementById('section-shortcut-rows');
+      if (rows) {
+        const mod = /Mac|iPhone|iPad/i.test(navigator.platform) ? '⌘' : 'Ctrl ';
+        rows.textContent = '';
+        getSectionTabs().slice(0, 9).forEach((tab, i) => {
+          const row = document.createElement('div');
+          row.className = 'shortcut-row';
+          const label = document.createElement('span');
+          label.textContent = 'Open ' + ((tab.textContent || '').trim() || 'section');
+          const key = document.createElement('kbd');
+          key.textContent = mod + (i + 1);
+          row.append(label, key);
+          rows.appendChild(row);
+        });
+      }
     }
     document.addEventListener('keydown', (e) => {
       if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return;
@@ -67,7 +83,7 @@
     // the last Bible/Lyrics/Setlist library while the lower-third controls fill
     // the workspace. Any setSidebarTab() call leaves it.
     function openOverlaysWorkspace() {
-      document.body.classList.remove('displays-workspace-active', 'background-workspace-active');
+      document.body.classList.remove('displays-workspace-active', 'background-workspace-active', 'media-workspace-active');
       document.body.classList.add('overlays-workspace-active');
       document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.id === 'tab-overlays'));
       updateBottomNavSidebarButtons('overlays');
@@ -132,7 +148,7 @@
           else if (typeof refreshPreviewMonitor === 'function') refreshPreviewMonitor();
         }, 250);
       }
-      document.body.classList.remove('overlays-workspace-active', 'displays-workspace-active', 'background-workspace-active');
+      document.body.classList.remove('overlays-workspace-active', 'displays-workspace-active', 'background-workspace-active', 'media-workspace-active');
       const prevTab = sidebarTab;
       saveProjectionSettingsProfileForTab(getEffectiveSettingsTargetTab());
       const useFocusedWorkspaceControls = isFocusedWorkspaceMode();

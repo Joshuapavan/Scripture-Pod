@@ -194,9 +194,12 @@ pub fn open_wall(app: &AppHandle, opts: &Value) {
     let fit = if opts["fit"].as_str() == Some("contain") { "contain" } else { "cover" };
     // One address, or several separated by commas (a playlist)
     let list = opts["urls"].as_array().map(|a| a.iter().filter_map(|u| u.as_str()).collect::<Vec<_>>().join(",")).unwrap_or_else(|| opts["url"].as_str().unwrap_or("").to_string());
-    let src: String = list.chars().filter(|c| c.is_ascii_alphanumeric() || ":/._-,".contains(*c)).collect();
+    let src: String = list.chars().filter(|c| c.is_ascii_alphanumeric() || ":/._-,%".contains(*c)).collect();
     let fade = opts["fade"].as_f64().unwrap_or(0.0).clamp(0.0, 5.0);
-    let query = format!("?fit={}&fade={}&src={}", fit, fade, src);
+    let kind = if opts["kind"].as_str() == Some("html") { "html" } else { "video" };
+    let once = if opts["once"].as_bool() == Some(true) { 1 } else { 0 };
+    let trusted = if opts["trusted"].as_bool() == Some(true) { 1 } else { 0 };
+    let query = format!("?fit={}&fade={}&kind={}&once={}&trusted={}&src={}", fit, fade, kind, once, trusted, src);
     let _ = builder(app, "wall", page_url("src/renderer/wall/wall.html", &query))
         .title("Scripture Pod background").decorations(false).position(x, y).inner_size(w, h).fullscreen(true).focused(false).build();
 }

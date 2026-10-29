@@ -213,6 +213,13 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
                 .map(|p| json!({"path": p.to_string_lossy(), "name": p.file_stem().map(|n| n.to_string_lossy().to_string()).unwrap_or_default()})).collect();
             json!({"files": files})
         }
+        // Stream media: videos and web pages (HTML) from this computer
+        "pickMediaFiles" => {
+            let picked = app.dialog().file().set_title("Choose videos or web pages").add_filter("Videos and web pages", &["mp4", "m4v", "mov", "webm", "mkv", "ogv", "html", "htm"]).blocking_pick_files();
+            let files: Vec<Value> = picked.unwrap_or_default().into_iter().filter_map(|f| f.into_path().ok())
+                .map(|p| json!({"path": p.to_string_lossy(), "name": p.file_stem().map(|n| n.to_string_lossy().to_string()).unwrap_or_default()})).collect();
+            json!({"files": files})
+        }
         "registerMediaFile" => register_media_file(state, arg["path"].as_str().unwrap_or("")),
         "openWall" => { windows::open_wall(app, &arg); json!({"ok": true}) }
         "closeWall" => { windows::close(app, "wall", true); json!({"ok": true}) }
@@ -462,7 +469,7 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
 fn register_media_file(state: &Arc<AppState>, path: &str) -> Value {
     let p = PathBuf::from(path);
     let ext = p.extension().map(|e| e.to_string_lossy().to_lowercase()).unwrap_or_default();
-    let mime = match ext.as_str() { "mp4" | "m4v" => "video/mp4", "mov" => "video/quicktime", "webm" => "video/webm", "mkv" => "video/x-matroska", "ogv" => "video/ogg", _ => return json!({"error": "Only video files can be used"}) };
+    let mime = match ext.as_str() { "mp4" | "m4v" => "video/mp4", "mov" => "video/quicktime", "webm" => "video/webm", "mkv" => "video/x-matroska", "ogv" => "video/ogg", "html" | "htm" => "text/html; charset=utf-8", _ => return json!({"error": "Only videos and web pages can be used"}) };
     if !p.is_file() { return json!({"error": "That video was moved or deleted"}); }
     let existing = state.media.lock().unwrap().iter().find(|(_, (q, _))| *q == p).map(|(k, _)| k.clone());
     let id = existing.unwrap_or_else(|| { let id = uuid_v4(); state.media.lock().unwrap().insert(id.clone(), (p.clone(), mime.to_string())); id });

@@ -87,6 +87,7 @@
     '.dv-stage{position:absolute;inset:0;padding:8% 7%;display:flex;flex-direction:column;gap:6%;background:#000;color:#fff;overflow:hidden}',
     '.dv-stage b{font-size:15px;line-height:1.25;font-weight:600;white-space:pre-line;display:block;max-height:60%;overflow:hidden}',
     '.dv-stage small{font-size:11px;opacity:.55;white-space:pre-line;max-height:30%;overflow:hidden;display:block}',
+    '.dv-hint{font-size:12px;color:var(--dv-muted)}',
     '.dv-empty{color:var(--dv-muted);padding:20px;border:1px dashed var(--dv-line);border-radius:12px;text-align:center}'
   ].join('\n');
 
@@ -199,6 +200,7 @@
     if (counts.clear) chips.appendChild(el('span', 'dv-chip', counts.clear + ' clear'));
     if (counts.blank) chips.appendChild(el('span', 'dv-chip', counts.blank + ' blanked'));
     if (counts.off) chips.appendChild(el('span', 'dv-chip', counts.off + ' off'));
+    if (snap.locked) chips.appendChild(el('span', 'dv-chip', 'Service lock on'));
     head.appendChild(chips);
     head.appendChild(btn('Identify screens', 'Show a number on every screen for a moment', function () { act({ action: 'identify' }); }));
     if (opts.canPopOut) head.appendChild(btn('Pop out', 'Open this as its own window, to put on another monitor', function () { act({ action: 'popout' }); }));
@@ -220,7 +222,8 @@
       var row = function (k, v) { var r = el('div', 'dv-row'); r.appendChild(el('span', '', k)); r.appendChild(el('span', '', v)); card.appendChild(r); };
       row(d.kind === 'preview' || d.kind === 'program' ? 'Role' : 'Projecting', info.status === 'off' ? 'Not open' : info.how);
       if (d.screenLabel) row('Screen', d.screenLabel);
-      if (info.status === 'live' && info.showing) row('Showing', info.showing);
+      if (d.mediaName && d.open) row('Playing', d.mediaName);
+      else if (info.status === 'live' && info.showing) row('Showing', info.showing);
       else if (info.status === 'preview') row('Showing', info.showing || 'Cued');
       else if (info.status === 'clear') row('Showing', d.kind === 'preview' ? 'Nothing cued' : 'Nothing on air');
       else if (info.status === 'blank') row('Showing', 'Blacked out from here');
@@ -250,6 +253,11 @@
       screens.appendChild(r);
     });
     wrap.appendChild(screens);
+    // Which keys open which section (the order of the tabs, so a new section gets the next number)
+    if ((snap.sectionKeys || []).length) {
+      var mod = /Mac|iPhone|iPad/i.test(navigator.platform || '') ? '\u2318' : 'Ctrl ';
+      wrap.appendChild(el('div', 'dv-hint', 'Sections: ' + snap.sectionKeys.map(function (k) { return mod + k.n + ' ' + k.name; }).join('  \u00b7  ')));
+    }
     rootEl.appendChild(wrap);
   }
 

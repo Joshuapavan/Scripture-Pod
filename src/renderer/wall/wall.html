@@ -7,18 +7,21 @@
 <style>
   html, body { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; cursor: none; }
   video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; opacity: 0; transition: opacity var(--fade, 0s) linear; }
-  html.sp-blank video { visibility: hidden; }
+  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #000; display: none; }
+  html.sp-blank video, html.sp-blank iframe { visibility: hidden; }
 </style>
 </head>
 <body>
 <video id="a" muted playsinline disablepictureinpicture></video>
 <video id="b" muted playsinline disablepictureinpicture></video>
+<iframe id="f" sandbox="allow-scripts" allow="autoplay" title="Web page"></iframe>
 <script>
   // Background wall: a list of videos played in order and looped, always silent. With two or more videos each one
   // fades into the next. The panel changes the list, the fit or the fade by message.
   var A = document.getElementById('a'), B = document.getElementById('b');
   var q = new URLSearchParams(location.search);
-  var urls = [], idx = 0, fade = 0, cur = A, switching = false;
+  var urls = [], idx = 0, fade = 0, cur = A, switching = false, once = false;
+  var F = document.getElementById('f');
 
   function setFit(fit) { A.style.objectFit = B.style.objectFit = fit === 'contain' ? 'contain' : 'cover'; }
   function setFade(sec) { fade = Math.max(0, Math.min(5, Number(sec) || 0)); document.documentElement.style.setProperty('--fade', fade + 's'); }
@@ -43,7 +46,7 @@
     });
     el.addEventListener('ended', function () {
       if (el !== cur) return;
-      if (urls.length > 1) next(); else { el.currentTime = 0; play(el); }
+      if (urls.length > 1) next(); else if (once) { el.style.opacity = 0; } else { el.currentTime = 0; play(el); }
     });
     el.addEventListener('error', function () {
       // A video that cannot be read is skipped, or retried when it is the only one
@@ -52,7 +55,22 @@
   }
   watch(A); watch(B);
 
+  // A web page (HTML file or link) instead of a video; the page is sandboxed so it cannot reach the app
+  // A file the operator added (trusted) runs with its own storage; a pasted link stays fully locked down
+  function showPage(url, trusted) {
+    A.pause(); B.pause(); A.style.opacity = 0; B.style.opacity = 0;
+    if (!url) { F.style.display = 'none'; F.removeAttribute('src'); return; }
+    F.setAttribute('sandbox', trusted ? 'allow-scripts allow-same-origin' : 'allow-scripts');
+    F.style.display = 'block';
+    // A frame that has never loaded anything can show a page black the first time (seen in WebKit), so it goes
+    // through an empty page first, which makes the page load exactly as it does when it is changed later
+    F.src = 'about:blank';
+    var wanted = url;
+    setTimeout(function () { if (F.style.display === 'block') F.src = wanted; }, 250);
+  }
+
   function start(list, fit, fadeSec) {
+    F.style.display = 'none'; F.removeAttribute('src');
     urls = (list || []).filter(Boolean);
     idx = 0; switching = false;
     setFit(fit); setFade(fadeSec);
@@ -60,7 +78,7 @@
     B.style.opacity = 0; B.removeAttribute('src');
     cur = A;
     if (!urls.length) { A.style.opacity = 0; A.removeAttribute('src'); A.load(); return; }
-    A.loop = urls.length === 1;
+    A.loop = urls.length === 1 && !once;
     A.src = urls[0];
     A.style.opacity = 1;
     play(A);
@@ -69,12 +87,15 @@
   window.addEventListener('message', function (e) {
     var d = e.data;
     if (!d || typeof d !== 'object') return;
-    if (d.type === 'WALL_SRC') start(d.urls || (d.url ? [d.url] : []), d.fit, d.fade);
+    if (d.type === 'WALL_SRC') { once = !!d.once; start(d.urls || (d.url ? [d.url] : []), d.fit, d.fade); }
+    else if (d.type === 'WALL_HTML') showPage(d.url, !!d.trusted);
     else if (d.type === 'WALL_FIT') setFit(d.fit);
-    else if (d.type === 'WALL_STOP') start([], d.fit, 0);
+    else if (d.type === 'WALL_STOP') { showPage(''); start([], d.fit, 0); }
     else if (d.type === 'BLANK_SCREEN') document.documentElement.classList.toggle('sp-blank', !!d.on);
   });
-  start((q.get('src') || '').split(',').filter(Boolean), q.get('fit'), q.get('fade'));
+  once = q.get('once') === '1';
+  // A page opened with the window waits until this window has finished loading, so it starts like one sent later
+  if (q.get('kind') === 'html') window.addEventListener('load', function () { setTimeout(function () { showPage(q.get('src') || '', q.get('trusted') === '1'); }, 300); }); else start((q.get('src') || '').split(',').filter(Boolean), q.get('fit'), q.get('fade'));
 </script>
 </body>
 </html>

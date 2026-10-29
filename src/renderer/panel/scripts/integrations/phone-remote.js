@@ -8,6 +8,28 @@
     // What the phone shows: the section it is in, a small picture of what is on air (or cued), the slides
     // of the open song or chapter, and what comes next
     let phoneRemoteRefResult = '';
+    // The displays and the background wall as the phone sees them, refreshed every second or so
+    let phoneDisplaysCache = [];
+    let phoneDisplaysAt = 0;
+    function refreshPhoneDisplays() {
+      if (typeof buildDisplaysSnapshot !== 'function' || Date.now() - phoneDisplaysAt < 1500) return;
+      phoneDisplaysAt = Date.now();
+      buildDisplaysSnapshot().then((snap) => {
+        const onAir = !!(snap.onAir && snap.onAir.live);
+        phoneDisplaysCache = (snap.displays || []).map((d) => ({
+          key: d.key, name: d.name, open: !!d.open, blank: !!d.blank, canBlank: !!d.canBlank && d.kind !== 'wall', live: onAir && d.kind !== 'wall' && d.kind !== 'preview'
+        }));
+        phoneDisplaysCache.wallOpen = (snap.displays || []).some((d) => d.kind === 'wall' && d.open);
+      }).catch(() => {});
+    }
+    function remoteWallState() {
+      if (typeof bgWall === 'undefined' || typeof loadBgVideos !== 'function') return null;
+      return {
+        open: !!phoneDisplaysCache.wallOpen, name: bgWall.playingName || '', blank: !!bgWall.blank,
+        videos: loadBgVideos().slice(0, 30).map((v) => ({ id: v.id, name: String(v.name || 'Video').slice(0, 40) })),
+        playingIds: bgWall.playingIds || [], hasPlaylist: (bgWall.playlist || []).length > 0, canResume: (bgWall.last || []).length > 0
+      };
+    }
     function remoteFeedFrom(p, isBible) {
       if (!p) return null;
       const plain = (html) => { const d = document.createElement('div'); d.innerHTML = String(html || '').replace(/<br\s*\/?>/gi, '\n'); return (d.textContent || '').replace(/[ \t]+\n/g, '\n').trim(); };
@@ -44,7 +66,9 @@
           feed: liveNow ? remoteFeedFrom(p, liveIsBible) : null,
           cued: cuedPayload ? remoteFeedFrom(cuedPayload, !!(cuedPayload.bibleRef)) : null,
           slides, cursor: lineCursor, liveIndex: liveSame ? liveLineCursor : -1,
-          refResult: phoneRemoteRefResult
+          refResult: phoneRemoteRefResult,
+          displays: phoneDisplaysCache.map((d) => ({ ...d })), wall: remoteWallState(),
+          locked: typeof serviceLockOn === 'function' && serviceLockOn()
         };
       } catch (e) { return { live: false, section: 'other', title: '', current: '', next: '', slides: [] }; }
     }
@@ -65,6 +89,16 @@
         saveToStorageDebounced();
       } else if (kind === 'tab') {
         if (['bible', 'songs', 'schedule'].includes(value)) setSidebarTab(value);
+      } else if (kind === 'blank') {
+        // Blank or show one display from the phone
+        const d = phoneDisplaysCache.find((x) => x.key === value);
+        if (d && typeof window.__spDisplaysAction === 'function') window.__spDisplaysAction({ action: 'blank', key: value, on: !d.blank });
+      } else if (kind === 'wall') {
+        if (value === 'stop') stopBgWall();
+        else if (value === 'blank') toggleBgWallBlank();
+        else if (value === 'playlist') playBgPlaylist();
+        else if (value === 'resume') resumeBgWall();
+        else if (value.startsWith('play:')) playBgVideo(value.slice(5));
       } else if (kind === 'ref') {
         const ref = window.SP_SPOKEN_REF ? window.SP_SPOKEN_REF.spokenToReference(value) : null;
         if (!ref) { phoneRemoteRefResult = 'Did not understand: ' + value; return; }
@@ -79,6 +113,7 @@
     async function runPhoneRemoteTick() {
       const bridge = window.BSPDesktop;
       if (!bridge || typeof bridge.pollRemote !== 'function') return;
+      refreshPhoneDisplays();
       const actions = await bridge.pollRemote().catch(() => []);
       (actions || []).forEach((id) => {
         try {

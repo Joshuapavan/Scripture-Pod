@@ -1412,6 +1412,8 @@ ${getLtThumbCss()}
           desktop.sendOutputMessage(monitorMsg, 'stage').catch(() => {});
         } else if (rawMsg && rawMsg.type === 'TEST_PATTERN') {
           desktop.sendOutputMessage(rawMsg).catch(() => {});
+        } else if (rawMsg && (rawMsg.type === 'MEDIA_PLAY' || rawMsg.type === 'MEDIA_STOP')) {
+          desktop.sendOutputMessage(rawMsg, 'feed').catch(() => {});
         } else if (rawMsg && rawMsg.type === 'STAGE_CONFIG') {
           desktop.sendOutputMessage(rawMsg, 'stage').catch(() => {});
         } else if (rawMsg && rawMsg.type === 'CLOCK') {
@@ -1496,7 +1498,7 @@ ${getLtThumbCss()}
       if (typeof B.isStageOpen === 'function' && await safe(() => B.isStageOpen(), false)) rows.push({ key: 'w:stage', label: 'stage', name: 'Stage display window', meta: 'This computer', close: () => B.closeStage() });
       // The background wall (looping video), with the name of what is playing
       if (typeof B.isWallOpen === 'function' && await safe(() => B.isWallOpen(), false)) {
-        rows.push({ key: 'w:wall', label: 'wall', name: 'Background wall', meta: typeof bgWall !== 'undefined' && bgWall.playingName ? bgWall.playingName : 'This computer', close: () => stopBgWall() });
+        rows.push({ key: 'w:wall', label: 'wall', name: 'Wall/LED', meta: typeof bgWall !== 'undefined' && bgWall.playingName ? bgWall.playingName : 'This computer', close: () => stopBgWall() });
       }
       let browserCount = 0;
       if (typeof B.listJoins === 'function') {
@@ -1568,7 +1570,7 @@ ${getLtThumbCss()}
       if (typeof bgWall !== 'undefined' && typeof B.isWallOpen === 'function') {
         let wallOpen = false;
         try { wallOpen = !!(await B.isWallOpen()); } catch (e) { /* bridge unavailable */ }
-        slots.push({ slot: { label: 'wall', name: 'Background wall', isWall: true }, open: wallOpen, screenId: String(bgWall.screenId || '') });
+        slots.push({ slot: { label: 'wall', name: 'Wall/LED', isWall: true }, open: wallOpen, screenId: String(bgWall.screenId || '') });
       }
       return { screens, slots };
     }
@@ -1670,7 +1672,7 @@ ${getLtThumbCss()}
             const close = document.createElement('button');
             close.type = 'button';
             close.textContent = r.closeLabel || 'Close';
-            close.onclick = async () => { try { await r.close(); } catch (e) { /* already gone */ } blankedDisplays.delete(r.key); setTimeout(renderDisplayList, 300); };
+            close.onclick = () => confirmIfLocked('Close ' + r.name + '?', 'It stops showing on that screen.', async () => { try { await r.close(); } catch (e) { /* already gone */ } blankedDisplays.delete(r.key); setTimeout(renderDisplayList, 300); });
             actions.appendChild(close);
           }
           row.appendChild(actions);

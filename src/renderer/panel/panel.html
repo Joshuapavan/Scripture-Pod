@@ -20,7 +20,8 @@
       <button type="button" class="tab" id="tab-schedule" onclick="setSidebarTab('schedule')"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg><span data-i18n="ui_tab_setlist">Setlist</span></button>
       <button type="button" class="tab" id="tab-overlays" onclick="openOverlaysWorkspace()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 15h20"/><path d="M6 18h6"/></svg><span>Overlays</span></button>
       <button type="button" class="tab" id="tab-displays" onclick="openDisplaysWorkspace()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="13" height="10" rx="2"/><rect x="9" y="9" width="13" height="10" rx="2"/></svg><span>Displays</span></button>
-      <button type="button" class="tab" id="tab-background" onclick="openBackgroundWorkspace()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg><span>Background</span></button>
+      <button type="button" class="tab" id="tab-background" onclick="openBackgroundWorkspace()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 9 5 3-5 3z"/></svg><span>Wall/LED</span></button>
+      <button type="button" class="tab" id="tab-media" onclick="openMediaWorkspace()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><path d="m10 9 4 2-4 2z"/></svg><span>Media</span></button>
     </nav>
     <div id="status-bar" title="Shows whether an output display is connected: the output window, an OBS Browser Source, or another computer on the network">
       <div id="status-dot"></div>
@@ -30,6 +31,7 @@
       <span class="air-indicator-dot" aria-hidden="true"></span>
       <span class="air-indicator-text">Idle</span>
     </button>
+    <button type="button" class="topbar-btn" id="btn-service-lock" aria-pressed="false" onclick="toggleServiceLock()" title="Service lock"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span>Lock</span></button>
     <button type="button" class="topbar-btn" id="btn-topbar-outputs" onclick="showOutputsCard()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg><span>Outputs</span></button>
     <button type="button" class="topbar-btn topbar-icon-btn" id="sidebar-quick-actions-btn" aria-label="Quick actions" data-i18n-aria-label="ui_quick_actions" title="Quick actions" data-i18n-title="ui_quick_actions" aria-haspopup="true" onclick="toggleSidebarQuickActions()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/></svg></button>
     <button class="topbar-btn topbar-icon-btn" aria-label="Settings" id="btn-settings" onclick="openModal('settingsModal')" title="Settings" data-i18n-title="common_settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7"/><path d="M4 10V3"/><path d="M12 21v-9"/><path d="M12 8V3"/><path d="M20 21v-5"/><path d="M20 12V3"/><path d="M1 14h6"/><path d="M9 8h6"/><path d="M17 16h6"/></svg></button>
@@ -191,7 +193,8 @@
       <div id="main-workspace">
         <div id="focused-main-panel" aria-hidden="true"></div>
         <section id="displays-workspace" aria-label="Displays"><div id="displays-view"></div></section>
-        <section id="background-workspace" aria-label="Background"><div id="background-view"></div></section>
+        <section id="background-workspace" aria-label="Wall/LED"><div id="background-view"></div></section>
+        <section id="media-workspace" aria-label="Media"><div id="media-view"></div></section>
         <section id="overlays-workspace" aria-labelledby="overlays-workspace-title">
       <nav class="overlays-list" aria-label="Overlays">
         <div class="library-label">Overlays</div>
@@ -1046,7 +1049,8 @@
       <button class="page-nav-btn" data-side-tab="schedule" onclick="switchBottomNavSidebarTab('schedule')" data-i18n="ui_tab_setlist">Setlist</button>
       <button class="page-nav-btn" data-side-tab="overlays" onclick="openOverlaysWorkspace()">Overlays</button>
       <button class="page-nav-btn" data-side-tab="displays" onclick="openDisplaysWorkspace()">Displays</button>
-      <button class="page-nav-btn" data-side-tab="background" onclick="openBackgroundWorkspace()">Background</button>
+      <button class="page-nav-btn" data-side-tab="background" onclick="openBackgroundWorkspace()">Wall/LED</button>
+      <button class="page-nav-btn" data-side-tab="media" onclick="openMediaWorkspace()">Media</button>
     </div>
   </div>
   <div id="footer-bible-version-popover" aria-hidden="true"></div>
@@ -1128,7 +1132,8 @@
           <h4>Around the app</h4>
           <div class="shortcut-row"><span>Presentation clicker: next / previous slide</span><kbd>Page Down · Page Up</kbd></div>
           <div class="shortcut-row"><span>Switch Bible, Lyrics and Setlist</span><kbd>Tab · ⇧ Tab</kbd></div>
-          <div class="shortcut-row"><span>Open a section by its place in the top bar (1 is the first tab)</span><kbd>⌘/Ctrl 1–9</kbd></div>
+          <div class="shortcut-row"><span>Service lock on or off</span><kbd>⌘ L · Ctrl L</kbd></div>
+          <div id="section-shortcut-rows"><div class="shortcut-row"><span>Open a section by its place in the top bar (1 is the first tab)</span><kbd>⌘/Ctrl 1–9</kbd></div></div>
           <div class="shortcut-row"><span>Show or hide the sidebar</span><kbd>S · ⌘ B</kbd></div>
           <div class="shortcut-row"><span>Open Imports</span><kbd>I</kbd></div>
           <div class="shortcut-row"><span>Command palette</span><kbd>⌘ K</kbd></div>
@@ -3257,6 +3262,10 @@
   <script src="./scripts/ui/command-palette.js"></script>
   <script src="./scripts/integrations/displays.js"></script>
   <script src="./scripts/integrations/background.js"></script>
+  <script src="./scripts/integrations/stream-media.js"></script>
+  <script src="./scripts/integrations/service-lock.js"></script>
+  <script src="./scripts/ui/modal-keyboard.js"></script>
+  <script src="./scripts/ui/section-order.js"></script>
   <script src="./scripts/core/settings-and-controls.js"></script>
   <script src="./scripts/ui/sidebar-and-workspace.js"></script>
   <script src="./scripts/output/sync-and-output.js"></script>

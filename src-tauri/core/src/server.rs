@@ -60,12 +60,18 @@ main{min-height:100%;display:flex;flex-direction:column;gap:10px;padding:12px;ma
 button:active{background:#23272c}.go{grid-column:1/3;background:#e5372a;border-color:#e5372a;height:70px;font-size:20px}
 .ref{display:flex;gap:6px}.ref input{flex:1;min-width:0;height:48px;border-radius:12px;border:1px solid #2e3339;background:#101215;color:#edeef0;font-size:16px;padding:0 12px;-webkit-user-select:text;user-select:text}.ref button{height:48px;width:52px;font-size:15px}
 .msg{text-align:center;color:#8b9299;font-size:13px;min-height:18px}
-@media (max-height:760px){button{height:48px;font-size:15px}.go{height:56px}.tabs button{height:38px}}</style></head>
+.conn{display:flex;align-items:center;gap:8px;font-size:12px;color:#8b9299;padding:0 4px}.conn i{width:8px;height:8px;border-radius:50%;background:#2fb170;flex:0 0 auto}.conn.off i{background:#e5372a}.conn span:first-of-type{flex:1}
+.dsp{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid #23272c}.dsp:first-child{border-top:0}.dsp b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:600}
+.mini{height:38px;padding:0 14px;font-size:13px;border-radius:999px;flex:0 0 auto}.wb{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 8px}.wv{display:flex;flex-direction:column;gap:6px}.wv .mini{height:auto;min-height:38px;padding:8px 14px;text-align:left;border-radius:12px;font-weight:500}.pill.ok{background:#2fb170}.pill.dim{background:#2e3339;color:#a3a9b0}.pill.warn{background:#d9a016;color:#111}
+@media (max-height:760px){button{height:48px;font-size:15px}.go{height:56px}.tabs button{height:38px}.mini{height:34px}}</style></head>
 <body><main>
+<div class="conn" id="conn"><i></i><span id="connt">Connecting…</span><span id="lock" class="pill warn" hidden>LOCKED</span></div>
 <div class="tabs"><button data-t="bible">Bible</button><button data-t="songs">Lyrics</button><button data-t="schedule">Setlist</button></div>
 <div class="card"><div class="tag"><b id="ttl">Scripture Pod</b><span id="lv" class="pill" hidden></span></div>
 <div class="feed" id="feed"><div class="none" id="none">Connecting…</div><div class="txt" id="ftxt"></div></div><div id="nxt"></div></div>
 <div class="card" id="slcard" hidden><div class="tag"><b id="sttl">Slides</b></div><div id="slides"></div></div>
+<div class="card" id="dcard" hidden><div class="tag"><b>Displays</b></div><div id="dlist"></div></div>
+<div class="card" id="wcard" hidden><div class="tag"><b id="wttl">Wall/LED</b><span id="wpill" class="pill dim"></span></div><div class="wb" id="wbtns"></div><div class="wv" id="wvids"></div></div>
 <div class="ref"><input id="ri" type="text" placeholder="Say or type: john three sixteen" autocomplete="off" autocapitalize="off" enterkeyhint="go"><button id="rm" hidden title="Speak">🎤</button><button id="rg">Open</button></div>
 <div class="msg" id="msg"></div>
 <div class="dock"><div class="grid"><button data-a="prevSlide">◀ Previous</button><button data-a="nextSlide">Next ▶</button><button class="go" data-a="goLive">Go live</button>
@@ -85,9 +91,20 @@ function paintSlides(s){var card=$("slcard"),box2=$("slides");var list=s.slides|
 $("sttl").textContent=s.itemTitle||"Slides";var sig=JSON.stringify([list,s.cursor,s.liveIndex]);if(box2.dataset.sig===sig)return;box2.dataset.sig=sig;box2.textContent="";
 list.forEach(function(x,i){var b=document.createElement("button");b.className="sl"+(i===s.cursor?" cur":"")+(s.live&&i===s.liveIndex?" air":"");var t=document.createElement("i");t.textContent=x.tag||String(i+1);var p=document.createElement("span");p.textContent=x.t;b.appendChild(t);b.appendChild(p);b.addEventListener("click",function(){send({action:"goto",index:i})});box2.appendChild(b)});
 var cur=box2.querySelector(".cur");if(cur&&cur.scrollIntoView)cur.scrollIntoView({block:"nearest"})}
-function paint(s){$("ttl").textContent=s.title||"Scripture Pod";$("nxt").textContent=s.next?"Next: "+s.next:"";
+function stat(d){return !d.open?"off":d.blank?"blank":d.live?"live":"clear"}
+function paintDisplays(s){var list=(s.displays||[]).filter(function(d){return d.canBlank});var card=$("dcard"),box=$("dlist");card.hidden=!list.length;if(!list.length)return;
+var sig=JSON.stringify(list);if(box.dataset.sig===sig)return;box.dataset.sig=sig;box.textContent="";
+list.forEach(function(d){var row=document.createElement("div");row.className="dsp";var n=document.createElement("b");n.textContent=d.name;var st=stat(d);var p=document.createElement("span");p.className="pill "+(st==="live"?"live":st==="blank"?"warn":"dim");p.textContent=st.toUpperCase();row.appendChild(n);row.appendChild(p);
+if(d.open){var b=document.createElement("button");b.className="mini";b.textContent=d.blank?"Show":"Blank";b.addEventListener("click",function(){send({action:"blank",value:d.key})});row.appendChild(b)}box.appendChild(row)})}
+function paintWall(s){var w=s.wall,card=$("wcard");card.hidden=!w||!(w.open||(w.videos||[]).length);if(card.hidden)return;
+var sig=JSON.stringify(w);if(card.dataset.sig===sig)return;card.dataset.sig=sig;
+$("wttl").textContent=w.open?(w.name||"Wall/LED"):"Wall/LED";var pl=$("wpill");pl.textContent=w.open?(w.blank?"BLANK":"PLAYING"):"STOPPED";pl.className="pill "+(w.open?(w.blank?"warn":"ok"):"dim");
+var bt=$("wbtns");bt.textContent="";function add(label,val){var b=document.createElement("button");b.className="mini";b.textContent=label;b.addEventListener("click",function(){send({action:"wall",value:val})});bt.appendChild(b)}
+if(w.open){add(w.blank?"Show":"Blank","blank");add("Stop","stop")}else if(w.canResume)add("Play last again","resume");if(w.hasPlaylist)add("Play playlist","playlist");
+var vb=$("wvids");vb.textContent="";(w.videos||[]).forEach(function(v){var b=document.createElement("button");b.className="mini";b.textContent=(w.playingIds&&w.playingIds.indexOf(v.id)>=0?"▶ ":"")+v.name;b.addEventListener("click",function(){send({action:"wall",value:"play:"+v.id})});vb.appendChild(b)})}
+function paint(s){$("lock").hidden=!s.locked;paintDisplays(s);paintWall(s);$("ttl").textContent=s.title||"Scripture Pod";$("nxt").textContent=s.next?"Next: "+s.next:"";
 document.querySelectorAll(".tabs button").forEach(function(b){b.className=b.dataset.t===s.section?"on":""});paintFeed(s);paintSlides(s);msg(s.refResult||"")}
-function poll(){fetch("/__remote/state?k="+encodeURIComponent(key)).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(s){paint(s)}).catch(function(){msg("Not connected: check the link and that the remote is switched on")})}
+function poll(){fetch("/__remote/state?k="+encodeURIComponent(key)).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(s){var c=$("conn");c.className="conn";$("connt").textContent="Connected to Scripture Pod";paint(s)}).catch(function(){$("conn").className="conn off";$("connt").textContent="Not connected, trying again…";msg("Check the link and that the remote is switched on")})}
 document.querySelectorAll("button[data-a]").forEach(function(b){b.addEventListener("click",function(){send({action:b.dataset.a})})});
 document.querySelectorAll(".tabs button").forEach(function(b){b.addEventListener("click",function(){send({action:"tab",value:b.dataset.t})})});
 function openRef(){var v=$("ri").value.trim();if(!v)return;msg("Opening…");send({action:"ref",text:v});$("ri").blur()}
@@ -113,6 +130,9 @@ fn remote_request(mut req: tiny_http::Request, state: &AppState, path: &str, que
     let entry: Option<String> = if REMOTE_ACTIONS.contains(&action) { Some(action.to_string()) }
         else if action == "goto" { v["index"].as_u64().filter(|i| *i < 2000).map(|i| format!("goto:{}", i)) }
         else if action == "tab" { v["value"].as_str().filter(|t| ["bible", "songs", "schedule"].contains(t)).map(|t| format!("tab:{}", t)) }
+        // Blank or show one display (by its key), and control the background wall
+        else if action == "blank" { v["value"].as_str().filter(|k| k.len() <= 40 && k.chars().all(|c| c.is_ascii_alphanumeric() || ":_-".contains(c))).map(|k| format!("blank:{}", k)) }
+        else if action == "wall" { v["value"].as_str().filter(|k| k.len() <= 60 && k.chars().all(|c| c.is_ascii_alphanumeric() || ":_-".contains(c)) && (["playlist", "stop", "resume", "blank"].contains(k) || k.starts_with("play:"))).map(|k| format!("wall:{}", k)) }
         else if action == "ref" {
             let t: String = v["text"].as_str().unwrap_or("").chars().filter(|c| c.is_alphanumeric() || " :.'-".contains(*c)).take(80).collect();
             let t = t.trim().to_string();

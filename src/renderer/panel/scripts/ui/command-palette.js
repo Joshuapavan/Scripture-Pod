@@ -80,6 +80,8 @@
         { label: 'Reader view', run: () => { setSidebarTab('bible'); setBibleReaderView(true); } },
         { label: 'Verses view', run: () => { setSidebarTab('bible'); setBibleReaderView(false); } },
         { label: 'Switch Bible version in the lower third', hint: 'V', run: () => cycleLiveBibleVersion(1) },
+        { label: 'Service lock on / off', hint: '⌘L', run: () => toggleServiceLock() },
+        { label: 'Put the sections back in their usual order', run: () => resetSectionOrder() },
         { label: 'Outputs', run: () => showOutputsCard() },
         { label: 'Keyboard shortcuts', run: () => openShortcutsWindow() },
         { label: 'Settings', run: () => openModal('settingsModal') },

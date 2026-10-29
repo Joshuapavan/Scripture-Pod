@@ -35,6 +35,7 @@
     <div id="text-container" class="hardware-accelerated"></div>
   </div>
   <div id="monitor-clock" aria-hidden="true" hidden></div>
+  <div id="media-layer" hidden aria-hidden="true"></div>
   <div id="test-pattern" hidden aria-hidden="true">
     <div class="tp-bars"><i style="background:#fff"></i><i style="background:#ff0"></i><i style="background:#0ff"></i><i style="background:#0f0"></i><i style="background:#f0f"></i><i style="background:#f00"></i><i style="background:#00f"></i><i style="background:#000"></i></div>
     <div class="tp-grid"></div><div class="tp-safe tp-action"></div><div class="tp-safe tp-title"></div>
@@ -600,8 +601,47 @@
       if (size) size.textContent = `${window.innerWidth} × ${window.innerHeight}`;
     }
     window.addEventListener('resize', () => { const el = document.getElementById('test-pattern'); if (el && !el.hidden) showTestPattern(true); });
+    function stopStreamMedia() {
+      const layer = document.getElementById('media-layer');
+      if (!layer) return;
+      layer.hidden = true;
+      layer.textContent = '';
+    }
+    function playStreamMedia(d) {
+      const layer = document.getElementById('media-layer');
+      if (!layer || !d.url) return;
+      layer.textContent = '';
+      layer.hidden = false;
+      if (d.kind === 'html') {
+        const frame = document.createElement('iframe');
+        // The page can run its own scripts and animations but not reach this display or the app
+        // A file the operator added runs with its own storage; a pasted link stays fully locked down
+        frame.setAttribute('sandbox', d.trusted ? 'allow-scripts allow-same-origin' : 'allow-scripts');
+        frame.setAttribute('allow', 'autoplay');
+        layer.appendChild(frame);
+        // A frame that has never loaded anything can show a page black the first time (seen in WebKit), so it goes
+        // through an empty page first, which makes the page load exactly as it does when it is changed later
+        frame.src = 'about:blank';
+        setTimeout(() => { if (frame.isConnected) frame.src = d.url; }, 250);
+      } else {
+        const v = document.createElement('video');
+        v.playsInline = true; v.loop = !!d.loop; v.autoplay = true;
+        v.style.objectFit = d.fit === 'contain' ? 'contain' : 'cover';
+        v.src = d.url;
+        // Sound goes out with the stream; if the engine refuses sound without a click, it plays silent instead of not at all
+        v.muted = d.sound === false;
+        v.addEventListener('ended', () => { if (!d.loop) stopStreamMedia(); });
+        layer.appendChild(v);
+        const p = v.play();
+        if (p && p.catch) p.catch(() => { v.muted = true; v.play().catch(() => {}); });
+      }
+    }
+
     function handleInboundMessage(d, source) {
       if (d && d.type === 'TEST_PATTERN') { showTestPattern(!!d.on); return; }
+      // Stream media: a video or a web page played over everything on the live display (intro, prayer time, outro)
+      if (d && d.type === 'MEDIA_PLAY') { if (!IS_STAGE && MY_AUDIENCE === 'live') playStreamMedia(d); return; }
+      if (d && d.type === 'MEDIA_STOP') { stopStreamMedia(); return; }
       // Blank this one screen from the Display list: monitors go black, the live (transparent) display goes empty
       if (d && d.type === 'BLANK_SCREEN') {
         const mySid = new URLSearchParams(window.location.search).get('sid') || '';
