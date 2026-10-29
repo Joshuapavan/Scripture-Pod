@@ -81,3 +81,14 @@
       };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
     })();
+
+    // The version in the Settings footer is the app's own version
+    (async function showAppVersion() {
+      try {
+        const bridge = window.BSPDesktop;
+        const el = document.getElementById('app-version-label');
+        if (!el || !bridge || typeof bridge.getAppInfo !== 'function') return;
+        const info = await bridge.getAppInfo();
+        if (info && info.version) el.textContent = 'v' + info.version;
+      } catch (e) { /* keeps the placeholder */ }
+    })();

@@ -337,12 +337,7 @@
       fit.onchange = () => { streamMedia.fit = fit.value; saveStreamMediaSettings(); };
       opts.appendChild(fit);
       bar.appendChild(opts);
-      bar.appendChild(mk('div', 'md-hint', 'Sound in this app: untick it to keep this app\'s own stream window silent (the sound then comes only from OBS, so use the media link). It applies the next time you play something. Sound in OBS: on the browser source that shows Scripture Pod, tick "Control audio via OBS", or the page\'s sound plays on this computer and never reaches the stream.'));
-      // A link of its own for the stream's media, so OBS can have it as a separate source above or below the Bible and lyrics one
-      const own = mk('div', 'md-own');
-      own.appendChild(btn('Copy separate media link', 'An OBS Browser Source that shows only the intro, prayer time and outro, with its own sound', copyLocalMediaUrl));
-      own.appendChild(mk('div', 'md-hint', 'Add it in OBS as its own Browser Source (1920 x 1080, tick "Control audio via OBS"). The Bible and lyrics source does not play media, so nothing doubles up. To make it play media too, add &media=1 to its address.'));
-      bar.appendChild(own);
+      bar.appendChild(mk('div', 'md-hint', 'For sound in OBS, use the Media Link from Outputs as its own Browser Source and tick "Control audio via OBS". Untick "Sound in this app" to keep this app silent so nothing doubles up; it applies the next time you play something.'));
       host.appendChild(bar);
 
       // Adding
