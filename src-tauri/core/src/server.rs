@@ -157,7 +157,7 @@ fn join_request(mut req: tiny_http::Request, state: &AppState, path: &str) {
         let name: String = v["name"].as_str().unwrap_or("Browser").chars().take(60).collect();
         let sid = random_hex(8);
         let allowed = state.allowed_ips.lock().unwrap().get(&ip).cloned();
-        let role = allowed.clone().unwrap_or_else(|| match v["role"].as_str() { Some("monitor") => "monitor".into(), Some("stage") => "stage".into(), _ => "live".into() });
+        let role = allowed.clone().unwrap_or_else(|| match v["role"].as_str() { Some("monitor") => "monitor".into(), Some("stage") => "stage".into(), Some("media") => "media".into(), _ => "live".into() });
         let status = if allowed.is_some() { "approved" } else { "pending" };
         let now = std::time::Instant::now();
         let mut joins = state.joins.lock().unwrap();
@@ -173,7 +173,7 @@ fn join_request(mut req: tiny_http::Request, state: &AppState, path: &str) {
     if j.status == "approved" {
         // The page is opened on the same address it was loaded from (this computer, as that laptop reaches it)
         let hostname = host.rsplit_once(':').map(|(h, _)| h).unwrap_or(&host).to_string();
-        let role = match j.role.as_str() { "monitor" => "&role=monitor", "stage" => "&role=stage", _ => "" };
+        let role = match j.role.as_str() { "monitor" => "&role=monitor", "stage" => "&role=stage", "media" => "&role=media", _ => "" };
         let url = format!("http://{}/{}?hostMode=websocket&relay=ws%3A%2F%2F{}%3A{}&relayToken={}&sid={}{}", host, DISPLAY_PAGE, hostname, state.relay_port.load(Ordering::SeqCst), state.token, j.sid, role);
         out["url"] = serde_json::Value::String(url);
     }
@@ -224,8 +224,8 @@ fn connect_request(mut req: tiny_http::Request, state: &AppState, path: &str) {
 fn handle(req: tiny_http::Request, state: &AppState) {
     let full = req.url().to_string();
     let bare = full.split('?').next().unwrap_or("");
-    if bare == "/display.html" || bare == "/monitor.html" || bare == "/stage.html" || bare == "/join" {
-        let role = match bare { "/monitor.html" => "monitor", "/stage.html" => "stage", _ => "live" };
+    if bare == "/display.html" || bare == "/monitor.html" || bare == "/stage.html" || bare == "/media.html" || bare == "/join" {
+        let role = match bare { "/monitor.html" => "monitor", "/stage.html" => "stage", "/media.html" => "media", _ => "live" };
         let page = JOIN_PAGE.replace("__ROLE__", role);
         let _ = req.respond(Response::from_string(page).with_header(header("Content-Type", "text/html; charset=utf-8")).with_header(header("Cache-Control", "no-store")));
         return;

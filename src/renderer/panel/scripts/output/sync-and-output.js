@@ -1386,6 +1386,8 @@ ${getLtThumbCss()}
     }
 
     function broadcastMessage(rawMsg) {
+      // Something going on air takes over from media on the stream, so the monitors and the stream show it, not the media
+      if (rawMsg && rawMsg.type === 'UPDATE' && typeof streamMedia !== 'undefined' && streamMedia.playing && typeof stopStreamMediaPlayback === 'function') stopStreamMediaPlayback();
       // Live display (stream feed, display link, Program): lyrics as a lower third on a transparent page.
       // Monitor feeds (HDMI main screen, monitor link, Preview): lyrics full screen, with the clock.
       // Messages that differ between the two are tagged with an audience; the pages ignore the other one.
@@ -1394,7 +1396,8 @@ ${getLtThumbCss()}
       const monitorMsg = tag(mapOutputMessageMedia(mapMessagePayload(rawMsg, forMonitor)), 'monitor');
       const liveMsg = differs ? tag(mapOutputMessageMedia(mapMessagePayload(rawMsg, forOutput)), 'live') : monitorMsg;
       const sendBoth = (fn) => { fn(liveMsg); if (differs) fn(monitorMsg); };
-      if (channel) sendBoth((m) => channel.postMessage(m));
+      const isMedia = rawMsg && (rawMsg.type === 'MEDIA_PLAY' || rawMsg.type === 'MEDIA_STOP');
+      if (channel && !isMedia) sendBoth((m) => channel.postMessage(m));
       sendBoth((m) => {
         const relayMessage = compactRelayMedia(m);
         relaySend(relayMessage);

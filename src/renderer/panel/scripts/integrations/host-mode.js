@@ -28,6 +28,8 @@
       if (programDisplayUrlEl) programDisplayUrlEl.value = localServerInfo?.displayUrl || '';
       const monitorDisplayUrlEl = document.getElementById('monitor-display-link');
       if (monitorDisplayUrlEl) monitorDisplayUrlEl.value = getLocalMonitorUrl(localServerInfo);
+      const mediaDisplayUrlEl = document.getElementById('media-display-link');
+      if (mediaDisplayUrlEl) mediaDisplayUrlEl.value = getLocalMediaUrl(localServerInfo);
       return localServerInfo;
     }
 
@@ -98,6 +100,18 @@
       } catch (error) {
         return '';
       }
+    }
+
+    // Address of the media-only display: an OBS source of its own that shows just the intro, prayer time and outro
+    function getLocalMediaUrl(info = localServerInfo) {
+      if (!info?.displayUrl) return '';
+      try { const url = new URL(info.displayUrl); url.searchParams.set('role', 'media'); return url.toString(); } catch (error) { return ''; }
+    }
+    async function copyLocalMediaUrl() {
+      const info = localServerInfo || await refreshLocalServerInfo();
+      const mediaUrl = getLocalMediaUrl(info);
+      if (!mediaUrl) { showToast('Media link is only available in the desktop app'); return; }
+      try { await window.BSPDesktop.copyText(mediaUrl); showToast('Media link copied'); } catch (error) { showToast('Unable to copy media link'); }
     }
 
     async function copyLocalMonitorUrl() {
@@ -262,7 +276,7 @@
 
     function browserDisplayUrlFor(info, role) {
       if (!info) return '';
-      const list = role === 'monitor' ? info.monitorUrls : (role === 'stage' ? info.stageUrls : info.urls);
+      const list = role === 'monitor' ? info.monitorUrls : (role === 'stage' ? info.stageUrls : (role === 'media' ? info.mediaUrls : info.urls));
       const chosen = (typeof localServerInfo !== 'undefined' && localServerInfo && localServerInfo.preferredHost) || '';
       return (list || []).find((u) => chosen && u.includes(`//${chosen}:`)) || (list || [])[0] || '';
     }

@@ -647,7 +647,7 @@
         <div class="nav-row">
           <button class="btn" id="panel-inline-style-32" onclick="clearOutput()" title="Clear the output (Esc) · Shift+Esc clears everything"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span data-i18n="common_clear">Clear</span><kbd class="btn-key">Esc</kbd></button>
           <div class="nav-live-actions">
-            <button type="button" class="btn nav-preview-btn" id="btn-preview" onclick="togglePreviewOnlyMode()" aria-pressed="false" title="Preview only: selections go to Preview, not on air · Alt+Space previews the selection"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Preview only</span></button>
+            <button type="button" class="btn nav-preview-btn" id="btn-preview" onclick="togglePreviewOnlyMode()" aria-pressed="false" title="Preview only: selections go to Preview, not on air (P) · Alt+Space previews the selection"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span>Preview only</span><kbd class="btn-key" id="btn-preview-key">P</kbd></button>
             <button class="btn btn-live" id="btn-project-live" onclick="projectLive(true, true)" title="Go live (Space)"><span data-i18n="common_project_live">Go live</span><span class="go-live-ref" id="go-live-ref"></span><kbd class="go-live-key">Space</kbd></button>
           </div>
           <div id="nav-mirror-search-wrap">
@@ -688,7 +688,7 @@
       </div>
       <section id="preview-monitor" class="sp-monitor" aria-label="Preview monitor">
         <div class="sp-monitor-head">
-          <span class="sp-monitor-tag is-preview">Preview</span>
+          <span class="sp-monitor-tag is-preview" id="preview-monitor-tag">Preview</span>
           <span class="sp-monitor-ref" id="preview-monitor-ref"></span>
           <span class="sp-monitor-caption" id="preview-monitor-caption">Next</span>
           <button type="button" class="btn" id="btn-clear-program-preview" onclick="clearProgramPreview()" title="Clear the preview without clearing live output (Alt+Esc)">
@@ -924,6 +924,14 @@
               <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
             </button>
           </div>
+          <div class="program-display-link-row">
+            <label for="media-display-link">Media Link</label>
+            <input type="text" id="media-display-link" readonly placeholder="Launch display to load URL" title="A separate OBS Browser Source for the intro, prayer time and outro">
+            <button type="button" class="btn" id="copy-media-display-link" onclick="copyLocalMediaUrl()" title="Copy media link" aria-label="Copy media link">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>
+            </button>
+          </div>
+          <p class="output-route-hint">Media Link: its own OBS Browser Source for the Media tab (intro, prayer time, outro). Tick "Control audio via OBS" on it.</p>
         </div>
         <div class="output-route" id="output-route-screens">
           <div class="output-route-head">
@@ -984,6 +992,7 @@
               <option value="live">Live display (lower third, transparent)</option>
               <option value="monitor">Monitor (full screen, clock)</option>
               <option value="stage">Stage display (now, next, clock)</option>
+              <option value="media">Media only (intro, prayer, outro)</option>
             </select>
           </div>
           <div class="output-route-actions">
@@ -1109,6 +1118,7 @@
           <h4>Go live</h4>
           <div class="shortcut-row"><span>Send the selection live</span><kbd>Space</kbd></div>
           <div class="shortcut-row"><span>Send the selection live</span><kbd>Enter</kbd></div>
+          <div class="shortcut-row"><span>Turn Preview only on or off</span><kbd>P</kbd></div>
           <div class="shortcut-row"><span>Send to Preview only</span><kbd>⌥ Space · Ctrl Space</kbd></div>
           <div class="shortcut-row"><span>Clear the live output</span><kbd>Esc</kbd></div>
           <div class="shortcut-row"><span>Clear Preview</span><kbd>⌥ Esc · ⌘ Esc</kbd></div>

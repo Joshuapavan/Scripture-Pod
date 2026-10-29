@@ -7,7 +7,8 @@
 <style>
   html, body { margin: 0; width: 100%; height: 100%; background: #000; overflow: hidden; cursor: none; }
   video { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; opacity: 0; transition: opacity var(--fade, 0s) linear; }
-  iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: #000; display: none; }
+  /* A web page is shown at the size it was made for (1920 x 1080) and scaled to the screen from outside */
+  iframe { position: fixed; left: 50%; top: 50%; width: 1920px; height: 1080px; border: 0; background: #000; display: none; transform-origin: center; transform: translate(-50%, -50%) scale(var(--page-scale, 1)); }
   html.sp-blank video, html.sp-blank iframe { visibility: hidden; }
 </style>
 </head>
@@ -22,6 +23,8 @@
   var q = new URLSearchParams(location.search);
   var urls = [], idx = 0, fade = 0, cur = A, switching = false, once = false;
   var F = document.getElementById('f');
+  function fitPage() { document.documentElement.style.setProperty('--page-scale', String(Math.min(innerWidth / 1920, innerHeight / 1080) || 1)); }
+  addEventListener('resize', fitPage); fitPage();
 
   function setFit(fit) { A.style.objectFit = B.style.objectFit = fit === 'contain' ? 'contain' : 'cover'; }
   function setFade(sec) { fade = Math.max(0, Math.min(5, Number(sec) || 0)); document.documentElement.style.setProperty('--fade', fade + 's'); }

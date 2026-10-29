@@ -33,3 +33,10 @@ test('the preview monitor shows what is cued, never live', () => {
   assert.equal(cued.showing, 'Psalm 23:1');
   assert.equal(describe({ kind: 'preview', open: true, cued: false }, live).status, 'clear');
 });
+
+test('stream media shows as a display: live while something plays, clear otherwise', () => {
+  const on = describe({ kind: 'media', open: true, showing: 'ACI Intro' }, { live: false });
+  assert.equal(on.status, 'live');
+  assert.equal(on.showing, 'ACI Intro');
+  assert.equal(describe({ kind: 'media', open: true, showing: '' }, live).status, 'clear');
+});

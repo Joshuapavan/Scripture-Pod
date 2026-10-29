@@ -5,6 +5,7 @@
     const SHORTCUT_ACTIONS = [
       { id: 'goLive', label: 'Go live', run: () => projectLive(true) },
       { id: 'preview', label: 'Send to Preview only', run: () => previewCurrentSelection() },
+      { id: 'togglePreviewOnly', label: 'Turn Preview only on or off', run: () => togglePreviewOnlyMode() },
       { id: 'clear', label: 'Clear the live output', run: () => clearOutput() },
       { id: 'clearPreview', label: 'Clear Preview', run: () => clearProgramPreview() },
       { id: 'clearAll', label: 'Clear everything', run: () => clearAllOutputs() },
@@ -21,6 +22,7 @@
       prevSlide: ['PageUp'],
       clear: ['.', 'B'],
       nextVersion: ['V'],
+      togglePreviewOnly: ['P'],
       toggleLock: ['Cmd+L', 'Ctrl+L']
     };
     const SHORTCUTS_STORAGE_KEY = 'scripturePod.shortcuts.v1';
@@ -38,8 +40,22 @@
     }
     let customShortcuts = loadCustomShortcuts();
 
+    // The key for turning Preview only on or off, shown on its button like Space is on Go live
+    function labelPreviewOnlyKey() {
+      const el = document.getElementById('btn-preview-key');
+      if (!el) return;
+      const keys = (customShortcuts && customShortcuts.togglePreviewOnly) || [];
+      const mac = /Mac|iPhone|iPad/i.test(navigator.platform || '');
+      const pick = keys.find((k) => (mac ? !/^Ctrl\+/.test(k) : !/^Cmd\+/.test(k))) || keys[0] || '';
+      el.textContent = pick ? describeShortcut(pick) : '';
+      el.hidden = !pick;
+    }
+    document.addEventListener('DOMContentLoaded', labelPreviewOnlyKey);
+    setTimeout(labelPreviewOnlyKey, 0);
+
     function saveCustomShortcuts() {
       try { localStorage.setItem(SHORTCUTS_STORAGE_KEY, JSON.stringify(customShortcuts)); } catch (e) { /* storage unavailable */ }
+      labelPreviewOnlyKey();
     }
 
     // "Ctrl+Shift+F5", "PageDown", "." : modifiers in a fixed order, a single letter in capitals

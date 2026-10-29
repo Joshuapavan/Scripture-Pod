@@ -53,6 +53,11 @@
           screenId: bgWall.screenId, screenLabel: wallOpen ? labelOf(bgWall.screenId) : '', blank: wallOpen && !!bgWall.blank,
           videoUrl: wallOpen ? bgWall.url : '', showing: playing ? playing.name : '', canBlank: true, canClose: true, canMove: true });
       }
+      // Stream media: the intro, prayer time or outro playing over the stream
+      if (typeof streamMedia !== 'undefined') {
+        displays.push({ key: 'p:media', kind: 'media', thumb: 'media', role: 'media', name: 'Media', where: 'Stream feed and media link', open: true,
+          showing: streamMedia.playing ? streamMedia.playingName : '', canClose: !!streamMedia.playing, closeLabel: 'Stop' });
+      }
       rows.filter((r) => !String(r.key || '').startsWith('w:')).forEach((r) => {
         displays.push({ key: r.key || ('o:' + r.name), kind: r.kind || 'other', thumb: r.key ? ({ monitor: 'monitor', stage: 'stage' }[r.role] || 'live') : '', role: r.role || 'live', name: r.name, where: r.meta, open: true,
           blank: blankedDisplays.has(r.key), canBlank: !!r.key, canClose: typeof r.close === 'function', closeLabel: r.closeLabel });
@@ -150,6 +155,11 @@
         if (a.action === 'ready') { displaysPopoutOpen = true; popoutThumbSent = false; lastPopoutFeedKey = ''; await refreshDisplaysView(); return; }
         if (a.action === 'identify') { if (window.BSPDesktop.identifyScreens) window.BSPDesktop.identifyScreens(); return; }
         if (a.action === 'popout') { await openDisplaysWindow(); return; }
+        if (a.key === 'p:media') {
+          if (a.action === 'close' && typeof stopStreamMediaPlayback === 'function') stopStreamMediaPlayback();
+          setTimeout(refreshDisplaysView, 300);
+          return;
+        }
         // The background wall has its own window
         if (a.key === 'w:wall') {
           if (a.action === 'blank' && typeof toggleBgWallBlank === 'function') { if (!!bgWall.blank !== !!a.on) await toggleBgWallBlank(); }

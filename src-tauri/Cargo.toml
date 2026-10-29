@@ -22,6 +22,9 @@ if-addrs = "0.13"
 ureq = "2"
 dns-lookup = "2"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+
 [features]
 harness = []
 

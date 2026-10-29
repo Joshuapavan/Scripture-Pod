@@ -65,7 +65,7 @@
 
   <div id="social-engagement-overlay" aria-hidden="true" data-position="bottom-center" data-theme="solid"></div>
 
-  <div id="debug-overlay" style="position: fixed; right: 12px; top: 12px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px; border-radius: 8px; z-index: 9999; font-family: monospace; font-size: 12px; max-width: 440px; max-height: 60vh; overflow:auto; display: none;">
+  <div id="debug-overlay" style="position: fixed; right: 12px; top: 12px; background: rgba(0,0,0,0.7); color: #fff; padding: 10px; border-radius: 8px; z-index: 100000; font-family: monospace; font-size: 12px; max-width: 440px; max-height: 60vh; overflow:auto; display: none;">
     <div id="debug-status" style="font-weight:bold;margin-bottom:6px">DEBUG: initializing...</div>
     <div id="debug-logs"></div>
   </div>
@@ -210,6 +210,12 @@
     // Stage display for the worship team: what is on screen now, what comes next, and the time
     const IS_STAGE = new URLSearchParams(window.location.search).get('role') === 'stage';
     const MY_AUDIENCE = (IS_MONITOR_FEED || IS_STAGE) ? 'monitor' : 'live';
+    // Media-only display (its own OBS source): shows nothing but the intro / prayer / outro, transparent otherwise.
+    // The normal display link (Bible and lyrics) does not play media; only the stream feed window, the media link, or
+    // a display link with media=1 added does.
+    const IS_MEDIA_ONLY = new URLSearchParams(window.location.search).get('role') === 'media';
+    const PLAYS_MEDIA = IS_MEDIA_ONLY || new URLSearchParams(window.location.search).get('feed') === '1' || new URLSearchParams(window.location.search).get('media') === '1';
+    if (IS_MEDIA_ONLY) document.documentElement.classList.add('media-only');
     let stageClock = { format: '12' };
     // What the stage screen shows and how big, set from the panel (Outputs, Stage display, Customise)
     let stageConfig = { currentSize: 100, nextSize: 100, showTitle: true, showSection: true, showClock: true, showNext: true,
@@ -460,7 +466,26 @@
       // Reveal debug overlay and report init
       const dbg = document.getElementById('debug-overlay');
       if (dbg) dbg.style.display = DEBUG_MODE ? 'block' : 'none';
-      if (DEBUG_MODE) debug('init: initialized (overlay visible)');
+      if (DEBUG_MODE) {
+        debug('init: initialized (overlay visible)');
+        // What this browser is, how big it thinks it is, and whether sound may start by itself
+        debug('window ' + innerWidth + 'x' + innerHeight + ' dpr=' + devicePixelRatio + ' ' + navigator.userAgent.replace(/^Mozilla\/5.0 /, '').slice(0, 90));
+        try { const gl = document.createElement('canvas').getContext('webgl'); debug('webgl: ' + (gl ? 'yes' : 'NO')); } catch (e) { debug('webgl: error ' + e.message); }
+        try {
+          const probe = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=');
+          let settled = false;
+          const p = probe.play();
+          if (p && p.then) p.then(() => { settled = true; debug('autoplay with sound: ALLOWED'); }).catch((e) => { settled = true; debug('autoplay with sound: BLOCKED (' + (e && e.name) + ')'); });
+          setTimeout(() => { if (!settled) debug('autoplay with sound: no answer after 3s'); }, 3000);
+        } catch (e) { debug('autoplay probe error ' + e.message); }
+        setInterval(() => {
+          const l = document.getElementById('media-layer');
+          const f = l && l.querySelector('iframe, video');
+          const r = f ? f.getBoundingClientRect() : null;
+          const s = document.getElementById('debug-status');
+          if (s) s.innerText = 'win ' + innerWidth + 'x' + innerHeight + ' | media ' + (l && !l.hidden ? (f ? f.tagName + ' ' + Math.round(r.width) + 'x' + Math.round(r.height) + ' at ' + Math.round(r.x) + ',' + Math.round(r.y) : 'layer, no media') : 'off') + ' | ws ' + (relaySocket ? relaySocket.readyState : 'none');
+        }, 1000);
+      }
       else console.log('init: debug overlay hidden');
 
       // Send initial ping + state request
@@ -601,6 +626,14 @@
       if (size) size.textContent = `${window.innerWidth} × ${window.innerHeight}`;
     }
     window.addEventListener('resize', () => { const el = document.getElementById('test-pattern'); if (el && !el.hidden) showTestPattern(true); });
+    // A web page is shown at the size it was made for (1920 x 1080) and scaled to the screen from outside, so it looks the
+    // same in every browser, however that browser reports the size of a frame
+    function fitMediaPage() {
+      const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080) || 1;
+      document.documentElement.style.setProperty('--media-scale', String(s));
+    }
+    window.addEventListener('resize', fitMediaPage);
+    fitMediaPage();
     function stopStreamMedia() {
       const layer = document.getElementById('media-layer');
       if (!layer) return;
@@ -612,13 +645,23 @@
       if (!layer || !d.url) return;
       layer.textContent = '';
       layer.hidden = false;
+      // This app's own stream window can be kept silent (the sound then comes from the OBS media link)
+      const quiet = d.sound === false || (IS_STANDALONE_MONITOR && d.appSound === false);
       if (d.kind === 'html') {
         const frame = document.createElement('iframe');
+        frame.className = 'media-page';
         // The page can run its own scripts and animations but not reach this display or the app
         // A file the operator added runs with its own storage; a pasted link stays fully locked down
         frame.setAttribute('sandbox', d.trusted ? 'allow-scripts allow-same-origin' : 'allow-scripts');
-        frame.setAttribute('allow', 'autoplay');
+        // Without autoplay the page cannot start sound by itself, and nobody clicks in this window
+        frame.setAttribute('allow', quiet ? "autoplay 'none'" : 'autoplay');
         layer.appendChild(frame);
+        // A file of the operator's own is the same origin, so its players can be muted and its audio paused as well
+        if (quiet && d.trusted) frame.addEventListener('load', () => {
+          const hush = () => { try { const doc = frame.contentDocument; if (!doc) return; doc.querySelectorAll('audio,video').forEach((m) => { m.muted = true; }); const w = frame.contentWindow; if (w && w.AudioContext && w.AudioContext.prototype && !w.__spHushed) { w.__spHushed = true; const r = w.AudioContext.prototype.resume; w.AudioContext.prototype.resume = function () { return Promise.resolve(); }; w.AudioContext.prototype.__spResume = r; } } catch (e) { /* cross-origin: nothing to do */ } };
+          hush(); const t = setInterval(() => { if (!frame.isConnected) clearInterval(t); else hush(); }, 500);
+        });
+        if (DEBUG_MODE) frame.addEventListener('load', () => debug('media frame loaded: ' + String(frame.src).slice(0, 60) + ' size=' + frame.clientWidth + 'x' + frame.clientHeight));
         // A frame that has never loaded anything can show a page black the first time (seen in WebKit), so it goes
         // through an empty page first, which makes the page load exactly as it does when it is changed later
         frame.src = 'about:blank';
@@ -629,7 +672,7 @@
         v.style.objectFit = d.fit === 'contain' ? 'contain' : 'cover';
         v.src = d.url;
         // Sound goes out with the stream; if the engine refuses sound without a click, it plays silent instead of not at all
-        v.muted = d.sound === false;
+        v.muted = quiet;
         v.addEventListener('ended', () => { if (!d.loop) stopStreamMedia(); });
         layer.appendChild(v);
         const p = v.play();
@@ -640,8 +683,10 @@
     function handleInboundMessage(d, source) {
       if (d && d.type === 'TEST_PATTERN') { showTestPattern(!!d.on); return; }
       // Stream media: a video or a web page played over everything on the live display (intro, prayer time, outro)
-      if (d && d.type === 'MEDIA_PLAY') { if (!IS_STAGE && MY_AUDIENCE === 'live') playStreamMedia(d); return; }
-      if (d && d.type === 'MEDIA_STOP') { stopStreamMedia(); return; }
+      if (d && d.type === 'MEDIA_PLAY') { if (DEBUG_MODE) debug('MEDIA_PLAY got: ' + d.kind + ' ' + String(d.url).slice(0, 60) + ' stage=' + IS_STAGE + ' audience=' + MY_AUDIENCE); if (PLAYS_MEDIA && !IS_STAGE && MY_AUDIENCE === 'live') playStreamMedia(d); return; }
+      if (d && d.type === 'MEDIA_STOP') { if (DEBUG_MODE) debug('MEDIA_STOP got'); stopStreamMedia(); return; }
+      if (IS_MEDIA_ONLY && !(d && d.type === 'RS_ENVELOPE')) return;
+      if (IS_MEDIA_ONLY) return handleInboundMessage(d.payload, source);
       // Blank this one screen from the Display list: monitors go black, the live (transparent) display goes empty
       if (d && d.type === 'BLANK_SCREEN') {
         const mySid = new URLSearchParams(window.location.search).get('sid') || '';

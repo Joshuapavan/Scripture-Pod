@@ -131,6 +131,8 @@
     }
 
     function postMessageToEmbeddedProgramDisplay(message) {
+      // The Program monitor follows what is on air: a new update takes the media copy off it
+      if (message && (message.type === 'UPDATE' || message.type === 'SYNC_STATE') && typeof hideMediaMirror === 'function') hideMediaMirror('program-display-shell');
       const frame = document.getElementById('program-display-frame');
       if (!frame || !frame.contentWindow || !embeddedProgramDisplayReady) return false;
       frame.contentWindow.postMessage(message, '*');
@@ -158,6 +160,8 @@
     }
 
     function postMessageToPreviewMonitor(message) {
+      // The Preview monitor follows what the operator selects: a new cue takes the media copy off it
+      if (message && message.type === 'PREVIEW_UPDATE' && typeof hideMediaMirror === 'function') hideMediaMirror('preview-display-shell');
       let posted = false;
       PREVIEW_DISPLAYS.forEach(({ frame: frameId }) => {
         const frame = document.getElementById(frameId);
@@ -261,6 +265,8 @@
 
     function sendProgramPreview(payload, opts = {}) {
       if (!payload) return false;
+      // A new cue replaces the media copy in the Preview monitor
+      if (typeof hideMediaMirror === 'function') hideMediaMirror('preview-display-shell');
       if (typeof forMonitor === 'function') payload = forMonitor(payload);
       // A mirrored live payload already carries the version gap
       if (!opts.mirror && typeof applyBibleVersionGap === 'function') payload = applyBibleVersionGap(payload);

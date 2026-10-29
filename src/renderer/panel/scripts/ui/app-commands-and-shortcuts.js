@@ -293,6 +293,13 @@
     // Clear everything on screen: output, Preview monitor and any lower thirds.
     function clearAllOutputs() {
       clearOutput();
+      // Media playing on the stream, and media this app put on the wall, goes too
+      try {
+        if (typeof streamMedia !== 'undefined') {
+          if (streamMedia.playing && typeof stopStreamMediaPlayback === 'function') stopStreamMediaPlayback();
+          if (streamMedia.wall && typeof stopMediaOnWall === 'function') stopMediaOnWall();
+        }
+      } catch (e) { /* media not ready */ }
       if (document.getElementById('name-role-overlay-show-btn')?.getAttribute('aria-pressed') === 'true') toggleNameRoleOverlay();
       if (document.getElementById('social-engagement-overlay-show-btn')?.getAttribute('aria-pressed') === 'true') toggleSocialEngagementOverlay();
       // After the clears above have queued their Preview refresh, empty Preview too

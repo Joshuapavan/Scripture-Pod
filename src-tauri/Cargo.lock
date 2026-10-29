@@ -3299,6 +3299,7 @@ dependencies = [
  "base64 0.22.1",
  "dns-lookup",
  "if-addrs",
+ "objc2",
  "serde_json",
  "sp-core",
  "tauri",

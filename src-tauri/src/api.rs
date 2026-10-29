@@ -86,7 +86,7 @@ fn connect_device(state: &Arc<AppState>, arg: &Value, open: bool) -> Value {
     let same_net = lan_addresses().into_iter().find(|a| a.parse::<std::net::Ipv4Addr>().map(|x| x.octets()[..3] == prefix[..]).unwrap_or(false));
     let host = same_net.unwrap_or_else(|| lan_addresses().first().cloned().unwrap_or_else(|| "127.0.0.1".into()));
     let (hp, rp) = (state.http_port.load(Ordering::SeqCst), state.relay_port.load(Ordering::SeqCst));
-    let role = match arg["role"].as_str() { Some("monitor") => "&role=monitor", Some("stage") => "&role=stage", _ => "" };
+    let role = match arg["role"].as_str() { Some("monitor") => "&role=monitor", Some("stage") => "&role=stage", Some("media") => "&role=media", _ => "" };
     let url = format!("http://{}:{}/{}?hostMode=websocket&relay=ws%3A%2F%2F{}%3A{}&relayToken={}{}", host, hp, DISPLAY_PAGE, host, rp, state.token, role);
     let path = if open { "/__connect" } else { "/__disconnect" };
     let body = json!({"url": url, "code": code}).to_string();
@@ -254,7 +254,8 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
             let bp = state.browser_port.load(Ordering::SeqCst);
             json!({"port": bp, "urls": lan_addresses().iter().map(|a| format!("http://{}:{}/display.html", a, bp)).collect::<Vec<_>>(),
                    "monitorUrls": lan_addresses().iter().map(|a| format!("http://{}:{}/monitor.html", a, bp)).collect::<Vec<_>>(),
-                   "stageUrls": lan_addresses().iter().map(|a| format!("http://{}:{}/stage.html", a, bp)).collect::<Vec<_>>()})
+                   "stageUrls": lan_addresses().iter().map(|a| format!("http://{}:{}/stage.html", a, bp)).collect::<Vec<_>>(),
+                   "mediaUrls": lan_addresses().iter().map(|a| format!("http://{}:{}/media.html", a, bp)).collect::<Vec<_>>()})
         }
         "listJoins" => {
             let now = std::time::Instant::now();
@@ -299,6 +300,11 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "connectDevice" => connect_device(state, &arg, true),
         "disconnectDevice" => connect_device(state, &arg, false),
         "isFeedOpen" => json!(app.get_webview_window("feed").is_some()),
+        "setWindowMuted" => {
+            let label = arg["label"].as_str().filter(|l| ["main", "feed", "wall"].contains(l)).unwrap_or("main");
+            json!({"ok": windows::set_muted(app, label, arg["muted"].as_bool().unwrap_or(false))})
+        }
+        "setFeedMuted" => json!({"ok": windows::set_muted(app, "feed", arg["muted"].as_bool().unwrap_or(false))}),
         "sendOutputMessage" => {
             // { message, target } from the page; a bare message goes to both windows
             if arg["message"].is_object() { json!({"ok": windows::post_to_outputs(app, &arg["message"], arg["target"].as_str())}) }

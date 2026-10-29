@@ -237,3 +237,21 @@ pub fn open_main(app: &AppHandle) {
         });
     }
 }
+
+// Silence or restore everything a window plays (WKWebView's page mute: 1 is "audio muted"). Other systems keep their sound.
+pub fn set_muted(app: &AppHandle, label: &str, muted: bool) -> bool {
+    let Some(w) = app.get_webview_window(label) else { return false };
+    #[cfg(target_os = "macos")]
+    {
+        let _ = w.with_webview(move |pv| unsafe {
+            let view = pv.inner() as *mut objc2::runtime::AnyObject;
+            if !view.is_null() {
+                let state: usize = if muted { 1 } else { 0 };
+                let _: () = objc2::msg_send![&*view, _setPageMuted: state];
+            }
+        });
+    }
+    #[cfg(not(target_os = "macos"))]
+    { let _ = (&w, muted); }
+    true
+}

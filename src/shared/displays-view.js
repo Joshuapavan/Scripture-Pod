@@ -16,6 +16,7 @@
     live: 'Live: lower third on a transparent page',
     monitor: 'Monitor: full screen with the clock',
     wall: 'Background: a looping video, no sound',
+    media: 'Media: intro, prayer time and outro over the stream',
     program: 'Program: what is on air, shown in the app',
     preview: 'Preview: what is cued next, not on air'
   };
@@ -29,6 +30,10 @@
     if (d.kind === 'wall') {
       var wallStatus = !d.open ? 'off' : (d.blank ? 'blank' : 'live');
       return { status: wallStatus, how: HOW.wall, showing: wallStatus === 'live' ? String(d.showing || 'Video').slice(0, 90) : '' };
+    }
+    // Stream media (intro, prayer time, outro) plays over the stream whatever is on air
+    if (d.kind === 'media') {
+      return { status: d.showing ? 'live' : 'clear', how: HOW.media, showing: String(d.showing || '').slice(0, 90) };
     }
     if (d.kind === 'preview') {
       return { status: d.cued ? 'preview' : 'clear', how: HOW.preview, showing: d.cued ? String(d.showing || '').replace(/\s+/g, ' ').trim().slice(0, 90) : '' };
@@ -148,7 +153,9 @@
     var st = state(rootEl);
     var box = el('div', 'dv-thumb' + (d.thumb === 'live' ? ' is-live' : ''));
     if (status === 'off') { box.appendChild(el('div', 'dv-shade is-off', 'Not open')); return box; }
-    if (d.thumb === 'wall') {
+    if (d.thumb === 'media') {
+      box.appendChild(el('div', 'dv-shade' + (d.showing ? '' : ' is-off'), d.showing ? 'Rendering Media' : 'Idle'));
+    } else if (d.thumb === 'wall') {
       // The wall's own video, muted, in the same loop
       if (d.videoUrl) {
         var wv = document.createElement('video');
@@ -225,7 +232,7 @@
       if (d.mediaName && d.open) row('Playing', d.mediaName);
       else if (info.status === 'live' && info.showing) row('Showing', info.showing);
       else if (info.status === 'preview') row('Showing', info.showing || 'Cued');
-      else if (info.status === 'clear') row('Showing', d.kind === 'preview' ? 'Nothing cued' : 'Nothing on air');
+      else if (info.status === 'clear') row('Showing', d.kind === 'preview' ? 'Nothing cued' : (d.kind === 'media' ? 'Nothing playing' : 'Nothing on air'));
       else if (info.status === 'blank') row('Showing', 'Blacked out from here');
       var actions = el('div', 'dv-actions');
       if (d.open && d.canBlank) actions.appendChild(btn(d.blank ? 'Show' : 'Blank', d.blank ? 'Show this display again' : 'Black out only this display', function () { act({ action: 'blank', key: d.key, on: !d.blank }); }));

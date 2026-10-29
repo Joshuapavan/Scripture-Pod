@@ -4,15 +4,33 @@
     // background wall as well. Files stay where they are on disk; the app remembers where.
     const STREAM_MEDIA_KEY = 'scripturePod.streamMedia.v1';
     const STREAM_MEDIA_SETTINGS_KEY = 'scripturePod.streamMediaSettings.v1';
-    const MEDIA_TAGS = ['Intro', 'Prayer', 'Outro', 'Other'];
-    const streamMedia = { sound: true, loop: false, fit: 'cover', playing: '', playingName: '', wall: '', urls: {}, missing: {}, timer: 0 };
+    const MEDIA_TAGS = ['Intro', 'Prayer', 'Outro', 'Background', 'Other'];
+    // The church's own stream pages: one click adds them to the list
+    const ACI_MEDIA = [
+      { name: 'ACI Intro', url: 'https://aci-stream.vercel.app/v2/intro', tag: 'Intro' },
+      { name: 'ACI Prayer time', url: 'https://aci-stream.vercel.app/v2/prayer', tag: 'Prayer' },
+      { name: 'ACI Outro', url: 'https://aci-stream.vercel.app/v2/outro', tag: 'Outro' },
+      { name: 'ACI Background', url: 'https://aci-stream.vercel.app/v2/bg', tag: 'Background' }
+    ];
+    const ACI_BG_URL = 'https://aci-stream.vercel.app/v2/bg';
+    const streamMedia = { sound: true, appSound: false, loop: false, fit: 'cover', playing: '', playingName: '', wall: '', urls: {}, missing: {}, timer: 0 };
     try {
       const saved = JSON.parse(localStorage.getItem(STREAM_MEDIA_SETTINGS_KEY) || '{}');
-      ['sound', 'loop', 'fit'].forEach((k) => { if (saved[k] != null) streamMedia[k] = saved[k]; });
+      ['sound', 'appSound', 'loop', 'fit'].forEach((k) => { if (saved[k] != null) streamMedia[k] = saved[k]; });
     } catch (e) { /* defaults */ }
     function saveStreamMediaSettings() {
-      try { localStorage.setItem(STREAM_MEDIA_SETTINGS_KEY, JSON.stringify({ sound: streamMedia.sound, loop: streamMedia.loop, fit: streamMedia.fit })); } catch (e) { /* storage unavailable */ }
+      try { localStorage.setItem(STREAM_MEDIA_SETTINGS_KEY, JSON.stringify({ sound: streamMedia.sound, appSound: streamMedia.appSound, loop: streamMedia.loop, fit: streamMedia.fit })); } catch (e) { /* storage unavailable */ }
     }
+    // The control window never makes sound: the copies of pages in the thumbnails and the two monitors stay silent
+    // whatever the page tries, and the sound only comes from the stream window or OBS
+    function muteControlWindow() {
+      try { if (window.BSPDesktop && window.BSPDesktop.setWindowMuted) window.BSPDesktop.setWindowMuted({ label: 'main', muted: true }).catch(() => {}); } catch (e) { /* older build */ }
+    }
+    muteControlWindow();
+    setInterval(muteControlWindow, 5000);
+
+    // Thumbnails are kept between redraws so a page does not reload every time the list is drawn
+    const mediaThumbs = new Map();
     function loadStreamMediaList() { try { return JSON.parse(localStorage.getItem(STREAM_MEDIA_KEY) || '[]'); } catch (e) { return []; } }
     function saveStreamMediaList(list) { try { localStorage.setItem(STREAM_MEDIA_KEY, JSON.stringify(list)); } catch (e) { /* storage unavailable */ } }
 
@@ -33,11 +51,25 @@
       try { last = decodeURIComponent(u.pathname.split('/').filter(Boolean).pop() || '').slice(0, 30); } catch (e) { /* keep empty */ }
       return { kind: isVideo ? 'video' : 'html', url: u.href, name: last ? `${host} / ${last}` : host };
     }
+    function importAciMedia() {
+      const list = loadStreamMediaList();
+      let added = 0;
+      ACI_MEDIA.forEach((m) => {
+        if (list.some((x) => x.url === m.url)) return;
+        list.push({ id: 'sm' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), source: 'link', url: m.url, name: m.name, kind: 'html', tag: m.tag });
+        added++;
+      });
+      saveStreamMediaList(list);
+      showToast(added ? 'ACI media added (' + added + ')' : 'ACI media is already in the list');
+      renderMedia();
+    }
+
     function guessMediaTag(name) {
       const n = String(name || '').toLowerCase();
       if (/intro|welcome|opening/.test(n)) return 'Intro';
       if (/prayer|pray/.test(n)) return 'Prayer';
       if (/outro|ending|closing|thank/.test(n)) return 'Outro';
+      if (/\bbg\b|background/.test(n)) return 'Background';
       return 'Other';
     }
 
@@ -86,6 +118,7 @@
     }
 
     function removeMediaItem(id) {
+      mediaThumbs.delete(id);
       if (streamMedia.playing === id) stopStreamMediaPlayback();
       saveStreamMediaList(loadStreamMediaList().filter((x) => x.id !== id));
       delete streamMedia.urls[id];
@@ -108,8 +141,12 @@
       try { reachable = !!(B && (await B.isFeedOpen())); } catch (e) { /* bridge unavailable */ }
       if (!reachable) { try { reachable = !!(B && (await B.relayClientCount()) > (typeof relaySocket !== 'undefined' && relaySocket && relaySocket.readyState === WebSocket.OPEN ? 1 : 0)); } catch (e) { /* bridge unavailable */ } }
       if (!reachable) showToast('No stream display is open. Open the Stream feed in Outputs, or an OBS browser source.');
-      broadcastMessage({ type: 'MEDIA_PLAY', proto: 1, sender: 'control', ts: Date.now(), kind: item.kind, url, trusted: item.source === 'file', sound: !!streamMedia.sound, loop: !!streamMedia.loop, fit: streamMedia.fit });
+      // The app's own stream window is silenced as a whole, so a page's own sound cannot get out of it
+      try { if (B && B.setFeedMuted) await B.setFeedMuted({ muted: !streamMedia.appSound }); } catch (e) { /* older build */ }
+      broadcastMessage({ type: 'MEDIA_PLAY', proto: 1, sender: 'control', ts: Date.now(), kind: item.kind, url, trusted: item.source === 'file', sound: !!streamMedia.sound, appSound: !!streamMedia.appSound, loop: !!streamMedia.loop, fit: streamMedia.fit });
       streamMedia.playing = id; streamMedia.playingName = item.name;
+      streamMedia.playingKind = item.kind; streamMedia.playingUrl = url; streamMedia.playingTrusted = item.source === 'file';
+      syncMediaMonitor();
       clearTimeout(streamMedia.timer);
       // A video that plays once clears the label when it ends
       if (item.kind === 'video' && !streamMedia.loop) {
@@ -117,7 +154,7 @@
         probe.preload = 'metadata'; probe.src = url;
         probe.onloadedmetadata = () => {
           if (probe.duration && isFinite(probe.duration)) {
-            streamMedia.timer = setTimeout(() => { if (streamMedia.playing === id) { streamMedia.playing = ''; streamMedia.playingName = ''; renderMedia(); } }, probe.duration * 1000 + 800);
+            streamMedia.timer = setTimeout(() => { if (streamMedia.playing === id) { streamMedia.playing = ''; streamMedia.playingName = ''; syncMediaMonitor(); renderMedia(); } }, probe.duration * 1000 + 800);
           }
           probe.removeAttribute('src'); probe.load();
         };
@@ -126,9 +163,61 @@
       return true;
     }
 
+    // While media plays on the stream, the Program and Preview monitors play it too (silently)
+    function mediaMirror(shellId) {
+      const shell = document.getElementById(shellId);
+      if (!shell) return null;
+      let m = shell.querySelector('.sp-media-mirror');
+      if (m) return m;
+      m = document.createElement('div');
+      m.className = 'sp-media-mirror';
+      m.hidden = true;
+      shell.appendChild(m);
+      const fit = () => { const w = m.clientWidth; if (w) m.style.setProperty('--mirror-scale', String(w / 1920)); };
+      if (typeof ResizeObserver === 'function') new ResizeObserver(fit).observe(m);
+      return m;
+    }
+    function hideMediaMirror(shellId) {
+      const m = document.getElementById(shellId) && document.getElementById(shellId).querySelector('.sp-media-mirror');
+      if (m) { m.textContent = ''; m.hidden = true; }
+    }
+    function paintMediaMirror(m, now) {
+      m.textContent = '';
+      m.hidden = !now;
+      if (!now) return;
+      const w0 = m.clientWidth; if (w0) m.style.setProperty('--mirror-scale', String(w0 / 1920));
+      if (now.kind === 'video') {
+        const v = document.createElement('video');
+        v.muted = true; v.loop = !!now.loop; v.autoplay = true; v.playsInline = true; v.src = now.url;
+        v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:' + (now.fit === 'contain' ? 'contain' : 'cover') + ';background:#000';
+        m.appendChild(v);
+        const pr = v.play(); if (pr && pr.catch) pr.catch(() => {});
+      } else {
+        const f = document.createElement('iframe');
+        f.tabIndex = -1; f.setAttribute('aria-hidden', 'true'); f.title = '';
+        f.setAttribute('sandbox', now.trusted ? 'allow-scripts allow-same-origin' : 'allow-scripts');
+        f.className = 'sp-media-mirror-page';
+        // The small copies in the app never make sound
+        f.setAttribute('allow', "autoplay 'none'");
+        m.appendChild(f);
+        // The same two-step load as on the stream, so the page starts the same way
+        f.src = 'about:blank';
+        setTimeout(() => { if (f.isConnected) f.src = now.url; }, 250);
+      }
+    }
+    function syncMediaMonitor() {
+      const on = !!streamMedia.playing;
+      document.body.classList.toggle('sp-media-rendering', on);
+      const now = on ? { kind: streamMedia.playingKind, url: streamMedia.playingUrl, trusted: streamMedia.playingTrusted, loop: streamMedia.loop, fit: streamMedia.fit } : null;
+      ['preview-display-shell', 'program-display-shell'].forEach((id) => { const m = mediaMirror(id); if (m) paintMediaMirror(m, now); });
+      if (typeof refreshDisplaysView === 'function') refreshDisplaysView();
+      mediaThumbs.forEach((t) => { if (t.frame) t.frame.src = on ? 'about:blank' : (t.url || 'about:blank'); });
+    }
+
     function stopStreamMediaPlayback() {
       clearTimeout(streamMedia.timer);
       streamMedia.playing = ''; streamMedia.playingName = '';
+      syncMediaMonitor();
       try { broadcastMessage({ type: 'MEDIA_STOP', proto: 1, sender: 'control', ts: Date.now() }); } catch (e) { /* not ready */ }
       renderMedia();
     }
@@ -167,6 +256,39 @@
       await stopBgWall();
     }
 
+    // A video shows a frame; a web page shows a small live copy of itself (it cannot make sound there)
+    async function mediaThumbBody(item) {
+      const url = await streamMediaUrl(item).catch(() => '');
+      const have = mediaThumbs.get(item.id);
+      if (have && have.url === url) return have.body;
+      const body = document.createElement('div');
+      body.className = 'md-thumb-body';
+      const entry = { body, url, frame: null };
+      if (!url) {
+        body.appendChild(Object.assign(document.createElement('span'), { textContent: streamMedia.missing[item.id] || 'Not found', className: 'md-thumb-note' }));
+        return body;
+      }
+      if (item.kind === 'video') {
+        const v = document.createElement('video');
+        v.muted = true; v.preload = 'metadata'; v.playsInline = true; v.src = (item.source === 'link' ? url : url + '#t=1');
+        body.appendChild(v);
+      } else {
+        const f = document.createElement('iframe');
+        f.className = 'md-thumb-page';
+        f.setAttribute('allow', "autoplay 'none'");
+        f.tabIndex = -1; f.setAttribute('aria-hidden', 'true'); f.title = '';
+        f.setAttribute('sandbox', item.source === 'file' ? 'allow-scripts allow-same-origin' : 'allow-scripts');
+        body.appendChild(f);
+        entry.frame = f;
+        const fit = () => { const w = body.clientWidth; if (w) f.style.setProperty('--thumb-scale', String(w / 1920)); };
+        if (typeof ResizeObserver === 'function') new ResizeObserver(fit).observe(body);
+        // Pages open one after another, and not at all while media is playing on the stream
+        setTimeout(() => { if (!streamMedia.playing && mediaThumbs.get(item.id) === entry) f.src = url; }, 300 + mediaThumbs.size * 400);
+      }
+      mediaThumbs.set(item.id, entry);
+      return body;
+    }
+
     async function renderMedia() {
       const host = document.getElementById('media-view');
       if (!host) return;
@@ -174,7 +296,7 @@
       let wallOpen = false;
       try { wallOpen = !!(window.BSPDesktop && (await window.BSPDesktop.isWallOpen())); } catch (e) { /* bridge unavailable */ }
       if (!wallOpen && streamMedia.wall) streamMedia.wall = '';
-      const sig = JSON.stringify([list, streamMedia.playing, streamMedia.wall, streamMedia.sound, streamMedia.loop, streamMedia.fit, Object.keys(streamMedia.missing)]);
+      const sig = JSON.stringify([list, streamMedia.playing, streamMedia.wall, streamMedia.sound, streamMedia.appSound, streamMedia.loop, streamMedia.fit, Object.keys(streamMedia.missing)]);
       if (host.dataset.sig === sig) return;
       if (host.contains(document.activeElement) && /^(SELECT|INPUT)$/.test(document.activeElement.tagName)) return;
       host.dataset.sig = sig;
@@ -205,6 +327,7 @@
       const opts = mk('div', 'md-opts');
       const check = (label, on, fn) => { const l = mk('label', 'md-check'); const c = document.createElement('input'); c.type = 'checkbox'; c.checked = !!on; c.onchange = () => fn(c.checked); l.append(c, document.createTextNode(' ' + label)); return l; };
       opts.appendChild(check('Sound on the stream', streamMedia.sound, (v) => { streamMedia.sound = v; saveStreamMediaSettings(); }));
+      opts.appendChild(check('Sound in this app', streamMedia.appSound, (v) => { streamMedia.appSound = v; saveStreamMediaSettings(); }));
       opts.appendChild(check('Loop videos on the stream', streamMedia.loop, (v) => { streamMedia.loop = v; saveStreamMediaSettings(); }));
       const fit = mk('select');
       fit.setAttribute('aria-label', 'How videos fill the screen');
@@ -214,7 +337,12 @@
       fit.onchange = () => { streamMedia.fit = fit.value; saveStreamMediaSettings(); };
       opts.appendChild(fit);
       bar.appendChild(opts);
-      bar.appendChild(mk('div', 'md-hint', 'Sound in OBS: on the browser source that shows Scripture Pod, tick "Control audio via OBS", or the page\'s sound plays on this computer and never reaches the stream.'));
+      bar.appendChild(mk('div', 'md-hint', 'Sound in this app: untick it to keep this app\'s own stream window silent (the sound then comes only from OBS, so use the media link). It applies the next time you play something. Sound in OBS: on the browser source that shows Scripture Pod, tick "Control audio via OBS", or the page\'s sound plays on this computer and never reaches the stream.'));
+      // A link of its own for the stream's media, so OBS can have it as a separate source above or below the Bible and lyrics one
+      const own = mk('div', 'md-own');
+      own.appendChild(btn('Copy separate media link', 'An OBS Browser Source that shows only the intro, prayer time and outro, with its own sound', copyLocalMediaUrl));
+      own.appendChild(mk('div', 'md-hint', 'Add it in OBS as its own Browser Source (1920 x 1080, tick "Control audio via OBS"). The Bible and lyrics source does not play media, so nothing doubles up. To make it play media too, add &media=1 to its address.'));
+      bar.appendChild(own);
       host.appendChild(bar);
 
       // Adding
@@ -223,7 +351,7 @@
       const nameIn = mk('input'); nameIn.id = 'media-link-name'; nameIn.type = 'text'; nameIn.placeholder = 'Name (optional)'; nameIn.setAttribute('aria-label', 'Name for the link');
       const linkIn = mk('input'); linkIn.id = 'media-link-input'; linkIn.type = 'text'; linkIn.placeholder = 'Or paste a link: https://…'; linkIn.setAttribute('aria-label', 'Link to a video or web page');
       linkIn.onkeydown = (e) => { if (e.key === 'Enter') addMediaLink(); };
-      add.append(nameIn, linkIn, btn('Add link', 'Add this link to the list', addMediaLink));
+      add.append(nameIn, linkIn, btn('Add link', 'Add this link to the list', addMediaLink), btn('Import ACI media', 'Add the church intro, prayer time, outro and background pages', importAciMedia));
       host.appendChild(add);
 
       // The library, grouped: Intro, Prayer, Outro, Other
@@ -237,14 +365,7 @@
         const onWall = streamMedia.wall === item.id;
         const card = mk('div', 'md-card' + (onStream || onWall ? ' is-playing' : ''));
         const thumb = mk('div', 'md-thumb');
-        const url = item.kind === 'video' ? await streamMediaUrl(item).catch(() => '') : '';
-        if (item.kind === 'video' && url) {
-          const v = document.createElement('video');
-          v.muted = true; v.preload = 'metadata'; v.playsInline = true; v.src = (item.source === 'link' ? url : url + '#t=1');
-          thumb.appendChild(v);
-        } else {
-          thumb.appendChild(mk('span', '', streamMedia.missing[item.id] || (item.kind === 'html' ? 'Web page' : 'Video')));
-        }
+        thumb.appendChild(await mediaThumbBody(item));
         thumb.appendChild(mk('span', 'md-tag', MEDIA_TAGS.includes(item.tag) ? item.tag : 'Other'));
         card.appendChild(thumb);
         const nameRow = mk('div', 'md-name-row');
