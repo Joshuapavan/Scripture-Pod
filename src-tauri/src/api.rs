@@ -143,7 +143,8 @@ fn scan_network(state: &Arc<AppState>) -> Value {
 #[derive(Clone, Default)]
 struct UpdateProgress { state: String, received: u64, total: u64, path: String, error: String }
 static UPDATE: std::sync::Mutex<Option<UpdateProgress>> = std::sync::Mutex::new(None);
-const RELEASE_PREFIX: &str = "https://github.com/Joshuapavan/Scripture-Pod-V2/releases/download/";
+// The release files come from the project's GitHub releases (the repository has been published under both names)
+const RELEASE_PREFIXES: [&str; 2] = ["https://github.com/Joshuapavan/Scripture-Pod-V2/releases/download/", "https://github.com/Joshuapavan/Scripture-Pod/releases/download/"];
 
 // The file of a release that suits this computer (system and processor)
 fn pick_asset(assets: &Value) -> Value {
@@ -160,7 +161,7 @@ fn pick_asset(assets: &Value) -> Value {
 fn start_update_download(app: &AppHandle, arg: &Value) -> Value {
     let url = arg["url"].as_str().unwrap_or("").to_string();
     let name = arg["name"].as_str().unwrap_or("").to_string();
-    if !url.starts_with(RELEASE_PREFIX) || name.is_empty() || name.contains('/') || name.contains('\\') { return json!({"error": "That download is not allowed"}); }
+    if !RELEASE_PREFIXES.iter().any(|p| url.starts_with(p)) || name.is_empty() || name.contains('/') || name.contains('\\') { return json!({"error": "That download is not allowed"}); }
     if UPDATE.lock().unwrap().as_ref().map(|u| u.state == "downloading").unwrap_or(false) { return json!({"ok": true}); }
     let Ok(dir) = app.path().download_dir() else { return json!({"error": "There is no Downloads folder"}); };
     let total = arg["size"].as_u64().unwrap_or(0);
@@ -368,7 +369,7 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         // The newest published release, for the "update available" notice (this address only)
         "checkUpdate" => {
             let agent = ureq::AgentBuilder::new().timeout(std::time::Duration::from_secs(10)).build();
-            match agent.get("https://api.github.com/repos/Joshuapavan/Scripture-Pod-V2/releases/latest").set("User-Agent", "scripture-pod").set("Accept", "application/vnd.github+json").call() {
+            match agent.get("https://api.github.com/repos/Joshuapavan/Scripture-Pod/releases/latest").set("User-Agent", "scripture-pod").set("Accept", "application/vnd.github+json").call() {
                 Ok(resp) => {
                     let v: Value = serde_json::from_str(&resp.into_string().unwrap_or_default()).unwrap_or(Value::Null);
                     json!({"tag": v["tag_name"], "name": v["name"], "url": v["html_url"], "asset": pick_asset(&v["assets"])})

@@ -2103,6 +2103,11 @@
               <label class="settings-label">Updates</label>
               <div class="auto-backup-row"><button type="button" class="btn" onclick="checkForUpdate(true)">Check for updates</button><span id="update-check-status" class="output-route-hint"></span></div>
             </div>
+            <div class="settings-field">
+              <label class="settings-label">Update download</label>
+              <label class="mini-toggle"><span>Download updates automatically</span><input type="checkbox" id="auto-download-update" onchange="setAutoDownloadUpdate(this.checked)"></label>
+              <div class="sm-hint">Off: when there is an update, the notice opens the GitHub releases page and you download it there. On: the update downloads by itself, without opening GitHub, and the notice offers to open the installer.</div>
+            </div>
             <div class="settings-field auto-backup-field" id="auto-backup-field">
               <label class="settings-label">Automatic backups</label>
               <label class="mini-toggle"><span>Back up to a folder by itself</span><input type="checkbox" id="auto-backup-enabled" onchange="saveAutoBackupSettings()"></label>

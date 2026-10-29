@@ -1,6 +1,7 @@
     // ── Update notice ─────────────────────────────────────────────────────────────
     // Looks at the newest published release (once a day, and on request in Settings). When a newer
-    // version exists a bar offers to open its download page. The new version is installed by the user.
+    // version exists a bar offers to open its download page, or, when the user has turned on automatic download in
+    // Settings, the update downloads by itself. The new version is installed by the user.
     const UPDATE_CHECK_KEY = 'scripturePod.updateCheck.v1';
     function parseReleaseTag(tag) {
       const m = String(tag || '').match(/^v?(\d+)\.(\d+)\.(\d+)(?:-build\.(\d+))?/);
@@ -28,7 +29,21 @@
         if (status) status.textContent = manual ? ((e && e.message) || 'Could not check for updates') : '';
       }
     }
-    // The bar offers to download the new version inside the app, with progress, then to open the installer
+    // Whether an update downloads by itself (Settings, General). Off unless the user turns it on.
+    const AUTO_DOWNLOAD_KEY = 'scripturePod.autoDownloadUpdate.v1';
+    function autoDownloadUpdateOn() { try { return localStorage.getItem(AUTO_DOWNLOAD_KEY) === '1'; } catch (e) { return false; } }
+    function setAutoDownloadUpdate(on) {
+      try { localStorage.setItem(AUTO_DOWNLOAD_KEY, on ? '1' : '0'); } catch (e) { /* storage unavailable */ }
+      const box = document.getElementById('auto-download-update');
+      if (box) box.checked = !!on;
+      // Turning it on looks for an update right away, so one that is already waiting starts downloading
+      if (on) checkForUpdate(true);
+    }
+    function paintAutoDownloadUpdate() { const box = document.getElementById('auto-download-update'); if (box) box.checked = autoDownloadUpdateOn(); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', paintAutoDownloadUpdate); else paintAutoDownloadUpdate();
+
+    // The notice: with automatic download on, the new version downloads by itself, with progress, and then offers to
+    // open the installer. With it off, the notice opens the releases page on GitHub and the download is done there.
     function showUpdateBar(latest) {
       if (document.getElementById('update-bar')) return;
       const bar = document.createElement('div');
@@ -41,13 +56,17 @@
       const later = document.createElement('button');
       later.type = 'button'; later.className = 'btn'; later.textContent = 'Later';
       later.onclick = () => bar.remove();
-      const hasAsset = !!(latest.asset && latest.asset.url);
-      get.textContent = hasAsset ? 'Download' : 'Open download page';
-      get.onclick = async () => {
-        if (!hasAsset) { window.BSPDesktop.openReleasePage(latest.url).catch(() => {}); return; }
-        get.disabled = true; later.hidden = true;
+      const auto = autoDownloadUpdateOn() && !!(latest.asset && latest.asset.url);
+      get.textContent = 'Open download page';
+      get.onclick = () => { window.BSPDesktop.openReleasePage(latest.url).catch(() => {}); };
+      bar.append(text, get, later);
+      document.body.appendChild(bar);
+      if (!auto) return;
+
+      const startDownload = async () => {
+        get.disabled = true; later.hidden = true; get.textContent = 'Downloading…';
         const started = await window.BSPDesktop.startUpdateDownload({ url: latest.asset.url, name: latest.asset.name, size: latest.asset.size }).catch((e) => ({ error: (e && e.message) || 'Download failed' }));
-        if (started && started.error) { text.textContent = started.error; get.disabled = false; later.hidden = false; return; }
+        if (started && started.error) { text.textContent = started.error; get.disabled = false; get.textContent = 'Try again'; get.onclick = startDownload; later.hidden = false; return; }
         const timer = setInterval(async () => {
           const p = await window.BSPDesktop.getUpdateProgress().catch(() => null);
           if (!p) return;
@@ -66,12 +85,11 @@
           } else if (p.state === 'error') {
             clearInterval(timer);
             text.textContent = p.error || 'The download failed';
-            get.disabled = false; get.textContent = 'Try again'; later.hidden = false;
+            get.disabled = false; get.textContent = 'Try again'; get.onclick = startDownload; later.hidden = false;
           }
         }, 500);
       };
-      bar.append(text, get, later);
-      document.body.appendChild(bar);
+      startDownload();
     }
     (function initUpdateCheck() {
       const start = () => {
