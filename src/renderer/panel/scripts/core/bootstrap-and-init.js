@@ -4104,7 +4104,63 @@
       document.querySelectorAll('.sm-tab-panel').forEach(panel => {
         panel.classList.toggle('active', panel.dataset.smPanel === tabId);
       });
+      // The preview and the Apply to switch only belong to the sections that change how things look
+      const modal = document.getElementById('settingsModal');
+      if (modal) modal.dataset.smTab = tabId;
+      if (typeof syncMediaSettingsPanel === 'function') syncMediaSettingsPanel();
+      if (typeof scheduleInputShells === 'function') scheduleInputShells();
     }
+
+    // Left list of Settings sections: a search that looks at section names and at every setting inside them,
+    // and group headings that go away when nothing under them is shown
+    function syncSettingsGroups() {
+      const side = document.querySelector('#settingsModal .sm-sidebar');
+      if (!side) return;
+      let label = null, shown = 0;
+      const close = () => { if (label) label.classList.toggle('sm-group-empty', shown === 0); };
+      Array.from(side.children).forEach((el) => {
+        if (el.classList.contains('sm-group-label')) { close(); label = el; shown = 0; return; }
+        if (el.classList.contains('sm-sidebar-item') && getComputedStyle(el).display !== 'none') shown++;
+      });
+      close();
+    }
+    function filterSettingsNav(query) {
+      const q = String(query || '').trim().toLowerCase();
+      const items = Array.from(document.querySelectorAll('#settingsModal .sm-sidebar-item[data-sm-tab]'));
+      let any = false;
+      items.forEach((item) => {
+        let hit = !q;
+        if (!hit) {
+          const panel = document.querySelector(`.sm-tab-panel[data-sm-panel="${item.dataset.smTab}"]`);
+          const words = [item.textContent];
+          if (panel) {
+            panel.querySelectorAll('.settings-label, label, [data-card-title], h3, h4, option').forEach((n) => {
+              words.push(n.textContent || '', n.getAttribute('data-card-title') || '');
+            });
+          }
+          hit = words.join(' ').toLowerCase().includes(q);
+        }
+        item.classList.toggle('sm-filtered-out', !hit);
+        if (hit && getComputedStyle(item).display !== 'none') any = true;
+      });
+      const none = document.getElementById('sm-nomatch');
+      if (none) none.hidden = !q || any;
+      syncSettingsGroups();
+      const active = document.querySelector('#settingsModal .sm-sidebar-item.active');
+      if (q && active && getComputedStyle(active).display === 'none') {
+        const first = items.find((i) => getComputedStyle(i).display !== 'none');
+        if (first) switchSettingsTab(first.dataset.smTab);
+      }
+    }
+    (function watchSettingsNav() {
+      const side = document.querySelector('#settingsModal .sm-sidebar');
+      if (!side || typeof MutationObserver !== 'function') return;
+      new MutationObserver(syncSettingsGroups).observe(side, { subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+      syncSettingsGroups();
+      const modal = document.getElementById('settingsModal');
+      const active = side.querySelector('.sm-sidebar-item.active');
+      if (modal && active) modal.dataset.smTab = active.dataset.smTab;
+    })();
 
     // The remembered tab can be one the current mode hides (e.g. Custom Mode
     // Style while on Setlist), which left the content pane empty.

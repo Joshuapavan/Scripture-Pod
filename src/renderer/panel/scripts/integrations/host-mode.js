@@ -28,6 +28,9 @@
       if (programDisplayUrlEl) programDisplayUrlEl.value = localServerInfo?.displayUrl || '';
       const monitorDisplayUrlEl = document.getElementById('monitor-display-link');
       if (monitorDisplayUrlEl) monitorDisplayUrlEl.value = getLocalMonitorUrl(localServerInfo);
+      const smDisplay = document.getElementById('sm-link-display'); if (smDisplay) smDisplay.value = localServerInfo?.displayUrl || '';
+      const smMonitor = document.getElementById('sm-link-monitor'); if (smMonitor) smMonitor.value = getLocalMonitorUrl(localServerInfo);
+      const smMedia = document.getElementById('sm-link-media'); if (smMedia) smMedia.value = getLocalMediaUrl(localServerInfo);
       const mediaDisplayUrlEl = document.getElementById('media-display-link');
       if (mediaDisplayUrlEl) mediaDisplayUrlEl.value = getLocalMediaUrl(localServerInfo);
       return localServerInfo;

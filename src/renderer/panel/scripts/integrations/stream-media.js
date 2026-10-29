@@ -395,3 +395,27 @@
       renderMedia();
     }
     setInterval(() => { if (document.body.classList.contains('media-workspace-active')) renderMedia(); }, 2000);
+
+    // The Media and wall section of Settings: the same switches as the Media tab and the Wall/LED tab
+    function setMediaSetting(key, value) {
+      streamMedia[key] = value;
+      saveStreamMediaSettings();
+      const host = document.getElementById('media-view');
+      if (host) host.dataset.sig = '';
+      renderMedia();
+    }
+    function syncMediaSettingsPanel() {
+      const modal = document.getElementById('settingsModal');
+      if (!modal || modal.dataset.smTab !== 'media') return;
+      const put = (id, fn) => { const el = document.getElementById(id); if (el && document.activeElement !== el) fn(el); };
+      put('sm-media-sound', (el) => { el.checked = !!streamMedia.sound; });
+      put('sm-media-appsound', (el) => { el.checked = !!streamMedia.appSound; });
+      put('sm-media-loop', (el) => { el.checked = !!streamMedia.loop; });
+      put('sm-media-fit', (el) => { el.value = streamMedia.fit; });
+      if (typeof bgWall !== 'undefined') {
+        put('sm-wall-fit', (el) => { el.value = bgWall.fit; });
+        put('sm-wall-fade', (el) => { el.value = String(bgWall.fade); });
+        put('sm-wall-autostart', (el) => { el.checked = !!bgWall.autostart; });
+      }
+    }
+    setInterval(syncMediaSettingsPanel, 800);

@@ -1017,6 +1017,8 @@
         const btn = document.getElementById(`settings-target-${key}`);
         if (btn) btn.classList.toggle('active', key === value);
       });
+      const applySelect = document.getElementById('sm-apply-select');
+      if (applySelect) applySelect.value = value;
       if (typeof refreshSettingsTabVisibility === 'function') {
         refreshSettingsTabVisibility(getEffectiveSettingsTargetTab());
       }

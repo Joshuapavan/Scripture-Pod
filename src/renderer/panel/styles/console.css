@@ -3074,3 +3074,134 @@ body.media-workspace-active #main { flex: 1 1 auto !important; width: auto !impo
 .sp-media-mirror[hidden] { display: none; }
 .sp-media-mirror iframe.sp-media-mirror-page { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; background: #000; transform-origin: 0 0; transform: scale(var(--mirror-scale, .2)); }
 #program-display-shell, #preview-display-shell { position: relative; }
+
+/* ── Settings: a list of sections on the left, grouped, with search ──────────────── */
+#settingsModal .sm-body { grid-template-columns: 252px minmax(0, 1fr) 400px !important; grid-template-rows: minmax(0, 1fr) !important; }
+#settingsModal .sm-sidebar {
+  grid-column: 1 !important; grid-row: 1 !important;
+  display: flex !important; flex-direction: column !important; flex-wrap: nowrap !important; align-items: stretch !important; gap: 3px !important;
+  padding: 16px 12px 16px 16px !important; overflow-y: auto !important; overflow-x: hidden !important;
+  border-bottom: 0 !important; border-right: 1px solid var(--sp-line) !important;
+}
+#settingsModal .sm-content { grid-column: 2 !important; grid-row: 1 !important; }
+#settingsModal .settings-preview { grid-column: 3 !important; grid-row: 1 !important; }
+#settingsModal .sm-sidebar-item {
+  display: flex !important; width: auto; min-height: 38px !important; padding: 0 10px !important; gap: 10px !important; white-space: normal;
+  border: 0 !important; border-radius: 9px !important; background: transparent !important; color: var(--sp-muted) !important;
+}
+#settingsModal .sm-sidebar-item:hover { background: var(--sp-raised) !important; color: var(--sp-text) !important; }
+#settingsModal .sm-sidebar-item.active { background: var(--sp-line-2) !important; border: 0 !important; color: var(--sp-text) !important; }
+#settingsModal .sm-sidebar-item.sm-filtered-out { display: none !important; }
+#settingsModal .sm-sidebar > .sm-group-label {
+  margin: 14px 0 2px !important; padding: 0 10px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--sp-subtle) !important;
+}
+#settingsModal .sm-sidebar > .sm-group-label.sm-group-empty { display: none; }
+#settingsModal .sm-sidebar > .sm-search {
+  margin: 0 0 4px !important; display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; flex: 0 0 auto;
+  border: 1px solid var(--sp-line); border-radius: 10px; background: var(--sp-card); color: var(--sp-muted) !important; font-size: 13px;
+}
+#settingsModal .sm-search svg { width: 15px; height: 15px; flex: 0 0 auto; }
+#settingsModal .sm-search input { flex: 1 1 auto; min-width: 0; height: 36px; border: 0; background: transparent; color: var(--sp-text); font: inherit; outline: 0; }
+#settingsModal .sm-search:focus-within { border-color: var(--sp-cue); }
+#settingsModal .sm-sidebar > .sm-nomatch { margin: 10px 10px 0 !important; font-size: 13px; line-height: 1.5; color: var(--sp-muted) !important; }
+#settingsModal .sm-sidebar > .sm-nomatch[hidden] { display: none; }
+/* The version line sits at the bottom of the list */
+#settingsModal .sm-sidebar > #panel-inline-style-69 { margin-top: auto !important; padding-top: 12px; }
+/* Saved automatically */
+#settingsModal .sm-saved {
+  display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px; border-radius: 999px;
+  background: rgba(61, 214, 140, .12); color: #7fe0ae; font: 500 12px var(--ui-font, 'Geist', sans-serif);
+}
+#settingsModal .sm-saved i { width: 7px; height: 7px; border-radius: 999px; background: #3dd68c; }
+/* The preview and Apply to belong to the sections that change how things look */
+#settingsModal[data-sm-tab="setlist"] .settings-preview, #settingsModal[data-sm-tab="shortcuts"] .settings-preview,
+#settingsModal[data-sm-tab="presets"] .settings-preview, #settingsModal[data-sm-tab="feedback"] .settings-preview { display: none; }
+#settingsModal[data-sm-tab="setlist"] .sm-body, #settingsModal[data-sm-tab="shortcuts"] .sm-body,
+#settingsModal[data-sm-tab="presets"] .sm-body, #settingsModal[data-sm-tab="feedback"] .sm-body { grid-template-columns: 252px minmax(0, 1fr) !important; }
+#settingsModal[data-sm-tab="shortcuts"] #settings-target-switch, #settingsModal[data-sm-tab="presets"] #settings-target-switch,
+#settingsModal[data-sm-tab="feedback"] #settings-target-switch { display: none; }
+@media (max-width: 1000px) {
+  #settingsModal .sm-body { grid-template-columns: minmax(0, 1fr) !important; grid-template-rows: auto minmax(0, 1fr) !important; }
+  #settingsModal .sm-sidebar { grid-column: 1 !important; grid-row: 1 !important; flex-direction: row !important; flex-wrap: wrap !important; align-items: center !important; border-right: 0 !important; border-bottom: 1px solid var(--sp-line) !important; }
+  #settingsModal .sm-content { grid-column: 1 !important; grid-row: 2 !important; }
+  #settingsModal .sm-sidebar > .sm-group-label, #settingsModal .sm-sidebar > #panel-inline-style-69 { display: none; }
+  #settingsModal .sm-sidebar > .sm-search { flex: 1 0 100%; }
+}
+
+/* The search field is one box: the global input border and background stay off the inner field */
+#settingsModal .sm-sidebar > .sm-search input[type="search"] {
+  border: 0 !important; background: transparent !important; box-shadow: none !important; outline: 0 !important;
+  -webkit-appearance: none; appearance: none; padding: 0 !important; margin: 0 !important; height: 36px; width: auto;
+}
+#settingsModal .sm-sidebar > .sm-search input[type="search"]::-webkit-search-decoration,
+#settingsModal .sm-sidebar > .sm-search input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
+
+/* An input that fills a bordered wrapper: the wrapper is the field, so the input keeps no border of its own.
+   The class is repeated, and :is() brings the weight of an id, so this wins over the global input rule and the
+   per-panel ones, which are long and marked important. */
+:is(#sp-input-shell, body) input.in-shell.in-shell.in-shell {
+  border: 0 !important; box-shadow: none !important; background: transparent !important; background-color: transparent !important;
+  outline: 0 !important; min-height: 0 !important; border-radius: 0 !important; padding-inline: 6px !important;
+}
+:is(#sp-input-shell, body) input.in-shell.in-shell.in-shell:hover:not(:focus), :is(#sp-input-shell, body) input.in-shell.in-shell.in-shell:focus { border: 0 !important; box-shadow: none !important; outline: 0 !important; }
+:has(> input.in-shell:focus-visible), :has(> input.in-shell:focus) { border-color: var(--sp-cue, hsl(var(--ring))) !important; }
+
+/* A section the chosen Apply to leaves out stays out of the list (the list's own display rule must not bring it back) */
+#settingsModal .sm-sidebar-item[style*="display: none"], #settingsModal .sm-sidebar-item[style*="display:none"] { display: none !important; }
+
+/* The footer in the list lines up with the items */
+#settingsModal .sm-sidebar > #panel-inline-style-69 { padding: 12px 10px 0 !important; margin-left: 0 !important; }
+#settingsModal #panel-inline-style-70 { margin: 0 0 10px !important; }
+#settingsModal #panel-inline-style-71 { text-align: left !important; margin-left: 0 !important; font-size: 12px !important; line-height: 1.6; color: var(--sp-muted) !important; }
+#settingsModal #panel-inline-style-71 .settings-footer-plugin { display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--sp-muted); }
+#settingsModal #panel-inline-style-71 br { display: none; }
+
+/* Media and wall, Outputs and links: a hint under a switch, and an address with its Copy button */
+#settingsModal .sm-hint { padding: 0 0 12px; font-size: 12px; line-height: 1.5; color: var(--sp-subtle); border-bottom: 1px solid var(--sp-line); }
+#settingsModal .sm-hint:last-child { border-bottom: 0; }
+#settingsModal .sm-sub { display: block; margin-top: 2px; font-size: 12px; font-weight: 400; color: var(--sp-subtle); }
+#settingsModal .sm-linkrow { display: flex; gap: 8px; }
+#settingsModal .sm-linkrow input { flex: 1 1 auto; min-width: 0; font-family: var(--sp-mono, ui-monospace, monospace); font-size: 12px; }
+#settingsModal .sm-linkrow .btn { flex: 0 0 auto; }
+#settingsModal[data-sm-tab="media"] .settings-preview, #settingsModal[data-sm-tab="outputs"] .settings-preview { display: none; }
+#settingsModal[data-sm-tab="media"] .sm-body, #settingsModal[data-sm-tab="outputs"] .sm-body { grid-template-columns: 252px minmax(0, 1fr) !important; }
+#settingsModal[data-sm-tab="media"] #settings-target-switch, #settingsModal[data-sm-tab="outputs"] #settings-target-switch { display: none; }
+
+/* Number steppers in Settings: the label sits above, so the number, its unit and the arrows have room (a long number was cut off) */
+#settingsModal .paired-stepper-group { gap: 4px 24px; }
+#settingsModal .settings-row .paired-stepper-item { grid-template-columns: minmax(0, 1fr) !important; gap: 8px !important; }
+#settingsModal .settings-row .paired-stepper-item > * { grid-column: 1 !important; grid-row: auto !important; }
+#settingsModal .numeric-stepper-wrap { width: 100%; max-width: 200px; grid-template-columns: minmax(0, 1fr) 28px; gap: 6px; }
+#settingsModal .numeric-stepper-input-wrap { grid-template-columns: minmax(4ch, 1fr) auto; }
+#settingsModal .numeric-stepper-input { min-width: 4ch; text-align: left; padding-inline: 12px 4px !important; font-size: 13px; }
+#settingsModal .numeric-stepper-unit { padding: 0 12px 0 0; }
+
+/* Every Settings section is the same width, with or without the preview beside it (the content column used to
+   stretch when the preview went away) */
+#settingsModal { --sm-col: 520px; }
+#settingsModal .sm-content { scrollbar-gutter: stable; }
+#settingsModal .sm-content > .sm-tab-panel { width: 100%; max-width: var(--sm-col); margin-inline: 0; box-sizing: border-box; }
+#settingsModal .sm-content > .sm-tab-panel .settings-category-content { width: 100%; box-sizing: border-box; }
+
+/* Feedback: one card, not a box in a box in a box */
+#settingsModal [data-sm-panel="feedback"] .settings-category-content { background: transparent !important; border: 0 !important; padding: 0 !important; }
+#settingsModal [data-sm-panel="feedback"] .settings-category-content::before { display: none; }
+#settingsModal .feedback-note { border: 0 !important; background: transparent !important; padding: 4px 0 0 !important; }
+
+/* Apply to is a setting with a menu, so it does not look like another tab */
+#settingsModal #settings-target-switch { display: none !important; }
+#settingsModal .sm-applyto {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 10px; height: 36px; padding: 0 6px 0 14px;
+  border: 1px solid var(--sp-line); border-radius: 10px; background: var(--sp-card); color: var(--sp-muted); font-size: 12px;
+}
+#settingsModal .sm-applyto select { height: 30px; min-height: 0 !important; border: 0 !important; background-color: transparent !important; box-shadow: none !important; color: var(--sp-text) !important; font-size: 13px; font-weight: 500; padding: 0 4px; cursor: pointer; }
+#settingsModal[data-sm-tab="shortcuts"] .sm-applyto, #settingsModal[data-sm-tab="presets"] .sm-applyto, #settingsModal[data-sm-tab="feedback"] .sm-applyto,
+#settingsModal[data-sm-tab="media"] .sm-applyto, #settingsModal[data-sm-tab="outputs"] .sm-applyto { display: none; }
+
+/* Behind a popup, the app is blurred and dimmed */
+.modal-overlay, .sp-overlay { -webkit-backdrop-filter: blur(12px) saturate(120%); backdrop-filter: blur(12px) saturate(120%); }
+.command-palette-backdrop { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+#popup-scrim { position: fixed; inset: 0; z-index: 9300; display: none; background: rgb(0 0 0 / .35); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+/* Every small menu that opens over the app: Outputs, the connected displays list, quick actions, version and import menus */
+body.sp-popup-open #popup-scrim { display: block; }
+#display-list-card, #sidebar-quick-actions-panel, #footer-bible-version-popover, #imports-popover, #outputs-card { z-index: 9302 !important; }

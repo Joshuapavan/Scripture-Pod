@@ -75,7 +75,8 @@
     let oneVersionFlag = false;
     let oneVersionPool = [];
     try { oneVersionFlag = localStorage.getItem(ONE_VERSION_STORAGE) === '1'; } catch (e) { /* storage unavailable */ }
-    function isOneVersionActive() { return oneVersionFlag && activeRatio === '16-9' && sidebarTab === 'bible'; }
+    // One at a time applies to verses in the lower third and in full screen alike (verses are full screen unless the lower third is turned on)
+    function isOneVersionActive() { return oneVersionFlag && sidebarTab === 'bible'; }
 
     function getOnScreenVersionIds() {
       if (isOneVersionActive()) {
@@ -97,7 +98,8 @@
         const upcoming = pool.length > 1 ? pool[(Math.max(0, pool.indexOf(activeBibleVersion)) + 1) % pool.length] : '';
         next.title = upcoming ? `Switch to ${getVersionCode(upcoming)}` : 'Switch version';
         const label = next.querySelector('span');
-        if (label) label.textContent = upcoming ? getVersionCode(upcoming) : 'Next';
+        if (label) label.textContent = upcoming ? `${getVersionCode(activeBibleVersion)} → ${getVersionCode(upcoming)}` : 'Next';
+        next.setAttribute('aria-label', upcoming ? `Showing ${getVersionCode(activeBibleVersion)}. Switch to ${getVersionCode(upcoming)}` : 'Switch version');
       }
     }
 
@@ -106,7 +108,15 @@
       const ids = getOnScreenVersionIds();
       oneVersionFlag = !!on;
       try { localStorage.setItem(ONE_VERSION_STORAGE, oneVersionFlag ? '1' : '0'); } catch (e) { /* storage unavailable */ }
-      if (oneVersionFlag) oneVersionPool = ids.slice(0, MAX_VERSIONS_ON_SCREEN);
+      if (oneVersionFlag) {
+        oneVersionPool = ids.slice(0, MAX_VERSIONS_ON_SCREEN);
+        // It starts on the first version in the list, whichever one was showing before
+        if (oneVersionPool.length > 1 && oneVersionPool[0] !== activeBibleVersion && bibles[oneVersionPool[0]]) {
+          const keepSetting = versionSwitchUpdatesLive;
+          versionSwitchUpdatesLive = true;
+          try { changeActiveBibleVersionNow(oneVersionPool[0]); } finally { versionSwitchUpdatesLive = keepSetting; }
+        }
+      }
       else if (wasActive) { applyOnScreenVersions(oneVersionPool.length ? oneVersionPool : ids); return; }
       applyOnScreenVersions(oneVersionFlag ? oneVersionPool : ids);
       updateOneVersionControls();
@@ -122,6 +132,13 @@
       versionSwitchUpdatesLive = true;
       try { changeActiveBibleVersionNow(next); } finally { versionSwitchUpdatesLive = keepSetting; }
       applyOnScreenVersions(oneVersionPool);
+      // What is on air must be the version just chosen, whatever the chapter lookup did
+      if (isLive && livePointer && livePointer.kind === 'bible' && activeBibleVersion && livePointer.version !== activeBibleVersion && bibles[activeBibleVersion]) {
+        const list = bibles[activeBibleVersion];
+        const idx = Number.isFinite(currentIndex) && list[currentIndex] ? currentIndex : livePointer.index;
+        livePointer = { ...livePointer, version: activeBibleVersion, index: Math.min(Math.max(0, idx), list.length - 1) };
+        pushLiveUpdate();
+      }
     }
     // The ratio changes which versions are on screen, so re-apply the choice
     function syncOneVersionMode() {

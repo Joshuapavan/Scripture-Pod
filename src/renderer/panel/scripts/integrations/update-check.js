@@ -82,6 +82,18 @@
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
     })();
 
+    // A link that opens in the user's browser (the app's own window cannot browse)
+    function openExternalLink(e, url) {
+      if (e && e.preventDefault) e.preventDefault();
+      const bridge = window.BSPDesktop;
+      if (bridge && typeof bridge.openReleasePage === 'function') {
+        bridge.openReleasePage(url).catch(() => { if (typeof showToast === 'function') showToast('Could not open the link'); });
+      } else {
+        window.open(url, '_blank', 'noopener');
+      }
+      return false;
+    }
+
     // The version in the Settings footer is the app's own version
     (async function showAppVersion() {
       try {

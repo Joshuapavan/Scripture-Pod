@@ -390,7 +390,7 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         }
         "openReleasePage" => {
             let url = arg.as_str().unwrap_or("");
-            if url.starts_with("https://github.com/Joshuapavan/Scripture-Pod-V2/") { let _ = app.opener().open_url(url, None::<&str>); json!({"ok": true}) } else { err("That address is not allowed") }
+            if url.starts_with("https://github.com/Joshuapavan/Scripture-Pod-V2/") || url.starts_with("https://github.com/Joshuapavan/Scripture-Pod/") { let _ = app.opener().open_url(url, None::<&str>); json!({"ok": true}) } else { err("That address is not allowed") }
         }
         "pickFolder" => {
             let picked = app.dialog().file().set_title("Choose a folder for automatic backups").blocking_pick_folder();
