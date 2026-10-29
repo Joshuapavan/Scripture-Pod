@@ -15,15 +15,57 @@
       { id: 'prevItem', label: 'Previous song or chapter', run: () => navigateSidebar(-1) },
       { id: 'nextVersion', label: 'Switch Bible version in the lower third', run: () => cycleLiveBibleVersion(1) },
       { id: 'toggleLock', label: 'Turn the service lock on or off', run: () => toggleServiceLock() },
-      { id: 'toggleSidebar', label: 'Show or hide the sidebar', run: () => toggleSidebar() }
+      { id: 'toggleSidebar', label: 'Show or hide the sidebar', run: () => toggleSidebar() },
+      { id: 'openSettings', label: 'Open or close Settings', run: () => toggleSettingsWindow() },
+      { id: 'openOutputs', label: 'Open Outputs', run: () => showOutputsCard() },
+      { id: 'displayList', label: 'Show the connected displays', run: () => setDisplayListOpen(!document.getElementById('display-list-card')?.classList.contains('is-open')) },
+      { id: 'openImports', label: 'Open Imports', run: () => document.getElementById('btn-imports')?.click() },
+      { id: 'focusSearch', label: 'Search verses and songs', run: () => { const el = document.getElementById('song-search'); if (el) { el.focus(); el.select(); } } },
+      { id: 'commandPalette', label: 'Command palette', run: () => openCommandPalette() },
+      { id: 'newSong', label: 'New song', run: () => openModal('newSongModal') },
+      { id: 'stopMedia', label: 'Stop the media on the stream', run: () => { if (typeof streamMedia !== 'undefined' && streamMedia.playing) stopStreamMediaPlayback(); else showToast('No media is playing'); } },
+      { id: 'blankWall', label: 'Blank or show the Wall/LED', run: () => toggleBgWallBlank() },
+      { id: 'monitorClock', label: 'Show or hide the monitor clock', run: () => toggleMonitorClock() },
+      { id: 'identifyScreens', label: 'Show a number on every screen', run: () => identifyScreens() },
+      { id: 'nextSection', label: 'Next section', run: () => stepSection(1) },
+      { id: 'prevSection', label: 'Previous section', run: () => stepSection(-1) },
+      { id: 'showShortcuts', label: 'Show all shortcuts', run: () => openShortcutsWindow() }
     ];
+
+    // Settings opens and closes with the same key
+    function toggleSettingsWindow() {
+      const m = document.getElementById('settingsModal');
+      if (m && m.style.display === 'flex') closeModal('settingsModal'); else openModal('settingsModal');
+    }
+    // The next or previous section in the order of the tabs
+    function stepSection(step) {
+      const tabs = typeof getSectionTabs === 'function' ? getSectionTabs() : [];
+      if (!tabs.length) return;
+      let at = tabs.findIndex((t) => t.classList.contains('active'));
+      if (at < 0) at = 0;
+      tabs[(at + step + tabs.length) % tabs.length].click();
+    }
     const DEFAULT_EXTRA_SHORTCUTS = {
       nextSlide: ['PageDown'],
       prevSlide: ['PageUp'],
       clear: ['.', 'B'],
       nextVersion: ['V'],
       togglePreviewOnly: ['P'],
-      toggleLock: ['Cmd+L', 'Ctrl+L']
+      toggleLock: ['Cmd+L', 'Ctrl+L'],
+      openSettings: ['Cmd+S', 'Ctrl+S', 'Cmd+,'],
+      openOutputs: ['Cmd+O', 'Ctrl+O'],
+      displayList: ['Cmd+D', 'Ctrl+D'],
+      openImports: ['Cmd+I', 'Ctrl+I'],
+      focusSearch: ['Cmd+F', 'Ctrl+F', '/'],
+      commandPalette: ['Cmd+K', 'Ctrl+K'],
+      newSong: ['Cmd+N', 'Ctrl+N'],
+      stopMedia: ['M'],
+      blankWall: ['W'],
+      monitorClock: ['C'],
+      identifyScreens: ['Y'],
+      nextSection: ['Cmd+]', 'Ctrl+]'],
+      prevSection: ['Cmd+[', 'Ctrl+['],
+      showShortcuts: ['?']
     };
     const SHORTCUTS_STORAGE_KEY = 'scripturePod.shortcuts.v1';
 
@@ -93,10 +135,20 @@
         }
         const target = e.target;
         const tag = target && target.tagName ? target.tagName.toLowerCase() : '';
-        if (tag === 'input' || tag === 'textarea' || tag === 'select' || (target && target.isContentEditable)) return;
-        if (document.querySelector('.modal-overlay') && [...document.querySelectorAll('.modal-overlay')].some((m) => m.style.display === 'flex')) return;
         const combo = shortcutFromEvent(e);
         if (!combo) return;
+        const modified = e.metaKey || e.ctrlKey;
+        // Behind a menu, only the ⌘ and Ctrl keys act
+        if (document.body.classList.contains('sp-popup-open') && !modified) return;
+        const typing = tag === 'input' || tag === 'textarea' || tag === 'select' || (target && target.isContentEditable);
+        // Typing keeps its own keys; a ⌘ or Ctrl key still works, except the ones that edit text
+        if (typing && (!modified || /^(Cmd|Ctrl)\+[ACVXZYacvxzy]$/.test(combo))) return;
+        const modalOpen = [...document.querySelectorAll('.modal-overlay')].some((m) => m.style.display === 'flex');
+        // With a window open, only the key that opens Settings acts (it closes it)
+        if (modalOpen) {
+          if ((customShortcuts.openSettings || []).includes(combo) && document.getElementById('settingsModal')?.style.display === 'flex') { e.preventDefault(); e.stopImmediatePropagation(); closeModal('settingsModal'); }
+          return;
+        }
         for (const id of Object.keys(customShortcuts)) {
           if ((customShortcuts[id] || []).includes(combo)) {
             e.preventDefault(); e.stopImmediatePropagation();

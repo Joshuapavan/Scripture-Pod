@@ -82,10 +82,10 @@
         { label: 'Switch Bible version in the lower third', hint: 'V', run: () => cycleLiveBibleVersion(1) },
         { label: 'Service lock on / off', hint: '⌘L', run: () => toggleServiceLock() },
         { label: 'Put the sections back in their usual order', run: () => resetSectionOrder() },
-        { label: 'Outputs', run: () => showOutputsCard() },
+        { label: 'Outputs', hint: '⌘O', run: () => showOutputsCard() },
         { label: 'Keyboard shortcuts', run: () => openShortcutsWindow() },
-        { label: 'Settings', run: () => openModal('settingsModal') },
-        { label: 'New song', run: () => openModal('newSongModal') },
+        { label: 'Settings', hint: '⌘S', run: () => openModal('settingsModal') },
+        { label: 'New song', hint: '⌘N', run: () => openModal('newSongModal') },
         { label: 'Search lyrics online', run: () => openLyricsWebSearch('', 'any') }
       ];
     }

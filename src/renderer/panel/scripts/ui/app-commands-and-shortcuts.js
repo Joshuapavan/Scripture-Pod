@@ -369,6 +369,9 @@
 
     function setupKeyboardShortcuts() {
       document.addEventListener('keydown', (e) => {
+        // While a menu is open and the app behind it is blurred, the keys that move through verses, chapters, slides
+        // and songs, or go live, are left alone (Esc still closes the menu)
+        if (document.body.classList.contains('sp-popup-open') && !(e.ctrlKey || e.metaKey)) return;
         const target = e.target;
         const tag = (target && target.tagName) ? target.tagName.toLowerCase() : '';
         const isTypingTarget = !!(target && (
