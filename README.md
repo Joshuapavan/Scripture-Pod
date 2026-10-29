@@ -3,7 +3,7 @@
 Scripture Pod is a Bible and lyrics projection tool for churches. A control panel
 sends verses, lyrics and lower thirds to an output window or to OBS. It is a
 desktop app built with [Tauri](https://tauri.app) (Rust plus the system web view).
-macOS, Windows and Linux are supported; the app is not built for Android or iOS.
+macOS, Windows and Linux are supported; the app is not built for Android or iOS, but has remote control options within the same network.
 
 ## Demo
 
