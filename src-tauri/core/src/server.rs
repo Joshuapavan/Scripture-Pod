@@ -247,6 +247,18 @@ fn handle(req: tiny_http::Request, state: &AppState) {
         return;
     }
     let rel = percent_decode(if path == "/" { DISPLAY_PAGE } else { &path });
+    // The same page serves every link, so its title says which link was opened: a pasted link then shows as a
+    // Display, Monitor, Stage or Media link in a chat or a browser tab instead of all being "Display"
+    if rel.trim_start_matches('/') == DISPLAY_PAGE {
+        let role = query_param(&query, "role");
+        if let Some(p) = resolve_app_file(&state.root, &rel) {
+            if let Ok(html) = fs::read_to_string(&p) {
+                let page = titled_display_page(&html, &role);
+                let _ = req.respond(Response::from_string(page).with_header(header("Content-Type", "text/html; charset=utf-8")).with_header(header("Cache-Control", "no-cache")));
+                return;
+            }
+        }
+    }
     match resolve_app_file(&state.root, &rel) {
         // Browsers (WebKit above all) only play video when the server answers byte ranges
         Some(p) => serve_file(req, &p, content_type(&p), "no-cache"),
@@ -286,3 +298,67 @@ fn serve_file(req: tiny_http::Request, path: &std::path::Path, mime: &str, cache
     if partial { resp = resp.with_header(header("Content-Range", &format!("bytes {}-{}/{}", start, end, size))); }
     let _ = req.respond(resp);
 }
+
+fn query_param(query: &str, key: &str) -> String {
+    let prefix = format!("{}=", key);
+    query.trim_start_matches('?').split('&').find_map(|kv| kv.strip_prefix(prefix.as_str())).unwrap_or("").to_string()
+}
+
+// The title and a short description for each kind of link
+pub fn link_title(role: &str) -> (&'static str, &'static str) {
+    match role {
+        "monitor" => ("Scripture Pod - Monitor", "Monitor link: full screen with the clock, for the stage"),
+        "stage" => ("Scripture Pod - Stage Display", "Stage display link: what is on now, what is next, and the time"),
+        "media" => ("Scripture Pod - Media", "Media link: intro, prayer time and outro for OBS"),
+        _ => ("Scripture Pod - Display", "Display link: verses and lyrics on a transparent page"),
+    }
+}
+
+pub fn titled_display_page(html: &str, role: &str) -> String {
+    let (title, description) = link_title(role);
+    let tags = format!("<title>{t}</title>\n  <meta property=\"og:title\" content=\"{t}\">\n  <meta name=\"description\" content=\"{d}\">\n  <meta property=\"og:description\" content=\"{d}\">", t = title, d = description);
+    match (html.find("<title>"), html.find("</title>")) {
+        (Some(a), Some(b)) if b > a => format!("{}{}{}", &html[..a], tags, &html[b + "</title>".len()..]),
+        _ => html.to_string(),
+    }
+}
+
+#[cfg(test)]
+mod title_tests {
+    use super::titled_display_page;
+
+    #[test]
+    fn each_link_has_its_own_title() {
+        let page = "<head>\n  <title>Scripture Pod - Display</title>\n</head>";
+        assert!(titled_display_page(page, "media").contains("<title>Scripture Pod - Media</title>"));
+        assert!(titled_display_page(page, "monitor").contains("<title>Scripture Pod - Monitor</title>"));
+        assert!(titled_display_page(page, "stage").contains("<title>Scripture Pod - Stage Display</title>"));
+        assert!(titled_display_page(page, "").contains("<title>Scripture Pod - Display</title>"));
+        assert!(titled_display_page(page, "media").contains("og:title"));
+        assert_eq!(titled_display_page("<head></head>", "media"), "<head></head>");
+    }
+
+    // The real server: each link's page comes back with its own title
+    #[test]
+    fn the_server_titles_each_link() {
+        use std::io::{Read, Write};
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..").canonicalize().unwrap();
+        let data = std::env::temp_dir().join(format!("sp-title-test-{}", crate::state::random_hex(4)));
+        let state = std::sync::Arc::new(crate::state::AppState::new(root, data.clone()));
+        super::start(state.clone(), 25720);
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        let port = state.http_port.load(std::sync::atomic::Ordering::SeqCst);
+        let get = |q: &str| {
+            let mut s = std::net::TcpStream::connect(("127.0.0.1", port)).unwrap();
+            write!(s, "GET /src/renderer/display/display.html{} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", q).unwrap();
+            let mut out = String::new();
+            s.read_to_string(&mut out).unwrap();
+            out
+        };
+        assert!(get("?hostMode=websocket&role=media").contains("<title>Scripture Pod - Media</title>"));
+        assert!(get("?role=monitor").contains("<title>Scripture Pod - Monitor</title>"));
+        assert!(get("?hostMode=websocket").contains("<title>Scripture Pod - Display</title>"));
+        let _ = std::fs::remove_dir_all(&data);
+    }
+}
+

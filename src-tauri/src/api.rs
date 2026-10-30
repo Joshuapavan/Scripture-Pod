@@ -234,6 +234,7 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
         "openFeed" => { windows::open_feed(app, &arg); json!({"ok": true}) }
         "closeFeed" => { windows::close(app, "feed", true); json!({"ok": true}) }
         "relayClientCount" => json!(state.relay.client_count()),
+        "relayClients" => json!(state.relay.clients_info().into_iter().map(|(id, role, ip, sid)| json!({"id": id, "role": role, "ip": ip, "sid": sid})).collect::<Vec<_>>()),
         "fetchText" => fetch_text(&arg),
         "listDevices" => json!(discovery::fresh_peers(state).iter().map(|p| json!({
             "id": p.id, "name": p.name, "ip": p.ip, "port": p.port, "receiving": p.receiving

@@ -1516,9 +1516,21 @@ ${getLtThumbCss()}
         const devices = await safe(() => B.listDevices(), []);
         (devices || []).filter((d) => connectedDevices.has(d.id)).forEach((d) => rows.push({ key: 'c:' + d.id, kind: 'computer', name: d.name || d.ip, meta: `Computer · ${d.ip}`, close: () => disconnectNetworkDevice(d.id, (loadDeviceCodes()[d.id]) || ''), closeLabel: 'Disconnect' }));
       }
+      // Links opened in a browser or in OBS say which link they are: Display, Monitor, Stage or Media
+      let linkCount = 0;
+      if (typeof B.relayClients === 'function') {
+        const LINK_NAMES = { live: 'Display link', monitor: 'Monitor link', stage: 'Stage link', media: 'Media link' };
+        const seen = {};
+        ((await safe(() => B.relayClients(), [])) || []).filter((c) => !c.sid).forEach((c) => {
+          linkCount++;
+          seen[c.role] = (seen[c.role] || 0) + 1;
+          const label = LINK_NAMES[c.role] || 'Display link';
+          rows.push({ key: 'l:' + c.id, kind: 'link', link: true, role: c.role, name: seen[c.role] > 1 ? `${label} ${seen[c.role]}` : label, meta: `Browser or OBS · ${c.ip}` });
+        });
+      }
       if (typeof B.relayClientCount === 'function') {
         const own = typeof relaySocket !== 'undefined' && relaySocket && relaySocket.readyState === WebSocket.OPEN ? 1 : 0;
-        const other = Math.max(0, (await safe(() => B.relayClientCount(), 0)) - own - browserCount);
+        const other = Math.max(0, (await safe(() => B.relayClientCount(), 0)) - own - browserCount - linkCount);
         if (other > 0) rows.push({ name: other === 1 ? 'Another receiver' : `${other} other receivers`, meta: 'OBS source, monitor link or similar' });
       }
       return rows;

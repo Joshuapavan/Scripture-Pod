@@ -11,6 +11,8 @@ const KICK: &str = "\u{1}KICK";
 pub struct Relay {
     clients: Mutex<Vec<(u64, mpsc::Sender<String>)>>,
     sids: Mutex<Vec<(u64, String)>>,
+    // What each connection says it is (display, monitor, stage or media link) and where it connects from
+    infos: Mutex<Vec<(u64, String, String)>>,
     sid_check: Mutex<Option<SidCheck>>,
     next: AtomicU64,
 }
@@ -24,6 +26,11 @@ impl Relay {
         for (id, tx) in clients.iter() { if ids.contains(id) { let _ = tx.send(KICK.to_string()); } }
     }
     pub fn client_count(&self) -> usize { self.clients.lock().unwrap().len() }
+    // (id, role, address, sid) of every connection that named its role
+    pub fn clients_info(&self) -> Vec<(u64, String, String, String)> {
+        let sids = self.sids.lock().unwrap();
+        self.infos.lock().unwrap().iter().map(|(id, role, ip)| (*id, role.clone(), ip.clone(), sids.iter().find(|(i, _)| i == id).map(|(_, s)| s.clone()).unwrap_or_default())).collect()
+    }
     pub fn broadcast(&self, msg: &str, except: Option<u64>) {
         let mut clients = self.clients.lock().unwrap();
         clients.retain(|(id, tx)| Some(*id) == except || tx.send(msg.to_string()).is_ok());
@@ -59,13 +66,17 @@ pub fn start(relay: Arc<Relay>, token: String, preferred: u16) -> Option<u16> {
 }
 
 fn serve(stream: TcpStream, relay: Arc<Relay>, token: String) {
+    let peer_ip = stream.peer_addr().map(|a| a.ip().to_string()).unwrap_or_default();
+    let role_slot = Arc::new(Mutex::new(String::new()));
     let sid_slot = Arc::new(Mutex::new(String::new()));
-    let (relay_c, slot) = (relay.clone(), sid_slot.clone());
+    let (relay_c, slot, role_out) = (relay.clone(), sid_slot.clone(), role_slot.clone());
     let check = move |req: &Request, resp: Response| -> Result<Response, ErrorResponse> {
         let uri = req.uri().to_string();
         let deny = || Err(tungstenite::http::Response::builder().status(401).body(Some("Unauthorized".to_string())).unwrap());
         if !token_ok(&uri, &token) { return deny(); }
         // A browser that joined through the display address must have been allowed from the controlling app
+        let role = query_value(&uri, "role");
+        if ["live", "monitor", "stage", "media"].contains(&role.as_str()) { *role_out.lock().unwrap() = role; }
         let sid = query_value(&uri, "sid");
         if !sid.is_empty() {
             let ok = relay_c.sid_check.lock().unwrap().as_ref().map(|f| f(&sid)).unwrap_or(false);
@@ -81,6 +92,8 @@ fn serve(stream: TcpStream, relay: Arc<Relay>, token: String) {
     relay.clients.lock().unwrap().push((id, tx));
     let sid = sid_slot.lock().unwrap().clone();
     if !sid.is_empty() { relay.sids.lock().unwrap().push((id, sid)); }
+    let role = role_slot.lock().unwrap().clone();
+    if !role.is_empty() { relay.infos.lock().unwrap().push((id, role, peer_ip)); }
     loop {
         while let Ok(m) = rx.try_recv() {
             if m == KICK { let _ = ws.close(None); return remove(&relay, id); }
@@ -101,11 +114,13 @@ fn serve(stream: TcpStream, relay: Arc<Relay>, token: String) {
 fn remove(relay: &Relay, id: u64) {
     relay.clients.lock().unwrap().retain(|(i, _)| *i != id);
     relay.sids.lock().unwrap().retain(|(i, _)| *i != id);
+    relay.infos.lock().unwrap().retain(|(i, _, _)| *i != id);
 }
 
 #[cfg(test)]
 mod tests {
-    use super::token_ok;
+    use super::{start, token_ok, Relay};
+    use std::{sync::Arc, time::Duration};
 
     #[test]
     fn token_must_match_exactly() {
@@ -116,4 +131,24 @@ mod tests {
         assert!(!token_ok("/?token=abc1234", "abc123"));
         assert!(!token_ok("/?token=", ""));
     }
+
+    #[test]
+    fn a_link_names_its_role_and_is_listed_until_it_leaves() {
+        let relay = Arc::new(Relay::default());
+        let port = start(relay.clone(), "tok".to_string(), 25610).expect("relay starts");
+        let (mut media, _) = tungstenite::connect(format!("ws://127.0.0.1:{}/?token=tok&role=media", port)).expect("media link connects");
+        let (mut plain, _) = tungstenite::connect(format!("ws://127.0.0.1:{}/?token=tok", port)).expect("plain client connects");
+        let (_bad, _) = tungstenite::connect(format!("ws://127.0.0.1:{}/?token=tok&role=nonsense", port)).expect("unknown role still connects");
+        std::thread::sleep(Duration::from_millis(300));
+        let info = relay.clients_info();
+        assert_eq!(info.len(), 1, "only a known role is listed: {:?}", info);
+        assert_eq!(info[0].1, "media");
+        assert_eq!(info[0].2, "127.0.0.1");
+        assert_eq!(relay.client_count(), 3);
+        let _ = media.close(None);
+        let _ = plain.close(None);
+        std::thread::sleep(Duration::from_millis(600));
+        assert!(relay.clients_info().is_empty());
+    }
 }
+

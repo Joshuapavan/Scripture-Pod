@@ -40,3 +40,13 @@ test('stream media shows as a display: live while something plays, clear otherwi
   assert.equal(on.showing, 'ACI Intro');
   assert.equal(describe({ kind: 'media', open: true, showing: '' }, live).status, 'clear');
 });
+
+test('a media link shown as a browser display is a media display, not a plain display', () => {
+  const idle = describe({ kind: 'link', role: 'media', open: true, showing: '' }, live);
+  assert.equal(idle.status, 'clear');
+  assert.match(idle.how, /Media/);
+  const playing = describe({ kind: 'link', role: 'media', open: true, showing: 'ACI Intro' }, { live: false });
+  assert.equal(playing.status, 'live');
+  assert.equal(playing.showing, 'ACI Intro');
+  assert.match(describe({ kind: 'link', role: 'monitor', open: true }, live).how, /Monitor/);
+});

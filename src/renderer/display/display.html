@@ -547,14 +547,20 @@
       try { relaySocket.send(JSON.stringify(msg)); } catch (e) {}
     }
 
+    // Which link this page was opened from, so the app can show a Display, Monitor, Stage or Media link as such
+    // The tab title says which link this is
+    try { const t = { media: 'Media', monitor: 'Monitor', stage: 'Stage Display' }[IS_MEDIA_ONLY ? 'media' : (IS_STAGE ? 'stage' : (IS_MONITOR_FEED ? 'monitor' : ''))]; if (t) document.title = 'Scripture Pod - ' + t; } catch (e) { /* keeps the page title */ }
+    function relayRoleName() { return IS_MEDIA_ONLY ? 'media' : (IS_STAGE ? 'stage' : (IS_MONITOR_FEED ? 'monitor' : 'live')); }
     function buildRelayUrl() {
       const params = new URLSearchParams(window.location.search);
+      const roleParam = params.get('hostMode') === 'websocket' ? relayRoleName() : '';
       const override = params.get('relay');
       const relayToken = params.get('relayToken') || '';
       if (override) {
         try {
           const relayUrl = new URL(override, window.location.href);
           if (relayToken) relayUrl.searchParams.set('token', relayToken);
+          if (roleParam) relayUrl.searchParams.set('role', roleParam);
           return relayUrl.toString();
         } catch (_) {
           return '';
@@ -567,6 +573,7 @@
       if (!host || !port) return '';
       const relayUrl = new URL(`${protocol}//${host}:${port}`);
       if (relayToken) relayUrl.searchParams.set('token', relayToken);
+      if (roleParam) relayUrl.searchParams.set('role', roleParam);
       return relayUrl.toString();
     }
 

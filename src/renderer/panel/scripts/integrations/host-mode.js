@@ -509,3 +509,43 @@
       const btn = document.getElementById('btn-test-pattern');
       if (btn) { btn.setAttribute('aria-pressed', testPatternOn ? 'true' : 'false'); btn.textContent = testPatternOn ? 'Hide test pattern' : 'Show test pattern'; }
     }
+
+    // ── The network changes ───────────────────────────────────────────────────────
+    // The links hold this computer's address, which is read once at start. When Wi-Fi or Ethernet changes (another
+    // network, a new address from the router, a cable plugged in), the addresses are read again, the links in the
+    // app are rewritten, and the operator is told, since a link already pasted into OBS still has the old address.
+    let lastNetworkSig = null;
+    let networkWatchBusy = false;
+    async function checkNetworkChange() {
+      if (networkWatchBusy) return;
+      const bridge = window.BSPDesktop;
+      if (!bridge || typeof bridge.getLocalServerInfo !== 'function') return;
+      networkWatchBusy = true;
+      try {
+        const info = await bridge.getLocalServerInfo();
+        const sig = JSON.stringify([info && info.availableHosts, info && info.preferredHost]);
+        if (lastNetworkSig === null) { lastNetworkSig = sig; return; }
+        if (sig === lastNetworkSig) return;
+        lastNetworkSig = sig;
+        const before = localServerInfo && localServerInfo.preferredHost;
+        await refreshLocalServerInfo();
+        if (typeof updateRemoteShowDetails === 'function') updateRemoteShowDetails();
+        const now = localServerInfo && localServerInfo.preferredHost;
+        if (typeof showToast === 'function') {
+          showToast(before && now && before !== now
+            ? `The network changed. The links now use ${now}. A link already pasted into OBS needs the new address.`
+            : 'The network changed. The links were updated.');
+        }
+      } catch (e) { /* the next check tries again */ } finally { networkWatchBusy = false; }
+    }
+    (function watchNetwork() {
+      const start = () => {
+        checkNetworkChange();
+        setInterval(() => { if (document.visibilityState === 'visible') checkNetworkChange(); }, 5000);
+        window.addEventListener('online', checkNetworkChange);
+        window.addEventListener('offline', checkNetworkChange);
+        window.addEventListener('focus', checkNetworkChange);
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+    })();
+

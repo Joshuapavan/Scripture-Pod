@@ -59,8 +59,9 @@
           showing: streamMedia.playing ? streamMedia.playingName : '', canClose: !!streamMedia.playing, closeLabel: 'Stop' });
       }
       rows.filter((r) => !String(r.key || '').startsWith('w:')).forEach((r) => {
-        displays.push({ key: r.key || ('o:' + r.name), kind: r.kind || 'other', thumb: r.key ? ({ monitor: 'monitor', stage: 'stage' }[r.role] || 'live') : '', role: r.role || 'live', name: r.name, where: r.meta, open: true,
-          blank: blankedDisplays.has(r.key), canBlank: !!r.key, canClose: typeof r.close === 'function', closeLabel: r.closeLabel });
+        displays.push({ key: r.key || ('o:' + r.name), kind: r.kind || 'other', thumb: r.key ? ({ monitor: 'monitor', stage: 'stage', media: 'media' }[r.role] || 'live') : '', role: r.role || 'live', name: r.name, where: r.meta, open: true,
+          showing: r.role === 'media' && typeof streamMedia !== 'undefined' ? streamMedia.playingName : '',
+          blank: blankedDisplays.has(r.key), canBlank: !!r.key && !r.link, canClose: typeof r.close === 'function', closeLabel: r.closeLabel });
       });
       // The keys that open each section, in the order of the tabs, and whether the service lock is on
       const sectionKeys = typeof getSectionTabs === 'function' ? getSectionTabs().slice(0, 9).map((t, i) => ({ n: i + 1, name: (t.textContent || '').trim() })) : [];

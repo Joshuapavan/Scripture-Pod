@@ -32,7 +32,7 @@
       return { status: wallStatus, how: HOW.wall, showing: wallStatus === 'live' ? String(d.showing || 'Video').slice(0, 90) : '' };
     }
     // Stream media (intro, prayer time, outro) plays over the stream whatever is on air
-    if (d.kind === 'media') {
+    if (d.kind === 'media' || d.role === 'media') {
       return { status: d.showing ? 'live' : 'clear', how: HOW.media, showing: String(d.showing || '').slice(0, 90) };
     }
     if (d.kind === 'preview') {
