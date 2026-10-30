@@ -3205,3 +3205,47 @@ body.media-workspace-active #main { flex: 1 1 auto !important; width: auto !impo
 /* Every small menu that opens over the app: Outputs, the connected displays list, quick actions, version and import menus */
 body.sp-popup-open #popup-scrim { display: block; }
 #display-list-card, #sidebar-quick-actions-panel, #footer-bible-version-popover, #imports-popover, #outputs-card { z-index: 9302 !important; }
+
+/* The Clear button on a monitor shows only its icon when the monitor header is too narrow for the word */
+#preview-monitor .sp-monitor-head { container-type: inline-size; }
+@container (max-width: 380px) {
+  #btn-clear-program-preview span { display: none; }
+  #btn-clear-program-preview { padding-inline: 10px; gap: 0; }
+}
+
+/* Editing a Media item: its name, and the address of a link */
+#media-view .md-editor { display: flex; flex-direction: column; gap: 6px; }
+#media-view .md-editor input { width: 100%; box-sizing: border-box; min-height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-text); font-size: 12px; }
+#media-view .md-editor-actions { display: flex; gap: 6px; }
+
+/* Name and role: the extra option rows, and the next / previous speaker buttons */
+.ov-extras { display: flex; flex-wrap: wrap; gap: 6px; }
+.ov-extras select { flex: 1 1 110px; min-width: 0; }
+.overlays-saved-label { display: flex; align-items: center; justify-content: space-between; }
+.saved-names-step { display: inline-flex; gap: 4px; }
+.saved-names-step button { width: 24px; height: 22px; padding: 0; border-radius: 6px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-muted); font-size: 15px; line-height: 1; cursor: pointer; }
+.saved-names-step button:hover { color: var(--sp-text); border-color: var(--sp-text); }
+
+/* QR code, countdown and ticker: their panels show one at a time, like the other overlays */
+body:not([data-overlay="qr"]) #overlays-workspace #qr-overlay-panel,
+body:not([data-overlay="countdown"]) #overlays-workspace #countdown-overlay-panel,
+body:not([data-overlay="ticker"]) #overlays-workspace #ticker-overlay-panel { display: none !important; }
+body[data-overlay="qr"] #overlays-workspace :is(#name-role-overlay-panel, #social-engagement-overlay-panel, #countdown-overlay-panel, #ticker-overlay-panel),
+body[data-overlay="countdown"] #overlays-workspace :is(#name-role-overlay-panel, #social-engagement-overlay-panel, #qr-overlay-panel, #ticker-overlay-panel),
+body[data-overlay="ticker"] #overlays-workspace :is(#name-role-overlay-panel, #social-engagement-overlay-panel, #qr-overlay-panel, #countdown-overlay-panel) { display: none !important; }
+body:is([data-overlay="qr"], [data-overlay="countdown"], [data-overlay="ticker"]) .overlays-design { display: none; }
+body:has(#xo-qr-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="qr"] .is-ready,
+body:has(#xo-countdown-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="countdown"] .is-ready,
+body:has(#xo-ticker-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="ticker"] .is-ready { display: none; }
+body:has(#xo-qr-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="qr"] .is-on-air,
+body:has(#xo-countdown-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="countdown"] .is-on-air,
+body:has(#xo-ticker-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="ticker"] .is-on-air { display: inline; }
+body:has(#xo-qr-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="qr"] .overlay-list-dot,
+body:has(#xo-countdown-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="countdown"] .overlay-list-dot,
+body:has(#xo-ticker-show-btn[aria-pressed="true"]) .overlay-list-item[data-overlay="ticker"] .overlay-list-dot { display: block; }
+.xo-panel textarea { width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; resize: vertical; font: inherit; }
+.xo-panel .xo-check { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0 2px; }
+
+/* The blur behind a menu is a filter on the page itself. The old overlay layer is no longer used. */
+.sp-blurred { filter: blur(7px) brightness(.62) !important; pointer-events: none !important; transition: filter .16s ease; }
+body.sp-popup-open #popup-scrim { display: none !important; }

@@ -11,19 +11,28 @@
  * No backticks or template placeholders may appear in the CSS below.
  */
 (function (root) {
-  var THEMES = ['aurora', 'sunrise', 'royal', 'minimal', 'pill', 'holo', 'frost', 'cinema', 'sharp', 'emerald', 'pulse', 'parchment', 'sapphire', 'crimson', 'forest', 'graphite', 'rose', 'ocean', 'amber', 'violet', 'outline', 'halo', 'chapel', 'duobar', 'duoblock', 'duorule', 'duoghost', 'duotag', 'duoslant', 'duoflag', 'duopill', 'custom'];
-  var MOTIONS = ['bounce', 'elastic', 'iris', 'slice', 'swing', 'turn', 'cascade', 'typewriter', 'glitch', 'flicker'];
+  var THEMES = ['aurora', 'sunrise', 'royal', 'minimal', 'pill', 'holo', 'frost', 'cinema', 'sharp', 'emerald', 'pulse', 'parchment', 'sapphire', 'crimson', 'forest', 'graphite', 'rose', 'ocean', 'amber', 'violet', 'outline', 'halo', 'chapel', 'duobar', 'duoblock', 'duorule', 'duoghost', 'duotag', 'duoslant', 'duoflag', 'duopill', 'blueprint', 'ticket', 'stamp', 'dogear', 'chalk', 'sunbeam', 'gradline', 'leaf', 'terminal', 'diagonal', 'cobar', 'coblock', 'cobox', 'cocorner', 'cobadge', 'couline', 'cobrackets', 'cotint', 'cosquare', 'cotag', 'cohighlight', 'cowhite', 'sbleft', 'sbtop', 'sbblock', 'sbbar', 'custom'];
+  var MOTIONS = ['bounce', 'elastic', 'iris', 'slice', 'swing', 'turn', 'cascade', 'typewriter', 'glitch', 'flicker', 'unfold', 'spinin', 'rubber', 'wobble', 'tada', 'rollin', 'scanline', 'stretch'];
 
   var P = 'var(--name-role-primary,#90D5FF)';
   var A = 'var(--name-role-accent,#90D5FF)';
   var O = '#name-role-overlay';
   var CARD = ' .name-role-overlay-card';
+  // Text that reads on the Primary and on the Secondary colour, worked out when the overlay is drawn
+  var PFG = 'var(--name-role-primary-fg,#0b0d10)';
+  var AFG = 'var(--name-role-accent-fg,#0b0d10)';
+  // The Secondary colour lifted toward white, for text that sits straight on the video
+  var AL = 'color-mix(in srgb,' + A + ' 55%,#fff)';
   var NAME = ' .name-role-overlay-name';
   var ROLE = ' .name-role-overlay-role';
 
   var DUO = ['duobar', 'duoblock', 'duorule', 'duoghost', 'duotag', 'duoslant', 'duoflag', 'duopill'];
   function t(theme) { return O + '.theme-' + theme; }
   var ANY_DUO = O + ':is(' + DUO.map(function (x) { return '.theme-' + x; }).join(',') + ')';
+  var CALLOUTS = ['cobar', 'coblock', 'cobox', 'cocorner', 'cobadge', 'couline', 'cobrackets', 'cotint', 'cosquare', 'cotag', 'cohighlight', 'cowhite'];
+  var ANY_CALLOUT = O + ':is(' + CALLOUTS.map(function (x) { return '.theme-' + x; }).join(',') + ')';
+  var SIMPLE = ['sbleft', 'sbtop', 'sbblock', 'sbbar'];
+  var ANY_SIMPLE = O + ':is(' + SIMPLE.map(function (x) { return '.theme-' + x; }).join(',') + ')';
   var ANY_THEME = O + ':is(' + THEMES.map(function (x) { return '.theme-' + x; }).join(',') + ')';
 
   var css = [
@@ -236,6 +245,155 @@
     '@keyframes lt-halo{0%,100%{box-shadow:0 0 0 1px ' + A + ',0 0 22px color-mix(in srgb,' + A + ' 40%,transparent),0 18px 48px rgba(0,0,0,.55);}50%{box-shadow:0 0 0 1px ' + A + ',0 0 40px color-mix(in srgb,' + A + ' 70%,transparent),0 18px 48px rgba(0,0,0,.55);}}',
     '@keyframes lt-travel{from{background-position:200% 0;}to{background-position:-200% 0;}}',
 
+    /* ── Blueprint: drafting grid, monospace type, corner brackets ─────────── */
+    t('blueprint') + CARD + '{background-color:#0b2a4a;background-image:linear-gradient(rgba(120,190,255,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(120,190,255,.16) 1px,transparent 1px);background-size:14px 14px;border:1px solid rgba(140,200,255,.75);border-radius:2px;color:#e6f3ff;box-shadow:0 14px 40px rgba(0,0,0,.5);}',
+    t('blueprint') + NAME + '{font-family:"SF Mono",Menlo,Consolas,monospace;font-weight:700;letter-spacing:.05em;text-transform:uppercase;}',
+    t('blueprint') + ROLE + '{font-family:"SF Mono",Menlo,Consolas,monospace;color:#8fd0ff;letter-spacing:.14em;text-transform:uppercase;}',
+    t('blueprint') + CARD + '::before{content:"";position:absolute;left:6px;top:6px;width:16px;height:16px;border-left:2px solid #8fd0ff;border-top:2px solid #8fd0ff;pointer-events:none;}',
+    t('blueprint') + CARD + '::after{content:"";position:absolute;right:6px;bottom:6px;width:16px;height:16px;border-right:2px solid #8fd0ff;border-bottom:2px solid #8fd0ff;pointer-events:none;}',
+
+    /* ── Ticket: paper stub with half-round notches and a dashed divider ──── */
+    t('ticket') + CARD + '{background:linear-gradient(#fffdf7,#f1ead8);color:#231b10;border-radius:10px;box-shadow:0 14px 38px rgba(0,0,0,.45);-webkit-mask:radial-gradient(circle 9px at 0 50%,transparent 97%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% 50%,transparent 97%,#000) right/51% 100% no-repeat;mask:radial-gradient(circle 9px at 0 50%,transparent 97%,#000) left/51% 100% no-repeat,radial-gradient(circle 9px at 100% 50%,transparent 97%,#000) right/51% 100% no-repeat;}',
+    t('ticket') + NAME + '{font-weight:800;letter-spacing:.02em;padding-bottom:4px;border-bottom:2px dashed rgba(35,27,16,.35);}',
+    t('ticket') + ROLE + '{color:' + A + ';filter:brightness(.55) saturate(1.4);font-weight:700;letter-spacing:.12em;text-transform:uppercase;}',
+
+    /* ── Stamp: double frame, serif capitals, ink colour ────────────────────── */
+    t('stamp') + CARD + '{background:rgba(8,8,10,.55);border:3px double ' + A + ';border-radius:6px;color:' + A + ';box-shadow:inset 0 0 0 2px rgba(0,0,0,.35),0 12px 34px rgba(0,0,0,.45);}',
+    t('stamp') + NAME + '{font-family:Georgia,"Times New Roman",serif;font-weight:800;letter-spacing:.14em;text-transform:uppercase;}',
+    t('stamp') + ROLE + '{font-family:Georgia,"Times New Roman",serif;color:#fff;opacity:.9;letter-spacing:.2em;text-transform:uppercase;font-weight:600;}',
+
+    /* ── Dog-ear: solid card with a folded corner ───────────────────────────── */
+    t('dogear') + CARD + '{background:linear-gradient(120deg,color-mix(in srgb,' + P + ' 55%,#10131c),color-mix(in srgb,' + P + ' 30%,#05070c));border-radius:10px 0 10px 10px;color:#fff;box-shadow:0 16px 40px rgba(0,0,0,.5);}',
+    t('dogear') + CARD + '::after{content:"";position:absolute;top:0;right:0;width:30px;height:30px;background:linear-gradient(225deg,transparent 50%,' + A + ' 50%);filter:brightness(1.1);box-shadow:-3px 3px 8px rgba(0,0,0,.35);pointer-events:none;}',
+    t('dogear') + ROLE + '{color:color-mix(in srgb,' + A + ' 70%,#fff);}',
+
+    /* ── Chalkboard: slate with a wooden frame and chalky type ──────────────── */
+    t('chalk') + CARD + '{background:radial-gradient(120% 140% at 30% 20%,#2f4a3c,#1f3329);border:6px solid #8a5a2b;border-radius:6px;color:#f4f1e6;box-shadow:inset 0 0 22px rgba(0,0,0,.55),0 14px 36px rgba(0,0,0,.5);}',
+    t('chalk') + NAME + '{font-family:"Marker Felt","Chalkboard SE","Comic Sans MS",cursive;font-weight:700;letter-spacing:.03em;text-shadow:0 0 6px rgba(255,255,255,.35);}',
+    t('chalk') + ROLE + '{font-family:"Marker Felt","Chalkboard SE","Comic Sans MS",cursive;color:#f7d87a;text-shadow:0 0 5px rgba(247,216,122,.35);}',
+
+    /* ── Sunbeam: warm gradient with rays fanning from the left ─────────────── */
+    t('sunbeam') + CARD + '{background:repeating-conic-gradient(from 0deg at 10% 50%,rgba(255,255,255,.2) 0 6deg,transparent 6deg 12deg),linear-gradient(110deg,color-mix(in srgb,' + P + ' 30%,#ff9d1f),color-mix(in srgb,' + A + ' 25%,#ff4d6d));border-radius:14px;color:#fff;box-shadow:0 16px 44px rgba(255,120,40,.35);text-shadow:0 2px 10px rgba(90,20,10,.4);}',
+    t('sunbeam') + ROLE + '{color:rgba(255,255,255,.95);}',
+
+    /* ── Gradient line: dark glass with a travelling colour line underneath ─ */
+    t('gradline') + CARD + '{background:rgba(8,10,16,.74);border-radius:10px;color:#fff;box-shadow:0 14px 38px rgba(0,0,0,.5);}',
+    t('gradline') + CARD + '::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background:linear-gradient(90deg,' + P + ',' + A + ',' + P + ');background-size:200% 100%;animation:lt-travel 3.2s linear infinite;pointer-events:none;}',
+    t('gradline') + ROLE + '{color:color-mix(in srgb,' + A + ' 60%,#fff);letter-spacing:.06em;}',
+
+    /* ── Leaf: soft pastel card with opposite rounded corners ───────────────── */
+    t('leaf') + CARD + '{background:linear-gradient(135deg,#f8fff4,#d9f0dc);border-radius:30px 6px 30px 6px;color:#14301c;box-shadow:0 14px 36px rgba(0,0,0,.35);}',
+    t('leaf') + NAME + '{font-weight:800;}',
+    t('leaf') + ROLE + '{color:#2e7d4a;font-weight:600;letter-spacing:.06em;}',
+
+    /* ── Terminal: black screen, green monospace with a blinking cursor ───── */
+    t('terminal') + CARD + '{background:#050805;border:1px solid #1d7a2f;border-radius:4px;color:#6dff8c;box-shadow:0 0 0 1px rgba(109,255,140,.15),0 14px 36px rgba(0,0,0,.55);}',
+    t('terminal') + NAME + '{font-family:"SF Mono",Menlo,Consolas,monospace;font-weight:700;}',
+    t('terminal') + NAME + '::before{content:"> ";color:#2fbf4f;}',
+    t('terminal') + NAME + '::after{content:"_";margin-left:2px;animation:lt-blink 1s steps(1) infinite;}',
+    t('terminal') + ROLE + '{font-family:"SF Mono",Menlo,Consolas,monospace;color:#3fbf5a;letter-spacing:.04em;}',
+
+    /* ── Diagonal split: two tones meeting on a slant ───────────────────────── */
+    t('diagonal') + CARD + '{background:linear-gradient(115deg,color-mix(in srgb,' + P + ' 70%,#0a0f1f) 0 62%,color-mix(in srgb,' + A + ' 80%,#0a0f1f) 62% 100%);border-radius:8px;color:#fff;box-shadow:0 16px 40px rgba(0,0,0,.5);}',
+    t('diagonal') + ROLE + '{color:#fff;opacity:.92;letter-spacing:.08em;}',
+
+    '@keyframes lt-blink{0%,49%{opacity:1;}50%,100%{opacity:0;}}',
+
+    /* ══ Callouts: condensed capitals with blocks, outlines and corner marks. Primary is the main surface,
+       Secondary is for rules, tags and bars, and the text on each is picked to stay readable. ══════════ */
+    ANY_CALLOUT + CARD + '{border-radius:0;color:#fff;}',
+    ANY_CALLOUT + NAME + '{font-family:"Bebas Neue","Oswald","Barlow Condensed","Avenir Next Condensed","DIN Condensed","Arial Narrow",Impact,sans-serif;text-transform:uppercase;font-weight:700;letter-spacing:.02em;line-height:1;}',
+    ANY_CALLOUT + ROLE + '{font-family:"Bebas Neue","Oswald","Barlow Condensed","Avenir Next Condensed","DIN Condensed","Arial Narrow",Impact,sans-serif;text-transform:uppercase;font-weight:400;letter-spacing:.08em;}',
+
+    /* Callout Bar */
+    t('cobar') + CARD + '{padding:6px 24px 6px 4px;text-shadow:0 2px 10px rgba(0,0,0,.6);}',
+    t('cobar') + ROLE + '{color:' + AL + ';}',
+    t('cobar') + CARD + '::after{content:"";position:absolute;right:0;top:6px;bottom:6px;width:14px;background:' + P + ';}',
+
+    /* Callout Block: the name on the Primary colour, the role on a Secondary strip */
+    t('coblock') + CARD + '{padding:0;overflow:visible;}',
+    t('coblock') + NAME + '{align-self:flex-start;background:' + P + ';color:' + PFG + ';padding:5px 14px;}',
+    t('coblock') + ROLE + '{background:' + A + ';color:' + AFG + ';padding:3px 14px;font-weight:700;}',
+
+    /* Callout Box */
+    t('cobox') + CARD + '{border:1.5px solid ' + P + ';background:rgba(0,0,0,.28);padding:6px 6px 0;}',
+    t('cobox') + NAME + '{padding:2px 10px 4px;}',
+    t('cobox') + ROLE + '{background:' + A + ';color:' + AFG + ';padding:3px 10px;margin:4px -6px 0;font-weight:700;}',
+
+    /* Callout Corner: a Primary block with a Secondary square at one corner */
+    t('cocorner') + CARD + '{background:' + P + ';color:' + PFG + ';padding:6px 18px;overflow:visible;}',
+    t('cocorner') + ROLE + '{color:' + PFG + ';opacity:.8;font-weight:700;}',
+    t('cocorner') + CARD + '::after{content:"";position:absolute;right:-12px;top:-12px;width:34px;height:34px;border:2px solid ' + A + ';pointer-events:none;}',
+
+    /* Callout Badge: the first letter on a Primary square */
+    t('cobadge') + CARD + '{padding:4px 6px;text-shadow:0 2px 10px rgba(0,0,0,.55);}',
+    t('cobadge') + NAME + '::first-letter{background:' + P + ';color:' + PFG + ';padding:0 9px;margin-right:6px;text-shadow:none;}',
+    t('cobadge') + ROLE + '{font-size:.62em;color:' + AL + ';}',
+
+    /* Callout Tag Line */
+    t('couline') + CARD + '{padding:4px 4px 4px 0;text-shadow:0 2px 10px rgba(0,0,0,.6);}',
+    t('couline') + ROLE + '{align-self:flex-start;background:' + A + ';color:' + AFG + ';padding:2px 10px;font-size:.62em;margin-top:4px;font-weight:700;text-shadow:none;}',
+
+    /* Callout Brackets: Secondary corner marks around a Primary tint */
+    t('cobrackets') + CARD + '{background:color-mix(in srgb,' + P + ' 30%,rgba(0,0,0,.35));padding:10px 20px;text-shadow:0 2px 10px rgba(0,0,0,.6);overflow:visible;}',
+    t('cobrackets') + ROLE + '{color:' + AL + ';}',
+    t('cobrackets') + CARD + '::before{content:"";position:absolute;left:0;top:0;width:22px;height:22px;border-left:2px solid ' + A + ';border-top:2px solid ' + A + ';pointer-events:none;}',
+    t('cobrackets') + CARD + '::after{content:"";position:absolute;right:0;bottom:0;width:22px;height:22px;border-right:2px solid ' + A + ';border-bottom:2px solid ' + A + ';pointer-events:none;}',
+
+    /* Callout Tint: a Secondary outline around a Primary tint */
+    t('cotint') + CARD + '{border:1.5px solid ' + A + ';background:color-mix(in srgb,' + P + ' 28%,rgba(8,8,26,.62));padding:8px 18px;}',
+    t('cotint') + NAME + '{color:color-mix(in srgb,' + P + ' 45%,#fff);}',
+    t('cotint') + ROLE + '{color:' + AL + ';}',
+
+    /* Callout Square: a Primary square with a Secondary notch */
+    t('cosquare') + CARD + '{padding:4px 46px 4px 4px;text-shadow:0 2px 10px rgba(0,0,0,.6);overflow:visible;}',
+    t('cosquare') + ROLE + '{color:' + AL + ';}',
+    t('cosquare') + CARD + '::after{content:"";position:absolute;right:0;bottom:0;width:36px;height:36px;background:' + P + ';pointer-events:none;}',
+    t('cosquare') + CARD + '::before{content:"";position:absolute;right:0;bottom:0;width:12px;height:12px;background:' + A + ';z-index:1;pointer-events:none;}',
+
+    /* Callout Top Tag */
+    t('cotag') + CARD + '{padding:2px 4px;text-shadow:0 2px 10px rgba(0,0,0,.6);}',
+    t('cotag') + ' .name-role-overlay-copy{flex-direction:column-reverse;align-items:flex-start;}',
+    t('cotag') + ROLE + '{background:' + A + ';color:' + AFG + ';padding:1px 8px;font-size:.5em;margin-bottom:3px;font-weight:700;text-shadow:none;}',
+
+    /* Callout Highlight: the name on the Primary colour, the role in the Secondary */
+    t('cohighlight') + CARD + '{padding:0;overflow:visible;}',
+    t('cohighlight') + NAME + '{align-self:flex-start;background:' + P + ';color:' + PFG + ';padding:4px 14px;}',
+    t('cohighlight') + ROLE + '{font-size:.62em;margin-top:4px;letter-spacing:.12em;color:' + AL + ';text-shadow:0 2px 10px rgba(0,0,0,.7);}',
+
+    /* Callout White: a Primary name block and a Secondary role block */
+    t('cowhite') + CARD + '{padding:0;overflow:visible;}',
+    t('cowhite') + NAME + '{align-self:flex-start;background:' + P + ';color:' + PFG + ';padding:5px 14px;}',
+    t('cowhite') + ROLE + '{align-self:flex-start;background:' + A + ';color:' + AFG + ';padding:3px 14px;font-weight:700;}',
+
+    /* ══ Simple: bold capitals with a rule, a block or a bar ═════════════════════════════════ */
+    ANY_SIMPLE + CARD + '{border-radius:0;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6);}',
+    ANY_SIMPLE + NAME + '{text-transform:uppercase;font-weight:800;line-height:1.03;letter-spacing:.01em;}',
+    ANY_SIMPLE + ROLE + '{letter-spacing:.06em;}',
+
+    /* Simple Rule Left */
+    t('sbleft') + CARD + '{padding:2px 0 2px 16px;overflow:visible;}',
+    t('sbleft') + ' .name-role-overlay-copy{flex-direction:column-reverse;align-items:flex-start;}',
+    t('sbleft') + ROLE + '{font-size:.42em;text-transform:lowercase;color:' + AL + ';margin-bottom:6px;}',
+    t('sbleft') + CARD + '::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:' + P + ';pointer-events:none;}',
+
+    /* Simple Rule Top */
+    t('sbtop') + CARD + '{padding:0;overflow:visible;}',
+    t('sbtop') + ' .name-role-overlay-copy{flex-direction:column-reverse;align-items:stretch;}',
+    t('sbtop') + ROLE + '{font-size:.42em;text-transform:lowercase;color:' + AL + ';margin-bottom:4px;}',
+    t('sbtop') + NAME + '{border-top:3px solid ' + P + ';padding-top:8px;}',
+
+    /* Simple Block: the name on the Primary colour, the role on a Secondary strip as wide as the block */
+    t('sbblock') + CARD + '{padding:0;width:fit-content;overflow:visible;text-shadow:none;}',
+    t('sbblock') + ' .name-role-overlay-copy{align-items:stretch;}',
+    t('sbblock') + NAME + '{background:' + P + ';color:' + PFG + ';padding:7px 18px;}',
+    t('sbblock') + ROLE + '{background:' + A + ';color:' + AFG + ';font-size:.42em;padding:4px 18px;text-transform:uppercase;letter-spacing:.16em;font-weight:700;}',
+
+    /* Simple Bar: a bold name over a Secondary bar that carries the role */
+    t('sbbar') + CARD + '{padding:0;width:fit-content;overflow:visible;}',
+    t('sbbar') + ' .name-role-overlay-copy{align-items:stretch;}',
+    t('sbbar') + ROLE + '{background:' + A + ';color:' + AFG + ';font-size:.42em;padding:4px 14px;margin-top:5px;font-weight:700;text-transform:lowercase;text-shadow:none;}',
+
     /* ══ Extra animations ═════════════════════════════════════════════════
        Entrance uses keyframes (they win over the base visible state); the
        exit falls back to the base fade defined by the existing stylesheet.  */
@@ -275,6 +433,45 @@
 
     O + '.motion-flicker.is-visible' + CARD + '{animation:lt-flicker 1200ms linear both;}',
     '@keyframes lt-flicker{0%{opacity:0;}8%{opacity:.9;}12%{opacity:.1;}22%{opacity:1;}28%{opacity:.25;}38%{opacity:1;}46%{opacity:.6;}56%,100%{opacity:1;}}',
+
+    O + '.motion-unfold' + CARD + '{transform-origin:50% 0;}',
+    O + '.motion-unfold.is-visible' + CARD + '{animation:lt-unfold 800ms cubic-bezier(.2,.8,.3,1) both;}',
+    '@keyframes lt-unfold{0%{opacity:0;transform:perspective(900px) scaleY(.02);}60%{opacity:1;transform:perspective(900px) scaleY(1.06);}100%{opacity:1;transform:perspective(900px) scaleY(1);}}',
+
+    O + '.motion-spinin.is-visible' + CARD + '{animation:lt-spinin 900ms cubic-bezier(.2,.8,.3,1) both;}',
+    '@keyframes lt-spinin{0%{opacity:0;transform:rotate(-120deg) scale(.3);}70%{opacity:1;transform:rotate(8deg) scale(1.05);}100%{opacity:1;transform:rotate(0) scale(1);}}',
+
+    O + '.motion-rubber.is-visible' + CARD + '{animation:lt-rubber 1000ms ease both;}',
+    '@keyframes lt-rubber{0%{opacity:0;transform:scale3d(.4,.4,1);}30%{opacity:1;transform:scale3d(1.25,.75,1);}40%{transform:scale3d(.75,1.25,1);}50%{transform:scale3d(1.15,.85,1);}65%{transform:scale3d(.95,1.05,1);}75%{transform:scale3d(1.05,.95,1);}100%{opacity:1;transform:scale3d(1,1,1);}}',
+
+    O + '.motion-wobble.is-visible' + CARD + '{animation:lt-wobble 1000ms ease both;}',
+    '@keyframes lt-wobble{0%{opacity:0;transform:translateX(-80px) rotate(-8deg);}30%{opacity:1;transform:translateX(24px) rotate(4deg);}50%{transform:translateX(-14px) rotate(-3deg);}70%{transform:translateX(8px) rotate(2deg);}100%{opacity:1;transform:translateX(0) rotate(0);}}',
+
+    O + '.motion-tada.is-visible' + CARD + '{animation:lt-tada 1000ms ease both;}',
+    '@keyframes lt-tada{0%{opacity:0;transform:scale(.6) rotate(-4deg);}20%{opacity:1;transform:scale(.9) rotate(-3deg);}30%,50%,70%{transform:scale(1.1) rotate(3deg);}40%,60%{transform:scale(1.1) rotate(-3deg);}100%{opacity:1;transform:scale(1) rotate(0);}}',
+
+    O + '.motion-rollin.is-visible' + CARD + '{animation:lt-rollin 900ms cubic-bezier(.2,.8,.3,1) both;}',
+    '@keyframes lt-rollin{0%{opacity:0;transform:translateX(-110%) rotate(-540deg);}100%{opacity:1;transform:translateX(0) rotate(0);}}',
+
+    O + '.motion-scanline:not(.is-visible)' + CARD + '{clip-path:inset(0 0 100% 0);transform:none;}',
+    O + '.motion-scanline.is-visible' + CARD + '{clip-path:inset(0 0 0 0);transform:none;transition-duration:560ms,820ms,620ms,700ms;}',
+
+    /* stretch: the name draws in from wide letter spacing */
+    O + '.motion-stretch' + CARD + '{transform:none;transition:opacity 420ms ease;}',
+    O + '.motion-stretch' + NAME + '{opacity:0;letter-spacing:.7em;transition:opacity 700ms ease 120ms,letter-spacing 900ms cubic-bezier(.2,.85,.25,1) 120ms;}',
+    O + '.motion-stretch.is-visible' + NAME + '{opacity:1;letter-spacing:normal;}',
+
+    /* ══ Options on any design: text colours, font, weight, case, corners, height and a third line ═══════ */
+    O + '.has-x-name-color' + NAME + '{color:var(--x-name-color) !important;}',
+    O + '.has-x-role-color' + ROLE + '{color:var(--x-role-color) !important;}',
+    O + '.has-x-font' + NAME + ',' + O + '.has-x-font' + ROLE + '{font-family:var(--x-font) !important;}',
+    O + '.has-x-weight' + NAME + ',' + O + '.has-x-weight' + ROLE + '{font-weight:var(--x-weight) !important;}',
+    O + '.has-x-case' + NAME + ',' + O + '.has-x-case' + ROLE + '{text-transform:var(--x-case) !important;}',
+    O + '.has-x-radius' + CARD + ',' + O + '.has-x-radius' + NAME + ',' + O + '.has-x-radius' + ROLE + '{border-radius:var(--x-radius) !important;}',
+    O + '.pos-top{align-items:flex-start !important;padding-top:8vh !important;padding-bottom:0 !important;}',
+    O + '.pos-middle{align-items:center !important;padding-bottom:0 !important;}',
+    O + ' .name-role-overlay-extra{font-size:calc(var(--name-role-role-size,24px) * .8);opacity:.9;margin-top:2px;letter-spacing:.04em;}',
+    O + ' .name-role-overlay-extra:empty{display:none;}',
 
     /* Respect reduced-motion: show instantly */
     '@media (prefers-reduced-motion:reduce){' + O + ' *{animation-duration:.01ms !important;transition-duration:.01ms !important;}}'

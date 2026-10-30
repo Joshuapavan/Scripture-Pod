@@ -598,6 +598,7 @@
     #hud { position: fixed; right: 10px; top: 10px; z-index: 9; font-size: 11px; color: rgba(255,255,255,0.65); background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.15); border-radius: 7px; padding: 4px 8px; }
     ${(typeof window !== 'undefined' && window.SP_LT_EXTRA && window.SP_LT_EXTRA.css) || ''}
     ${(typeof window !== 'undefined' && window.SP_SOCIAL && window.SP_SOCIAL.css) || ''}
+    ${(typeof window !== 'undefined' && window.SP_EXTRA && window.SP_EXTRA.css) || ''}
   </style>
 </head>
 <body>
@@ -619,6 +620,7 @@
           <div class="name-role-overlay-copy">
             <strong class="name-role-overlay-name"></strong>
             <span class="name-role-overlay-role"></span>
+            <span class="name-role-overlay-extra"></span>
           </div>
         </div>
       </div>
@@ -627,6 +629,7 @@
   <div id="social-engagement-overlay" aria-hidden="true" data-position="bottom-center" data-theme="solid"></div>
   <div id="hud">${opts.preview ? 'Program Preview' : 'Standalone Output'}</div>
   <script>${(typeof window !== 'undefined' && window.SP_SOCIAL_SOURCE) || ''}</script>
+  <script>${(typeof window !== 'undefined' && window.SP_EXTRA_SOURCE) || ''}</script>
   <script>
     (function () {
       const CHANNEL_NAME = ${channelLiteral};
@@ -964,6 +967,23 @@
         }
       }
 
+      function applyOverlayExtras(overlay, x) {
+        x = x || {};
+        var FONTS = { montserrat: "'Montserrat',sans-serif", geist: "'Geist',system-ui,sans-serif", serif: "'Source Serif 4',Georgia,serif", georgia: 'Georgia,"Times New Roman",serif', condensed: '"Bebas Neue","Oswald","Avenir Next Condensed","DIN Condensed","Arial Narrow",Impact,sans-serif', impact: 'Impact,"Arial Narrow",sans-serif', arial: 'Arial,Helvetica,sans-serif', mono: '"SF Mono",Menlo,Consolas,monospace' };
+        var hex = function (v) { return /^#[0-9a-f]{6}$/i.test(v || '') ? v : ''; };
+        var set = function (cls, prop, val) { overlay.classList.toggle(cls, !!val); if (val) overlay.style.setProperty(prop, val); else overlay.style.removeProperty(prop); };
+        set('has-x-name-color', '--x-name-color', hex(x.nameColor));
+        set('has-x-role-color', '--x-role-color', hex(x.roleColor));
+        set('has-x-font', '--x-font', FONTS[x.font] || '');
+        set('has-x-weight', '--x-weight', ['400', '600', '700', '800'].indexOf(String(x.weight)) >= 0 ? String(x.weight) : '');
+        set('has-x-case', '--x-case', ['uppercase', 'lowercase', 'none', 'capitalize'].indexOf(x.textCase) >= 0 ? x.textCase : '');
+        set('has-x-radius', '--x-radius', { square: '0px', soft: '10px', round: '22px', pill: '999px' }[x.corners] || '');
+        overlay.classList.toggle('pos-top', x.position === 'top');
+        overlay.classList.toggle('pos-middle', x.position === 'middle');
+        var extraEl = overlay.querySelector('.name-role-overlay-extra');
+        if (extraEl) extraEl.textContent = String(x.extra || '').trim().slice(0, 80);
+      }
+
       function updateNameRoleOverlay(data) {
         const overlay = document.getElementById('name-role-overlay');
         if (!overlay) return;
@@ -975,9 +995,9 @@
         const name = String(data && data.name || '').trim();
         const role = String(data && data.role || '').trim();
         const rawStyle = String(data && data.style || 'classic-rise');
-        const legacyStyle = rawStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const legacyStyle = rawStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker|unfold|spinin|rubber|wobble|tada|rollin|scanline|stretch)$/);
         const normalizedStyle = legacyStyle ? legacyStyle[1] + '-gms-' + legacyStyle[2] : rawStyle;
-        const styleMatch = normalizedStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment|sapphire|crimson|forest|graphite|rose|ocean|amber|violet|outline|halo|chapel|duobar|duoblock|duorule|duoghost|duotag|duoslant|duoflag|duopill|custom)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const styleMatch = normalizedStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment|sapphire|crimson|forest|graphite|rose|ocean|amber|violet|outline|halo|chapel|duobar|duoblock|duorule|duoghost|duotag|duoslant|duoflag|duopill|blueprint|ticket|stamp|dogear|chalk|sunbeam|gradline|leaf|terminal|diagonal|cobar|coblock|cobox|cocorner|cobadge|couline|cobrackets|cotint|cosquare|cotag|cohighlight|cowhite|sbleft|sbtop|sbblock|sbbar|custom)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker|unfold|spinin|rubber|wobble|tada|rollin|scanline|stretch)$/);
         const layout = styleMatch ? styleMatch[1] : 'classic';
         const theme = styleMatch ? styleMatch[2] : 'gms';
         const animation = styleMatch ? styleMatch[3] : 'rise';
@@ -996,6 +1016,8 @@
         const logoSize = Math.max(24, Math.min(320, Number(data && data.logoSize) || 128));
         const accRgb = accentColor.slice(1).match(/.{2}/g).map((p) => parseInt(p, 16) / 255).map((c) => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
         const accentForeground = (0.2126 * accRgb[0] + 0.7152 * accRgb[1] + 0.0722 * accRgb[2]) >= 0.4 ? '#0b0d10' : '#ffffff';
+        const priRgb = primaryColor.slice(1).match(/.{2}/g).map((p) => parseInt(p, 16) / 255).map((c) => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+        const primaryForeground = (0.2126 * priRgb[0] + 0.7152 * priRgb[1] + 0.0722 * priRgb[2]) >= 0.4 ? '#0b0d10' : '#ffffff';
         const padL = Math.max(0, Math.min(400, Number(data && data.padL)||0)), padR = Math.max(0, Math.min(400, Number(data && data.padR)||0));
         const offsetX = Math.max(-40, Math.min(40, Number(data.offsetX) || 0));
         const offsetY = Math.max(-40, Math.min(40, Number(data.offsetY) || 0));
@@ -1012,7 +1034,7 @@
           else logoEl.removeAttribute('src');
           logoEl.hidden = !logo;
         }
-        overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'theme-sapphire', 'theme-crimson', 'theme-forest', 'theme-graphite', 'theme-rose', 'theme-ocean', 'theme-amber', 'theme-violet', 'theme-outline', 'theme-halo', 'theme-chapel', 'theme-duobar', 'theme-duoblock', 'theme-duorule', 'theme-duoghost', 'theme-duotag', 'theme-duoslant', 'theme-duoflag', 'theme-duopill', 'theme-custom', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker');
+        overlay.classList.remove('style-classic', 'style-right', 'style-centered', 'style-band', 'theme-gms', 'theme-noir', 'theme-broadcast', 'theme-modern', 'theme-news', 'theme-spotlight', 'theme-legacy', 'theme-clean', 'theme-glass', 'theme-copper', 'theme-editorial', 'theme-neon', 'theme-ribbon', 'theme-aurora', 'theme-sunrise', 'theme-royal', 'theme-minimal', 'theme-pill', 'theme-holo', 'theme-frost', 'theme-cinema', 'theme-sharp', 'theme-emerald', 'theme-pulse', 'theme-parchment', 'theme-sapphire', 'theme-crimson', 'theme-forest', 'theme-graphite', 'theme-rose', 'theme-ocean', 'theme-amber', 'theme-violet', 'theme-outline', 'theme-halo', 'theme-chapel', 'theme-duobar', 'theme-duoblock', 'theme-duorule', 'theme-duoghost', 'theme-duotag', 'theme-duoslant', 'theme-duoflag', 'theme-duopill', 'theme-blueprint', 'theme-ticket', 'theme-stamp', 'theme-dogear', 'theme-chalk', 'theme-sunbeam', 'theme-gradline', 'theme-leaf', 'theme-terminal', 'theme-diagonal', 'theme-cobar', 'theme-coblock', 'theme-cobox', 'theme-cocorner', 'theme-cobadge', 'theme-couline', 'theme-cobrackets', 'theme-cotint', 'theme-cosquare', 'theme-cotag', 'theme-cohighlight', 'theme-cowhite', 'theme-sbleft', 'theme-sbtop', 'theme-sbblock', 'theme-sbbar', 'theme-custom', 'motion-rise', 'motion-slide', 'motion-sweep', 'motion-zoom', 'motion-shutter', 'motion-spring', 'motion-glide', 'motion-blur', 'motion-flip', 'motion-wipe', 'motion-float', 'motion-glow', 'motion-reveal', 'motion-drop', 'motion-curtain', 'motion-pop', 'motion-expand', 'motion-bounce', 'motion-elastic', 'motion-iris', 'motion-slice', 'motion-swing', 'motion-turn', 'motion-cascade', 'motion-typewriter', 'motion-glitch', 'motion-flicker', 'motion-unfold', 'motion-spinin', 'motion-rubber', 'motion-wobble', 'motion-tada', 'motion-rollin', 'motion-scanline', 'motion-stretch');
         overlay.classList.add('style-' + layout, 'theme-' + theme, 'motion-' + animation);
         overlay.classList.toggle('logo-black', logoColor === 'black');
         overlay.classList.toggle('logo-off', logoColor === 'off');
@@ -1024,6 +1046,7 @@
         overlay.style.setProperty('--name-role-role-size', roleSize + 'px');
         overlay.style.setProperty('--name-role-logo-size', logoSize + 'px');
         overlay.style.setProperty('--name-role-accent-fg', accentForeground);
+        overlay.style.setProperty('--name-role-primary-fg', primaryForeground);
         // A custom design arrives as ready-made style variables; any other design clears them
         for (let i = overlay.style.length - 1; i >= 0; i--) { const n = overlay.style[i]; if (n.startsWith('--cd-')) overlay.style.removeProperty(n); }
         if (theme === 'custom' && data && data.customVars) Object.keys(data.customVars).forEach((n) => overlay.style.setProperty(n, data.customVars[n]));
@@ -1033,6 +1056,7 @@
         overlay.style.setProperty('--name-role-scale', String(Math.max(0.5, Math.min(2, (Number(data && data.scale) || 100) / 100))));
         overlay.style.setProperty('--name-role-offset-x', offsetX + 'vw');
         overlay.style.setProperty('--name-role-offset-y', offsetY + 'vh');
+        applyOverlayExtras(overlay, data && data.extras);
         overlay.dataset.name = name;
         overlay.dataset.role = role;
         overlay.dataset.style = style;
@@ -1102,6 +1126,10 @@
         const data = event.data || {};
         if (data && data.type === 'REQUEST_FULLSCREEN') {
           document.documentElement.requestFullscreen().catch(function () {});
+          return;
+        }
+        if (data && data.type === 'EXTRA_OVERLAYS') {
+          if (window.SP_EXTRA) window.SP_EXTRA.update(data.state);
           return;
         }
         if (data && data.type === 'PREVIEW_UPDATE' && data.payload) {

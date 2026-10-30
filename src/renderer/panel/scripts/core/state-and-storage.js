@@ -1392,6 +1392,8 @@
         nameRoleOverlayPadRight: document.getElementById('name-role-overlay-pad-r')?.value || '0',
         nameRoleOverlayOffsetX: document.getElementById('name-role-overlay-offset-x')?.value || '0',
         nameRoleOverlayOffsetY: document.getElementById('name-role-overlay-offset-y')?.value || '0',
+        nameRoleOverlayExtras: typeof collectNameRoleExtras === 'function' ? collectNameRoleExtras() : undefined,
+        extraOverlays: typeof collectExtraOverlays === 'function' ? collectExtraOverlays() : undefined,
         socialEngagementOverlayEnabled: document.getElementById('social-engagement-overlay-show-btn')?.getAttribute('aria-pressed') === 'true',
         socialEngagementConfig: typeof collectSocialEngagementConfig === 'function' ? collectSocialEngagementConfig() : undefined,
         socialEngagementOverlayCollapsed: document.getElementById('social-engagement-overlay-panel')?.classList.contains('is-collapsed') === true,

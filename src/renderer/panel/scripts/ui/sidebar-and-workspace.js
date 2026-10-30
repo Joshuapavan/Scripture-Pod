@@ -92,7 +92,7 @@
     }
 
     // Overlays tab: the list picks which overlay's settings and preview show.
-    const OVERLAY_TITLES = { 'name-role': 'Name & Role', social: 'Social engagement' };
+    const OVERLAY_TITLES = { 'name-role': 'Name & Role', social: 'Social engagement', qr: 'QR code', countdown: 'Countdown', ticker: 'Ticker' };
 
     // "Scripture lower third" follows the Bible workspace: open it in Lower third mode
     function openScriptureLowerThird() {
@@ -108,6 +108,14 @@
       });
       const title = document.getElementById('overlays-workspace-title');
       if (title) title.textContent = OVERLAY_TITLES[overlay];
+      const frame = document.getElementById('overlay-preview-frame');
+      if (['qr', 'countdown', 'ticker'].includes(overlay)) {
+        // These three are shown over the program feed: the lower third example goes, and the overlay itself is drawn
+        try { if (frame && frame.contentWindow) frame.contentWindow.postMessage({ type: 'PREVIEW_CLEAR' }, '*'); } catch (e) { /* preview not ready */ }
+        setTimeout(() => { if (typeof previewExtraOverlay === 'function') previewExtraOverlay(overlay); }, 60);
+        return;
+      }
+      if (typeof previewExtraOverlay === 'function') previewExtraOverlay('');
       if (overlay === 'social') previewSocialEngagementLowerThirdExample();
       else previewNameRoleLowerThirdExample();
     }

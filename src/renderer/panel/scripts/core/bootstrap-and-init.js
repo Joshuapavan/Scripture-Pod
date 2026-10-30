@@ -737,8 +737,8 @@
       }
       if (overlayDesignInput && overlayAnimationInput) {
         const savedOverlayStyle = String(ui.nameRoleOverlayStyle || 'classic-gms-rise');
-        const currentStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment|sapphire|crimson|forest|graphite|rose|ocean|amber|violet|outline|halo|chapel|duobar|duoblock|duorule|duoghost|duotag|duoslant|duoflag|duopill|custom)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
-        const previousStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker)$/);
+        const currentStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(gms|noir|broadcast|modern|news|spotlight|legacy|clean|glass|copper|editorial|neon|ribbon|aurora|sunrise|royal|minimal|pill|holo|frost|cinema|sharp|emerald|pulse|parchment|sapphire|crimson|forest|graphite|rose|ocean|amber|violet|outline|halo|chapel|duobar|duoblock|duorule|duoghost|duotag|duoslant|duoflag|duopill|blueprint|ticket|stamp|dogear|chalk|sunbeam|gradline|leaf|terminal|diagonal|cobar|coblock|cobox|cocorner|cobadge|couline|cobrackets|cotint|cosquare|cotag|cohighlight|cowhite|sbleft|sbtop|sbblock|sbbar|custom)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker|unfold|spinin|rubber|wobble|tada|rollin|scanline|stretch)$/);
+        const previousStyle = savedOverlayStyle.match(/^(classic|right|centered|band)-(rise|slide|sweep|zoom|shutter|spring|glide|blur|flip|wipe|float|glow|reveal|drop|curtain|pop|expand|bounce|elastic|iris|slice|swing|turn|cascade|typewriter|glitch|flicker|unfold|spinin|rubber|wobble|tada|rollin|scanline|stretch)$/);
         const layoutOnly = ['classic', 'right', 'centered', 'band'].includes(savedOverlayStyle) ? savedOverlayStyle : '';
         const design = currentStyle ? `${currentStyle[1]}-${currentStyle[2]}` : `${previousStyle?.[1] || layoutOnly || 'classic'}-gms`;
         overlayDesignInput.value = Array.from(overlayDesignInput.options).some((option) => option.value === design) ? design : 'classic-gms';
@@ -770,6 +770,8 @@
       if (overlayLogoSizeInput) overlayLogoSizeInput.value = String(Math.max(24, Math.min(320, Number(ui.nameRoleOverlayLogoSize) || 128)));
       if (overlayOffsetXInput) overlayOffsetXInput.value = String(Math.max(-40, Math.min(40, Number(ui.nameRoleOverlayOffsetX) || 0)));
       if (overlayOffsetYInput) overlayOffsetYInput.value = String(Math.max(-40, Math.min(40, Number(ui.nameRoleOverlayOffsetY) || 0)));
+      if (typeof applyNameRoleExtras === 'function') applyNameRoleExtras(ui.nameRoleOverlayExtras);
+      if (typeof applyExtraOverlays === 'function') applyExtraOverlays(ui.extraOverlays);
       document.getElementById('name-role-overlay-offset-x-value').textContent = `${overlayOffsetXInput?.value || 0}%`;
       const overlayScaleValueEl = document.getElementById('name-role-overlay-scale-value');
       if (overlayScaleValueEl) overlayScaleValueEl.textContent = `${overlayScaleInput?.value || 100}%`;

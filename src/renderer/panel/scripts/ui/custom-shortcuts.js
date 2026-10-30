@@ -29,6 +29,9 @@
       { id: 'identifyScreens', label: 'Show a number on every screen', run: () => identifyScreens() },
       { id: 'nextSection', label: 'Next section', run: () => stepSection(1) },
       { id: 'prevSection', label: 'Previous section', run: () => stepSection(-1) },
+      { id: 'toggleLowerThird', label: 'Show or hide the name and role lower third', run: () => toggleNameRoleOverlay() },
+      { id: 'nextSpeaker', label: 'Next saved name', run: () => stepSavedName(1) },
+      { id: 'prevSpeaker', label: 'Previous saved name', run: () => stepSavedName(-1) },
       { id: 'showShortcuts', label: 'Show all shortcuts', run: () => openShortcutsWindow() }
     ];
 
@@ -65,6 +68,9 @@
       identifyScreens: ['Y'],
       nextSection: ['Cmd+]', 'Ctrl+]'],
       prevSection: ['Cmd+[', 'Ctrl+['],
+      toggleLowerThird: ['L'],
+      nextSpeaker: ['K'],
+      prevSpeaker: ['J'],
       showShortcuts: ['?']
     };
     const SHORTCUTS_STORAGE_KEY = 'scripturePod.shortcuts.v1';

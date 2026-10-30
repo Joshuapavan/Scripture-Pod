@@ -47,6 +47,7 @@
       ['cycleLiveBibleVersion', 'Switch the version?', 'The verse on the live display changes to the next version.', () => typeof isLive !== 'undefined' && isLive],
       ['endOutputLive', 'Stop the output?', 'The output window closes and nothing is shown on that screen.'],
       ['setDisplayBlank', 'Change this display?', 'This blanks or shows that display.'],
+      ['toggleExtraOverlay', 'Change the overlay?', 'The QR code, countdown or ticker on the live displays is shown or hidden.'],
       ['toggleNameRoleOverlay', 'Change the overlay?', 'The name and role overlay on the live display is shown or hidden.'],
       ['toggleSocialEngagementOverlay', 'Change the overlay?', 'The social overlay on the live display is shown or hidden.'],
       ['playMediaOnStream', 'Play this on the stream?', 'It plays over the live stream.'],
@@ -60,6 +61,7 @@
     // After one confirmation, the actions it sets off on their own (stopping media when something goes live, and so on)
     // go through without asking again
     let serviceLockPassUntil = 0;
+    function allowServiceLockPass(ms) { serviceLockPassUntil = Math.max(serviceLockPassUntil, Date.now() + (ms || 1500)); }
     const serviceLockAsking = new Set();
     // Installed once every script has loaded, so the actions defined in the scripts after this one are covered too
     function installServiceGuards() {

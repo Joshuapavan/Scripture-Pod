@@ -293,6 +293,8 @@
     // Clear everything on screen: output, Preview monitor and any lower thirds.
     function clearAllOutputs() {
       clearOutput();
+      // QR code, countdown and ticker come off as well
+      try { if (typeof hideAllExtraOverlays === 'function') hideAllExtraOverlays(); } catch (e) { /* not ready */ }
       // Media playing on the stream, and media this app put on the wall, goes too
       try {
         if (typeof streamMedia !== 'undefined') {

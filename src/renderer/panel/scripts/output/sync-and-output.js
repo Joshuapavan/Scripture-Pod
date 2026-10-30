@@ -64,16 +64,20 @@
       if (!el) return;
       const onAir = typeof getOnAirPayload === 'function' && !!getOnAirPayload();
       const cued = typeof previewMonitorState !== 'undefined' && previewMonitorState.kind === 'update';
-      const state = onAir ? 'live' : (cued ? 'preview' : 'idle');
-      if (el.dataset.state === state) return;
+      // Media playing on the stream is live too
+      const mediaLive = typeof streamMedia !== 'undefined' && !!streamMedia.playing;
+      const state = (onAir || mediaLive) ? 'live' : (cued ? 'preview' : 'idle');
+      const sig = state + (mediaLive && !onAir ? ':media' : '');
+      if (el.dataset.sig === sig) return;
+      el.dataset.sig = sig;
       el.dataset.state = state;
       el.querySelector('.air-indicator-text').textContent = state === 'live' ? 'Live' : (state === 'preview' ? 'Preview' : 'Idle');
-      el.title = state === 'live' ? 'Something is going out live' : (state === 'preview' ? 'Something is in Preview, not live' : 'Nothing live or in preview');
+      el.title = state === 'live' ? (mediaLive && !onAir ? 'Media is playing on the stream' : 'Something is going out live') : (state === 'preview' ? 'Something is in Preview, not live' : 'Nothing live or in preview');
     }
 
     function onAirIndicatorClick() {
       const state = document.getElementById('air-indicator')?.dataset.state;
-      showToast(state === 'live' ? 'On air. Esc clears the output.' : (state === 'preview' ? 'In Preview only. Go live (Space) to send it out.' : 'Nothing is live or in Preview.'));
+      showToast(state === 'live' ? (typeof streamMedia !== 'undefined' && streamMedia.playing && !(typeof getOnAirPayload === 'function' && getOnAirPayload()) ? 'Media is playing on the stream. M stops it.' : 'On air. Esc clears the output.') : (state === 'preview' ? 'In Preview only. Go live (Space) to send it out.' : 'Nothing is live or in Preview.'));
     }
     setInterval(updateAirIndicator, 400);
 
@@ -130,7 +134,8 @@
         padL: Math.max(0, Math.min(400, Number(document.getElementById('name-role-overlay-pad-l')?.value) || 0)),
         padR: Math.max(0, Math.min(400, Number(document.getElementById('name-role-overlay-pad-r')?.value) || 0)),
         offsetX: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-x')?.value) || 0)),
-        offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-y')?.value) || 0))
+        offsetY: Math.max(-40, Math.min(40, Number(document.getElementById('name-role-overlay-offset-y')?.value) || 0)),
+        extras: typeof collectNameRoleExtras === 'function' ? collectNameRoleExtras() : {}
       };
     }
 
@@ -316,7 +321,7 @@
           role: settings.name ? settings.role : 'Senior Pastor'
         }
       });
-      if (!opts.keepTimers || visible) showToast('Lower-third example sent to preview');
+      if (!opts.quiet && (!opts.keepTimers || visible)) showToast('Lower-third example sent to preview');
     }
 
     function previewSocialEngagementLowerThirdExample(visible = true, opts = {}) {
@@ -373,6 +378,7 @@
       if (isLive && !isPreviewOnlyMode()) clearOutput({ fade: false });
     }
 
+    let nameRoleAutoHideTimer = null;
     function toggleNameRoleOverlay() {
       const button = document.getElementById('name-role-overlay-show-btn');
       if (!button) return;
@@ -385,9 +391,15 @@
       if (enabled) {
         setLowerThirdButtonState(document.getElementById('social-engagement-overlay-show-btn'), false, 'social lower third');
         takeLiveOutputForLowerThird();
-        rememberSavedName(overlay.name, overlay.role);
+        if (!(typeof steppedSavedKey !== 'undefined' && steppedSavedKey === overlay.name + '|' + (overlay.role || ''))) rememberSavedName(overlay.name, overlay.role);
       }
       setLowerThirdButtonState(button, enabled, 'lower third');
+      clearTimeout(nameRoleAutoHideTimer);
+      if (enabled && overlay.extras && overlay.extras.autoHide > 0) {
+        nameRoleAutoHideTimer = setTimeout(() => {
+          if (button.getAttribute('aria-pressed') === 'true') runWithoutServiceLock(() => toggleNameRoleOverlay());
+        }, overlay.extras.autoHide * 1000);
+      }
       updateProgramDisplayStatus();
       handleNameRoleOverlayChange(true);
     }
@@ -410,7 +422,7 @@
       clearTimeout(socialAutoHideTimer);
       if (enabled && overlay.autoHideSeconds > 0) {
         socialAutoHideTimer = setTimeout(() => {
-          if (button.getAttribute('aria-pressed') === 'true') toggleSocialEngagementOverlay();
+          if (button.getAttribute('aria-pressed') === 'true') (typeof runWithoutServiceLock === 'function' ? runWithoutServiceLock : (f) => f())(() => toggleSocialEngagementOverlay());
         }, overlay.autoHideSeconds * 1000);
       }
       handleSocialEngagementOverlayChange(true);
@@ -807,6 +819,7 @@ ${getLtThumbCss()}
       appState.settings.nameRoleOverlayPadRight = document.getElementById('name-role-overlay-pad-r')?.value || '0';
       appState.settings.nameRoleOverlayOffsetX = String(document.getElementById('name-role-overlay-offset-x')?.value || '0');
       appState.settings.nameRoleOverlayOffsetY = String(document.getElementById('name-role-overlay-offset-y')?.value || '0');
+      appState.settings.nameRoleOverlayExtras = typeof collectNameRoleExtras === 'function' ? collectNameRoleExtras() : {};
       document.getElementById('name-role-overlay-offset-x-value').textContent = `${appState.settings.nameRoleOverlayOffsetX}%`;
       const scaleValueEl = document.getElementById('name-role-overlay-scale-value');
       if (scaleValueEl) scaleValueEl.textContent = `${appState.settings.nameRoleOverlayScale}%`;
@@ -829,6 +842,24 @@ ${getLtThumbCss()}
         publishNameRoleOverlay();
       } else if (isPreviewOnlyMode()) previewCurrentSelection();
       else if (isLive && livePointer) pushLiveUpdate();
+      if (!enabled && !visibilityChanged) scheduleNameRoleExamplePreview();
+    }
+
+    // In the Overlays tab, a change to the look is drawn in the preview by itself: a new animation plays through once,
+    // anything else (font, colours, size, design) refreshes the example that is showing
+    let nameRoleExampleTimer = 0;
+    let lastNameRoleAnimation = null;
+    function scheduleNameRoleExamplePreview() {
+      const animation = document.getElementById('name-role-overlay-animation')?.value || 'rise';
+      const animationChanged = lastNameRoleAnimation !== null && lastNameRoleAnimation !== animation;
+      lastNameRoleAnimation = animation;
+      if (!document.body.classList.contains('overlays-workspace-active')) return;
+      if ((document.body.dataset.overlay || 'name-role') !== 'name-role') return;
+      clearTimeout(nameRoleExampleTimer);
+      nameRoleExampleTimer = setTimeout(() => {
+        if (animationChanged) testNameRoleLowerThird();
+        else previewNameRoleLowerThirdExample(true, { quiet: true });
+      }, 150);
     }
 
     function handleSocialEngagementOverlayChange(visibilityChanged = false, positionEdit = false) {
@@ -1413,7 +1444,7 @@ ${getLtThumbCss()}
           desktop.sendOutputMessage(liveMsg, 'feed').catch(() => {});
           desktop.sendOutputMessage(monitorMsg, 'output').catch(() => {});
           desktop.sendOutputMessage(monitorMsg, 'stage').catch(() => {});
-        } else if (rawMsg && rawMsg.type === 'TEST_PATTERN') {
+        } else if (rawMsg && (rawMsg.type === 'TEST_PATTERN' || rawMsg.type === 'EXTRA_OVERLAYS')) {
           desktop.sendOutputMessage(rawMsg).catch(() => {});
         } else if (rawMsg && (rawMsg.type === 'MEDIA_PLAY' || rawMsg.type === 'MEDIA_STOP')) {
           desktop.sendOutputMessage(rawMsg, 'feed').catch(() => {});

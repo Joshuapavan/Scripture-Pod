@@ -208,11 +208,26 @@
           <span class="overlay-list-copy"><span class="overlay-list-name">Social engagement</span><span class="overlay-list-state"><span class="is-ready">Like · Share · Subscribe</span><span class="is-on-air">On air</span></span></span>
           <span class="overlay-list-dot" aria-hidden="true"></span>
         </button>
+        <button type="button" class="overlay-list-item" data-overlay="qr" aria-pressed="false" onclick="selectOverlayPanel('qr')">
+          <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17.5 20.5h3.5v-3.5"/></svg></span>
+          <span class="overlay-list-copy"><span class="overlay-list-name">QR code</span><span class="overlay-list-state"><span class="is-ready">A code to scan</span><span class="is-on-air">On air</span></span></span>
+          <span class="overlay-list-dot" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="overlay-list-item" data-overlay="countdown" aria-pressed="false" onclick="selectOverlayPanel('countdown')">
+          <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg></span>
+          <span class="overlay-list-copy"><span class="overlay-list-name">Countdown</span><span class="overlay-list-state"><span class="is-ready">Until the service</span><span class="is-on-air">On air</span></span></span>
+          <span class="overlay-list-dot" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="overlay-list-item" data-overlay="ticker" aria-pressed="false" onclick="selectOverlayPanel('ticker')">
+          <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="9" width="20" height="6" rx="1.5"/><path d="M6 12h6M15 12h3"/></svg></span>
+          <span class="overlay-list-copy"><span class="overlay-list-name">Ticker</span><span class="overlay-list-state"><span class="is-ready">Scrolling messages</span><span class="is-on-air">On air</span></span></span>
+          <span class="overlay-list-dot" aria-hidden="true"></span>
+        </button>
         <button type="button" class="overlay-list-item" data-overlay="scripture" aria-pressed="false" onclick="openScriptureLowerThird()">
           <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg></span>
           <span class="overlay-list-copy"><span class="overlay-list-name">Scripture lower third</span><span class="overlay-list-state"><span class="is-ready">Follows the Bible workspace</span></span></span>
         </button>
-        <div class="library-label overlays-saved-label">Saved names</div>
+        <div class="library-label overlays-saved-label"><span>Saved names</span><span class="saved-names-step"><button type="button" onclick="stepSavedName(-1)" title="Previous speaker (J)" aria-label="Previous speaker">‹</button><button type="button" onclick="stepSavedName(1)" title="Next speaker (K)" aria-label="Next speaker">›</button></span></div>
         <input type="search" id="saved-names-search" class="saved-names-search" placeholder="Search names" aria-label="Search saved names" autocomplete="off" hidden oninput="setSavedNamesQuery(this.value)">
         <div id="saved-names-list" class="saved-names-list"></div>
       </nav>
@@ -281,6 +296,14 @@
                   <option value="typewriter">Typewriter</option>
                   <option value="glitch">Glitch</option>
                   <option value="flicker">Flicker</option>
+                  <option value="unfold">Unfold</option>
+                  <option value="spinin">Spin In</option>
+                  <option value="rubber">Rubber Band</option>
+                  <option value="wobble">Wobble</option>
+                  <option value="tada">Tada</option>
+                  <option value="rollin">Roll In</option>
+                  <option value="scanline">Scan Line</option>
+                  <option value="stretch">Stretch</option>
                 </select>
               <button type="button" class="ov-icon-btn" aria-label="Replay animation" title="Replay animation" onclick="testNameRoleLowerThird()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>
             </div>
@@ -305,6 +328,71 @@
             <div class="ov-control ov-colors">
               <label><span class="name-role-overlay-accent-picker" title="Primary color"><input type="color" id="name-role-overlay-primary" value="#90D5FF" aria-label="Primary color" onchange="handleNameRoleOverlayChange()"></span>Primary</label>
               <label><span class="name-role-overlay-accent-picker" title="Secondary color"><input type="color" id="name-role-overlay-accent" value="#90D5FF" aria-label="Secondary color" onchange="handleNameRoleOverlayChange()"></span>Secondary</label>
+            </div>
+            <span class="ov-label">Text colour</span>
+            <div class="ov-control ov-colors">
+              <label><span class="name-role-overlay-accent-picker" title="Name colour"><input type="color" id="name-role-overlay-x-name-color" value="#ffffff" aria-label="Name colour" onchange="onNameRoleExtraColor('name')"></span>Name</label>
+              <label><span class="name-role-overlay-accent-picker" title="Role colour"><input type="color" id="name-role-overlay-x-role-color" value="#ffffff" aria-label="Role colour" onchange="onNameRoleExtraColor('role')"></span>Role</label>
+              <button type="button" class="ov-text-btn" onclick="resetNameRoleTextColours()" title="Go back to the colours the design chooses">Auto</button>
+            </div>
+            <span class="ov-label">Font</span>
+            <div class="ov-control ov-extras">
+              <select id="name-role-overlay-x-font" aria-label="Typeface" onchange="handleNameRoleOverlayChange()">
+                <option value="">Design's own</option>
+                <option value="montserrat">Montserrat</option>
+                <option value="geist">Geist</option>
+                <option value="serif">Source Serif</option>
+                <option value="georgia">Georgia</option>
+                <option value="condensed">Condensed</option>
+                <option value="impact">Impact</option>
+                <option value="arial">Arial</option>
+                <option value="mono">Monospace</option>
+              </select>
+              <select id="name-role-overlay-x-weight" aria-label="Weight" onchange="handleNameRoleOverlayChange()">
+                <option value="">Weight</option>
+                <option value="400">Regular</option>
+                <option value="600">Semibold</option>
+                <option value="700">Bold</option>
+                <option value="800">Extra bold</option>
+              </select>
+              <select id="name-role-overlay-x-case" aria-label="Letter case" onchange="handleNameRoleOverlayChange()">
+                <option value="">Case</option>
+                <option value="uppercase">UPPER</option>
+                <option value="capitalize">Title</option>
+                <option value="none">As typed</option>
+                <option value="lowercase">lower</option>
+              </select>
+            </div>
+            <span class="ov-label">Corners</span>
+            <div class="ov-control ov-extras">
+              <select id="name-role-overlay-x-corners" aria-label="Corner shape" onchange="handleNameRoleOverlayChange()">
+                <option value="">Design's own</option>
+                <option value="square">Square</option>
+                <option value="soft">Soft</option>
+                <option value="round">Round</option>
+                <option value="pill">Pill</option>
+              </select>
+              <select id="name-role-overlay-x-position" aria-label="Height on the screen" onchange="handleNameRoleOverlayChange()">
+                <option value="bottom">Bottom</option>
+                <option value="middle">Middle</option>
+                <option value="top">Top</option>
+              </select>
+            </div>
+            <span class="ov-label">Third line</span>
+            <div class="ov-control">
+              <input type="text" id="name-role-overlay-x-extra" maxlength="80" placeholder="Optional, for example the church or city" aria-label="Third line" onchange="handleNameRoleOverlayChange()" oninput="handleNameRoleOverlayChange(false, true)">
+            </div>
+            <span class="ov-label">Hide after</span>
+            <div class="ov-control">
+              <select id="name-role-overlay-x-autohide" aria-label="Hide by itself after" onchange="handleNameRoleOverlayChange()">
+                <option value="0">Stays until hidden</option>
+                <option value="4">4 seconds</option>
+                <option value="6">6 seconds</option>
+                <option value="8">8 seconds</option>
+                <option value="10">10 seconds</option>
+                <option value="15">15 seconds</option>
+                <option value="20">20 seconds</option>
+              </select>
             </div>
             <span class="ov-label">Size</span>
             <div class="ov-sizes">
@@ -367,6 +455,32 @@
                     <option value="classic-duoslant">Slant</option>
                     <option value="classic-duoflag">Role Flag</option>
                     <option value="classic-duopill">Pill Layers</option>
+                    <option value="classic-blueprint">Blueprint</option>
+                    <option value="classic-ticket">Ticket</option>
+                    <option value="classic-stamp">Stamp</option>
+                    <option value="classic-dogear">Dog-ear</option>
+                    <option value="classic-chalk">Chalkboard</option>
+                    <option value="classic-sunbeam">Sunbeam</option>
+                    <option value="classic-gradline">Gradient Line</option>
+                    <option value="classic-leaf">Leaf</option>
+                    <option value="classic-terminal">Terminal</option>
+                    <option value="classic-diagonal">Diagonal Split</option>
+                    <option value="classic-cobar">Callout Bar</option>
+                    <option value="classic-coblock">Callout Block</option>
+                    <option value="classic-cobox">Callout Box</option>
+                    <option value="classic-cocorner">Callout Corner</option>
+                    <option value="classic-cobadge">Callout Badge</option>
+                    <option value="classic-couline">Callout Tag Line</option>
+                    <option value="classic-cobrackets">Callout Brackets</option>
+                    <option value="classic-cotint">Callout Tint</option>
+                    <option value="classic-cosquare">Callout Square</option>
+                    <option value="classic-cotag">Callout Top Tag</option>
+                    <option value="classic-cohighlight">Callout Highlight</option>
+                    <option value="classic-cowhite">Callout White</option>
+                    <option value="classic-sbleft">Simple Rule Left</option>
+                    <option value="classic-sbtop">Simple Rule Top</option>
+                    <option value="classic-sbblock">Simple Block</option>
+                    <option value="classic-sbbar">Simple Bar</option>
                     <option value="classic-custom">My design</option>
                   </optgroup>
                   <optgroup label="Right Title Bar">
@@ -414,6 +528,32 @@
                     <option value="right-duoslant">Right Slant</option>
                     <option value="right-duoflag">Right Role Flag</option>
                     <option value="right-duopill">Right Pill Layers</option>
+                    <option value="right-blueprint">Right Blueprint</option>
+                    <option value="right-ticket">Right Ticket</option>
+                    <option value="right-stamp">Right Stamp</option>
+                    <option value="right-dogear">Right Dog-ear</option>
+                    <option value="right-chalk">Right Chalkboard</option>
+                    <option value="right-sunbeam">Right Sunbeam</option>
+                    <option value="right-gradline">Right Gradient Line</option>
+                    <option value="right-leaf">Right Leaf</option>
+                    <option value="right-terminal">Right Terminal</option>
+                    <option value="right-diagonal">Right Diagonal Split</option>
+                    <option value="right-cobar">Right Callout Bar</option>
+                    <option value="right-coblock">Right Callout Block</option>
+                    <option value="right-cobox">Right Callout Box</option>
+                    <option value="right-cocorner">Right Callout Corner</option>
+                    <option value="right-cobadge">Right Callout Badge</option>
+                    <option value="right-couline">Right Callout Tag Line</option>
+                    <option value="right-cobrackets">Right Callout Brackets</option>
+                    <option value="right-cotint">Right Callout Tint</option>
+                    <option value="right-cosquare">Right Callout Square</option>
+                    <option value="right-cotag">Right Callout Top Tag</option>
+                    <option value="right-cohighlight">Right Callout Highlight</option>
+                    <option value="right-cowhite">Right Callout White</option>
+                    <option value="right-sbleft">Right Simple Rule Left</option>
+                    <option value="right-sbtop">Right Simple Rule Top</option>
+                    <option value="right-sbblock">Right Simple Block</option>
+                    <option value="right-sbbar">Right Simple Bar</option>
                     <option value="right-custom">Right My design</option>
                   </optgroup>
                   <optgroup label="Centered Banner">
@@ -460,6 +600,32 @@
                     <option value="centered-duoslant">Centered Slant</option>
                     <option value="centered-duoflag">Centered Role Flag</option>
                     <option value="centered-duopill">Centered Pill Layers</option>
+                    <option value="centered-blueprint">Centered Blueprint</option>
+                    <option value="centered-ticket">Centered Ticket</option>
+                    <option value="centered-stamp">Centered Stamp</option>
+                    <option value="centered-dogear">Centered Dog-ear</option>
+                    <option value="centered-chalk">Centered Chalkboard</option>
+                    <option value="centered-sunbeam">Centered Sunbeam</option>
+                    <option value="centered-gradline">Centered Gradient Line</option>
+                    <option value="centered-leaf">Centered Leaf</option>
+                    <option value="centered-terminal">Centered Terminal</option>
+                    <option value="centered-diagonal">Centered Diagonal Split</option>
+                    <option value="centered-cobar">Centered Callout Bar</option>
+                    <option value="centered-coblock">Centered Callout Block</option>
+                    <option value="centered-cobox">Centered Callout Box</option>
+                    <option value="centered-cocorner">Centered Callout Corner</option>
+                    <option value="centered-cobadge">Centered Callout Badge</option>
+                    <option value="centered-couline">Centered Callout Tag Line</option>
+                    <option value="centered-cobrackets">Centered Callout Brackets</option>
+                    <option value="centered-cotint">Centered Callout Tint</option>
+                    <option value="centered-cosquare">Centered Callout Square</option>
+                    <option value="centered-cotag">Centered Callout Top Tag</option>
+                    <option value="centered-cohighlight">Centered Callout Highlight</option>
+                    <option value="centered-cowhite">Centered Callout White</option>
+                    <option value="centered-sbleft">Centered Simple Rule Left</option>
+                    <option value="centered-sbtop">Centered Simple Rule Top</option>
+                    <option value="centered-sbblock">Centered Simple Block</option>
+                    <option value="centered-sbbar">Centered Simple Bar</option>
                     <option value="centered-custom">Centered My design</option>
                   </optgroup>
                   <optgroup label="Wide Band">
@@ -506,12 +672,162 @@
                     <option value="band-duoslant">Slant Band</option>
                     <option value="band-duoflag">Role Flag Band</option>
                     <option value="band-duopill">Pill Layers Band</option>
+                    <option value="band-blueprint">Blueprint Band</option>
+                    <option value="band-ticket">Ticket Band</option>
+                    <option value="band-stamp">Stamp Band</option>
+                    <option value="band-dogear">Dog-ear Band</option>
+                    <option value="band-chalk">Chalkboard Band</option>
+                    <option value="band-sunbeam">Sunbeam Band</option>
+                    <option value="band-gradline">Gradient Line Band</option>
+                    <option value="band-leaf">Leaf Band</option>
+                    <option value="band-terminal">Terminal Band</option>
+                    <option value="band-diagonal">Diagonal Split Band</option>
+                    <option value="band-cobar">Callout Bar Band</option>
+                    <option value="band-coblock">Callout Block Band</option>
+                    <option value="band-cobox">Callout Box Band</option>
+                    <option value="band-cocorner">Callout Corner Band</option>
+                    <option value="band-cobadge">Callout Badge Band</option>
+                    <option value="band-couline">Callout Tag Line Band</option>
+                    <option value="band-cobrackets">Callout Brackets Band</option>
+                    <option value="band-cotint">Callout Tint Band</option>
+                    <option value="band-cosquare">Callout Square Band</option>
+                    <option value="band-cotag">Callout Top Tag Band</option>
+                    <option value="band-cohighlight">Callout Highlight Band</option>
+                    <option value="band-cowhite">Callout White Band</option>
+                    <option value="band-sbleft">Simple Rule Left Band</option>
+                    <option value="band-sbtop">Simple Rule Top Band</option>
+                    <option value="band-sbblock">Simple Block Band</option>
+                    <option value="band-sbbar">Simple Bar Band</option>
                     <option value="band-custom">My design Band</option>
                   </optgroup>
                 </select></div>
           <div class="ov-footer">
             <button type="button" class="ov-test-btn name-role-overlay-example-btn" onclick="testNameRoleLowerThird()"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4l14 8-14 8z"/></svg>Test</button>
             <button type="button" class="ov-air-btn name-role-overlay-show-btn" id="name-role-overlay-show-btn" aria-pressed="false" onclick="toggleNameRoleOverlay()">Show on air</button>
+          </div>
+        </div>
+        <div id="qr-overlay-panel" class="name-role-overlay-panel xo-panel">
+          <section class="ov-card" aria-labelledby="xo-qr-title">
+            <h2 id="xo-qr-title">QR code</h2>
+            <div class="ov-field">
+              <label for="xo-qr-url">Link or text</label>
+              <input type="text" id="xo-qr-url" maxlength="300" placeholder="https://church.org/give" onchange="onExtraOverlayChange()" oninput="onExtraOverlayChange(true)">
+            </div>
+            <div class="ov-field">
+              <label for="xo-qr-caption">Caption <span>(optional)</span></label>
+              <input type="text" id="xo-qr-caption" maxlength="40" placeholder="Scan to give" onchange="onExtraOverlayChange()" oninput="onExtraOverlayChange(true)">
+            </div>
+          </section>
+          <section class="ov-card ov-style" aria-labelledby="xo-qr-style-title">
+            <h2 id="xo-qr-style-title">Style</h2>
+            <label for="xo-qr-pos" class="ov-label">Position</label>
+            <div class="ov-control"><select class="ov-select" id="xo-qr-pos" aria-label="Where on the screen" onchange="onExtraOverlayChange()">
+                <option value="bottom-right">Bottom right</option>
+                <option value="bottom-left">Bottom left</option>
+                <option value="top-right">Top right</option>
+                <option value="top-left">Top left</option>
+                <option value="center">Centre</option>
+              </select></div>
+            <label for="xo-qr-look" class="ov-label">Card</label>
+            <div class="ov-control">
+              <select class="ov-select" id="xo-qr-look" aria-label="Card colours" onchange="onExtraOverlayChange()">
+                <option value="light">White card</option>
+                <option value="dark">Dark card</option>
+              </select>
+            </div>
+            <label for="xo-qr-size" class="ov-label">Size</label>
+            <div class="ov-slider"><input type="range" id="xo-qr-size" min="12" max="60" step="1" value="28" oninput="onExtraOverlayChange(true)"><output id="xo-qr-size-value">28%</output></div>
+          </section>
+          <div class="ov-footer">
+            <button type="button" class="ov-air-btn" id="xo-qr-show-btn" aria-pressed="false" onclick="toggleExtraOverlay('qr')">Show on air</button>
+          </div>
+        </div>
+        <div id="countdown-overlay-panel" class="name-role-overlay-panel xo-panel">
+          <section class="ov-card" aria-labelledby="xo-cd-title">
+            <h2 id="xo-cd-title">Countdown</h2>
+            <div class="ov-field">
+              <label for="xo-cd-label">Label <span>(optional)</span></label>
+              <input type="text" id="xo-cd-label" maxlength="40" placeholder="Service starts in" onchange="onExtraOverlayChange()" oninput="onExtraOverlayChange(true)">
+            </div>
+            <label for="xo-cd-mode" class="ov-label">Count</label>
+            <div class="ov-control">
+              <select class="ov-select" id="xo-cd-mode" aria-label="How to count" onchange="onExtraOverlayChange()">
+                <option value="duration">For a number of minutes</option>
+                <option value="clock">Until a time of day</option>
+              </select>
+            </div>
+            <div class="ov-field" id="xo-cd-minutes-row">
+              <label for="xo-cd-minutes">Minutes</label>
+              <input type="number" id="xo-cd-minutes" min="1" max="600" step="1" value="10" onchange="onExtraOverlayChange()">
+            </div>
+            <div class="ov-field" id="xo-cd-time-row">
+              <label for="xo-cd-time">Time of day</label>
+              <input type="time" id="xo-cd-time" value="18:00" onchange="onExtraOverlayChange()">
+            </div>
+            <div class="ov-field">
+              <label for="xo-cd-end">When it reaches zero <span>(optional)</span></label>
+              <input type="text" id="xo-cd-end" maxlength="30" placeholder="We are live" onchange="onExtraOverlayChange()" oninput="onExtraOverlayChange(true)">
+            </div>
+            <label class="mini-toggle xo-check"><span>Hide a few seconds after zero</span><input type="checkbox" id="xo-cd-hide" checked onchange="onExtraOverlayChange()"></label>
+          </section>
+          <section class="ov-card ov-style" aria-labelledby="xo-cd-style-title">
+            <h2 id="xo-cd-style-title">Style</h2>
+            <label for="xo-cd-pos" class="ov-label">Position</label>
+            <div class="ov-control"><select class="ov-select" id="xo-cd-pos" aria-label="Where on the screen" onchange="onExtraOverlayChange()">
+                <option value="bottom-right">Bottom right</option>
+                <option value="bottom-left">Bottom left</option>
+                <option value="top-right">Top right</option>
+                <option value="top-left">Top left</option>
+                <option value="center">Centre</option>
+              </select></div>
+            <label for="xo-cd-accent" class="ov-label">Colour</label>
+            <div class="ov-control ov-colors"><label><span class="name-role-overlay-accent-picker" title="Label and zero colour"><input type="color" id="xo-cd-accent" value="#90D5FF" aria-label="Label colour" onchange="onExtraOverlayChange()"></span>Accent</label></div>
+            <label for="xo-cd-size" class="ov-label">Size</label>
+            <div class="ov-slider"><input type="range" id="xo-cd-size" min="5" max="30" step="1" value="12" oninput="onExtraOverlayChange(true)"><output id="xo-cd-size-value">12%</output></div>
+          </section>
+          <div class="ov-footer">
+            <button type="button" class="ov-air-btn" id="xo-countdown-show-btn" aria-pressed="false" onclick="toggleExtraOverlay('countdown')">Start and show on air</button>
+          </div>
+        </div>
+        <div id="ticker-overlay-panel" class="name-role-overlay-panel xo-panel">
+          <section class="ov-card" aria-labelledby="xo-tk-title">
+            <h2 id="xo-tk-title">Ticker</h2>
+            <div class="ov-field">
+              <label for="xo-tk-text">Messages <span>(one per line)</span></label>
+              <textarea id="xo-tk-text" rows="4" maxlength="600" placeholder="Welcome to church&#10;Youth night is on Friday at 7" onchange="onExtraOverlayChange()" oninput="onExtraOverlayChange(true)"></textarea>
+            </div>
+            <div class="ov-field">
+              <label for="xo-tk-label">Tag <span>(optional)</span></label>
+              <input type="text" id="xo-tk-label" maxlength="24" placeholder="Announcements" onchange="onExtraOverlayChange()" oninput="onExtraOverlayChange(true)">
+            </div>
+          </section>
+          <section class="ov-card ov-style" aria-labelledby="xo-tk-style-title">
+            <h2 id="xo-tk-style-title">Style</h2>
+            <label for="xo-tk-where" class="ov-label">Position</label>
+            <div class="ov-control">
+              <select class="ov-select" id="xo-tk-where" aria-label="Top or bottom" onchange="onExtraOverlayChange()">
+                <option value="bottom">Bottom</option>
+                <option value="top">Top</option>
+              </select>
+            </div>
+            <label for="xo-tk-speed" class="ov-label">Speed</label>
+            <div class="ov-control">
+              <select class="ov-select" id="xo-tk-speed" aria-label="Scroll speed" onchange="onExtraOverlayChange()">
+                <option value="slow">Slow</option>
+                <option value="normal" selected>Normal</option>
+                <option value="fast">Fast</option>
+              </select>
+            </div>
+            <label for="xo-tk-color" class="ov-label">Colours</label>
+            <div class="ov-control ov-colors">
+              <label><span class="name-role-overlay-accent-picker" title="Band colour"><input type="color" id="xo-tk-color" value="#101216" aria-label="Band colour" onchange="onExtraOverlayChange()"></span>Band</label>
+              <label><span class="name-role-overlay-accent-picker" title="Tag colour"><input type="color" id="xo-tk-accent" value="#90D5FF" aria-label="Tag colour" onchange="onExtraOverlayChange()"></span>Tag</label>
+            </div>
+            <label for="xo-tk-height" class="ov-label">Height</label>
+            <div class="ov-slider"><input type="range" id="xo-tk-height" min="4" max="14" step="0.5" value="7" oninput="onExtraOverlayChange(true)"><output id="xo-tk-height-value">7%</output></div>
+          </section>
+          <div class="ov-footer">
+            <button type="button" class="ov-air-btn" id="xo-ticker-show-btn" aria-pressed="false" onclick="toggleExtraOverlay('ticker')">Show on air</button>
           </div>
         </div>
         <div id="social-engagement-overlay-panel" class="name-role-overlay-panel social-engagement-overlay-panel">
@@ -1145,6 +1461,8 @@
           <div class="shortcut-row"><span>Service lock on or off</span><kbd>⌘ L · Ctrl L</kbd></div>
           <div id="section-shortcut-rows"><div class="shortcut-row"><span>Open a section by its place in the top bar (1 is the first tab)</span><kbd>⌘/Ctrl 1–9</kbd></div></div>
           <div class="shortcut-row"><span>Show or hide the sidebar</span><kbd>S · ⌘ B</kbd></div>
+          <div class="shortcut-row"><span>Show or hide the name and role lower third</span><kbd>L</kbd></div>
+          <div class="shortcut-row"><span>Next / previous saved name</span><kbd>K · J</kbd></div>
           <div class="shortcut-row"><span>Open or close Settings</span><kbd>⌘ S · ⌘ ,</kbd></div>
           <div class="shortcut-row"><span>Open Outputs</span><kbd>⌘ O</kbd></div>
           <div class="shortcut-row"><span>Show the connected displays</span><kbd>⌘ D</kbd></div>
@@ -3348,6 +3666,7 @@
   <script src="../../shared/displays-view.js"></script>
   <script src="../../shared/lower-third-extra.js"></script>
   <script src="../../shared/social-overlay.js"></script>
+  <script src="../../shared/extra-overlays.js"></script>
   <script src="./scripts/core/state-and-storage.js"></script>
   <script src="./scripts/library/bible-search-db.js"></script>
   <script src="./scripts/core/panel-app-core.js"></script>
@@ -3376,6 +3695,8 @@
   <script src="./scripts/ui/section-order.js"></script>
   <script src="./scripts/ui/input-shells.js"></script>
   <script src="./scripts/ui/popup-scrim.js"></script>
+  <script src="./scripts/ui/overlay-extras.js"></script>
+  <script src="./scripts/ui/extra-overlays-panel.js"></script>
   <script src="./scripts/core/settings-and-controls.js"></script>
   <script src="./scripts/ui/sidebar-and-workspace.js"></script>
   <script src="./scripts/output/sync-and-output.js"></script>

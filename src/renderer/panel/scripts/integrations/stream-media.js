@@ -210,6 +210,7 @@
       document.body.classList.toggle('sp-media-rendering', on);
       const now = on ? { kind: streamMedia.playingKind, url: streamMedia.playingUrl, trusted: streamMedia.playingTrusted, loop: streamMedia.loop, fit: streamMedia.fit } : null;
       ['preview-display-shell', 'program-display-shell'].forEach((id) => { const m = mediaMirror(id); if (m) paintMediaMirror(m, now); });
+      if (typeof updateAirIndicator === 'function') updateAirIndicator();
       if (typeof refreshDisplaysView === 'function') refreshDisplaysView();
       mediaThumbs.forEach((t) => { if (t.frame) t.frame.src = on ? 'about:blank' : (t.url || 'about:blank'); });
     }
@@ -256,6 +257,46 @@
       await stopBgWall();
     }
 
+    // Rename an item, or change the address of a link
+    function buildMediaEditor(item, mk, btn) {
+      const form = mk('div', 'md-editor');
+      const nameIn = mk('input'); nameIn.type = 'text'; nameIn.value = item.name; nameIn.setAttribute('aria-label', 'Name'); nameIn.placeholder = 'Name';
+      form.appendChild(nameIn);
+      let linkIn = null;
+      if (item.source === 'link') {
+        linkIn = mk('input'); linkIn.type = 'text'; linkIn.value = item.url; linkIn.setAttribute('aria-label', 'Link'); linkIn.placeholder = 'https://…';
+        form.appendChild(linkIn);
+      }
+      const save = () => {
+        const found = linkIn ? classifyMediaLink(linkIn.value) : null;
+        if (linkIn && !found) { showToast('Paste a web address that starts with https://'); linkIn.focus(); return; }
+        saveMediaEdit(item.id, nameIn.value.trim() || item.name, found ? found.url : '', found ? found.kind : '');
+      };
+      [nameIn, linkIn].filter(Boolean).forEach((el) => { el.onkeydown = (e) => { if (e.key === 'Enter') save(); else if (e.key === 'Escape') cancelMediaEdit(); }; });
+      const row = mk('div', 'md-editor-actions');
+      row.append(btn('Save', 'Keep these changes', save, 'is-primary'), btn('Cancel', 'Leave it as it was', cancelMediaEdit));
+      form.appendChild(row);
+      setTimeout(() => { nameIn.focus(); nameIn.select(); }, 0);
+      return form;
+    }
+    function cancelMediaEdit() { streamMedia.editing = ''; if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); renderMedia(); }
+    function saveMediaEdit(id, name, url, kind) {
+      const list = loadStreamMediaList().map((x) => {
+        if (x.id !== id) return x;
+        const next = { ...x, name };
+        if (url) { next.url = url; next.kind = kind || x.kind; }
+        return next;
+      });
+      saveStreamMediaList(list);
+      mediaThumbs.delete(id); delete streamMedia.urls[id]; delete streamMedia.missing[id];
+      // What is playing keeps its old address until it is played again; the name on the label is updated
+      if (streamMedia.playing === id) streamMedia.playingName = name;
+      streamMedia.editing = '';
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      showToast('Saved');
+      renderMedia();
+    }
+
     // A video shows a frame; a web page shows a small live copy of itself (it cannot make sound there)
     async function mediaThumbBody(item) {
       const url = await streamMediaUrl(item).catch(() => '');
@@ -296,7 +337,7 @@
       let wallOpen = false;
       try { wallOpen = !!(window.BSPDesktop && (await window.BSPDesktop.isWallOpen())); } catch (e) { /* bridge unavailable */ }
       if (!wallOpen && streamMedia.wall) streamMedia.wall = '';
-      const sig = JSON.stringify([list, streamMedia.playing, streamMedia.wall, streamMedia.sound, streamMedia.appSound, streamMedia.loop, streamMedia.fit, Object.keys(streamMedia.missing)]);
+      const sig = JSON.stringify([list, streamMedia.playing, streamMedia.wall, streamMedia.sound, streamMedia.appSound, streamMedia.loop, streamMedia.fit, streamMedia.editing || '', Object.keys(streamMedia.missing)]);
       if (host.dataset.sig === sig) return;
       if (host.contains(document.activeElement) && /^(SELECT|INPUT)$/.test(document.activeElement.tagName)) return;
       host.dataset.sig = sig;
@@ -366,7 +407,7 @@
         const nameRow = mk('div', 'md-name-row');
         nameRow.appendChild(mk('div', 'md-name', item.name));
         nameRow.appendChild(mk('span', 'md-kind', (item.source === 'link' ? 'Link · ' : '') + (item.kind === 'html' ? 'Web page' : 'Video')));
-        card.appendChild(nameRow);
+        card.appendChild(streamMedia.editing === item.id ? buildMediaEditor(item, mk, btn) : nameRow);
         const actions = mk('div', 'md-card-actions');
         actions.appendChild(btn(onStream ? 'On stream' : 'Play on stream', 'Play it over the live stream', () => playMediaOnStream(item.id), 'is-primary'));
         actions.appendChild(btn(onWall ? 'On wall' : 'Wall', 'Show it on the Wall/LED screen', () => playMediaOnWall(item.id)));
@@ -378,7 +419,7 @@
         MEDIA_TAGS.forEach((t) => sel.appendChild(new Option(t, t)));
         sel.value = MEDIA_TAGS.includes(item.tag) ? item.tag : 'Other';
         sel.onchange = () => setMediaTag(item.id, sel.value);
-        foot.append(sel, btn('Remove', 'Take it off this list (the file is kept)', () => removeMediaItem(item.id), 'is-tiny'));
+        foot.append(sel, btn('Edit', item.source === 'link' ? 'Change the name or the link' : 'Change the name', () => { streamMedia.editing = item.id; renderMedia(); }, 'is-tiny'), btn('Remove', 'Take it off this list (the file is kept)', () => removeMediaItem(item.id), 'is-tiny'));
         card.appendChild(foot);
         grid.appendChild(card);
       }
