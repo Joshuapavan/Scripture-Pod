@@ -3231,14 +3231,6 @@
       }, Math.round(durationSec * 1000));
     }
 
-    // Calculate optimal font size for Bible LT mode
-    function calculateBibleFontSize(lineCount, baseSize) {
-      if (lineCount <= 2) return baseSize;
-      if (lineCount === 3) return Math.max(baseSize * 0.85, 24);
-      if (lineCount === 4) return Math.max(baseSize * 0.75, 20);
-      return Math.max(baseSize * 0.65, 18);
-    }
-
     // Handle window resize
     function handleResize() {
       resizeYoutubeFrames();

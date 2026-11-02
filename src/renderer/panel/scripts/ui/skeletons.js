@@ -20,4 +20,3 @@
       host.style.display = '';
       host.setAttribute('aria-busy', 'true');
     }
-    function clearSkeletonBusy(host) { if (host) host.removeAttribute('aria-busy'); }

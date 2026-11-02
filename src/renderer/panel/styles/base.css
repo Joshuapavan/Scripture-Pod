@@ -2715,12 +2715,6 @@
       gap: 3px;
     }
 
-    .settings-footer-pro {
-      font-size: 7px;
-      vertical-align: super;
-      color: var(--settings-footer-color, var(--text-secondary));
-      line-height: 1;
-    }
     .settings-footer-link {
       color: var(--settings-footer-link-color, var(--settings-footer-color, var(--accent-light)));
       font-weight: 700;
@@ -3414,30 +3408,6 @@
     #footer-bible-version-popover.open {
       display: flex;
     }
-    #footer-bible-version-popover .footer-bv-list {
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    #footer-bible-version-popover .footer-bv-search {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      background: var(--bg-panel, #1c1f26);
-      padding: 2px 0 6px;
-    }
-    #footer-bible-version-popover .footer-bv-search input {
-      width: 100%;
-      box-sizing: border-box;
-      border: 1px solid var(--border);
-      background: var(--panel-content-bg, rgba(255,255,255,0.04));
-      color: var(--text);
-      border-radius: 8px;
-      padding: 7px 10px;
-      font-size: 12px;
-      font-family: inherit;
-      outline: none;
-    }
     #footer-bible-version-popover .footer-bv-item {
       width: 100%;
       border-radius: 8px;
@@ -3470,63 +3440,8 @@
       justify-content: flex-start;
       cursor: pointer;
     }
-    #footer-bible-version-popover .footer-bv-name {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-    #footer-bible-version-popover .footer-bv-flags {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-left: auto;
-      flex: 0 0 auto;
-    }
-    #footer-bible-version-popover .footer-bv-flag {
-      min-width: 20px;
-      height: 20px;
-      padding: 0 6px;
-      border-radius: 999px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      font-weight: 800;
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.18);
-    }
-    #footer-bible-version-popover .footer-bv-flag.primary {
-      background: rgba(10, 132, 255, 0.92);
-      border-color: rgba(125, 190, 255, 0.65);
-    }
-    #footer-bible-version-popover .footer-bv-flag.secondary {
-      background: rgba(46, 204, 113, 0.9);
-      border-color: rgba(143, 234, 176, 0.6);
-    }
     #footer-bible-version-popover .footer-bv-btn:hover {
       background: rgba(255, 255, 255, 0.04);
-    }
-    #footer-bible-version-popover .footer-bv-del {
-      border: none;
-      background: transparent;
-      color: var(--text-secondary);
-      width: 28px;
-      min-width: 28px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 12px;
-      line-height: 1;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0.72;
-      transition: all 0.15s ease;
-      margin: 2px 2px 2px 0;
-    }
-    #footer-bible-version-popover .footer-bv-del:hover {
-      background: rgba(239, 68, 68, 0.18);
-      color: var(--danger);
-      opacity: 1;
     }
     #footer-bible-version-popover .footer-bv-btn:disabled {
       cursor: not-allowed;

@@ -459,10 +459,6 @@ pub fn handle(app: &AppHandle, state: &Arc<AppState>, name: &str, label: &str, b
             }
             json!(true)
         }
-        #[cfg(any(debug_assertions, feature = "harness"))]
-        "devWrite" => { let ok = fs::write(arg["path"].as_str().unwrap_or("/tmp/dev-write"), arg["contents"].as_str().unwrap_or("")).is_ok(); json!({"ok": ok}) }
-        #[cfg(any(debug_assertions, feature = "harness"))]
-        "devRead" => json!({"contents": fs::read_to_string(arg.as_str().unwrap_or("")).unwrap_or_default()}),
         "log" => {
             #[cfg(any(debug_assertions, feature = "harness"))]
             println!("[page:{}] {}", label, arg);

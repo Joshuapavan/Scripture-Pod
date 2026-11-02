@@ -2849,11 +2849,6 @@
       saveToStorageDebounced();
     }
 
-    function handleWorkspaceLayoutModeChange() {
-      const select = document.getElementById('workspace-layout-mode-select');
-      applyWorkspaceLayoutMode(select ? select.value : 'classic', { persist: true });
-    }
-
     function updateFocusedWorkspaceToolbar() {
       const addBtn = document.querySelector('.header-toolbar > .add-btn');
       const modeSwitch = document.getElementById('editor-mode-switch');
@@ -3126,11 +3121,6 @@
         saveState();
         saveToStorageDebounced();
       }
-    }
-
-    function handleSidebarLayoutChange() {
-      const select = document.getElementById('sidebar-layout-select');
-      applySidebarLayoutMode(select ? select.value : 'layout2', { persist: true });
     }
 
     function positionSidebarPopup() {

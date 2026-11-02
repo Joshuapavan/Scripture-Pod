@@ -3689,10 +3689,6 @@
         if (dragOverlay) dragOverlay.style.display = 'none';
       }
 
-      function getLeftRailWidth() {
-        return 0;
-      }
-
       function getCurrentLeftPanelWidth() {
         return main ? main.offsetWidth : 0;
       }
