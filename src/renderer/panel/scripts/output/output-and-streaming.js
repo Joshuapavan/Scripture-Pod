@@ -1576,6 +1576,12 @@
         card.style.right = Math.max(8, Math.round(window.innerWidth - r.right)) + 'px';
       }
       card.classList.toggle('is-open', !!open);
+      // The card hangs from the button's right edge; when that would push it past the left edge it is moved in
+      if (open) {
+        const box = card.getBoundingClientRect();
+        if (box.left < 8) { card.style.left = '8px'; card.style.right = 'auto'; }
+        else { card.style.left = ''; }
+      }
       btn?.setAttribute('aria-expanded', open ? 'true' : 'false');
       btn?.classList.toggle('is-active', !!open);
     }

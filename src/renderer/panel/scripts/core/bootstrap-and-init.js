@@ -4110,6 +4110,7 @@
       const modal = document.getElementById('settingsModal');
       if (modal) modal.dataset.smTab = tabId;
       if (typeof syncMediaSettingsPanel === 'function') syncMediaSettingsPanel();
+      if (tabId === 'sections' && typeof renderSectionsManager === 'function') renderSectionsManager();
       if (typeof scheduleInputShells === 'function') scheduleInputShells();
     }
 

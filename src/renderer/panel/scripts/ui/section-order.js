@@ -120,3 +120,105 @@
       setupSectionDrag();
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSectionOrder); else initSectionOrder();
+
+    // ── Showing and hiding sections ─────────────────────────────────────────────────
+    // Any section can be hidden from the top bar (Settings, Sections). At least one always stays. A hidden section is
+    // skipped by ⌘1…9 and ⌘[ ⌘], which count the tabs that are shown.
+    const SECTION_HIDDEN_KEY = 'scripturePod.sectionHidden.v1';
+    function loadHiddenSections() {
+      try { const saved = JSON.parse(localStorage.getItem(SECTION_HIDDEN_KEY) || '[]'); if (Array.isArray(saved)) return saved.filter((id) => typeof id === 'string'); } catch (e) { /* storage unavailable */ }
+      return [];
+    }
+    function saveHiddenSections(ids) {
+      try { localStorage.setItem(SECTION_HIDDEN_KEY, JSON.stringify(ids)); } catch (e) { /* storage unavailable */ }
+    }
+    function applySectionVisibility() {
+      const hidden = new Set(loadHiddenSections());
+      const present = sectionTabIds();
+      // Never all of them: with everything hidden there would be no way back
+      if (present.length && present.every((id) => hidden.has(id))) hidden.delete(present[0]);
+      present.forEach((id) => {
+        const tab = document.getElementById(id);
+        if (tab) tab.hidden = hidden.has(id);
+        const btn = document.querySelector('#page-nav-bar .page-nav-btn[data-side-tab="' + id.replace(/^tab-/, '') + '"]');
+        if (btn) btn.hidden = hidden.has(id);
+      });
+      // The open section was hidden: go to the first one that is shown
+      const active = document.querySelector('#app-topbar .sidebar-tabs .tab.active');
+      if (active && active.hidden) {
+        const first = Array.from(sectionTabHost().querySelectorAll('.tab')).find((t) => !t.hidden);
+        if (first) first.click();
+      }
+      if (typeof labelSectionShortcuts === 'function') labelSectionShortcuts();
+    }
+    function setSectionShown(id, shown) {
+      const present = sectionTabIds();
+      let hidden = loadHiddenSections().filter((x) => present.includes(x));
+      hidden = shown ? hidden.filter((x) => x !== id) : Array.from(new Set(hidden.concat(id)));
+      if (present.every((x) => hidden.includes(x))) { showToast('At least one section has to stay'); return false; }
+      saveHiddenSections(hidden);
+      applySectionVisibility();
+      return true;
+    }
+    function showAllSections() {
+      saveHiddenSections([]);
+      applySectionVisibility();
+      renderSectionsManager();
+    }
+
+    // The list in Settings: move a section up or down, show or hide it
+    function renderSectionsManager() {
+      const host = document.getElementById('sections-manager');
+      if (!host) return;
+      const ids = sectionTabIds();
+      const hidden = new Set(loadHiddenSections());
+      host.replaceChildren();
+      ids.forEach((id, index) => {
+        const tab = document.getElementById(id);
+        if (!tab) return;
+        const row = document.createElement('div');
+        row.className = 'sec-row' + (hidden.has(id) ? ' is-hidden' : '');
+        const icon = document.createElement('span');
+        icon.className = 'sec-icon';
+        const svg = tab.querySelector('svg');
+        if (svg) icon.appendChild(svg.cloneNode(true));
+        const name = document.createElement('span');
+        name.className = 'sec-name';
+        name.textContent = (tab.textContent || '').trim() || id;
+        const place = document.createElement('span');
+        place.className = 'sec-place';
+        place.textContent = hidden.has(id) ? 'Hidden' : 'Key ' + (ids.filter((x) => !hidden.has(x)).indexOf(id) + 1 <= 9 ? '\u2318' + (ids.filter((x) => !hidden.has(x)).indexOf(id) + 1) : '\u2013');
+        const move = (label, aria, delta, disabled) => {
+          const b = document.createElement('button');
+          b.type = 'button'; b.className = 'sec-move'; b.textContent = label; b.title = aria; b.setAttribute('aria-label', aria + ' ' + name.textContent);
+          b.disabled = disabled;
+          b.onclick = () => {
+            moveSection(id, index + delta);
+            renderSectionsManager();
+            // Keep the keyboard where it was: on the same section's button, in its new row
+            const rows = host.querySelectorAll('.sec-row');
+            const moved = rows[Math.max(0, Math.min(rows.length - 1, index + delta))];
+            const buttons = moved ? moved.querySelectorAll('.sec-move') : [];
+            const target = buttons[delta < 0 ? 0 : 1];
+            if (target && !target.disabled) target.focus(); else if (buttons[0] && !buttons[0].disabled) buttons[0].focus(); else if (buttons[1]) buttons[1].focus();
+          };
+          return b;
+        };
+        const toggle = document.createElement('label');
+        toggle.className = 'mini-toggle sec-toggle';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox'; cb.checked = !hidden.has(id); cb.setAttribute('aria-label', 'Show ' + name.textContent);
+        cb.onchange = () => { if (!setSectionShown(id, cb.checked)) cb.checked = true; renderSectionsManager(); };
+        toggle.appendChild(cb);
+        row.append(icon, name, place, move('\u2191', 'Move up', -1, index === 0), move('\u2193', 'Move down', 1, index === ids.length - 1), toggle);
+        host.appendChild(row);
+      });
+    }
+    function resetSectionsFromSettings() {
+      saveHiddenSections([]);
+      resetSectionOrder();
+      applySectionVisibility();
+      renderSectionsManager();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', applySectionVisibility); else applySectionVisibility();
+

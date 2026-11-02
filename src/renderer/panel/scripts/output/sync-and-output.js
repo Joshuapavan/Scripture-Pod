@@ -2108,14 +2108,20 @@ ${getLtThumbCss()}
       const primaryRawText = p.raw || '';
       let dynamicHeight = getLtBgHeightPct(verseCount);
       let dualSecondaryRaw = '';
+      // The other versions are drawn under the main one only when they are different Bibles: a version already shown as
+      // the main one (or as the second) is not drawn again, however the choices got that way
+      const livePrimaryVersion = (liveItem && liveItem.version) || (livePointer && livePointer.version) || activeBibleVersion;
+      let dualSecondaryEff = (dualVersionSecondaryId && dualVersionSecondaryId !== livePrimaryVersion) ? dualVersionSecondaryId : null;
+      let dualTertiaryEff = (dualVersionTertiaryId && dualVersionTertiaryId !== livePrimaryVersion && dualVersionTertiaryId !== dualSecondaryEff) ? dualVersionTertiaryId : null;
+      if (!dualSecondaryEff && dualTertiaryEff) { dualSecondaryEff = dualTertiaryEff; dualTertiaryEff = null; }
       const storedDualSnapshot = (liveItem && liveItem.dualSnapshot) ? liveItem.dualSnapshot : null;
-      const globalDualActive = dualVersionModeEnabled && !!dualVersionSecondaryId && !useCustomStyle &&
+      const globalDualActive = dualVersionModeEnabled && !!dualSecondaryEff && !useCustomStyle &&
         livePointer.kind === 'bible';
       const isStoredDualActive = !!storedDualSnapshot;
       const dualActive = isStoredDualActive || globalDualActive;
       const shouldAutoReduceForDual = globalDualActive && !isStoredDualActive && livePointer.source !== 'schedule';
       const dualMeasurementRaw = shouldAutoReduceForDual
-        ? resolveDualSecondaryRawForMeasurement(storedDualSnapshot, dualVersionSecondaryId, livePointer, liveLineCursor, liveItem)
+        ? resolveDualSecondaryRawForMeasurement(storedDualSnapshot, dualSecondaryEff, livePointer, liveLineCursor, liveItem)
         : '';
       const prefitDualSecondaryRaw = dualMeasurementRaw || (storedDualSnapshot ? (storedDualSnapshot.raw || '') : '');
       const singleBibleFullMaxFont = (typeof SINGLE_BIBLE_FULL_MAX_FONT === 'number') ? SINGLE_BIBLE_FULL_MAX_FONT : 60;
@@ -2394,7 +2400,7 @@ ${getLtThumbCss()}
               refTextTransform: activeLtRefTextTransform
             });
         } else {
-          const secondaryList = bibles[dualVersionSecondaryId];
+          const secondaryList = bibles[dualSecondaryEff];
           const chapterIndexForSecondary = getDualBibleChapterIndex(liveItem, livePointer);
           const secondaryItem = (secondaryList && chapterIndexForSecondary != null)
             ? secondaryList[chapterIndexForSecondary]
@@ -2449,7 +2455,7 @@ ${getLtThumbCss()}
       // tertiary support (display a third version underneath secondary)
       let tertiarySectionHtml = '';
       const storedTertiarySnapshot = (liveItem && liveItem.tertiarySnapshot) ? liveItem.tertiarySnapshot : null;
-      const globalTertiaryActive = dualVersionModeEnabled && !!dualVersionTertiaryId && !useCustomStyle && livePointer.kind === 'bible';
+      const globalTertiaryActive = dualVersionModeEnabled && !!dualTertiaryEff && !useCustomStyle && livePointer.kind === 'bible';
       if (globalTertiaryActive || storedTertiarySnapshot) {
         let tertiarySegment = '';
         if (storedTertiarySnapshot) {
@@ -2483,7 +2489,7 @@ ${getLtThumbCss()}
               refTextTransform: activeLtRefTextTransform
             });
         } else {
-          const tertiaryList = bibles[dualVersionTertiaryId];
+          const tertiaryList = bibles[dualTertiaryEff];
           const chapterIndexForTertiary = getDualBibleChapterIndex(liveItem, livePointer);
           const tertiaryItem = (tertiaryList && chapterIndexForTertiary != null)
             ? tertiaryList[chapterIndexForTertiary]
@@ -2604,8 +2610,8 @@ ${getLtThumbCss()}
         refPositionFull: refPositionFull,
         autoResizeLT: autoResizeLT,
         dualVersionMode: !!dualSectionHtml,
-        dualVersionSecondaryId: dualVersionSecondaryId || null,
-        dualVersionTertiaryId: dualVersionTertiaryId || null,
+        dualVersionSecondaryId: dualSecondaryEff || null,
+        dualVersionTertiaryId: dualTertiaryEff || null,
         dualVersionPrimaryId: (livePointer.kind === 'bible') ? livePointer.version : null,
         nameRoleOverlay: ui.nameRoleOverlay
       };

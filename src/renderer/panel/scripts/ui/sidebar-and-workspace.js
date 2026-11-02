@@ -139,23 +139,40 @@
       setSidebarTab('bible');
     }
 
+    // Leaving Overlays, by any way (another tab, Media, Wall/LED, Displays): the example lower third, the QR code, countdown
+    // and ticker examples, and any test that is playing go, and the Preview monitor goes back to the selection
+    let overlaysCleanupAt = 0;
+    function leaveOverlaysCleanup() {
+      if (Date.now() - overlaysCleanupAt < 500) return;
+      overlaysCleanupAt = Date.now();
+      try { if (Array.isArray(lowerThirdTestTimers)) { lowerThirdTestTimers.forEach(clearTimeout); lowerThirdTestTimers = []; } } catch (e) { /* no test running */ }
+      try { if (typeof previewExtraOverlay === 'function') previewExtraOverlay(''); } catch (e) { /* preview not ready */ }
+      // Noted now: the selection refresh that follows replaces the monitor's state before the timer below runs
+      let wasLowerThird = false;
+      try { const st = previewMonitorState; wasLowerThird = !!(st && st.kind === 'update' && st.payload && st.payload.lowerThirdOnly); } catch (e) { /* no preview */ }
+      setTimeout(() => {
+        // The monitor page stays in lower-third-only mode until it is cleared, so clear it first
+        try {
+          if (wasLowerThird && typeof clearPreviewMonitor === 'function') clearPreviewMonitor();
+        } catch (e) { /* preview not ready */ }
+        if (typeof isPreviewOnlyMode === 'function' && isPreviewOnlyMode() && currentItem && typeof renderSelectionToPreview === 'function') renderSelectionToPreview(lineCursor, { silent: true });
+        else if (typeof refreshPreviewMonitor === 'function') refreshPreviewMonitor();
+      }, 250);
+    }
+    // Media, Wall/LED and Displays leave Overlays without going through setSidebarTab, so the body class is watched
+    (function watchLeavingOverlays() {
+      if (typeof MutationObserver !== 'function') return;
+      let inOverlays = document.body.classList.contains('overlays-workspace-active');
+      new MutationObserver(() => {
+        const now = document.body.classList.contains('overlays-workspace-active');
+        if (inOverlays && !now) leaveOverlaysCleanup();
+        inOverlays = now;
+      }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    })();
+
     function setSidebarTab(tab) {
       // Leaving Overlays: the Preview monitor must go back to the selection, not stay on the lower-third example
-      const leavingOverlays = document.body.classList.contains('overlays-workspace-active');
-      if (leavingOverlays) {
-        try { if (Array.isArray(lowerThirdTestTimers)) { lowerThirdTestTimers.forEach(clearTimeout); lowerThirdTestTimers = []; } } catch (e) { /* no test running */ }
-        // Noted now: the selection refresh that follows replaces the monitor's state before the timer below runs
-        let wasLowerThird = false;
-        try { const st = previewMonitorState; wasLowerThird = !!(st && st.kind === 'update' && st.payload && st.payload.lowerThirdOnly); } catch (e) { /* no preview */ }
-        setTimeout(() => {
-          // The monitor page stays in lower-third-only mode until it is cleared, so clear it first
-          try {
-            if (wasLowerThird && typeof clearPreviewMonitor === 'function') clearPreviewMonitor();
-          } catch (e) { /* preview not ready */ }
-          if (typeof isPreviewOnlyMode === 'function' && isPreviewOnlyMode() && currentItem && typeof renderSelectionToPreview === 'function') renderSelectionToPreview(lineCursor, { silent: true });
-          else if (typeof refreshPreviewMonitor === 'function') refreshPreviewMonitor();
-        }, 250);
-      }
+      if (document.body.classList.contains('overlays-workspace-active')) leaveOverlaysCleanup();
       document.body.classList.remove('overlays-workspace-active', 'displays-workspace-active', 'background-workspace-active', 'media-workspace-active');
       const prevTab = sidebarTab;
       saveProjectionSettingsProfileForTab(getEffectiveSettingsTargetTab());
@@ -493,14 +510,11 @@
     let sidebarQuickActionsRenderPending = false;
     let sidebarQuickActionsNeedsRender = false;
 
+    // The panel drops down from the top bar button, so it works whenever the button is there, with the library
+    // column open or closed, and in every workspace
     function isSidebarQuickActionsVisible() {
-      const main = document.getElementById('main');
-      const sidebar = document.getElementById('sidebar');
-      if (!main || !sidebar || !sidebar.classList.contains('sidebar-open')) return false;
-      const style = getComputedStyle(main);
-      if (style.display === 'none' || style.visibility === 'hidden') return false;
-      const rect = main.getBoundingClientRect();
-      return rect.width > 120 && rect.height > 120;
+      const btn = document.getElementById('sidebar-quick-actions-btn');
+      return !!btn && btn.getClientRects().length > 0;
     }
 
     function scheduleSidebarQuickActionsRender(opts = {}) {

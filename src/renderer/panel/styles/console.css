@@ -3249,3 +3249,96 @@ body:has(#xo-ticker-show-btn[aria-pressed="true"]) .overlay-list-item[data-overl
 /* The blur behind a menu is a filter on the page itself. The old overlay layer is no longer used. */
 .sp-blurred { filter: blur(7px) brightness(.62) !important; pointer-events: none !important; transition: filter .16s ease; }
 body.sp-popup-open #popup-scrim { display: none !important; }
+
+/* ── The window gets narrower: the top bar gives up its words step by step, so it stays on one row ──────────── */
+@media (max-width: 1500px) {
+  #app-topbar #app-topbar-title { display: none; }
+}
+@media (max-width: 1400px) {
+  /* Only the open tab keeps its name, and it is as wide as its name needs; the tabs no longer share the row equally */
+  #app-topbar .sidebar-tabs .tab { flex: 0 0 auto; overflow: visible; white-space: nowrap; }
+  #app-topbar .sidebar-tabs .tab:not(.active) { font-size: 0; gap: 0; padding: 0 12px; }
+  #app-topbar .sidebar-tabs .tab:not(.active) svg { margin: 0; }
+}
+@media (max-width: 1250px) {
+  #app-topbar #btn-service-lock span { display: none; }
+  #app-topbar #btn-service-lock { padding-inline: 11px; }
+}
+@media (max-width: 1180px) {
+  #app-topbar #status-text { display: none; }
+  #app-topbar .air-indicator-text { display: none; }
+}
+
+/* Sections in Settings: one row for each, with a place, move buttons and a switch */
+#app-topbar .sidebar-tabs .tab[hidden], #page-nav-bar .page-nav-btn[hidden] { display: none !important; }
+#settingsModal[data-sm-tab="sections"] .settings-preview { display: none; }
+#settingsModal[data-sm-tab="sections"] .sm-body { grid-template-columns: 252px minmax(0, 1fr) !important; }
+#settingsModal[data-sm-tab="sections"] #settings-target-switch, #settingsModal[data-sm-tab="sections"] .sm-applyto { display: none !important; }
+.sections-manager { display: flex; flex-direction: column; }
+.sec-row { display: grid; grid-template-columns: 26px 1fr auto auto auto 52px; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--sp-line); }
+.sec-row:last-child { border-bottom: 0; }
+.sec-row.is-hidden .sec-name, .sec-row.is-hidden .sec-icon { opacity: .45; }
+.sec-icon svg { width: 18px; height: 18px; display: block; }
+.sec-name { font-size: 14px; font-weight: 500; }
+.sec-place { font-size: 12px; color: var(--sp-subtle); min-width: 46px; text-align: right; }
+.sec-move { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--sp-line); background: transparent; color: var(--sp-text); font-size: 15px; cursor: pointer; }
+.sec-move:disabled { opacity: .35; cursor: default; }
+.sec-move:not(:disabled):hover { border-color: var(--sp-text); }
+.sec-actions { display: flex; gap: 8px; padding-top: 12px; }
+
+/* ── Bible versions picker ─────────────────────────────────────────────────────────────────────────── */
+#footer-bible-version-popover { width: min(380px, calc(100vw - 20px)) !important; max-height: min(520px, calc(100vh - 100px)) !important; padding: 0 !important; overflow: hidden !important; gap: 0 !important; border-radius: 14px !important; }
+#footer-bible-version-popover .vp { display: flex; flex-direction: column; min-height: 0; max-height: inherit; }
+#footer-bible-version-popover .vp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 14px 16px 8px; }
+#footer-bible-version-popover .vp-head strong { font-size: 14px; font-weight: 600; }
+#footer-bible-version-popover .vp-count { font-size: 12px; color: var(--sp-subtle); }
+#footer-bible-version-popover .vp-search { display: flex; align-items: center; gap: 8px; margin: 0 12px 8px; padding: 0 12px; height: 38px; border-radius: 10px; border: 1px solid var(--sp-line); background: var(--sp-inset, rgba(255,255,255,.03)); color: var(--sp-muted); }
+#footer-bible-version-popover .vp-search:focus-within { border-color: var(--sp-cue, #3b9eff); }
+#footer-bible-version-popover .vp-search svg { width: 15px; height: 15px; flex: 0 0 auto; }
+#footer-bible-version-popover .vp-search input { flex: 1 1 auto; min-width: 0; height: 34px; border: 0 !important; background: transparent !important; box-shadow: none !important; outline: 0 !important; padding: 0 !important; min-height: 0 !important; color: var(--sp-text); font-size: 13px; }
+#footer-bible-version-popover .vp-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 8px 8px; }
+#footer-bible-version-popover .vp-group { padding: 10px 8px 4px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--sp-subtle); }
+#footer-bible-version-popover .vp-row { position: relative; display: flex; align-items: center; border-radius: 10px; }
+#footer-bible-version-popover .vp-row:hover, #footer-bible-version-popover .vp-row:focus-within { background: var(--sp-raised, rgba(255,255,255,.05)); }
+#footer-bible-version-popover .vp-row.is-main { background: color-mix(in srgb, var(--sp-cue, #3b9eff) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sp-cue, #3b9eff) 55%, transparent); }
+#footer-bible-version-popover .vp-pick { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 9px 8px; border: 0; background: transparent; color: var(--sp-text); text-align: left; cursor: pointer; border-radius: 10px; font: inherit; }
+#footer-bible-version-popover .vp-code { flex: 0 0 auto; min-width: 44px; padding: 5px 8px; border-radius: 8px; background: var(--sp-line-2, rgba(255,255,255,.08)); color: var(--sp-text); font: 600 12px/1 var(--sp-mono, ui-monospace, monospace); text-align: center; letter-spacing: .02em; }
+#footer-bible-version-popover .vp-row.is-main .vp-code { background: var(--sp-cue, #3b9eff); color: #04121f; }
+#footer-bible-version-popover .vp-text { flex: 1 1 auto; min-width: 0; }
+#footer-bible-version-popover .vp-name { display: block; font-size: 13px; font-weight: 500; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#footer-bible-version-popover .vp-role { flex: 0 0 auto; padding: 2px 9px; border-radius: 999px; background: rgba(61, 214, 140, .14); color: #7fe0ae; font-size: 11px; font-weight: 600; }
+#footer-bible-version-popover .vp-role.is-main { background: color-mix(in srgb, var(--sp-cue, #3b9eff) 22%, transparent); color: color-mix(in srgb, var(--sp-cue, #3b9eff) 55%, #fff); }
+#footer-bible-version-popover .vp-del { flex: 0 0 auto; width: 30px; height: 30px; margin-right: 4px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: var(--sp-subtle); cursor: pointer; opacity: 0; transition: opacity .12s; }
+#footer-bible-version-popover .vp-del svg { width: 15px; height: 15px; }
+#footer-bible-version-popover .vp-row:hover .vp-del, #footer-bible-version-popover .vp-row:focus-within .vp-del, #footer-bible-version-popover .vp-del:focus-visible { opacity: 1; }
+#footer-bible-version-popover .vp-del:hover { color: #ff8a80; background: rgba(229, 55, 42, .12); }
+#footer-bible-version-popover .vp-none { padding: 18px 8px; font-size: 13px; color: var(--sp-subtle); text-align: center; }
+#footer-bible-version-popover .vp-foot { padding: 10px 16px 12px; border-top: 1px solid var(--sp-line); font-size: 12px; line-height: 1.45; color: var(--sp-subtle); }
+
+/* ── Settings header: the title on the left; on the right the scope, the saved status and Close, all lined up ───── */
+#settingsModal .settings-modal-title { align-items: center !important; flex-wrap: nowrap !important; gap: 14px !important; padding: 16px 20px 14px 24px !important; font-size: 26px !important; border-bottom: 1px solid var(--sp-line) !important; }
+#settingsModal .settings-modal-title > span[data-i18n="settings_display_settings"] { flex: 0 1 auto; line-height: 1.1; white-space: nowrap; }
+/* The scope reads as a field: a small label over the chosen value, with a chevron */
+#settingsModal .sm-applyto { margin-left: auto !important; position: relative; display: flex; flex-direction: column; align-items: stretch; justify-content: center; gap: 1px; min-width: 168px; height: 46px !important; padding: 6px 34px 6px 14px !important; border: 1px solid var(--sp-line) !important; border-radius: 12px !important; background: var(--sp-card) !important; cursor: pointer; font-family: var(--ui-font, 'Geist', sans-serif); }
+#settingsModal .sm-applyto:hover { border-color: var(--sp-muted) !important; }
+#settingsModal .sm-applyto:focus-within { border-color: var(--sp-cue, #3b9eff) !important; }
+#settingsModal .sm-applyto-label { font: 600 10px/1.1 var(--ui-font, 'Geist', sans-serif); letter-spacing: .09em; text-transform: uppercase; color: var(--sp-subtle); }
+#settingsModal .sm-applyto select { appearance: none; -webkit-appearance: none; height: 22px !important; padding: 0 !important; margin: 0; border: 0 !important; background-color: transparent !important; background-image: none !important; box-shadow: none !important; outline: 0 !important; color: var(--sp-text) !important; font: 500 14px/1.2 var(--ui-font, 'Geist', sans-serif) !important; cursor: pointer; width: 100%; }
+#settingsModal .sm-applyto::after { content: ""; position: absolute; right: 14px; top: 50%; width: 7px; height: 7px; margin-top: -5px; border-right: 1.6px solid var(--sp-muted); border-bottom: 1.6px solid var(--sp-muted); transform: rotate(45deg); pointer-events: none; }
+/* Saved: a quiet status, not a button-looking pill */
+#settingsModal .sm-saved { height: auto; padding: 0; background: transparent !important; gap: 6px; font: 500 12px/1 var(--ui-font, 'Geist', sans-serif); color: #7fe0ae; white-space: nowrap; }
+#settingsModal .sm-saved i { width: 8px; height: 8px; box-shadow: 0 0 0 3px rgba(61, 214, 140, .18); }
+/* Without the scope, the status and Close move to the right edge */
+#settingsModal .sm-saved { margin-left: 0; }
+#settingsModal .settings-modal-title:has(.sm-applyto[style*="display: none"]) .sm-saved,
+#settingsModal[data-sm-tab="shortcuts"] .sm-saved, #settingsModal[data-sm-tab="presets"] .sm-saved, #settingsModal[data-sm-tab="feedback"] .sm-saved,
+#settingsModal[data-sm-tab="media"] .sm-saved, #settingsModal[data-sm-tab="outputs"] .sm-saved, #settingsModal[data-sm-tab="sections"] .sm-saved { margin-left: auto; }
+#settingsModal .settings-close-btn { display: inline-flex !important; align-items: center; justify-content: center; padding: 0 !important; flex: 0 0 auto; }
+#settingsModal .settings-close-btn svg { width: 16px; height: 16px; }
+
+#settingsModal .settings-modal-title > span[data-i18n="settings_display_settings"] { order: -2; }
+#settingsModal .settings-modal-title > #panel-inline-style-67 { order: -1; flex: 1 1 auto; }
+#settingsModal .sm-applyto { margin-left: 0 !important; }
+#settingsModal .sm-saved, #settingsModal[data-sm-tab] .sm-saved { margin-left: 0 !important; }
+#settingsModal[data-sm-tab="shortcuts"] .sm-applyto, #settingsModal[data-sm-tab="presets"] .sm-applyto, #settingsModal[data-sm-tab="feedback"] .sm-applyto,
+#settingsModal[data-sm-tab="media"] .sm-applyto, #settingsModal[data-sm-tab="outputs"] .sm-applyto, #settingsModal[data-sm-tab="sections"] .sm-applyto { display: none !important; }

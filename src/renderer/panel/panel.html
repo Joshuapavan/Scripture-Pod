@@ -1495,17 +1495,17 @@
           <button class="seg-btn" id="settings-target-songs" type="button" data-i18n="ui_tab_songs" onclick="handleSettingsTargetChange('songs')">Lyrics</button>
           <button class="seg-btn" id="settings-target-schedule" type="button" onclick="handleSettingsTargetChange('schedule')">Setlist</button>
         </div>
-        <label class="sm-applyto" id="sm-applyto"><span>Apply to</span>
+        <label class="sm-applyto" id="sm-applyto" title="Which workspace the look settings change. The open workspace follows whichever tab you are on."><span class="sm-applyto-label">Apply to</span>
           <select id="sm-apply-select" aria-label="Apply settings to" onchange="handleSettingsTargetChange(this.value)">
-            <option value="follow">Follow the open workspace</option>
+            <option value="follow">Open workspace</option>
             <option value="bible">Bible</option>
             <option value="songs">Lyrics</option>
             <option value="schedule">Setlist</option>
           </select>
         </label>
-        <span class="sm-saved" aria-live="polite"><i aria-hidden="true"></i>Saved automatically</span>
+        <span class="sm-saved" aria-live="polite" title="Changes are saved automatically"><i aria-hidden="true"></i>Saved</span>
         <span id="panel-inline-style-67"></span>
-        <button class="btn settings-close-btn" onclick="closeModal('settingsModal')">✕</button>
+        <button class="btn settings-close-btn" type="button" onclick="closeModal('settingsModal')" aria-label="Close settings" title="Close (Esc)"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </div>
       <!-- Two-pane body -->
       <div class="sm-body">
@@ -1560,6 +1560,10 @@
             <span>Outputs and links</span>
           </div>
           <div class="sm-group-label" data-sm-group="App">App</div>
+          <div class="sm-sidebar-item" data-sm-tab="sections" onclick="switchSettingsTab('sections')">
+            <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            <span>Sections</span>
+          </div>
           <div class="sm-sidebar-item" data-sm-tab="presets" onclick="switchSettingsTab('presets')">
             <svg class="cat-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
             <span data-i18n="settings_presets">General</span>
@@ -2379,6 +2383,18 @@
               <div class="sm-linkrow"><input type="text" id="sm-link-media" readonly placeholder="Open the app to load the address"><button type="button" class="btn" onclick="copyLocalMediaUrl()">Copy</button></div>
             </div>
             <div class="sm-hint">Open a link on another computer, or paste it into an OBS Browser Source. Tick "Control audio via OBS" on the media source.</div>
+          </div>
+        </div>
+        <!-- Tab: Sections -->
+        <div class="sm-tab-panel" data-sm-panel="sections">
+          <div class="sm-panel-title">Sections</div>
+          <div class="settings-category-content" data-card-title="Top bar sections">
+            <div class="sm-hint">Move the sections up or down, and switch off the ones you do not use. You can also drag the tabs in the top bar. The keys ⌘1 to ⌘9 follow this order.</div>
+            <div id="sections-manager" class="sections-manager"></div>
+            <div class="sec-actions">
+              <button type="button" class="btn" onclick="showAllSections()">Show all</button>
+              <button type="button" class="btn" onclick="resetSectionsFromSettings()">Usual order</button>
+            </div>
           </div>
         </div>
         <!-- Tab: Presets -->
