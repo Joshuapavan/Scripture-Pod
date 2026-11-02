@@ -450,7 +450,11 @@
 
     function startMirrorPolling() {
       if (syncMirrorPollTimer) return;
+      // The stored copy is shared only between windows of one browser. A link opened in OBS or on another
+      // computer is fed over the connection, so it has nothing to read there: no need to open the database every 0.8 s.
+      if (new URLSearchParams(window.location.search).get('hostMode') === 'websocket') return;
       syncMirrorPollTimer = setInterval(() => {
+        if (document.hidden) return;
         syncFromMirror(false);
       }, 800);
     }

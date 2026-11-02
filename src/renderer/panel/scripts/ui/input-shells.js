@@ -4,8 +4,11 @@
     // wrapper is marked here, and its own border goes: the wrapper is the field. Nothing needs to be listed per field.
     const INPUT_KINDS = /^(text|search|number|url|email|password|tel)$/;
     function markInputShells(root) {
-      (root || document).querySelectorAll('input:not(.in-shell)').forEach((input) => {
-        if (!INPUT_KINDS.test(input.type || 'text')) return;
+      (root || document).querySelectorAll('input:not(.in-shell):not([data-shell-done])').forEach((input) => {
+        if (!INPUT_KINDS.test(input.type || 'text')) { input.dataset.shellDone = '1'; return; }
+        // A field that is not on screen yet cannot be measured: look again once it shows. Each field is measured once.
+        if (!input.offsetParent) return;
+        input.dataset.shellDone = '1';
         // The wrapper can be the parent, or a level or two up (a stepper keeps its input in an inner span)
         let box = input.parentElement, found = false;
         for (let depth = 0; box && box !== document.body && depth < 3 && !found; depth++, box = box.parentElement) {
@@ -25,9 +28,19 @@
     }
     let inputShellTimer = 0;
     function scheduleInputShells() { clearTimeout(inputShellTimer); inputShellTimer = setTimeout(() => markInputShells(), 120); }
-    document.addEventListener('focusin', (e) => { if (e.target && e.target.tagName === 'INPUT') markInputShells(e.target.parentElement && e.target.parentElement.parentElement); });
-    if (typeof MutationObserver === 'function') new MutationObserver(scheduleInputShells).observe(document.documentElement, { childList: true, subtree: true });
+    document.addEventListener('focusin', (e) => {
+      if (!e.target || e.target.tagName !== 'INPUT') return;
+      delete e.target.dataset.shellDone;
+      markInputShells(e.target.parentElement && e.target.parentElement.parentElement);
+    });
+    // Only a change that brings in a field is worth a look: the rest of the page redraws all the time
+    const bringsInput = (n) => n.nodeType === 1 && (n.tagName === 'INPUT' || (n.firstElementChild && n.querySelector('input')));
+    if (typeof MutationObserver === 'function') new MutationObserver((records) => {
+      for (const r of records) for (const n of r.addedNodes) if (bringsInput(n)) { scheduleInputShells(); return; }
+    }).observe(document.documentElement, { childList: true, subtree: true });
     document.addEventListener('DOMContentLoaded', scheduleInputShells);
     scheduleInputShells();
     // Fields in a panel that was hidden cannot be measured until it shows, so look again now and then
-    setInterval(() => { if (document.visibilityState === 'visible') markInputShells(); }, 2000);
+    setInterval(() => {
+      if (document.visibilityState === 'visible' && document.querySelector('input:not(.in-shell):not([data-shell-done])')) markInputShells();
+    }, 3000);

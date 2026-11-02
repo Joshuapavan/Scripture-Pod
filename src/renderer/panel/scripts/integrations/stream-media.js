@@ -436,6 +436,24 @@
       renderMedia();
     }
     setInterval(() => { if (document.body.classList.contains('media-workspace-active')) renderMedia(); }, 2000);
+    // The small live copies of the pages only run while the Media tab is on screen and the window is visible;
+    // away from it they are blanked, so five web pages are not running behind the stream. They load again on return.
+    function mediaThumbsShouldRun() {
+      return document.body.classList.contains('media-workspace-active') && document.visibilityState === 'visible' && !streamMedia.playing;
+    }
+    function syncMediaThumbsRunning() {
+      const run = mediaThumbsShouldRun();
+      let n = 0;
+      mediaThumbs.forEach((t) => {
+        if (!t.frame || !t.url) return;
+        const want = run ? t.url : 'about:blank';
+        if (t.frame.getAttribute('src') === want) return;
+        if (run) setTimeout(() => { if (mediaThumbsShouldRun()) t.frame.src = t.url; }, 300 * n++);
+        else t.frame.src = 'about:blank';
+      });
+    }
+    if (typeof MutationObserver === 'function') new MutationObserver(syncMediaThumbsRunning).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    document.addEventListener('visibilitychange', syncMediaThumbsRunning);
 
     // The Media and wall section of Settings: the same switches as the Media tab and the Wall/LED tab
     function setMediaSetting(key, value) {
