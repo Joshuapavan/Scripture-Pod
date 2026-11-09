@@ -45,7 +45,11 @@
     function idbPut(storeName, value) {
       // Never write a placeholder for a Bible that is not loaded
       if (storeName === STORE_BIBLES && value && value.unloaded) return Promise.resolve(false);
-      if (storeName === STORE_SONGS) queueRelayStatePush({ includeSongs: true });
+      if (storeName === STORE_SONGS) {
+        queueRelayStatePush({ includeSongs: true });
+        // Every song that is added or edited also goes to the shared Firebase library
+        if (window.SP_SONG_CLOUD) window.SP_SONG_CLOUD.uploadSong(value);
+      }
       if (storeName === STORE_BIBLES) { queueRelayStatePush({ includeBibles: true }); queueBibleSearchDbIndex(value); }
       return openDb().then(db => new Promise((resolve, reject) => {
         const tx = db.transaction(storeName, 'readwrite');

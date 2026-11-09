@@ -1411,6 +1411,14 @@
         <label>Genius access token <input type="password" id="lyrics-key-genius" autocomplete="off" onchange="saveLyricsSourceKeys()"></label>
         <label>YouTube API key <input type="password" id="lyrics-key-youtube" autocomplete="off" onchange="saveLyricsSourceKeys()"></label>
       </details>
+      <details class="lyrics-sources">
+        <summary>Cloud song database</summary>
+        <p>Songs you add are uploaded to a shared Firebase library, and searches look there first. Scripture Pod's own project is filled in by default. To use a different project, enter its details here.</p>
+        <label><input type="checkbox" id="cloud-db-enabled" onchange="saveCloudDbSettings()"> Check the cloud database when searching</label>
+        <label>Project ID <input type="text" id="cloud-db-project-id" autocomplete="off" onchange="saveCloudDbSettings()"></label>
+        <label>Project number <input type="text" id="cloud-db-project-number" autocomplete="off" onchange="saveCloudDbSettings()"></label>
+        <label>Web API key (optional) <input type="password" id="cloud-db-api-key" autocomplete="off" onchange="saveCloudDbSettings()"></label>
+      </details>
       <div id="auto-lyrics-suggest" class="lyrics-suggest" style="display:none"></div>
       <div id="auto-lyrics-status"  data-i18n="auto_lyrics_prompt">Enter a title or artist and search.</div>
       <div id="auto-lyrics-results" ></div>
@@ -3679,6 +3687,8 @@
   <script src="../../shared/lyrics-clean.js"></script>
   <script src="../../shared/spoken-reference.js"></script>
   <script src="../../shared/song-import.js"></script>
+  <script src="../../shared/song-cloud-config.js"></script>
+  <script src="../../shared/song-cloud.js"></script>
   <script src="../../shared/displays-view.js"></script>
   <script src="../../shared/lower-third-extra.js"></script>
   <script src="../../shared/social-overlay.js"></script>

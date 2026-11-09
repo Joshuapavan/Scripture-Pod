@@ -2066,7 +2066,25 @@
       try { localStorage.setItem(LYRICS_KEYS_STORAGE, JSON.stringify({ genius, youtube })); } catch (e) { /* storage unavailable */ }
       showToast('Lyrics sources saved');
     }
+    function saveCloudDbSettings() {
+      const val = (id) => document.getElementById(id)?.value.trim() || '';
+      window.SP_SONG_CLOUD.saveSettings({
+        enabled: !!document.getElementById('cloud-db-enabled')?.checked,
+        projectId: val('cloud-db-project-id'),
+        projectNumber: val('cloud-db-project-number'),
+        apiKey: val('cloud-db-api-key')
+      });
+      showToast('Cloud database settings saved');
+    }
+    function loadCloudDbInputs() {
+      if (!window.SP_SONG_CLOUD) return;
+      const c = window.SP_SONG_CLOUD.getConfig();
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+      const on = document.getElementById('cloud-db-enabled'); if (on) on.checked = c.enabled;
+      set('cloud-db-project-id', c.projectId); set('cloud-db-project-number', c.projectNumber); set('cloud-db-api-key', c.apiKey);
+    }
     function loadLyricsSourceKeyInputs() {
+      loadCloudDbInputs();
       const keys = getLyricsSourceKeys();
       const g = document.getElementById('lyrics-key-genius'); if (g) g.value = keys.genius;
       const y = document.getElementById('lyrics-key-youtube'); if (y) y.value = keys.youtube;
@@ -2105,6 +2123,15 @@
       if (!cleanTitle && !cleanArtist) throw new Error('Title or artist required');
 
       const timeoutMs = 12000;
+      // Songs already in the shared Firebase library come first: if it has the song, no website is searched
+      if (window.SP_SONG_CLOUD && window.SP_SONG_CLOUD.isEnabled()) {
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), 6000);
+        try {
+          const fromCloud = dedupeLyricsSearchResults(await window.SP_SONG_CLOUD.searchSongs(`${cleanTitle} ${cleanArtist}`.trim() || cleanTitle, 10, ctl.signal));
+          if (fromCloud.length) return fromCloud;
+        } catch (e) { /* offline or not set up: search the websites */ } finally { clearTimeout(timer); }
+      }
       const doFetchJson = async (url) => {
         const ctl = new AbortController();
         const t = setTimeout(() => ctl.abort(), timeoutMs);
