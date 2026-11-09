@@ -1019,6 +1019,8 @@
       }
       const qRaw = document.getElementById('song-search').value || "";
       const q = normalizeSearchText(qRaw);
+      // Songs this search finds go to the shared library as well, if it does not have them yet
+      if (sidebarTab === 'songs' && typeof queueCloudSyncForSearch === 'function') queueCloudSyncForSearch(qRaw);
       list.replaceChildren();
       list.classList.remove('chapter-grid-mode');
       if (sidebarTab === 'bible' && qRaw.trim().length >= 2) {

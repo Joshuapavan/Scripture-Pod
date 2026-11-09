@@ -599,6 +599,7 @@
     ${(typeof window !== 'undefined' && window.SP_LT_EXTRA && window.SP_LT_EXTRA.css) || ''}
     ${(typeof window !== 'undefined' && window.SP_SOCIAL && window.SP_SOCIAL.css) || ''}
     ${(typeof window !== 'undefined' && window.SP_EXTRA && window.SP_EXTRA.css) || ''}
+    ${(typeof window !== 'undefined' && window.SP_BG_MOTION && window.SP_BG_MOTION.css('bg')) || ''}
   </style>
 </head>
 <body>
@@ -635,6 +636,7 @@
       const CHANNEL_NAME = ${channelLiteral};
       const IS_PREVIEW = ${isPreviewLiteral};
       const FX_ENABLED = ${animateLiteral};
+      const BG_MOTION_IDS = ${JSON.stringify((typeof window !== 'undefined' && window.SP_BG_MOTION && window.SP_BG_MOTION.ids) || ['drift'])};
       const channel = IS_PREVIEW ? null : new BroadcastChannel(CHANNEL_NAME);
       const bg = document.getElementById('bg');
       const bgVideo = document.getElementById('bg-video');
@@ -793,6 +795,13 @@
         const angle = Number(data.bgGradientAngle || 135);
         const shadow = data.bgGradientShadow || '#111111';
         const highlight = data.bgGradientHighlight || '#000000';
+        if (mode === 'gradient') {
+          const motion = BG_MOTION_IDS.indexOf(data.bgMotion) >= 0 ? data.bgMotion : 'drift';
+          BG_MOTION_IDS.forEach(function (id) { bg.classList.toggle('bg-motion-' + id, id === motion); });
+          const tint = /^#[0-9a-f]{6}$/i.test(data.bgMotionColor || '') ? data.bgMotionColor : highlight;
+          bg.style.setProperty('--bg-hi', /^#[0-9a-f]{6}$/i.test(tint) ? tint : '#ffffff');
+          bg.style.setProperty('--bg-lo', /^#[0-9a-f]{6}$/i.test(shadow) ? shadow : '#000000');
+        }
         if (mode === 'gradient') {
           bg.style.backgroundImage = data.bgGradientShape === 'linear'
             ? 'linear-gradient(' + angle + 'deg, ' + shadow + ', ' + highlight + ')'

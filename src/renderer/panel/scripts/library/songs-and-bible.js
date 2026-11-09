@@ -906,7 +906,9 @@
         bgBlur: Math.max(0, Math.min(40, parseInt(document.getElementById('bg-blur')?.value || '0', 10) || 0)),
         bgEdgeFix: (document.getElementById('bg-edge-fix')?.value || 'off') === 'on',
         bgGradientAngle: document.getElementById('bg-gradient-angle')?.value || 135,
-        bgGradientShape: document.getElementById('bg-gradient-shape')?.value || 'radial'
+        bgGradientShape: document.getElementById('bg-gradient-shape')?.value || 'radial',
+        bgMotion: document.getElementById('bg-motion')?.value || 'drift',
+        bgMotionColor: document.getElementById('bg-motion-color-auto')?.checked === false ? (document.getElementById('bg-motion-color')?.value || '') : ''
       };
     }
 
@@ -950,7 +952,9 @@
             bgBlur: Math.max(0, Math.min(40, parseInt(profile.bgBlur != null ? profile.bgBlur : (document.getElementById('bg-blur')?.value || '0'), 10) || 0)),
             bgEdgeFix: profile.bgEdgeFix != null ? !!profile.bgEdgeFix : ((document.getElementById('bg-edge-fix')?.value || 'off') === 'on'),
             bgGradientAngle: profile.bgGradientAngle != null ? profile.bgGradientAngle : (document.getElementById('bg-gradient-angle')?.value || 135),
-            bgGradientShape: profile.bgGradientShape != null ? profile.bgGradientShape : (document.getElementById('bg-gradient-shape')?.value || 'radial')
+            bgGradientShape: profile.bgGradientShape != null ? profile.bgGradientShape : (document.getElementById('bg-gradient-shape')?.value || 'radial'),
+            bgMotion: profile.bgMotion != null ? profile.bgMotion : (document.getElementById('bg-motion')?.value || 'drift'),
+            bgMotionColor: profile.bgMotionColor != null ? profile.bgMotionColor : (document.getElementById('bg-motion-color-auto')?.checked === false ? (document.getElementById('bg-motion-color')?.value || '') : '')
           };
         }
       }

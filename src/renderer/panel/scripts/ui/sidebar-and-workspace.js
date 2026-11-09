@@ -92,7 +92,7 @@
     }
 
     // Overlays tab: the list picks which overlay's settings and preview show.
-    const OVERLAY_TITLES = { 'name-role': 'Name & Role', social: 'Social engagement', qr: 'QR code', countdown: 'Countdown', ticker: 'Ticker' };
+    const OVERLAY_TITLES = { 'name-role': 'Name & Role', social: 'Social engagement', qr: 'QR code', countdown: 'Countdown', ticker: 'Ticker', points: 'Points' };
 
     // "Scripture lower third" follows the Bible workspace: open it in Lower third mode
     function openScriptureLowerThird() {
@@ -117,6 +117,7 @@
       }
       if (typeof previewExtraOverlay === 'function') previewExtraOverlay('');
       if (overlay === 'social') previewSocialEngagementLowerThirdExample();
+      else if (overlay === 'points' && typeof previewPointExample === 'function') previewPointExample();
       else previewNameRoleLowerThirdExample();
     }
 

@@ -2078,10 +2078,13 @@
     }
     // Says what Firebase answered, in words: a refusal from the rules is the usual reason songs do not appear there
     function showCloudDbStatus(text, bad) {
-      const el = document.getElementById('cloud-db-status');
-      if (!el) return;
-      el.textContent = text || '';
-      el.classList.toggle('is-bad', !!bad);
+      // The same message shows under the Get-Lyrics cloud section and on the Song Options page
+      ['cloud-db-status', 'song-cloud-sync-status'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = text || '';
+        el.classList.toggle('is-bad', !!bad);
+      });
     }
     function cloudRefusalText(st) {
       if (st && st.code === 403) return 'Firebase refused it: ' + (st.message || 'permission denied') + '. Open the project in the Firebase console, go to Firestore > Rules, and allow read and write on /songs/{doc}.';
@@ -2095,13 +2098,27 @@
       const part = (name, x) => name + ': ' + (x.ok ? 'allowed' : 'refused (' + (x.message || x.code) + ')');
       showCloudDbStatus(part('Reading', r.read) + '. ' + part('Writing', r.write) + '. ' + (r.read.code === 403 || r.write.code === 403 ? 'Open the project in the Firebase console, go to Firestore > Rules, and allow read and write on /songs/{doc}.' : ''), true);
     }
+    let cloudSyncRunning = false;
     async function sendAllSongsToCloud() {
+      if (cloudSyncRunning) return;
+      if (!window.SP_SONG_CLOUD || !window.SP_SONG_CLOUD.isEnabled()) { showCloudDbStatus('The cloud database is switched off. Turn it on under Get-Lyrics > More sources > Cloud song database.', true); return; }
       const list = (typeof songs !== 'undefined' && Array.isArray(songs)) ? songs : [];
       if (!list.length) { showCloudDbStatus('There are no songs to send.'); return; }
-      showCloudDbStatus('Sending ' + list.length + ' songs...');
-      const r = await window.SP_SONG_CLOUD.uploadAll(list, (done, total) => showCloudDbStatus('Sending ' + done + ' of ' + total + '...'));
-      if (r.ok) showCloudDbStatus('Done. ' + r.sent + ' of ' + r.total + ' songs sent (songs already there are skipped).');
-      else showCloudDbStatus('Stopped after ' + r.sent + ' songs. ' + cloudRefusalText(r.status), true);
+      const buttons = ['cloud-db-send-all', 'song-cloud-sync-btn'].map((id) => document.getElementById(id)).filter(Boolean);
+      cloudSyncRunning = true;
+      buttons.forEach((b) => { b.disabled = true; });
+      showCloudDbStatus('Checking ' + list.length + ' songs...');
+      try {
+        const r = await window.SP_SONG_CLOUD.uploadAll(list, (done, total) => showCloudDbStatus('Checking ' + done + ' of ' + total + '...'));
+        if (!r.ok) { showCloudDbStatus('Stopped after adding ' + r.sent + ' songs. ' + cloudRefusalText(r.status), true); return; }
+        const already = r.total - r.sent;
+        const skipped = list.length - r.total;
+        showCloudDbStatus('Done. ' + r.sent + (r.sent === 1 ? ' song was' : ' songs were') + ' added to the cloud, ' + already + ' already there' + (skipped ? ', ' + skipped + ' without a title or lyrics skipped' : '') + '.');
+        if (r.sent) showToast(r.sent + (r.sent === 1 ? ' song' : ' songs') + ' added to the cloud library');
+      } finally {
+        cloudSyncRunning = false;
+        buttons.forEach((b) => { b.disabled = false; });
+      }
     }
     // A song saved while Firebase refuses it tells the user once, instead of only writing to the console
     let cloudRefusalToldAt = 0;
@@ -2160,6 +2177,8 @@
 
       const timeoutMs = 12000;
       const nameQuery = `${cleanTitle} ${cleanArtist}`.trim();
+      // A song already saved in the app that this search matches goes to the shared library too, if it is not there
+      if (typeof queueCloudSyncForSearch === 'function') queueCloudSyncForSearch(cleanTitle || cleanArtist, { titleOnly: true, delay: 200 });
       const doFetchJson = async (url) => {
         const ctl = new AbortController();
         const t = setTimeout(() => ctl.abort(), timeoutMs);

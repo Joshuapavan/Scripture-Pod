@@ -575,7 +575,9 @@
         bgToggle: document.getElementById('bg-toggle')?.checked,
         animateBgTransitions: document.getElementById('animate-bg-transitions')?.checked,
         bgGradientAngle: document.getElementById('bg-gradient-angle')?.value || 135,
-        bgGradientShape: document.getElementById('bg-gradient-shape')?.value || 'radial'
+        bgGradientShape: document.getElementById('bg-gradient-shape')?.value || 'radial',
+        bgMotion: document.getElementById('bg-motion')?.value || 'drift',
+        bgMotionColor: document.getElementById('bg-motion-color-auto')?.checked === false ? (document.getElementById('bg-motion-color')?.value || '') : ''
       };
       return snapshot;
     }
@@ -814,6 +816,8 @@
       'animateBgTransitions',
       'bgGradientAngle',
       'bgGradientShape',
+      'bgMotion',
+      'bgMotionColor',
       'ltRefFontSize',
       'linesPerPage',
       'activeRatio',
@@ -1184,6 +1188,8 @@
       if (next.animateBgTransitions != null && document.getElementById('animate-bg-transitions')) document.getElementById('animate-bg-transitions').checked = !!next.animateBgTransitions;
       if (next.bgGradientAngle != null && document.getElementById('bg-gradient-angle')) document.getElementById('bg-gradient-angle').value = next.bgGradientAngle;
       if (next.bgGradientShape != null && document.getElementById('bg-gradient-shape')) document.getElementById('bg-gradient-shape').value = next.bgGradientShape;
+      if (next.bgMotion != null && document.getElementById('bg-motion')) document.getElementById('bg-motion').value = next.bgMotion;
+      if (next.bgMotionColor != null && typeof setBgMotionColourInputs === 'function') setBgMotionColourInputs(next.bgMotionColor);
       if (document.getElementById('bg-upload-hint')) {
         document.getElementById('bg-upload-hint').innerText = bgUploadDataUrl ? t('settings_image_selected') : t('settings_no_image_selected');
       }
@@ -1329,6 +1335,8 @@
         bgY: document.getElementById('bg-y').value,
         bgGradientAngle: document.getElementById('bg-gradient-angle')?.value || 135,
         bgGradientShape: document.getElementById('bg-gradient-shape')?.value || 'radial',
+        bgMotion: document.getElementById('bg-motion')?.value || 'drift',
+        bgMotionColor: document.getElementById('bg-motion-color-auto')?.checked === false ? (document.getElementById('bg-motion-color')?.value || '') : '',
         textX: document.getElementById('text-x')?.value ?? 0,
         textY: document.getElementById('text-y')?.value ?? 860,
         padLR: document.getElementById('pad-lr-lt')?.value ?? 5,

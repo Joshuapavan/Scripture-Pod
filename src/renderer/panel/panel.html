@@ -224,6 +224,11 @@
           <span class="overlay-list-copy"><span class="overlay-list-name">Ticker</span><span class="overlay-list-state"><span class="is-ready">Scrolling messages</span><span class="is-on-air">On air</span></span></span>
           <span class="overlay-list-dot" aria-hidden="true"></span>
         </button>
+        <button type="button" class="overlay-list-item" data-overlay="points" aria-pressed="false" onclick="selectOverlayPanel('points')">
+          <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h12M9 12h12M9 18h12"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></span>
+          <span class="overlay-list-copy"><span class="overlay-list-name">Points</span><span class="overlay-list-state"><span class="is-ready">Sermon points</span><span class="is-on-air">On air</span></span></span>
+          <span class="overlay-list-dot" aria-hidden="true"></span>
+        </button>
         <button type="button" class="overlay-list-item" data-overlay="scripture" aria-pressed="false" onclick="openScriptureLowerThird()">
           <span class="overlay-list-icon"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg></span>
           <span class="overlay-list-copy"><span class="overlay-list-name">Scripture lower third</span><span class="overlay-list-state"><span class="is-ready">Follows the Bible workspace</span></span></span>
@@ -831,6 +836,32 @@
             <button type="button" class="ov-air-btn" id="xo-ticker-show-btn" aria-pressed="false" onclick="toggleExtraOverlay('ticker')">Show on air</button>
           </div>
         </div>
+        <div id="points-overlay-panel" class="name-role-overlay-panel xo-panel">
+          <section class="ov-card" aria-labelledby="points-title">
+            <h2 id="points-title">Sermon points</h2>
+            <div class="ov-field">
+              <label for="points-input">Your points <span>(one per line)</span></label>
+              <textarea id="points-input" rows="5" maxlength="6000" placeholder="Trust God in every season&#10;Pray before you decide&#10;Serve with a glad heart" oninput="onPointsEdited()"></textarea>
+            </div>
+            <div id="points-list" class="points-list" role="list" aria-label="Points"></div>
+            <p id="points-empty" class="points-empty">Type your points above. Click one to show it, or use the arrows to go through them.</p>
+          </section>
+          <section class="ov-card ov-style" aria-labelledby="points-label-title">
+            <h2 id="points-label-title">Small line under the point</h2>
+            <div class="ov-field">
+              <label for="points-label">Label <span>(optional)</span></label>
+              <input type="text" id="points-label" maxlength="30" value="" placeholder="None, for example Point" oninput="onPointsEdited()">
+            </div>
+            <label class="xo-check"><span>Number the points (Point 2)</span><input type="checkbox" id="points-numbered" onchange="onPointsEdited()"></label>
+            <label class="xo-check"><span>Show the total (Point 2 of 5)</span><input type="checkbox" id="points-of" onchange="onPointsEdited()"></label>
+            <p class="points-note">Left empty, only the point itself is shown. The point uses the look chosen under Name &amp; Role: its design, colours, animation and size.</p>
+          </section>
+          <div class="ov-footer points-footer">
+            <button type="button" class="ov-test-btn" onclick="stepPoint(-1)" title="Previous point (shortcut in Settings)" aria-label="Previous point">&#8249; Prev</button>
+            <button type="button" class="ov-test-btn" onclick="stepPoint(1)" title="Next point (shortcut in Settings)" aria-label="Next point">Next &#8250;</button>
+            <button type="button" class="ov-air-btn" id="points-show-btn" aria-pressed="false" onclick="togglePointOnAir()">Show on air</button>
+          </div>
+        </div>
         <div id="social-engagement-overlay-panel" class="name-role-overlay-panel social-engagement-overlay-panel">
           <section class="ov-card" aria-labelledby="ov-social-title">
             <h2 id="ov-social-title">Handles</h2>
@@ -1421,7 +1452,7 @@
         <label>Web API key (optional) <input type="password" id="cloud-db-api-key" autocomplete="off" onchange="saveCloudDbSettings()"></label>
         <div class="cloud-db-actions">
           <button type="button" class="btn" id="cloud-db-test" onclick="testCloudDb()">Test connection</button>
-          <button type="button" class="btn" id="cloud-db-send-all" onclick="sendAllSongsToCloud()">Send all my songs</button>
+          <button type="button" class="btn" id="cloud-db-send-all" onclick="sendAllSongsToCloud()">Sync songs to the cloud</button>
         </div>
         <p id="cloud-db-status" class="cloud-db-status" aria-live="polite"></p>
       </details>
@@ -2234,6 +2265,39 @@
               </select>
             </div>
 
+            <div class="settings-field">
+              <label class="settings-label" for="bg-motion">Background motion</label>
+              <select id="bg-motion" class="settings-select" onchange="onAnyControlChange()">
+                <option value="drift" selected>Drift (slow movement)</option>
+                <option value="aurora">Aurora ribbons</option>
+                <option value="waves">Waves</option>
+                <option value="orbs">Floating lights</option>
+                <option value="rays">Light rays</option>
+                <option value="pulse">Breathing glow</option>
+                <option value="shimmer">Shimmer sweep</option>
+                <option value="dust">Rising dust</option>
+                <option value="stars">Twinkling stars</option>
+                <option value="embers">Embers</option>
+                <option value="still">Still (no movement)</option>
+              </select>
+              <p class="settings-hint">Moves a gradient background. Each workspace keeps its own.</p>
+            </div>
+
+            <div class="settings-field" id="bg-colours-field">
+              <span class="settings-label">Background colours</span>
+              <div class="bg-presets" id="bg-presets" role="group" aria-label="Colour themes"></div>
+              <div class="bg-colour-row">
+                <label for="bg-edge-pick">Edge</label>
+                <input type="color" id="bg-edge-pick" value="#AD0000" oninput="onBgColourPick('shadow', this.value)">
+                <label for="bg-glow-pick">Glow</label>
+                <input type="color" id="bg-glow-pick" value="#000000" oninput="onBgColourPick('highlight', this.value)">
+                <label for="bg-motion-color">Movement</label>
+                <input type="color" id="bg-motion-color" value="#ffffff" oninput="onBgMotionColour()" disabled>
+              </div>
+              <label class="xo-check"><span>Movement takes the glow colour</span><input type="checkbox" id="bg-motion-color-auto" checked onchange="onBgMotionColour()"></label>
+              <p class="settings-hint">Edge is the outer colour and glow is the light in the middle. Movement is the colour of the ribbons, lights, dust or stars; left on auto it follows the glow.</p>
+            </div>
+
             <div class="slider-container" id="panel-inline-style-120">
               <div class="slider-header">
                 <label class="settings-label" data-i18n="settings_gradient_angle">GB(Gradient) Angle</label>
@@ -2281,6 +2345,14 @@
                 <span data-i18n="settings_display_songs_by_sections">Display Songs By Sections</span>
               </label>
             </div>
+          </div>
+          <div class="settings-category-content" data-card-title="Cloud song library">
+            <div class="sm-hint">Sends every song saved in this app that the shared Firebase library does not have yet. Songs it already has are left as they are.</div>
+            <div class="cloud-db-actions">
+              <button type="button" class="btn" id="song-cloud-sync-btn" onclick="sendAllSongsToCloud()">Sync songs to the cloud</button>
+              <button type="button" class="btn" onclick="testCloudDb()">Test connection</button>
+            </div>
+            <p class="cloud-db-status" id="song-cloud-sync-status" aria-live="polite"></p>
           </div>
         </div>
         <!-- Tab: Bible Options -->
@@ -3699,6 +3771,7 @@
   <script src="../../shared/displays-view.js"></script>
   <script src="../../shared/lower-third-extra.js"></script>
   <script src="../../shared/social-overlay.js"></script>
+  <script src="../../shared/bg-motion.js"></script>
   <script src="../../shared/extra-overlays.js"></script>
   <script src="./scripts/core/state-and-storage.js"></script>
   <script src="./scripts/library/bible-search-db.js"></script>
@@ -3729,8 +3802,12 @@
   <script src="./scripts/ui/section-order.js"></script>
   <script src="./scripts/ui/input-shells.js"></script>
   <script src="./scripts/ui/popup-scrim.js"></script>
+  <script src="../../shared/points.js"></script>
   <script src="./scripts/ui/overlay-extras.js"></script>
   <script src="./scripts/ui/extra-overlays-panel.js"></script>
+  <script src="./scripts/ui/points-overlay.js"></script>
+  <script src="./scripts/ui/cloud-song-sync.js"></script>
+  <script src="./scripts/ui/bg-colours.js"></script>
   <script src="./scripts/core/settings-and-controls.js"></script>
   <script src="./scripts/ui/sidebar-and-workspace.js"></script>
   <script src="./scripts/output/sync-and-output.js"></script>

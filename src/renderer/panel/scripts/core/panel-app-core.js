@@ -22,7 +22,7 @@
       'bgVideoLoop', 'bgVideoSpeed', 'bgMode', 'bgColor',
       'bgGradientShadow', 'bgGradientHighlight', 'bgBlur', 'bgEdgeFix',
       'bgOpacity', 'bgOpacityFull', 'bgOpacityLT', 'bgY', 'bgToggle',
-      'animateBgTransitions', 'bgGradientAngle', 'bgGradientShape'
+      'animateBgTransitions', 'bgGradientAngle', 'bgGradientShape', 'bgMotion', 'bgMotionColor'
     ];
     const ANIMATION_SETTINGS_KEYS = [
       'songTransitionType',

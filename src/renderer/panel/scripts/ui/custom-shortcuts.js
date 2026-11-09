@@ -32,6 +32,9 @@
       { id: 'toggleLowerThird', label: 'Show or hide the name and role lower third', run: () => toggleNameRoleOverlay() },
       { id: 'nextSpeaker', label: 'Next saved name', run: () => stepSavedName(1) },
       { id: 'prevSpeaker', label: 'Previous saved name', run: () => stepSavedName(-1) },
+      { id: 'nextPoint', label: 'Show the next sermon point', run: () => stepPoint(1) },
+      { id: 'prevPoint', label: 'Show the previous sermon point', run: () => stepPoint(-1) },
+      { id: 'hidePoint', label: 'Hide the sermon point', run: () => { if (pointIsOnAir()) toggleNameRoleOverlay(); } },
       { id: 'showShortcuts', label: 'Show all shortcuts', run: () => openShortcutsWindow() }
     ];
 
@@ -71,6 +74,9 @@
       toggleLowerThird: ['L'],
       nextSpeaker: ['K'],
       prevSpeaker: ['J'],
+      nextPoint: [']'],
+      prevPoint: ['['],
+      hidePoint: ['H'],
       showShortcuts: ['?']
     };
     const SHORTCUTS_STORAGE_KEY = 'scripturePod.shortcuts.v1';

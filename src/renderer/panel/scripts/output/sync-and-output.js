@@ -115,11 +115,16 @@
     }
 
 
+    // A sermon point being shown (Overlays > Points) takes the place of the name and the role on the same lower third
+    let activePointOverlay = null;
+
     function getNameRoleOverlaySettings(enabled) {
+      const point = enabled ? activePointOverlay : null;
+      const baseNameSize = Number(document.getElementById('name-role-overlay-name-size')?.value || 56);
       return {
         enabled: !!enabled,
-        name: String(document.getElementById('name-role-overlay-name')?.value || '').trim(),
-        role: String(document.getElementById('name-role-overlay-role')?.value || '').trim(),
+        name: point ? point.text : String(document.getElementById('name-role-overlay-name')?.value || '').trim(),
+        role: point ? point.role : String(document.getElementById('name-role-overlay-role')?.value || '').trim(),
         style: getNameRoleOverlayStyle(),
         customDesign: String(document.getElementById('name-role-overlay-design')?.value || '').endsWith('-custom') ? getActiveCustomLtDesign() : null,
         customVars: (String(document.getElementById('name-role-overlay-design')?.value || '').endsWith('-custom') && getActiveCustomLtDesign() && window.SP_LT_EXTRA) ? window.SP_LT_EXTRA.customVars(getActiveCustomLtDesign()) : null,
@@ -127,7 +132,7 @@
         accentColor: document.getElementById('name-role-overlay-accent')?.value || '#90D5FF',
         logo: document.getElementById('name-role-overlay-logo-preview')?.dataset.logoDataUrl || '',
         logoColor: document.getElementById('name-role-overlay-logo-color')?.value || 'white',
-        nameSize: Number(document.getElementById('name-role-overlay-name-size')?.value || 56),
+        nameSize: point && window.SP_POINTS ? window.SP_POINTS.sizeFor(point.text, baseNameSize) : baseNameSize,
         roleSize: Number(document.getElementById('name-role-overlay-role-size')?.value || 24),
         logoSize: Number(document.getElementById('name-role-overlay-logo-size')?.value || 128),
         scale: Math.max(50, Math.min(200, Number(document.getElementById('name-role-overlay-scale')?.value) || 100)),
@@ -379,10 +384,22 @@
     }
 
     let nameRoleAutoHideTimer = null;
-    function toggleNameRoleOverlay() {
+    // Hides the lower third by itself after the time chosen under Name & Role > Hide by itself after
+    function scheduleNameRoleAutoHide(overlay) {
+      const button = document.getElementById('name-role-overlay-show-btn');
+      clearTimeout(nameRoleAutoHideTimer);
+      if (button && overlay && overlay.enabled && overlay.extras && overlay.extras.autoHide > 0) {
+        nameRoleAutoHideTimer = setTimeout(() => {
+          if (button.getAttribute('aria-pressed') === 'true') runWithoutServiceLock(() => toggleNameRoleOverlay());
+        }, overlay.extras.autoHide * 1000);
+      }
+    }
+    // A point (an object with text and role) can be passed to show it on this lower third instead of the name
+    function toggleNameRoleOverlay(point) {
       const button = document.getElementById('name-role-overlay-show-btn');
       if (!button) return;
       const enabled = button.getAttribute('aria-pressed') !== 'true';
+      activePointOverlay = (enabled && point && point.text) ? { text: String(point.text), role: String(point.role || '') } : null;
       const overlay = getNameRoleOverlaySettings(enabled);
       if (enabled && !overlay.name) {
         showToast('Enter a name before showing the lower third');
@@ -391,17 +408,22 @@
       if (enabled) {
         setLowerThirdButtonState(document.getElementById('social-engagement-overlay-show-btn'), false, 'social lower third');
         takeLiveOutputForLowerThird();
-        if (!(typeof steppedSavedKey !== 'undefined' && steppedSavedKey === overlay.name + '|' + (overlay.role || ''))) rememberSavedName(overlay.name, overlay.role);
+        if (!activePointOverlay && !(typeof steppedSavedKey !== 'undefined' && steppedSavedKey === overlay.name + '|' + (overlay.role || ''))) rememberSavedName(overlay.name, overlay.role);
       }
       setLowerThirdButtonState(button, enabled, 'lower third');
-      clearTimeout(nameRoleAutoHideTimer);
-      if (enabled && overlay.extras && overlay.extras.autoHide > 0) {
-        nameRoleAutoHideTimer = setTimeout(() => {
-          if (button.getAttribute('aria-pressed') === 'true') runWithoutServiceLock(() => toggleNameRoleOverlay());
-        }, overlay.extras.autoHide * 1000);
-      }
+      scheduleNameRoleAutoHide(overlay);
       updateProgramDisplayStatus();
       handleNameRoleOverlayChange(true);
+    }
+
+    // Shows a sermon point; one already on air is replaced in place, and the lower third plays its animation again
+    function showPointOnAir(point) {
+      const button = document.getElementById('name-role-overlay-show-btn');
+      if (!button || !point || !point.text) return;
+      if (button.getAttribute('aria-pressed') !== 'true') { toggleNameRoleOverlay(point); return; }
+      activePointOverlay = { text: String(point.text), role: String(point.role || '') };
+      handleNameRoleOverlayChange(true);
+      scheduleNameRoleAutoHide(getNameRoleOverlaySettings(true));
     }
 
     function toggleSocialEngagementOverlay() {
@@ -805,7 +827,8 @@ ${getLtThumbCss()}
       appState.settings.socialEngagementOverlayEnabled = document.getElementById('social-engagement-overlay-show-btn')?.getAttribute('aria-pressed') === 'true';
       appState.settings.nameRoleOverlayName = name;
       appState.settings.nameRoleOverlayRole = role;
-      appState.settings.nameRoleOverlayEnabled = enabled;
+      // A point on air is not saved as the name that comes back after a restart
+      appState.settings.nameRoleOverlayEnabled = enabled && !activePointOverlay;
       appState.settings.nameRoleOverlayStyle = getNameRoleOverlayStyle();
       appState.settings.nameRoleOverlayPrimaryColor = document.getElementById('name-role-overlay-primary')?.value || '#90D5FF';
       appState.settings.nameRoleOverlayAccentColor = document.getElementById('name-role-overlay-accent')?.value || '#90D5FF';
@@ -827,7 +850,7 @@ ${getLtThumbCss()}
       saveState();
       saveToStorageDebounced();
       if (enabled) {
-        if (!name) {
+        if (!name && !activePointOverlay) {
           enabledButton?.setAttribute('aria-pressed', 'false');
           if (enabledButton) enabledButton.textContent = 'Show on air';
           appState.settings.nameRoleOverlayEnabled = false;
@@ -2568,6 +2591,8 @@ ${getLtThumbCss()}
         bgGradientHighlight,
         bgGradientAngle: liveBgState.bgGradientAngle || 135,
         bgGradientShape: liveBgState.bgGradientShape || 'radial',
+        bgMotion: liveBgState.bgMotion || 'drift',
+        bgMotionColor: liveBgState.bgMotionColor || '',
         bgImage,
         bgVideo,
         bgVideoLoop,

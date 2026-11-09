@@ -49,6 +49,7 @@
       ['setDisplayBlank', 'Change this display?', 'This blanks or shows that display.'],
       ['toggleExtraOverlay', 'Change the overlay?', 'The QR code, countdown or ticker on the live displays is shown or hidden.'],
       ['toggleNameRoleOverlay', 'Change the overlay?', 'The name and role overlay on the live display is shown or hidden.'],
+      ['showPointOnAir', 'Change the overlay?', 'A sermon point on the live display is shown or changed.'],
       ['toggleSocialEngagementOverlay', 'Change the overlay?', 'The social overlay on the live display is shown or hidden.'],
       ['playMediaOnStream', 'Play this on the stream?', 'It plays over the live stream.'],
       ['playMediaOnWall', 'Show this on the Wall/LED?', 'It replaces what is on the wall.'],

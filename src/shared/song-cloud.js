@@ -208,7 +208,24 @@
     });
   }
 
-  var api = { getStatus: getStatus, uploadAll: uploadAll, testConnection: testConnection, isEnabled: isEnabled, getConfig: getConfig, saveSettings: saveSettings, titleKey: titleKey, docIdFor: docIdFor, uploadSong: uploadSong, searchSongs: searchSongs, SOURCE_NAME: SOURCE_NAME };
+  // Songs in the app that a search matches: the title has the search in it, or (unless titleOnly) the lyrics do.
+  // At most `limit` are returned, so one search never sends a whole library.
+  function findLocalMatches(songs, query, opts) {
+    var o = opts || {};
+    var key = titleKey(query);
+    if (!key || key.length < 2) return [];
+    var out = [];
+    (Array.isArray(songs) ? songs : []).some(function (s) {
+      if (!s || !docIdFor(s.title)) return false;
+      var text = String(s.content != null ? s.content : (s.text || '')).trim();
+      if (!text) return false;
+      if (titleKey(s.title).indexOf(key) >= 0 || (!o.titleOnly && titleKey(text).indexOf(key) >= 0)) out.push(s);
+      return out.length >= (o.limit || 10);
+    });
+    return out;
+  }
+
+  var api = { findLocalMatches: findLocalMatches, getStatus: getStatus, uploadAll: uploadAll, testConnection: testConnection, isEnabled: isEnabled, getConfig: getConfig, saveSettings: saveSettings, titleKey: titleKey, docIdFor: docIdFor, uploadSong: uploadSong, searchSongs: searchSongs, SOURCE_NAME: SOURCE_NAME };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) root.SP_SONG_CLOUD = api;
 })(typeof window !== 'undefined' ? window : globalThis);

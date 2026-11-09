@@ -115,3 +115,17 @@ test('editing a song updates the library copy, and a new song that is not there 
   assert.equal(await cloud.uploadSong({ title: 'Brand New', content: 'one edited', createdAt: now - 5000, updatedAt: now }), true);
   assert.doesNotMatch(calls[1], /currentDocument/);
 });
+
+test('a search matches songs in the app by title or lyrics, a few at a time', () => {
+  const songs = [
+    { title: 'Yeshu Naam', content: 'sing his name' },
+    { title: 'Another', content: 'praise Yeshu all day' },
+    { title: 'Unrelated', content: 'nothing here' },
+    { title: '', content: 'yeshu without a title' },
+    { title: 'Yeshu Empty', content: '' }
+  ];
+  assert.deepEqual(cloud.findLocalMatches(songs, 'yeshu').map((s) => s.title), ['Yeshu Naam', 'Another']);
+  assert.deepEqual(cloud.findLocalMatches(songs, 'yeshu', { titleOnly: true }).map((s) => s.title), ['Yeshu Naam']);
+  assert.deepEqual(cloud.findLocalMatches(songs, 'y'), []);
+  assert.equal(cloud.findLocalMatches(Array.from({ length: 30 }, (_, i) => ({ title: 'Song ' + i, content: 'x' })), 'song', { limit: 4 }).length, 4);
+});

@@ -75,6 +75,8 @@
   <script>if (window.SP_LT_EXTRA) window.SP_LT_EXTRA.inject(document);</script>
   <script src="../../shared/social-overlay.js"></script>
   <script>if (window.SP_SOCIAL) window.SP_SOCIAL.inject(document);</script>
+  <script src="../../shared/bg-motion.js"></script>
+  <script>if (window.SP_BG_MOTION) window.SP_BG_MOTION.inject(document, 'bg-layer');</script>
   <script src="../../shared/extra-overlays.js"></script>
   <script>if (window.SP_EXTRA) window.SP_EXTRA.inject(document);</script>
   <script>
@@ -3000,6 +3002,7 @@
                 setCachedBgImage(elements.bg, buildBackgroundGradient(d.bgGradientShape, angle, gradStart, gradEnd));
                 elements.bg.style.backgroundColor = gradStart;
                 elements.bg.classList.add('bg-animated');
+                if (window.SP_BG_MOTION) window.SP_BG_MOTION.apply(elements.bg, d.bgMotion, gradStart, gradEnd, d.bgMotionColor);
                 return;
               } else {
                 setCachedBgImage(elements.bg, 'none');
