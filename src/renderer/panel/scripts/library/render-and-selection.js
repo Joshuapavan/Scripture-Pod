@@ -901,6 +901,11 @@
             projectLive(true);
             close();
           }});
+          (songServiceState.services || []).forEach((svc) => {
+            const on = window.SP_SONG_SERVICES.inService(songs[itemIndex] || {}, svc.id);
+            items.push({ label: `${on ? '✓ ' : ''}Service: ${svc.name}`, icon: '', action: () => { toggleSongInService(songs[itemIndex], svc.id); close(); } });
+          });
+          if ((songServiceState.services || []).length) items.push({ type: 'sep' });
           items.push({ label: t('common_rename_song'), icon: '✎', action: () => {
             const target = songs[itemIndex];
             if (!target) { close(); return; }
@@ -1041,6 +1046,8 @@
         }
       }
       const frag = document.createDocumentFragment();
+      const isSongsView = sidebarTab === 'songs' && buttonContextTab === 'songs';
+      if (typeof renderSongServicesBar === 'function') renderSongServicesBar();
       // Bible chapters render as a number grid per book; add-to-setlist stays
       // on the right-click menu.
       const chapterGrid = sidebarTab === 'bible' && buttonContextTab === 'bible';
@@ -1055,6 +1062,7 @@
       };
       displayList.forEach((s, i) => {
         if (q && !getItemSearchableText(s).includes(q)) return;
+        if (isSongsView && !window.SP_SONG_SERVICES.inService(s, songServiceState.active)) return;
         const itemIndex = (sidebarTab === 'bible' && displayIndices) ? displayIndices[i] : i;
         const { book, chap } = chapterGrid ? extractBookAndChapter(s) : {};
         if (chapterGrid && chap) {
@@ -1109,6 +1117,7 @@
           div.addEventListener('dragleave', () => div.classList.remove('drop-target'));
           div.addEventListener('drop', (e) => { e.preventDefault(); div.classList.remove('drop-target'); if (dragIndex == null || dragIndex === i) return; const item = schedule.splice(dragIndex, 1)[0]; schedule.splice(i, 0, item); saveState(); saveToStorageDebounced(); renderSongs() });
         } else {
+          if (isSongsView && !q) attachSongDrag(div, s, right);
           const add = document.createElement('span');
           add.style.color = 'var(--success)'; add.style.marginRight = '12px'; add.style.cursor = 'pointer'; add.textContent = '+';
           add.onclick = (e) => addToSet(itemIndex, e);
@@ -1152,6 +1161,7 @@
         frag.appendChild(div);
       });
       list.appendChild(frag);
+      if (isSongsView && !list.children.length && songServiceState.active !== 'all') list.appendChild(buildSongsEmptyNote());
       if (typeof window._refreshNavMirrorResults === 'function') {
         window._refreshNavMirrorResults();
       }
