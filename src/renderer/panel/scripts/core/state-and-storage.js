@@ -481,7 +481,10 @@
         normalizedLines,
         searchableText,
         createdAt: isNew ? now : (song.createdAt || now),
-        updatedAt: now
+        updatedAt: now,
+        // Place in the list (set by dragging) and the services the song is filed under
+        order: Number.isFinite(song.order) ? song.order : undefined,
+        services: Array.isArray(song.services) ? song.services : []
       };
     }
 
@@ -493,7 +496,9 @@
         text: record.text || '',
         searchableText: record.searchableText || normalizeSearchText(`${record.title || ''}\n${record.text || ''}`),
         createdAt: record.createdAt || Date.now(),
-        updatedAt: record.updatedAt || Date.now()
+        updatedAt: record.updatedAt || Date.now(),
+        order: Number.isFinite(record.order) ? record.order : undefined,
+        services: Array.isArray(record.services) ? record.services : []
       });
     }
 

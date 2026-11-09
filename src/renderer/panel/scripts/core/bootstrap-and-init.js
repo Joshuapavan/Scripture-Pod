@@ -4284,7 +4284,7 @@
       initializeDefaultStyles();
       if (runInit && !hasInitialized) populateLanguageSelect();
 
-      songs = songRecords.map(hydrateSongFromRecord);
+      songs = window.SP_SONG_SERVICES.sortSongs(songRecords.map(hydrateSongFromRecord));
       bibles = {};
       bibleRecords.forEach(record => {
         if (!record || !record.id) return;
