@@ -2076,6 +2076,42 @@
       });
       showToast('Cloud database settings saved');
     }
+    // Says what Firebase answered, in words: a refusal from the rules is the usual reason songs do not appear there
+    function showCloudDbStatus(text, bad) {
+      const el = document.getElementById('cloud-db-status');
+      if (!el) return;
+      el.textContent = text || '';
+      el.classList.toggle('is-bad', !!bad);
+    }
+    function cloudRefusalText(st) {
+      if (st && st.code === 403) return 'Firebase refused it: ' + (st.message || 'permission denied') + '. Open the project in the Firebase console, go to Firestore > Rules, and allow read and write on /songs/{doc}.';
+      return 'Firebase did not accept it: ' + ((st && st.message) || 'unknown error');
+    }
+    async function testCloudDb() {
+      showCloudDbStatus('Testing...');
+      const r = await window.SP_SONG_CLOUD.testConnection();
+      if (r.ok) { showCloudDbStatus('Connected. Reading and writing are allowed.'); return; }
+      if (!r.read) { showCloudDbStatus(r.message, true); return; }
+      const part = (name, x) => name + ': ' + (x.ok ? 'allowed' : 'refused (' + (x.message || x.code) + ')');
+      showCloudDbStatus(part('Reading', r.read) + '. ' + part('Writing', r.write) + '. ' + (r.read.code === 403 || r.write.code === 403 ? 'Open the project in the Firebase console, go to Firestore > Rules, and allow read and write on /songs/{doc}.' : ''), true);
+    }
+    async function sendAllSongsToCloud() {
+      const list = (typeof songs !== 'undefined' && Array.isArray(songs)) ? songs : [];
+      if (!list.length) { showCloudDbStatus('There are no songs to send.'); return; }
+      showCloudDbStatus('Sending ' + list.length + ' songs...');
+      const r = await window.SP_SONG_CLOUD.uploadAll(list, (done, total) => showCloudDbStatus('Sending ' + done + ' of ' + total + '...'));
+      if (r.ok) showCloudDbStatus('Done. ' + r.sent + ' of ' + r.total + ' songs sent (songs already there are skipped).');
+      else showCloudDbStatus('Stopped after ' + r.sent + ' songs. ' + cloudRefusalText(r.status), true);
+    }
+    // A song saved while Firebase refuses it tells the user once, instead of only writing to the console
+    let cloudRefusalToldAt = 0;
+    window.addEventListener('sp-cloud-status', (e) => {
+      const st = e.detail || {};
+      if (st.ok === false) {
+        showCloudDbStatus(cloudRefusalText(st), true);
+        if (Date.now() - cloudRefusalToldAt > 5 * 60 * 1000) { cloudRefusalToldAt = Date.now(); showToast('Song not saved to the cloud database. See Settings > Lyrics > Cloud song database.'); }
+      } else if (st.ok === true) showCloudDbStatus('Last upload went through.');
+    });
     function loadCloudDbInputs() {
       if (!window.SP_SONG_CLOUD) return;
       const c = window.SP_SONG_CLOUD.getConfig();
@@ -2123,15 +2159,7 @@
       if (!cleanTitle && !cleanArtist) throw new Error('Title or artist required');
 
       const timeoutMs = 12000;
-      // Songs already in the shared Firebase library come first: if it has the song, no website is searched
-      if (window.SP_SONG_CLOUD && window.SP_SONG_CLOUD.isEnabled()) {
-        const ctl = new AbortController();
-        const timer = setTimeout(() => ctl.abort(), 6000);
-        try {
-          const fromCloud = dedupeLyricsSearchResults(await window.SP_SONG_CLOUD.searchSongs(`${cleanTitle} ${cleanArtist}`.trim() || cleanTitle, 10, ctl.signal));
-          if (fromCloud.length) return fromCloud;
-        } catch (e) { /* offline or not set up: search the websites */ } finally { clearTimeout(timer); }
-      }
+      const nameQuery = `${cleanTitle} ${cleanArtist}`.trim();
       const doFetchJson = async (url) => {
         const ctl = new AbortController();
         const t = setTimeout(() => ctl.abort(), timeoutMs);
@@ -2144,40 +2172,51 @@
         }
       };
 
+      // Every source is asked at the same moment, so the search takes as long as the slowest one, not all of them added up.
+      // A source that fails or is offline just adds nothing.
+      const safe = (p) => Promise.resolve(p).catch(() => []);
+
+      // The shared Firebase library
+      const cloudSearch = (window.SP_SONG_CLOUD && window.SP_SONG_CLOUD.isEnabled())
+        ? (async () => {
+          const ctl = new AbortController();
+          const timer = setTimeout(() => ctl.abort(), 6000);
+          try { return await window.SP_SONG_CLOUD.searchSongs(nameQuery || cleanTitle, 10, ctl.signal); } finally { clearTimeout(timer); }
+        })()
+        : Promise.resolve([]);
+
+      // LRCLIB: the title with the artist, the title alone, the artist alone
       const lookupTerms = [];
       if (cleanTitle && cleanArtist) lookupTerms.push(`${cleanTitle} ${cleanArtist}`);
       if (cleanTitle) lookupTerms.push(cleanTitle);
       if (cleanArtist) lookupTerms.push(cleanArtist);
-      const lookupUrls = Array.from(new Set(lookupTerms.map(term => `https://lrclib.net/api/search?q=${encodeURIComponent(term)}`)));
+      const lrclibSearches = Array.from(new Set(lookupTerms)).map((term) => safe(
+        doFetchJson(`https://lrclib.net/api/search?q=${encodeURIComponent(term)}`).then((payload) => (Array.isArray(payload) ? payload : (payload && typeof payload === 'object' ? [payload] : [])))
+      ));
 
-      const collected = [];
-      for (const url of lookupUrls) {
-        const payload = await doFetchJson(url).catch(() => null);
-        if (!payload) continue;
-        if (Array.isArray(payload)) collected.push(...payload);
-        else if (payload && typeof payload === 'object') collected.push(payload);
-      }
+      const webSearches = [...lrclibSearches];
       // Tamil worship songs: tamilchristiansongs.in has them with a typed-English version
-      if (language !== 'english' && language !== 'kannada') {
-        const tamilSongs = await searchTamilChristianSongs(`${cleanTitle} ${cleanArtist}`.trim()).catch(() => []);
-        collected.push(...tamilSongs);
-      }
-      // More Tamil and Kannada sources, all searched at once
-      const nameQuery = `${cleanTitle} ${cleanArtist}`.trim();
-      const extra = [];
-      if (language === 'any' || language === 'tamil') extra.push(searchWaytochurch(nameQuery, 'tamil'));
+      if (language !== 'english' && language !== 'kannada') webSearches.push(safe(searchTamilChristianSongs(nameQuery)));
+      // More Tamil and Kannada sources
+      if (language === 'any' || language === 'tamil') webSearches.push(safe(searchWaytochurch(nameQuery, 'tamil')));
       if (language === 'any' || language === 'kannada') {
-        extra.push(searchWaytochurch(nameQuery, 'kannada'));
-        extra.push(searchKannadaBlog(nameQuery));
+        webSearches.push(safe(searchWaytochurch(nameQuery, 'kannada')));
+        webSearches.push(safe(searchKannadaBlog(nameQuery)));
       }
-      (await Promise.all(extra.map((p) => p.catch(() => [])))).forEach((list) => collected.push(...list));
       // A second public source for English songs when both the title and the artist are known
       if (cleanTitle && cleanArtist && language !== 'kannada' && language !== 'tamil') {
-        const ovh = await doFetchJson(`https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`).catch(() => null);
-        if (ovh && typeof ovh.lyrics === 'string' && ovh.lyrics.trim()) {
-          collected.push({ title: cleanTitle, artist: cleanArtist, lyrics: ovh.lyrics, source: 'lyrics.ovh' });
-        }
+        webSearches.push(safe(
+          doFetchJson(`https://api.lyrics.ovh/v1/${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`).then((ovh) => (
+            ovh && typeof ovh.lyrics === 'string' && ovh.lyrics.trim() ? [{ title: cleanTitle, artist: cleanArtist, lyrics: ovh.lyrics, source: 'lyrics.ovh' }] : []
+          ))
+        ));
       }
+
+      const [cloudRows, ...webLists] = await Promise.all([safe(cloudSearch), ...webSearches]);
+      // The library's own songs come first and are not filtered: they were saved on purpose
+      const fromCloud = dedupeLyricsSearchResults(cloudRows);
+      const collected = [];
+      webLists.forEach((list) => collected.push(...(Array.isArray(list) ? list : [])));
       let results = dedupeLyricsSearchResults(collected);
       const want = { english: 'English', kannada: 'Kannada', tamil: 'Tamil' }[String(language || 'any').toLowerCase()];
       if (want) results = results.filter((r) => r.language === want);
@@ -2188,6 +2227,10 @@
         return kept;
       };
       results = keepWorship(results);
+      // A song the library has is shown from the library: the same title found on a website is left out
+      const cloudTitles = new Set(fromCloud.map((r) => window.SP_SONG_CLOUD.titleKey(r.title)));
+      const withCloud = (list) => { const merged = dedupeLyricsSearchResults([...fromCloud, ...list.filter((r) => !cloudTitles.has(window.SP_SONG_CLOUD.titleKey(r.title)))]); merged.hidden = list.hidden; return merged; };
+      results = withCloud(results);
       // Nothing found: ask Genius / YouTube (when a key is saved) for the proper names, then look those up
       if (!results.length) {
         const ctl = new AbortController();
@@ -2201,7 +2244,7 @@
           }
           results = dedupeLyricsSearchResults(more);
           if (want) results = results.filter((r) => r.language === want);
-          results = keepWorship(results);
+          results = withCloud(keepWorship(results));
         } catch (e) { /* the extra sources are optional */ } finally { clearTimeout(timer); }
       }
       return results;

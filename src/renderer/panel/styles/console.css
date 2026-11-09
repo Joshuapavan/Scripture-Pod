@@ -3342,3 +3342,30 @@ body.sp-popup-open #popup-scrim { display: none !important; }
 #settingsModal .sm-saved, #settingsModal[data-sm-tab] .sm-saved { margin-left: 0 !important; }
 #settingsModal[data-sm-tab="shortcuts"] .sm-applyto, #settingsModal[data-sm-tab="presets"] .sm-applyto, #settingsModal[data-sm-tab="feedback"] .sm-applyto,
 #settingsModal[data-sm-tab="media"] .sm-applyto, #settingsModal[data-sm-tab="outputs"] .sm-applyto, #settingsModal[data-sm-tab="sections"] .sm-applyto { display: none !important; }
+
+/* ── Checkboxes: one look, from the theme ──────────────────────────────────────
+   Plain checkboxes drew the browser's own blue square. They now take the theme's input border and primary colour,
+   the same as the switches (.mini-toggle keeps its switch look). */
+body input[type="checkbox"]:not(.mini-toggle input) {
+  -webkit-appearance: none !important; appearance: none !important;
+  position: relative; flex: 0 0 auto; display: inline-block; vertical-align: -3px;
+  width: 16px !important; height: 16px !important; min-width: 16px !important; min-height: 0 !important;
+  padding: 0 !important; margin: 0 6px 0 0;
+  border: 1.5px solid hsl(var(--input)) !important; border-radius: 5px !important;
+  background: hsl(var(--background)) !important; box-shadow: none !important; cursor: pointer;
+  transition: background-color .12s ease, border-color .12s ease, box-shadow .12s ease;
+}
+body input[type="checkbox"]:not(.mini-toggle input):hover { border-color: hsl(var(--muted-foreground)) !important; }
+body input[type="checkbox"]:not(.mini-toggle input):focus-visible { outline: 0; box-shadow: 0 0 0 3px hsl(var(--primary) / .25) !important; }
+body input[type="checkbox"]:not(.mini-toggle input):checked { background: hsl(var(--primary)) !important; border-color: hsl(var(--primary)) !important; }
+body input[type="checkbox"]:not(.mini-toggle input):checked::after {
+  content: ""; position: absolute; left: 4px; top: 1px; width: 4px; height: 8px;
+  border: solid hsl(var(--primary-foreground)); border-width: 0 2px 2px 0; transform: rotate(45deg);
+}
+body input[type="checkbox"]:not(.mini-toggle input):disabled { opacity: .5; cursor: not-allowed; }
+.cloud-db-actions { display: flex; gap: 8px; margin: 10px 0 4px; flex-wrap: wrap; }
+.cloud-db-status { margin: 6px 0 0; font-size: 12px; line-height: 1.45; color: hsl(var(--muted-foreground)); }
+.cloud-db-status.is-bad { color: #f0a0a0; }
+.cloud-db-status:empty { display: none; }
+.lyrics-sources label:has(> input[type="checkbox"]) { display: flex; align-items: center; justify-content: flex-start; gap: 8px; text-align: left; }
+.lyrics-sources label:has(> input[type="checkbox"]) input { margin: 0; }

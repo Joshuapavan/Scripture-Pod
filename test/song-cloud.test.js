@@ -54,3 +54,64 @@ test('search merges title-prefix and word matches without repeats', async () => 
   assert.deepEqual(found.map((s) => s.title), ['Yeshu Naam', 'Naam Yeshu']);
   assert.equal(found[0].source, cloud.SOURCE_NAME);
 });
+
+test('a refused upload is reported with the reason, and sending all songs stops at the refusal', async () => {
+  globalThis.SP_FIREBASE_CONFIG = { projectId: 'denied', apiKey: '' };
+  let calls = 0;
+  globalThis.fetch = async () => { calls++; return { ok: false, status: 403, text: async () => JSON.stringify({ error: { message: 'Missing or insufficient permissions.' } }) }; };
+  assert.equal(await cloud.uploadSong({ title: 'One', content: 'a' }), false);
+  assert.equal(cloud.getStatus().ok, false);
+  assert.equal(cloud.getStatus().code, 403);
+  assert.match(cloud.getStatus().message, /insufficient permissions/);
+  calls = 0;
+  const r = await cloud.uploadAll([{ title: 'Two', content: 'b' }, { title: 'Three', content: 'c' }, { title: 'Four', content: 'd' }]);
+  assert.equal(r.ok, false);
+  assert.equal(r.sent, 0);
+  assert.equal(calls, 1);
+});
+
+test('sending all songs sends each one and counts them', async () => {
+  globalThis.SP_FIREBASE_CONFIG = { projectId: 'open', apiKey: '' };
+  const urls = [];
+  globalThis.fetch = async (url) => { urls.push(url); return { ok: true, status: 200, text: async () => '{}' }; };
+  const r = await cloud.uploadAll([{ title: 'Alpha', text: 'x' }, { title: 'Beta', content: 'y' }, { title: 'Empty', content: '' }]);
+  assert.equal(r.ok, true);
+  assert.equal(r.sent, 2);
+  assert.equal(r.total, 2);
+  assert.equal(cloud.getStatus().ok, true);
+});
+
+test('the connection test reports reading and writing separately', async () => {
+  globalThis.SP_FIREBASE_CONFIG = { projectId: 'mixed', apiKey: '' };
+  globalThis.fetch = async (url, opts) => (opts.method === 'PATCH'
+    ? { ok: false, status: 404, text: async () => '{}' }
+    : { ok: false, status: 403, text: async () => JSON.stringify({ error: { message: 'Missing or insufficient permissions.' } }) });
+  const r = await cloud.testConnection();
+  assert.equal(r.read.ok, false);
+  assert.equal(r.write.ok, true);
+  assert.equal(r.ok, false);
+});
+
+test('a new song is only created: one the library already has is kept, and that is not an error', async () => {
+  globalThis.SP_FIREBASE_CONFIG = { projectId: 'keep', apiKey: '' };
+  const calls = [];
+  globalThis.fetch = async (url, opts) => { calls.push(url); return { ok: false, status: 409, text: async () => JSON.stringify({ error: { message: 'Document already exists', status: 'ALREADY_EXISTS' } }) }; };
+  const now = Date.now();
+  assert.equal(await cloud.uploadSong({ title: 'Already There', content: 'web copy', createdAt: now, updatedAt: now }), false);
+  assert.match(calls[0], /songs\/already-there\?currentDocument\.exists=false$/);
+  assert.equal(cloud.getStatus().ok, true);
+  // The same song is not sent again and again
+  assert.equal(await cloud.uploadSong({ title: 'Already There', content: 'web copy', createdAt: now, updatedAt: now }), false);
+  assert.equal(calls.length, 1);
+});
+
+test('editing a song updates the library copy, and a new song that is not there yet is created', async () => {
+  globalThis.SP_FIREBASE_CONFIG = { projectId: 'edit', apiKey: '' };
+  const calls = [];
+  globalThis.fetch = async (url) => { calls.push(url); return { ok: true, status: 200, text: async () => '{}' }; };
+  const now = Date.now();
+  assert.equal(await cloud.uploadSong({ title: 'Brand New', content: 'one', createdAt: now, updatedAt: now }), true);
+  assert.match(calls[0], /exists=false$/);
+  assert.equal(await cloud.uploadSong({ title: 'Brand New', content: 'one edited', createdAt: now - 5000, updatedAt: now }), true);
+  assert.doesNotMatch(calls[1], /currentDocument/);
+});

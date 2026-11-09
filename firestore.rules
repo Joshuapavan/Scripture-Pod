@@ -1,0 +1,33 @@
+rules_version = '2';
+
+// Rules for the shared song library (Scripture Pod > Settings > Lyrics > Cloud song database).
+// Paste into Firebase console > Firestore Database > Rules, then Publish.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /songs/{songId} {
+      // Anyone running the app can search the library
+      allow read: if true;
+
+      // ...and add or update a song, as long as it looks like one the app sends. Nothing can be deleted.
+      allow create, update: if validSong();
+      allow delete: if false;
+    }
+
+    // Everything else in the project stays closed
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function validSong() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['title', 'titleKey', 'words', 'content', 'updatedAt'])
+        && d.keys().hasAll(['title', 'titleKey', 'content'])
+        && d.title is string && d.title.size() > 0 && d.title.size() <= 200
+        && d.titleKey is string && d.titleKey.size() > 0 && d.titleKey.size() <= 200
+        && d.content is string && d.content.size() > 0 && d.content.size() <= 20000
+        && (!('words' in d) || (d.words is list && d.words.size() <= 30))
+        && (!('updatedAt' in d) || d.updatedAt is int);
+    }
+  }
+}

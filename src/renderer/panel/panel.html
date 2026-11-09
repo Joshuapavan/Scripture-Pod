@@ -1419,6 +1419,11 @@
         <label>Project ID <input type="text" id="cloud-db-project-id" autocomplete="off" onchange="saveCloudDbSettings()"></label>
         <label>Project number <input type="text" id="cloud-db-project-number" autocomplete="off" onchange="saveCloudDbSettings()"></label>
         <label>Web API key (optional) <input type="password" id="cloud-db-api-key" autocomplete="off" onchange="saveCloudDbSettings()"></label>
+        <div class="cloud-db-actions">
+          <button type="button" class="btn" id="cloud-db-test" onclick="testCloudDb()">Test connection</button>
+          <button type="button" class="btn" id="cloud-db-send-all" onclick="sendAllSongsToCloud()">Send all my songs</button>
+        </div>
+        <p id="cloud-db-status" class="cloud-db-status" aria-live="polite"></p>
       </details>
       <div id="auto-lyrics-suggest" class="lyrics-suggest" style="display:none"></div>
       <div id="auto-lyrics-status"  data-i18n="auto_lyrics_prompt">Enter a title or artist and search.</div>
