@@ -3413,3 +3413,21 @@ body[data-overlay="points"] .overlays-design { display: none; }
 .lt-design-star:hover { color: #f5c542; transform: scale(1.08); }
 .lt-design-star.is-on { color: #f5c542; }
 .lt-design-family-fav { color: #f5c542; }
+
+/* ── Buy me a coffee: the right side of Settings ───────────────────────────────────
+   On the tabs that have no preview, the right side is left for this card alone. */
+.sm-coffee { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 18px 16px; text-align: center; border: 1px solid var(--sp-line); border-radius: 14px; background: var(--sp-card); }
+.sm-coffee-head { display: flex; align-items: center; gap: 8px; }
+.sm-coffee-cup { font-size: 20px; line-height: 1; }
+.sm-coffee h3 { margin: 0; font-size: 16px; font-weight: 600; color: var(--sp-text); }
+.sm-coffee p { margin: 0; font-size: 12.5px; line-height: 1.55; color: var(--sp-muted); }
+.sm-coffee-qr { display: block; padding: 10px; border-radius: 14px; background: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,.06); line-height: 0; }
+.sm-coffee-qr img { display: block; width: 168px; height: 168px; }
+.sm-coffee-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 0 18px; border-radius: 10px; background: #FFDD00 !important; color: #111 !important; border: 0 !important; font-weight: 600; text-decoration: none; cursor: pointer; }
+.sm-coffee-btn:hover { filter: brightness(.94); }
+.sm-coffee-url { font-size: 11.5px; color: var(--sp-subtle); }
+@media (min-width: 1001px) {
+  #settingsModal:is([data-sm-tab="setlist"], [data-sm-tab="shortcuts"], [data-sm-tab="presets"], [data-sm-tab="feedback"], [data-sm-tab="media"], [data-sm-tab="outputs"], [data-sm-tab="sections"]) .sm-body { grid-template-columns: 252px minmax(0, 1fr) 320px !important; }
+  #settingsModal:is([data-sm-tab="setlist"], [data-sm-tab="shortcuts"], [data-sm-tab="presets"], [data-sm-tab="feedback"], [data-sm-tab="media"], [data-sm-tab="outputs"], [data-sm-tab="sections"]) .settings-preview { display: flex !important; }
+  #settingsModal:is([data-sm-tab="setlist"], [data-sm-tab="shortcuts"], [data-sm-tab="presets"], [data-sm-tab="feedback"], [data-sm-tab="media"], [data-sm-tab="outputs"], [data-sm-tab="sections"]) .settings-preview > :not(.sm-coffee) { display: none !important; }
+}
