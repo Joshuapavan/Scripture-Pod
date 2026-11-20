@@ -3406,3 +3406,10 @@ body[data-overlay="points"] .overlays-design { display: none; }
 #settingsModal #bg-colours-field .bg-colour-row { grid-template-columns: auto 1fr; gap: 8px 12px; }
 #settingsModal #bg-colours-field .bg-colour-row input[type="color"] { width: 56px; justify-self: start; }
 #settingsModal #bg-colours-field .xo-check { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; }
+
+/* Favourite designs */
+.lt-design-star { position: absolute; top: 6px; left: 6px; z-index: 2; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; background: color-mix(in srgb, var(--sp-card) 88%, transparent); border: 1px solid var(--sp-line); color: var(--sp-muted); font-size: 15px; line-height: 1; cursor: pointer; opacity: 0; transition: opacity 120ms ease, color 120ms ease, transform 120ms ease; }
+.lt-design-tile:hover .lt-design-star, .lt-design-tile:focus-within .lt-design-star, .lt-design-star.is-on, .lt-design-star:focus-visible { opacity: 1; }
+.lt-design-star:hover { color: #f5c542; transform: scale(1.08); }
+.lt-design-star.is-on { color: #f5c542; }
+.lt-design-family-fav { color: #f5c542; }

@@ -462,6 +462,23 @@
     let ltThumbCssCache = '';
     let ltDesignQuery = '';
 
+    // Favourite designs: starred in the picker and gathered under a Favourites tab, so the ones a church always uses are one click away
+    const LT_FAVOURITES_KEY = 'scripturePod.ltFavourites.v1';
+    const LT_FAVOURITES_LABEL = 'Favourites';
+    let ltFavourites = window.SP_LT_FAVOURITES.parse((() => { try { return localStorage.getItem(LT_FAVOURITES_KEY); } catch (e) { return '[]'; } })());
+    let ltFavouritesOpened = false;
+    function toggleLtFavourite(value) {
+      ltFavourites = window.SP_LT_FAVOURITES.toggle(ltFavourites, value);
+      try { localStorage.setItem(LT_FAVOURITES_KEY, JSON.stringify(ltFavourites)); } catch (e) { /* storage unavailable */ }
+      renderLtDesignPicker();
+    }
+    // Every design the picker knows, built in and your own, for looking up a favourite's name
+    function allLtDesignOptions(groups) {
+      const all = [];
+      groups.forEach((g) => Array.from(g.children).forEach((o) => all.push({ value: o.value, label: o.textContent })));
+      return all.concat(customLtDesignOptions());
+    }
+
     function getLtThumbCss() {
       if (ltThumbCssCache) return ltThumbCssCache;
       const page = buildStandaloneDisplayHtml({ preview: true });
@@ -579,7 +596,9 @@ ${getLtThumbCss()}
       if (!groups.length) return;
       const current = select.value;
       const currentGroup = groups.find(g => Array.from(g.children).some(o => o.value === current)) || groups[0];
-      if (ltDesignPickerFamily !== MY_LT_DESIGNS_LABEL && !groups.some(g => g.label === ltDesignPickerFamily)) ltDesignPickerFamily = currentGroup.label;
+      // The first time the picker is drawn it opens on Favourites, when there are any
+      if (!ltFavouritesOpened) { ltFavouritesOpened = true; if (ltFavourites.length) ltDesignPickerFamily = LT_FAVOURITES_LABEL; }
+      if (ltDesignPickerFamily !== MY_LT_DESIGNS_LABEL && ltDesignPickerFamily !== LT_FAVOURITES_LABEL && !groups.some(g => g.label === ltDesignPickerFamily)) ltDesignPickerFamily = currentGroup.label;
 
       // Toolbar (search, family tabs, count) is built once so the search box keeps focus
       let toolbar = host.querySelector('.lt-design-toolbar');
@@ -611,6 +630,12 @@ ${getLtThumbCss()}
       const familiesEl = toolbar.querySelector('.lt-design-families');
       familiesEl.hidden = searching;
       if (!familiesEl.children.length) {
+        const favTab = document.createElement('button');
+        favTab.type = 'button';
+        favTab.className = 'lt-design-family lt-design-family-fav';
+        favTab.dataset.family = LT_FAVOURITES_LABEL;
+        favTab.onclick = () => { ltDesignPickerFamily = LT_FAVOURITES_LABEL; renderLtDesignPicker(); };
+        familiesEl.appendChild(favTab);
         groups.forEach((group) => {
           const tab = document.createElement('button');
           tab.type = 'button';
@@ -628,11 +653,15 @@ ${getLtThumbCss()}
         mine.onclick = () => { ltDesignPickerFamily = MY_LT_DESIGNS_LABEL; renderLtDesignPicker(); };
         familiesEl.appendChild(mine);
       }
+      const favouriteOptions = window.SP_LT_FAVOURITES.resolve(ltFavourites, allLtDesignOptions(groups));
+      const favTabEl = familiesEl.querySelector('.lt-design-family-fav');
+      if (favTabEl) favTabEl.textContent = '★ ' + LT_FAVOURITES_LABEL + (favouriteOptions.length ? ' ' + favouriteOptions.length : '');
       familiesEl.querySelectorAll('.lt-design-family').forEach(tab => {
         tab.setAttribute('aria-pressed', tab.dataset.family === ltDesignPickerFamily ? 'true' : 'false');
       });
       const total = groups.reduce((n, g) => n + g.children.length, 0);
-      const options = (!searching && ltDesignPickerFamily === MY_LT_DESIGNS_LABEL) ? customLtDesignOptions() : ltDesignOptions(groups);
+      const showingFavourites = !searching && ltDesignPickerFamily === LT_FAVOURITES_LABEL;
+      const options = showingFavourites ? favouriteOptions : (!searching && ltDesignPickerFamily === MY_LT_DESIGNS_LABEL) ? customLtDesignOptions() : ltDesignOptions(groups);
       toolbar.querySelector('.lt-design-count').textContent = searching
         ? `${options.length} of ${total} designs`
         : `${total} designs in ${groups.length} families`;
@@ -646,7 +675,7 @@ ${getLtThumbCss()}
         if (!options.length) {
           const none = document.createElement('p');
           none.className = 'lt-design-none';
-          none.textContent = showingMine ? 'You have not made a design yet.' : 'No designs match.';
+          none.textContent = showingMine ? 'You have not made a design yet.' : (showingFavourites ? 'No favourites yet. Click the star on a design to keep it here.' : 'No designs match.');
           grid.replaceChildren(none);
           if (showingMine) grid.appendChild(buildCreateLtDesignTile());
         } else {
@@ -659,6 +688,13 @@ ${getLtThumbCss()}
             label.className = 'lt-design-label';
             label.textContent = option.label;
             tile.append(buildLtDesignThumb(option.value), label);
+            const star = document.createElement('span');
+            star.className = 'lt-design-star';
+            star.setAttribute('role', 'button');
+            star.tabIndex = 0;
+            star.onclick = (e) => { e.stopPropagation(); toggleLtFavourite(option.value); };
+            star.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); toggleLtFavourite(option.value); } };
+            tile.appendChild(star);
             if (option.value.startsWith('custom:')) {
               tile.onclick = () => pickCustomLtDesign(option.value.slice(7));
               const edit = document.createElement('span');
@@ -676,6 +712,15 @@ ${getLtThumbCss()}
       const activeCustomId = current.endsWith('-custom') ? getActiveCustomLtDesignId() : '';
       grid.querySelectorAll('.lt-design-tile').forEach(tile => {
         const v = tile.dataset.value || '';
+        const star = tile.querySelector('.lt-design-star');
+        if (star) {
+          const on = window.SP_LT_FAVOURITES.has(ltFavourites, v);
+          star.classList.toggle('is-on', on);
+          star.setAttribute('aria-pressed', on ? 'true' : 'false');
+          star.title = on ? 'Remove from favourites' : 'Add to favourites';
+          star.setAttribute('aria-label', star.title);
+          star.textContent = on ? '★' : '☆';
+        }
         tile.setAttribute('aria-pressed', (v.startsWith('custom:') ? (v.slice(7) === activeCustomId) : v === current) ? 'true' : 'false');
       });
     }
