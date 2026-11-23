@@ -1065,6 +1065,12 @@
       if (activeRatio === 'custom') activeRatio = 'full';
       if (ui.lineHeightFull) document.getElementById('line-height-full').value = ui.lineHeightFull;
       if (ui.lineHeightLT) document.getElementById('line-height-lt').value = ui.lineHeightLT;
+      if (ui.ltBarHeightPct != null) {
+        const barEl = document.getElementById('lt-bar-height');
+        if (barEl) barEl.value = ui.ltBarHeightPct;
+        const barValueEl = document.getElementById('lt-bar-height-value');
+        if (barValueEl) barValueEl.textContent = `${ui.ltBarHeightPct}%`;
+      }
       if (ui.ltWidthPct != null) {
         const ltWidthEl = document.getElementById('lt-width-pct');
         if (ltWidthEl) ltWidthEl.value = ui.ltWidthPct;
@@ -3216,18 +3222,58 @@
       showToast(t('preset_deleted'));
     }
 
+    // Looks that come with the app, listed above the ones you save. They never change or get deleted.
+    const BUILTIN_LOOKS = [{
+      id: 'lyrics-bar-caps',
+      name: 'Lyrics bar (stream style)',
+      tab: 'songs',
+      // A full-width dark bar flush with the bottom, two centred lines of white bold capitals, as on the church stream
+      ui: {
+        activeRatio: '16-9', linesPerPage: 2, fontFamily: "'Montserrat',sans-serif", fontWeight: '700', ltFontSongs: 38,
+        lineHeightLT: '1.6', ltTextTransform: 'uppercase', textColor: '#ffffff', hAlignLTSongs: 'center', vAlignLTSongs: 'middle',
+        ltWidthPct: '100', ltScalePct: '100', ltBorderRadius: '0', ltOffsetX: '0', ltOffsetY: '0', ltAnchorMode: 'bottom', padLRLT: '5',
+        autoAdjustLtHeight: true, ltBarHeightPct: '17', bgToggle: true, bgMode: 'solid', bgColor: '#000000', bgOpacityLT: 75
+      }
+    }];
+    function applyBuiltinLook(id) {
+      const look = BUILTIN_LOOKS.find((l) => l.id === id);
+      if (!look) return;
+      // This look is for lyrics: it must not change the Bible's lower third
+      if (look.tab && getEffectiveSettingsTargetTab() !== look.tab) {
+        showToast('Open Lyrics first, or choose Lyrics under Apply to in Settings');
+        return;
+      }
+      // Written into the Lyrics settings only, so the Bible's lower third keeps what it had
+      saveProjectionSettingsProfileForTab(getEffectiveSettingsTargetTab());
+      const profiles = ensureProjectionSettingsProfiles();
+      profiles[look.tab] = normalizeProjectionSettingsSnapshot({ ...getProjectionSettingsSnapshotForTab(look.tab), ...look.ui }, profiles[look.tab]);
+      applyProjectionSettingsProfileForTab(look.tab, { triggerChange: false });
+      renderLtStylePicker();
+      onAnyControlChange();
+      showToast('Look applied: ' + look.name);
+    }
+
     // Named looks: the saved presets, in a quick list at the top of the Look card
     let selectedLookId = '';
     function refreshLookSelect() {
       const select = document.getElementById('look-preset-select');
       if (!select) return;
-      select.innerHTML = '<option value="">Saved looks…</option>' + presets.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('');
+      const builtin = '<optgroup label="Built in">' + BUILTIN_LOOKS.map((l) => `<option value="builtin:${esc(l.id)}">${esc(l.name)}</option>`).join('') + '</optgroup>';
+      const mine = presets.length ? '<optgroup label="Your looks">' + presets.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join('') + '</optgroup>' : '';
+      select.innerHTML = '<option value="">Saved looks…</option>' + builtin + mine;
       if (!presets.some((p) => p.id === selectedLookId)) selectedLookId = '';
       select.value = selectedLookId;
       ['look-update-btn', 'look-delete-btn'].forEach((id) => { const b = document.getElementById(id); if (b) b.disabled = !selectedLookId; });
     }
     function applyLookFromSelect(select) {
-      selectedLookId = select.value || '';
+      const value = select.value || '';
+      if (value.startsWith('builtin:')) {
+        selectedLookId = '';
+        refreshLookSelect();
+        applyBuiltinLook(value.slice(8));
+        return;
+      }
+      selectedLookId = value;
       refreshLookSelect();
       if (selectedLookId) applyPreset(selectedLookId);
     }

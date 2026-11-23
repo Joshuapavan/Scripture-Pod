@@ -5,6 +5,7 @@
         { id: 'pad-lr-full', suffix: '%' },
         { id: 'pad-lr-lt', suffix: '%' },
         { id: 'lt-width-pct', suffix: '%' },
+        { id: 'lt-bar-height', suffix: '%' },
         { id: 'lt-scale-pct', suffix: '%' },
         { id: 'text-x', suffix: 'px' },
         { id: 'text-y', suffix: 'px' },

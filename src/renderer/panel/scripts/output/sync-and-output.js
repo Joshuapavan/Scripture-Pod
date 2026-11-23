@@ -2041,6 +2041,7 @@ ${getLtThumbCss()}
         autoResizeFull: liveProjection.autoResizeFull || document.getElementById('auto-resize-full')?.value || 'shrink',
         autoResizeLT: liveProjection.autoResizeLT || document.getElementById('auto-resize-lt')?.value || 'shrink',
         ltWidthPct: pickNumber(liveProjection.ltWidthPct, document.getElementById('lt-width-pct')?.value || 100),
+        ltBarHeightPct: pickNumber(liveProjection.ltBarHeightPct, document.getElementById('lt-bar-height')?.value || 0),
         ltScalePct: pickNumber(liveProjection.ltScalePct, document.getElementById('lt-scale-pct')?.value || 100),
         ltOffsetX: pickNumber(liveProjection.ltOffsetX, document.getElementById('lt-offset-x')?.value || 0),
         ltOffsetY: pickNumber(liveProjection.ltOffsetY, document.getElementById('lt-offset-y')?.value || 0),
@@ -2238,6 +2239,9 @@ ${getLtThumbCss()}
         const dualHeightPct = calculateLtHeightPctFromLines(dualLines, 2);
         dynamicHeight = Math.max(dynamicHeight, dualHeightPct);
       }
+      // A bar height chosen for the lyrics (LT Bar Height) replaces the automatic one
+      const fixedLyricsBarPct = Number(ui.ltBarHeightPct) || 0;
+      if (fixedLyricsBarPct > 0 && mode !== 'full' && livePointer.kind !== 'bible' && !useCustomStyle) dynamicHeight = Math.min(100, fixedLyricsBarPct);
       if (!useCustomStyle && mode !== 'full' && autoResizeLT !== 'none') {
         const baseWidth = (styleCanvasBaseSize && styleCanvasBaseSize.width) ? styleCanvasBaseSize.width : 1920;
         const baseHeight = (styleCanvasBaseSize && styleCanvasBaseSize.height) ? styleCanvasBaseSize.height : 1080;

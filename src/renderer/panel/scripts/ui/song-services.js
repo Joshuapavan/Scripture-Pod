@@ -111,7 +111,7 @@
     function buildSongsEmptyNote() {
       const note = document.createElement('div');
       note.className = 'song-services-empty';
-      note.textContent = 'No songs in this service yet. Right-click a song and pick this service, or drag a song onto the service above.';
+      note.textContent = 'No songs in this service yet. Click ⋯ beside a song (or right-click it) and pick this service, or drag a song onto the service above.';
       return note;
     }
 
@@ -140,6 +140,15 @@
         row.classList.remove('drop-target');
         if (draggedSongId) moveSongInList(draggedSongId, song.id);
       });
+    }
+
+    // The songs either side of this one in the list as it is shown (the open service, in order)
+    function getSongListNeighbours(song) {
+      if (!song) return { prev: null, next: null };
+      const shown = getButtonContextList().filter((s) => window.SP_SONG_SERVICES.inService(s, songServiceState.active));
+      const at = shown.findIndex((s) => s.id === song.id);
+      if (at < 0) return { prev: null, next: null };
+      return { prev: shown[at - 1] || null, next: shown[at + 1] || null };
     }
 
     function moveSongInList(fromId, toId) {

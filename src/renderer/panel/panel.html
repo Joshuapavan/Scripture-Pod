@@ -1900,6 +1900,13 @@
           </div>
           <input type="range" id="lt-width-pct" min="50" max="100" step="1" value="78" class="settings-slider" oninput="updateSliderValue(this,'%');onAnyControlChange()">
         </div>
+        <div class="slider-container" id="lt-bar-height-field">
+          <div class="slider-header">
+            <label class="settings-label" title="How tall the lyrics bar is. 0 keeps the automatic height.">LT Bar Height <span class="settings-sublabel">(Lyrics, 0 = automatic)</span></label>
+            <span class="slider-value" id="lt-bar-height-value">0%</span>
+          </div>
+          <input type="range" id="lt-bar-height" min="0" max="60" step="1" value="0" class="settings-slider" oninput="updateSliderValue(this,'%');onAnyControlChange()">
+        </div>
         <div class="slider-container" id="panel-inline-style-88">
           <div class="slider-header">
             <label class="settings-label">Scale</label>

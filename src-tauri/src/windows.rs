@@ -13,7 +13,11 @@ fn page_url(page: &str, query: &str) -> WebviewUrl {
 }
 
 fn builder<'a>(app: &'a AppHandle, label: &str, url: WebviewUrl) -> WebviewWindowBuilder<'a, tauri::Wry, AppHandle> {
-    WebviewWindowBuilder::new(app, label, url).initialization_script(&format!("window.__BSP_LABEL={:?};\n{}", label, SHIM))
+    // On Windows the webview hands drag and drop to the app instead of the page, which stops the page's own
+    // drag and drop (re-arranging songs and the setlist, dropping a song on a service). The page does not use file drops.
+    WebviewWindowBuilder::new(app, label, url)
+        .disable_drag_drop_handler()
+        .initialization_script(&format!("window.__BSP_LABEL={:?};\n{}", label, SHIM))
 }
 
 fn monitor_id(m: &Monitor, i: usize) -> String { let _ = m; i.to_string() }

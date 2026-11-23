@@ -905,7 +905,11 @@
             const on = window.SP_SONG_SERVICES.inService(songs[itemIndex] || {}, svc.id);
             items.push({ label: `${on ? '✓ ' : ''}Service: ${svc.name}`, icon: '', action: () => { toggleSongInService(songs[itemIndex], svc.id); close(); } });
           });
-          if ((songServiceState.services || []).length) items.push({ type: 'sep' });
+          // Moving a song up or down in the list, for when dragging is not possible
+          const neighbours = typeof getSongListNeighbours === 'function' ? getSongListNeighbours(songs[itemIndex]) : { prev: null, next: null };
+          if (neighbours.prev) items.push({ label: 'Move up', icon: '↑', action: () => { moveSongInList(songs[itemIndex].id, neighbours.prev.id); close(); } });
+          if (neighbours.next) items.push({ label: 'Move down', icon: '↓', action: () => { moveSongInList(songs[itemIndex].id, neighbours.next.id); close(); } });
+          if ((songServiceState.services || []).length || neighbours.prev || neighbours.next) items.push({ type: 'sep' });
           items.push({ label: t('common_rename_song'), icon: '✎', action: () => {
             const target = songs[itemIndex];
             if (!target) { close(); return; }
@@ -1120,6 +1124,21 @@
           div.addEventListener('drop', (e) => { e.preventDefault(); div.classList.remove('drop-target'); if (dragIndex == null || dragIndex === i) return; const item = schedule.splice(dragIndex, 1)[0]; schedule.splice(i, 0, item); saveState(); saveToStorageDebounced(); renderSongs() });
         } else {
           if (isSongsView && !q) attachSongDrag(div, s, right);
+          if (isSongsView) {
+            // The same menu as a right-click, one click away: services, move up and down, rename
+            const more = document.createElement('span');
+            more.className = 'song-row-menu';
+            more.textContent = '⋯';
+            more.title = 'Services, move and more';
+            more.setAttribute('role', 'button');
+            more.onclick = (e) => {
+              e.stopPropagation();
+              if (typeof window._openSidebarContextMenu !== 'function') return;
+              const r = more.getBoundingClientRect();
+              window._openSidebarContextMenu(sidebarTab, s, itemIndex, i, r.left, r.bottom);
+            };
+            right.appendChild(more);
+          }
           const add = document.createElement('span');
           add.style.color = 'var(--success)'; add.style.marginRight = '12px'; add.style.cursor = 'pointer'; add.textContent = '+';
           add.onclick = (e) => addToSet(itemIndex, e);

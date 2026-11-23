@@ -833,6 +833,7 @@
       'autoResizeLT',
       'refPositionFull',
       'ltWidthPct',
+      'ltBarHeightPct',
       'ltScalePct',
       'ltOffsetX',
       'ltOffsetY',
@@ -897,6 +898,7 @@
         ltPresetSelection: document.getElementById('lt-preset-select')?.value || 'default',
         ltPresetUpdatesLive: document.getElementById('lt-preset-update-live')?.value !== 'false',
         ltWidthPct: document.getElementById('lt-width-pct')?.value,
+        ltBarHeightPct: document.getElementById('lt-bar-height')?.value,
         ltScalePct: document.getElementById('lt-scale-pct')?.value,
         ltOffsetX: document.getElementById('lt-offset-x')?.value,
         ltOffsetY: document.getElementById('lt-offset-y')?.value,
@@ -1150,6 +1152,7 @@
       }
       if (next.ltWidthPct != null && document.getElementById('lt-width-pct')) document.getElementById('lt-width-pct').value = next.ltWidthPct;
       if (next.ltWidthPct != null && document.getElementById('lt-width-pct-value')) document.getElementById('lt-width-pct-value').textContent = `${next.ltWidthPct}%`;
+      if (next.ltBarHeightPct != null && document.getElementById('lt-bar-height')) { document.getElementById('lt-bar-height').value = next.ltBarHeightPct; const bh = document.getElementById('lt-bar-height-value'); if (bh) bh.textContent = `${next.ltBarHeightPct}%`; }
       if (next.ltScalePct != null && document.getElementById('lt-scale-pct')) document.getElementById('lt-scale-pct').value = next.ltScalePct;
       if (next.ltScalePct != null && document.getElementById('lt-scale-pct-value')) document.getElementById('lt-scale-pct-value').textContent = `${next.ltScalePct}%`;
       if (next.ltOffsetX != null && document.getElementById('lt-offset-x')) document.getElementById('lt-offset-x').value = next.ltOffsetX;
@@ -1224,6 +1227,7 @@
           'pad-lr-full',
           'pad-lr-lt',
           'lt-width-pct',
+          'lt-bar-height',
           'lt-scale-pct',
           'lt-border-radius',
           'bg-blur',
@@ -1360,6 +1364,7 @@
         lineHeightFull: document.getElementById('line-height-full').value,
         lineHeightLT: document.getElementById('line-height-lt').value,
         ltWidthPct: document.getElementById('lt-width-pct')?.value || 100,
+        ltBarHeightPct: document.getElementById('lt-bar-height')?.value || 0,
         ltScalePct: document.getElementById('lt-scale-pct')?.value || 100,
         ltOffsetY: document.getElementById('lt-offset-y')?.value || 0,
         ltOffsetX: document.getElementById('lt-offset-x')?.value || 0,
